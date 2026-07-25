@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'org.example'
@@ -9,6 +10,11 @@ def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
 
 repositories {
     mavenCentral()
+}
+
+javafx {
+    version = '21.0.7'
+    modules = [ 'javafx.controls', 'javafx.media', 'javafx.swing' ]
 }
 
 dependencies {

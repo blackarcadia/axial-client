@@ -93,6 +93,14 @@ public class MinecraftLauncher {
     }
 
     public void launch(LaunchRequest request, java.io.PrintStream log) throws IOException, InterruptedException {
+        Process process = start(request, log);
+        int code = process.waitFor();
+        if (code != 0) {
+            throw new IllegalStateException("Minecraft exited with code " + code);
+        }
+    }
+
+    public Process start(LaunchRequest request, java.io.PrintStream log) throws IOException {
         FileLayout layout = new FileLayout(request.getGameDir());
         JsonObject versionJson = readJson(layout.versionJson(request.getVersionId()));
         if (versionJson.has("inheritsFrom")) {
@@ -128,7 +136,12 @@ public class MinecraftLauncher {
         pb.redirectErrorStream(true);
 
         log.println("Launching Minecraft " + request.getVersionId());
-        Process p = pb.start();
+        Process p;
+        try {
+            p = pb.start();
+        } catch (IOException e) {
+            throw e;
+        }
         Thread pipe = new Thread(() -> {
             try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()))) {
                 String line;
@@ -140,12 +153,7 @@ public class MinecraftLauncher {
         }, "mc-log-pipe");
         pipe.setDaemon(true);
         pipe.start();
-
-        int code = p.waitFor();
-        pipe.join(2000);
-        if (code != 0) {
-            throw new IllegalStateException("Minecraft exited with code " + code);
-        }
+        return p;
     }
 
     private VersionManifest loadVersionManifest() throws IOException {
