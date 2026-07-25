@@ -1,0 +1,32 @@
+{
+  "required": true,
+  "package": "com.axial.cosmetics.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "AxialColorTileMixin",
+    "AxialConfigScreenCrosshairMixin",
+    "AxialConfigScreenMixin",
+    "AxialConfigScreenItemScalerMixin",
+    "AxialUiThemeFontMixin",
+    "CloseModMenuMixin",
+    "ItemInHandRendererItemScalerMixin",
+    "TitleOverlaySettingsScreenMixin",
+    "TitleOverlayCrosshairMixin",
+    "MinecraftIconsMixin",
+    "MinecraftClientTitleMixin",
+    "MusicTrackerMixin",
+    "MinecraftClientDynamicCrosshairMixin",
+    "TitleScreenBackgroundMixin",
+    "MenuSubscreenBackgroundMixin",
+    "LevelLoadingScreenBackgroundMixin",
+    "ProgressScreenBackgroundMixin",
+    "TitleScreenButtonPressSoundMixin",
+    "InGameButtonSkinMixin",
+    "TitleScreenButtonSkinMixin",
+    "TitleScreenMenuLayoutMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,193 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'org.apache.commons:commons-compress:1.26.0'
+    implementation 'net.raphimc:MinecraftAuth:5.0.0'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+application {
+    mainClass = 'org.example.Main'
+}
+
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Package all dependencies into a single executable jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set('all')
+    from(sourceSets.main.output)
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.files
+                .findAll { it.name.endsWith('jar') }
+                .collect { zipTree(it) }
+    })
+    manifest {
+        attributes 'Main-Class': application.mainClass
+    }
+}
+
+def isMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX()
+def mainJarName = "${project.name}-${version}-all.jar"
+
+tasks.register('runtimeImage', Exec) {
+    group = 'distribution'
+    description = 'Create trimmed runtime image (requires JDK with jlink)'
+    dependsOn tasks.fatJar
+    onlyIf { isMac }
+    doFirst {
+        delete "${buildDir}/runtime"
+    }
+    commandLine 'jlink',
+            '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.unsupported,jdk.zipfs',
+            '--strip-debug',
+            '--no-header-files',
+            '--no-man-pages',
+            '--output', "${buildDir}/runtime"
+}
+
+tasks.register('jpackageMac') {
+    group = 'distribution'
+    description = 'Package macOS .dmg app (requires macOS + jpackage)'
+    dependsOn tasks.runtimeImage
+    onlyIf { isMac }
+    doLast {
+        def libsDir = layout.buildDirectory.dir("libs").get().asFile
+        def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
+        def packageDir = layout.buildDirectory.dir("jpackage").get().asFile
+        def outImage = new File(packageDir, "AxialLauncher-${appVersion}.dmg")
+
+        delete outImage
+        packageDir.mkdirs()
+
+        def runCommand = { List<String> command ->
+            def stringCommand = command.collect { it.toString() }
+            def process = new ProcessBuilder(stringCommand)
+                    .directory(projectDir)
+                    .inheritIO()
+                    .start()
+            def exitCode = process.waitFor()
+            if (exitCode != 0) {
+                throw new GradleException("Command failed (${exitCode}): ${stringCommand.join(' ')}")
+            }
+        }
+
+        def dmgCommand = [
+                'jpackage',
+                '--type', 'dmg',
+                '--name', 'AxialLauncher',
+                '--app-version', appVersion,
+                '--mac-package-identifier', 'com.axial.launcher',
+                '--input', libsDir.absolutePath,
+                '--main-jar', mainJarName,
+                '--main-class', application.mainClass.get(),
+                '--runtime-image', runtimeDir.absolutePath,
+                '--dest', packageDir.absolutePath
+        ]
+        def iconPath = layout.projectDirectory.file("src/main/resources/icon.icns").asFile
+        if (iconPath.exists()) {
+            dmgCommand += ['--icon', iconPath.absolutePath]
+        }
+        runCommand(dmgCommand)
+
+        if (!outImage.exists()) {
+            throw new GradleException("Expected DMG was not created: ${outImage.absolutePath}")
+        }
+    }
+}
+
+tasks.register('macUninstaller') {
+    group = 'distribution'
+    description = 'Generate a macOS uninstaller script'
+    onlyIf { isMac }
+    doLast {
+        def outDir = file("${buildDir}/jpackage")
+        outDir.mkdirs()
+        def script = new File(outDir, "uninstall-axiallauncher.command")
+        script.text = '''#!/bin/bash
+set -e
+APP_PATH="/Applications/AxialLauncher.app"
+LOG_PATH="$HOME/Library/Logs/AxialLauncher"
+echo "Removing $APP_PATH"
+rm -rf "$APP_PATH" || true
+echo "Removing logs at $LOG_PATH"
+rm -rf "$LOG_PATH" || true
+echo "Done."
+'''
+        script.setExecutable(true)
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register('gitSync') {
+    group = 'versioning'
+    description = 'Commit and push the current workspace state when there are changes'
+    doLast {
+        def repoCheck = new ByteArrayOutputStream()
+        def repoResult = exec {
+            commandLine 'git', 'rev-parse', '--is-inside-work-tree'
+            standardOutput = repoCheck
+            errorOutput = new ByteArrayOutputStream()
+            ignoreExitValue = true
+        }
+
+        if (repoResult.exitValue != 0 || repoCheck.toString().trim() != 'true') {
+            logger.lifecycle('gitSync skipped: this directory is not a git repository')
+            return
+        }
+
+        exec {
+            commandLine 'git', 'add', '-A'
+        }
+
+        def diffResult = exec {
+            commandLine 'git', 'diff', '--cached', '--quiet'
+            ignoreExitValue = true
+        }
+
+        if (diffResult.exitValue == 0) {
+            logger.lifecycle('gitSync skipped: no staged changes')
+            return
+        }
+
+        def timestamp = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
+        exec {
+            commandLine 'git', 'commit', '-m', "build: auto sync ${timestamp}"
+        }
+
+        def remoteResult = exec {
+            commandLine 'git', 'remote', 'get-url', 'origin'
+            ignoreExitValue = true
+        }
+
+        if (remoteResult.exitValue == 0) {
+            exec {
+                commandLine 'git', 'push', 'origin', 'HEAD'
+            }
+        } else {
+            logger.lifecycle('gitSync: no origin remote configured, commit created locally only')
+        }
+    }
+}
+
+tasks.named('build') {
+    finalizedBy tasks.named('gitSync')
+}

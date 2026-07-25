@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "axial_cosmetics",
+  "version": "1.1.0",
+  "name": "Axial Cosmetics",
+  "description": "Client-side cosmetic system with per-player grants and custom slot rendering.",
+  "authors": ["Axial Team"],
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.axial.cosmetics.AxialCosmetics"]
+  },
+  "mixins": [
+    "axial-cosmetics.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "fabric": "*",
+    "minecraft": "1.21.11"
+  },
+  "contact": {
+    "sources": "https://example.com/axial-cosmetics"
+  },
+  "license": "All Rights Reserved"
+}

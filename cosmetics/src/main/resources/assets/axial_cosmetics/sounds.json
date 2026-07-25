@@ -1,0 +1,17 @@
+{
+  "ui.menu_button_press": {
+    "sounds": [
+      {
+        "name": "axial_cosmetics:ui/menu/button_press"
+      }
+    ]
+  },
+  "menu_music": {
+    "sounds": [
+      {
+        "name": "axial_cosmetics:ui/menu/menu_music",
+        "stream": true
+      }
+    ]
+  }
+}
