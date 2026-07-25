@@ -5,6 +5,8 @@ import javax.swing.SwingUtilities;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,17 +19,28 @@ public final class StartupController {
         t.setDaemon(false);
         return t;
     });
-    private final LoadingScreen loadingScreen = new LoadingScreen();
+    private LoadingScreen loadingScreen;
     private final GitUpdater gitUpdater = new GitUpdater(Path.of("").toAbsolutePath().normalize());
 
     public void start() {
-        loadingScreen.show();
-        loadingScreen.update("Starting", 0);
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                loadingScreen = new LoadingScreen();
+                loadingScreen.show();
+                loadingScreen.update("Starting", 0);
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        }
         executor.submit(this::runStartup);
     }
 
     private void runStartup() {
         try {
+            Instant startupShownAt = Instant.now();
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
                 loadingScreen.update("Checking for updates", 5);
                 GitUpdater.GitUpdateResult update = gitUpdater.syncIfNeeded();
@@ -44,6 +57,8 @@ public final class StartupController {
             } else {
                 loadingScreen.update("Up to date", 10);
             }
+
+            holdStartupScreen(startupShownAt);
 
             LaunchRequest request = buildLaunchRequest();
             loadingScreen.update("Authenticating", 25);
@@ -140,7 +155,24 @@ public final class StartupController {
     }
 
     private void closeScreen() {
-        loadingScreen.close();
+        if (loadingScreen != null) {
+            loadingScreen.close();
+        }
+    }
+
+    private void holdStartupScreen(Instant startedAt) {
+        Duration minimumVisible = Duration.ofSeconds(10);
+        Duration elapsed = Duration.between(startedAt, Instant.now());
+        Duration remaining = minimumVisible.minus(elapsed);
+        if (!remaining.isPositive()) {
+            return;
+        }
+        loadingScreen.update("Up to date", 15);
+        try {
+            Thread.sleep(remaining.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private String capitalize(String text) {

@@ -17,24 +17,34 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.net.URL;
 
 public final class LoadingScreen {
     private final JFrame frame;
     private final JProgressBar progressBar;
+    private final JFXPanel videoPanel;
     private MediaPlayer player;
+    private Path tempVideoFile;
 
     public LoadingScreen() {
         frame = new JFrame("AxialClient");
         frame.setUndecorated(true);
+        frame.setAlwaysOnTop(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setSize(screen);
-        frame.setLocationRelativeTo(null);
+        frame.setLocation(0, 0);
 
-        JFXPanel videoPanel = new JFXPanel();
+        videoPanel = new JFXPanel();
+        videoPanel.setBackground(Color.BLACK);
         frame.add(videoPanel, BorderLayout.CENTER);
 
         progressBar = new JProgressBar(0, 100);
@@ -50,7 +60,22 @@ public final class LoadingScreen {
     }
 
     public void show() {
-        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        Runnable showAction = () -> {
+            frame.setVisible(true);
+            frame.toFront();
+            frame.requestFocus();
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            showAction.run();
+            return;
+        }
+        try {
+            SwingUtilities.invokeAndWait(showAction);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     public void update(String message, int progress) {
@@ -80,32 +105,74 @@ public final class LoadingScreen {
     private void initVideo(JFXPanel videoPanel) {
         Platform.runLater(() -> {
             try {
-                URL video = LoadingScreen.class.getResource("/loading-background.mp4");
-                if (video == null) {
+                Platform.setImplicitExit(false);
+                if (LoadingScreen.class.getResource("/loading-background.mp4") == null) {
                     videoPanel.setScene(new Scene(new StackPane(), 800, 450));
                     return;
                 }
 
-                Media media = new Media(video.toExternalForm());
+                Path source = extractVideoToTemp();
+                Media media = new Media(source.toUri().toString());
                 player = new MediaPlayer(media);
                 player.setCycleCount(MediaPlayer.INDEFINITE);
                 player.setMute(true);
+                player.setAutoPlay(true);
+                player.setOnError(() -> update("Video playback unavailable", 0));
+                media.setOnError(() -> update("Video playback unavailable", 0));
+                media.widthProperty().addListener((obs, oldValue, newValue) -> update("Starting", progressBar.getValue()));
 
                 MediaView mediaView = new MediaView(player);
                 mediaView.setPreserveRatio(true);
+                mediaView.setSmooth(true);
+                mediaView.setOnError(e -> update("Video playback unavailable", 0));
 
                 StackPane root = new StackPane(mediaView);
                 root.setStyle("-fx-background-color: black;");
-                Scene scene = new Scene(root, frame.getWidth(), frame.getHeight());
+                Scene scene = new Scene(root, frame.getWidth(), Math.max(1, frame.getHeight() - 120));
                 mediaView.fitWidthProperty().bind(root.widthProperty());
                 mediaView.fitHeightProperty().bind(root.heightProperty());
                 videoPanel.setScene(scene);
 
-                player.setOnReady(player::play);
-                player.setOnError(() -> update("Video playback unavailable", 0));
+                player.statusProperty().addListener((obs, oldStatus, newStatus) -> {
+                    if (newStatus == MediaPlayer.Status.READY) {
+                        update("Starting", progressBar.getValue());
+                        player.play();
+                    }
+                });
+                player.setOnReady(() -> {
+                    update("Starting", progressBar.getValue());
+                    player.play();
+                });
             } catch (MediaException ex) {
+                showFallback();
+                update("Video playback unavailable", 0);
+            } catch (Exception ex) {
+                showFallback();
                 update("Video playback unavailable", 0);
             }
         });
+    }
+
+    private void showFallback() {
+        Platform.runLater(() -> {
+            StackPane root = new StackPane();
+            root.setStyle("-fx-background-color: black;");
+            videoPanel.setScene(new Scene(root, frame.getWidth(), Math.max(1, frame.getHeight() - 120)));
+        });
+    }
+
+    private Path extractVideoToTemp() throws IOException {
+        if (tempVideoFile != null && Files.exists(tempVideoFile)) {
+            return tempVideoFile;
+        }
+        tempVideoFile = Files.createTempFile("axial-loading-", ".mp4");
+        tempVideoFile.toFile().deleteOnExit();
+        try (InputStream in = LoadingScreen.class.getResourceAsStream("/loading-background.mp4")) {
+            if (in == null) {
+                throw new IOException("loading-background.mp4 missing from resources");
+            }
+            Files.copy(in, tempVideoFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return tempVideoFile;
     }
 }
