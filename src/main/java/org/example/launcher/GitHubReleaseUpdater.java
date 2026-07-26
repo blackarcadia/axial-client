@@ -116,11 +116,26 @@ set -e
 old="$1"
 new="$2"
 pid="$3"
+backup="${old}.backup"
+temp="${old}.update"
+restored=0
+cleanup() {
+  if [ "$restored" -eq 0 ] && [ -d "$backup" ] && [ ! -d "$old" ]; then
+    mv "$backup" "$old" || true
+  fi
+}
+trap cleanup EXIT INT TERM
 while kill -0 "$pid" 2>/dev/null; do
   sleep 1
 done
-rm -rf "$old"
-cp -R "$new" "$old"
+rm -rf "$backup" "$temp"
+mv "$old" "$backup"
+ditto "$new" "$temp"
+xattr -dr com.apple.quarantine "$temp" 2>/dev/null || true
+chmod -R u+rwX,go+rX "$temp" 2>/dev/null || true
+mv "$temp" "$old"
+restored=1
+rm -rf "$backup"
 open "$old"
 """);
         command.add("axial-updater");
