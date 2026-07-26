@@ -3,6 +3,7 @@ package com.axial.cosmetics;
 import com.axial.cosmetics.client.CosmeticFeatureRenderer;
 import com.axial.cosmetics.client.CrosshairConfigManager;
 import com.axial.cosmetics.client.CrosshairDynamicState;
+import com.axial.cosmetics.client.ChunkBordersConfig;
 import com.axial.cosmetics.client.ItemScalerConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
@@ -31,6 +32,7 @@ public class AxialCosmetics implements ClientModInitializer {
     public void onInitializeClient() {
         ItemScalerConfig.load();
         CrosshairConfigManager.load();
+        ChunkBordersConfig.load();
         MenuMusicConfig.load();
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
@@ -48,6 +50,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MenuMusicController.tick(client);
+            ChunkBordersConfig.sync(client);
             if (client.player != null && client.currentScreen == null && CrosshairConfigManager.get().enabled && CrosshairConfigManager.get().dynamicEnabled) {
                 if (client.options.attackKey.wasPressed() || client.options.useKey.wasPressed()) {
                     CrosshairDynamicState.triggerPulse();

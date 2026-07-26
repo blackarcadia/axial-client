@@ -1,6 +1,8 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ChunkBordersSettingsScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -8,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.List;
 
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false)
@@ -18,10 +19,7 @@ public abstract class AxialConfigScreenChunkBordersMixin {
     private static Field axial_cosmetics$tileLabelField;
     private static Field axial_cosmetics$tileXField;
     private static Field axial_cosmetics$tileYField;
-    private static Field axial_cosmetics$renderChunkborderField;
-    private static Class<?> axial_cosmetics$booleanSupplierClass;
     private static Method axial_cosmetics$addActionTileMethod;
-    private static Method axial_cosmetics$switchRenderChunkborderMethod;
 
     @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 920)
     private void axial_cosmetics$addChunkBordersButton(CallbackInfo ci) {
@@ -36,34 +34,36 @@ public abstract class AxialConfigScreenChunkBordersMixin {
                 return;
             }
 
-            Object scoreboardTile = null;
-            Object worldBorderTile = null;
+            Object anchorTile = null;
             for (Object tile : tiles) {
                 String label = axial_cosmetics$getTileLabel(tile);
                 if ("CHUNK BORDERS".equals(label)) {
                     return;
                 }
-                if ("SCOREBOARD".equals(label)) {
-                    scoreboardTile = tile;
-                } else if ("WORLD BORDER".equals(label)) {
-                    worldBorderTile = tile;
+                if ("ITEM SCALER".equals(label)) {
+                    anchorTile = tile;
+                    break;
                 }
             }
 
-            if (worldBorderTile != null) {
-                int x = axial_cosmetics$getTileX(worldBorderTile) + 154;
-                int y = axial_cosmetics$getTileY(worldBorderTile);
-                axial_cosmetics$addActionTile(x, y, "CHUNK BORDERS", this::axial_cosmetics$toggleChunkBorders, axial_cosmetics$chunkBordersAccentGetter());
+            if (anchorTile == null) {
+                for (Object tile : tiles) {
+                    if ("TITLE OVERLAY".equals(axial_cosmetics$getTileLabel(tile))) {
+                        anchorTile = tile;
+                        break;
+                    }
+                }
+            }
+
+            if (anchorTile == null) {
                 return;
             }
 
-            if (scoreboardTile != null) {
-                int x = axial_cosmetics$getTileX(scoreboardTile) + 308;
-                int y = axial_cosmetics$getTileY(scoreboardTile);
-                axial_cosmetics$addActionTile(x, y, "CHUNK BORDERS", this::axial_cosmetics$toggleChunkBorders, axial_cosmetics$chunkBordersAccentGetter());
-            }
+            int x = axial_cosmetics$getTileX(anchorTile);
+            int y = axial_cosmetics$getTileY(anchorTile) + 30;
+            axial_cosmetics$addActionTile(x, y, "CHUNK BORDERS", () -> MinecraftClient.getInstance().setScreen(new ChunkBordersSettingsScreen((Screen) (Object) this)));
         } catch (ReflectiveOperationException | ClassCastException ignored) {
-            // Leave the upstream menu unchanged if axialutils internals change.
+            // Leave the upstream menu unchanged if its private layout details change.
         }
     }
 
@@ -107,80 +107,12 @@ public abstract class AxialConfigScreenChunkBordersMixin {
         return axial_cosmetics$tileYField.getInt(tile);
     }
 
-    private void axial_cosmetics$addActionTile(int x, int y, String label, Runnable action, Object accentGetter) throws ReflectiveOperationException {
+    private void axial_cosmetics$addActionTile(int x, int y, String label, Runnable action) throws ReflectiveOperationException {
         if (axial_cosmetics$addActionTileMethod == null) {
-            if (axial_cosmetics$booleanSupplierClass == null) {
-                axial_cosmetics$booleanSupplierClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen$BooleanSupplier");
-            }
-            axial_cosmetics$addActionTileMethod = this.getClass().getDeclaredMethod(
-                    "addActionTile",
-                    int.class,
-                    int.class,
-                    String.class,
-                    Runnable.class,
-                    axial_cosmetics$booleanSupplierClass
-            );
+            Class<?> booleanSupplierClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen$BooleanSupplier");
+            axial_cosmetics$addActionTileMethod = this.getClass().getDeclaredMethod("addActionTile", int.class, int.class, String.class, Runnable.class, booleanSupplierClass);
             axial_cosmetics$addActionTileMethod.setAccessible(true);
         }
-        axial_cosmetics$addActionTileMethod.invoke(this, x, y, label, action, accentGetter);
-    }
-
-    private void axial_cosmetics$toggleChunkBorders() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.worldRenderer != null && client.worldRenderer.debugRenderer != null) {
-            try {
-                if (axial_cosmetics$switchRenderChunkborderMethod == null) {
-                    axial_cosmetics$switchRenderChunkborderMethod = client.worldRenderer.debugRenderer.getClass().getDeclaredMethod("switchRenderChunkborder");
-                    axial_cosmetics$switchRenderChunkborderMethod.setAccessible(true);
-                }
-                axial_cosmetics$switchRenderChunkborderMethod.invoke(client.worldRenderer.debugRenderer);
-            } catch (ReflectiveOperationException ignored) {
-                // Keep the button harmless if the debug renderer changes.
-            }
-        }
-    }
-
-    private boolean axial_cosmetics$isChunkBordersEnabled() {
-        try {
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (client.worldRenderer == null || client.worldRenderer.debugRenderer == null) {
-                return false;
-            }
-
-            if (axial_cosmetics$renderChunkborderField == null) {
-                axial_cosmetics$renderChunkborderField = client.worldRenderer.debugRenderer.getClass().getDeclaredField("renderChunkborder");
-                axial_cosmetics$renderChunkborderField.setAccessible(true);
-            }
-            return axial_cosmetics$renderChunkborderField.getBoolean(client.worldRenderer.debugRenderer);
-        } catch (ReflectiveOperationException ignored) {
-            return false;
-        }
-    }
-
-    private Object axial_cosmetics$chunkBordersAccentGetter() throws ReflectiveOperationException {
-        if (axial_cosmetics$booleanSupplierClass == null) {
-            axial_cosmetics$booleanSupplierClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen$BooleanSupplier");
-        }
-
-        return Proxy.newProxyInstance(
-                axial_cosmetics$booleanSupplierClass.getClassLoader(),
-                new Class<?>[] { axial_cosmetics$booleanSupplierClass },
-                (proxy, method, args) -> {
-                    String name = method.getName();
-                    if ("getAsBoolean".equals(name) || "get".equals(name)) {
-                        return axial_cosmetics$isChunkBordersEnabled();
-                    }
-                    if ("toString".equals(name)) {
-                        return "ChunkBordersAccentGetter";
-                    }
-                    if ("hashCode".equals(name)) {
-                        return System.identityHashCode(proxy);
-                    }
-                    if ("equals".equals(name)) {
-                        return args != null && args.length > 0 && proxy == args[0];
-                    }
-                    return null;
-                }
-        );
+        axial_cosmetics$addActionTileMethod.invoke(this, x, y, label, action, null);
     }
 }
