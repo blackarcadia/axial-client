@@ -1,0 +1,45 @@
+name: Release Beta Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Build package
+        env:
+          APP_VERSION: 1.${{ github.run_number }}
+        run: ./gradlew clean jpackageMac -PappVersion="${APP_VERSION}"
+
+      - name: Create app zip
+        run: |
+          cd build/jpackage
+          ditto -c -k --sequesterRsrc --keepParent AxialLauncher.app AxialLauncher.app.zip
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1beta.${{ github.run_number }}
+          name: v1beta.${{ github.run_number }}
+          prerelease: false
+          files: |
+            build/jpackage/AxialLauncher.app.zip
+            build/jpackage/AxialLauncher-*.dmg

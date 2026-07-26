@@ -82,9 +82,11 @@ tasks.register('jpackageMac') {
         def libsDir = layout.buildDirectory.dir("libs").get().asFile
         def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
         def packageDir = layout.buildDirectory.dir("jpackage").get().asFile
+        def appImageDir = new File(packageDir, "AxialLauncher.app")
         def outImage = new File(packageDir, "AxialLauncher-${appVersion}.dmg")
 
         delete outImage
+        delete appImageDir
         packageDir.mkdirs()
 
         def runCommand = { List<String> command ->
@@ -99,6 +101,28 @@ tasks.register('jpackageMac') {
             }
         }
 
+        def appImageCommand = [
+                'jpackage',
+                '--type', 'app-image',
+                '--name', 'AxialLauncher',
+                '--app-version', appVersion,
+                '--mac-package-identifier', 'com.axial.launcher',
+                '--input', libsDir.absolutePath,
+                '--main-jar', mainJarName,
+                '--main-class', application.mainClass.get(),
+                '--runtime-image', runtimeDir.absolutePath,
+                '--dest', packageDir.absolutePath
+        ]
+        def iconPath = layout.projectDirectory.file("src/main/resources/icon.icns").asFile
+        if (iconPath.exists()) {
+            appImageCommand += ['--icon', iconPath.absolutePath]
+        }
+        runCommand(appImageCommand)
+
+        if (!appImageDir.exists()) {
+            throw new GradleException("Expected app image was not created: ${appImageDir.absolutePath}")
+        }
+
         def dmgCommand = [
                 'jpackage',
                 '--type', 'dmg',
@@ -111,7 +135,6 @@ tasks.register('jpackageMac') {
                 '--runtime-image', runtimeDir.absolutePath,
                 '--dest', packageDir.absolutePath
         ]
-        def iconPath = layout.projectDirectory.file("src/main/resources/icon.icns").asFile
         if (iconPath.exists()) {
             dmgCommand += ['--icon', iconPath.absolutePath]
         }
@@ -147,53 +170,4 @@ echo "Done."
 
 test {
     useJUnitPlatform()
-}
-
-tasks.register('gitSync') {
-    group = 'versioning'
-    description = 'Commit and push the current workspace state when there are changes'
-    doLast {
-        def runGit = { List<String> args ->
-            def command = args.collect { it.toString() }
-            def process = new ProcessBuilder(command)
-                    .directory(projectDir)
-                    .redirectErrorStream(true)
-                    .start()
-            def output = new ByteArrayOutputStream()
-            process.inputStream.transferTo(output)
-            [exit: process.waitFor(), text: output.toString('UTF-8')]
-        }
-
-        def repoResult = runGit(['git', 'rev-parse', '--is-inside-work-tree'])
-        if (repoResult.exit != 0 || repoResult.text.trim() != 'true') {
-            logger.lifecycle('gitSync skipped: this directory is not a git repository')
-            return
-        }
-
-        runGit(['git', 'add', '-A'])
-
-        def diffResult = runGit(['git', 'diff', '--cached', '--quiet'])
-
-        if (diffResult.exit == 0) {
-            logger.lifecycle('gitSync skipped: no staged changes')
-            return
-        }
-
-        def timestamp = new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC'))
-        def commitResult = runGit(['git', 'commit', '-m', "build: auto sync ${timestamp}"])
-        if (commitResult.exit != 0) {
-            throw new GradleException("git commit failed: ${commitResult.text}")
-        }
-
-        def remoteResult = runGit(['git', 'remote', 'get-url', 'origin'])
-
-        if (remoteResult.exit == 0) {
-            def pushResult = runGit(['git', 'push', 'origin', 'HEAD'])
-            if (pushResult.exit != 0) {
-                throw new GradleException("git push failed: ${pushResult.text}")
-            }
-        } else {
-            logger.lifecycle('gitSync: no origin remote configured, commit created locally only')
-        }
-    }
 }
