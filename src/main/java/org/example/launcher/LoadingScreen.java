@@ -26,6 +26,8 @@ import java.nio.file.StandardCopyOption;
 import java.net.URL;
 
 public final class LoadingScreen {
+    private static final int WINDOW_WIDTH = 960;
+    private static final int WINDOW_HEIGHT = 540;
     private final JFrame frame;
     private final JProgressBar progressBar;
     private final JFXPanel videoPanel;
@@ -36,12 +38,15 @@ public final class LoadingScreen {
         frame = new JFrame("AxialClient");
         frame.setUndecorated(true);
         frame.setAlwaysOnTop(true);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        frame.setSize(screen);
-        frame.setLocation(0, 0);
+        int x = Math.max(0, (screen.width - WINDOW_WIDTH) / 2);
+        int y = Math.max(0, (screen.height - WINDOW_HEIGHT) / 2);
+        frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        frame.setLocation(x, y);
 
         videoPanel = new JFXPanel();
         videoPanel.setBackground(Color.BLACK);
