@@ -11,7 +11,7 @@ public final class AppBuildInfo {
     private final String githubRepo;
     private final String githubAsset;
 
-    private AppBuildInfo(String appVersion, String appChannel, String githubOwner, String githubRepo, String githubAsset) {
+    AppBuildInfo(String appVersion, String appChannel, String githubOwner, String githubRepo, String githubAsset) {
         this.appVersion = appVersion;
         this.appChannel = appChannel;
         this.githubOwner = githubOwner;
@@ -28,6 +28,18 @@ public final class AppBuildInfo {
         } catch (IOException ignored) {
         }
 
+        return new AppBuildInfo(
+                properties.getProperty("app.version", "0.0.0"),
+                properties.getProperty("app.channel", "dev"),
+                properties.getProperty("github.owner", "blackarcadia"),
+                properties.getProperty("github.repo", "axial-client"),
+                properties.getProperty("github.asset", "AxialLauncher.app.zip")
+        );
+    }
+
+    static AppBuildInfo load(InputStream in) throws IOException {
+        Properties properties = new Properties();
+        properties.load(in);
         return new AppBuildInfo(
                 properties.getProperty("app.version", "0.0.0"),
                 properties.getProperty("app.channel", "dev"),
