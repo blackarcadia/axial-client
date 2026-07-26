@@ -27,7 +27,8 @@ jobs:
       - name: Build package
         env:
           APP_VERSION: 1.${{ github.run_number }}
-        run: ./gradlew clean jpackageMac -PappVersion="${APP_VERSION}"
+          APP_CHANNEL: release
+        run: ./gradlew clean jpackageMac -PappVersion="${APP_VERSION}" -PappChannel="${APP_CHANNEL}"
 
       - name: Create app zip
         run: |

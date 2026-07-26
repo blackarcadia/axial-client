@@ -52,7 +52,7 @@ public final class GitHubReleaseUpdater {
 
             JsonObject release = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
             String tag = normalizeVersion(release.get("tag_name").getAsString());
-            if (!isNewer(tag, buildInfo.appVersion())) {
+            if ("release".equalsIgnoreCase(buildInfo.appChannel()) && !isNewer(tag, buildInfo.appVersion())) {
                 return UpdateStatus.upToDate(buildInfo.appVersion());
             }
 

@@ -7,6 +7,7 @@ plugins {
 group = 'org.example'
 version = '1.0-SNAPSHOT'
 def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
+def appChannel = (project.findProperty("appChannel") ?: "dev").toString()
 
 repositories {
     mavenCentral()
@@ -29,7 +30,7 @@ dependencies {
 
 processResources {
     filesMatching('version.properties') {
-        expand(appVersion: appVersion)
+        expand(appVersion: appVersion, appChannel: appChannel)
     }
 }
 

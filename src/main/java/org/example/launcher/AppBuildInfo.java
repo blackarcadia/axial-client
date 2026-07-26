@@ -6,12 +6,14 @@ import java.util.Properties;
 
 public final class AppBuildInfo {
     private final String appVersion;
+    private final String appChannel;
     private final String githubOwner;
     private final String githubRepo;
     private final String githubAsset;
 
-    private AppBuildInfo(String appVersion, String githubOwner, String githubRepo, String githubAsset) {
+    private AppBuildInfo(String appVersion, String appChannel, String githubOwner, String githubRepo, String githubAsset) {
         this.appVersion = appVersion;
+        this.appChannel = appChannel;
         this.githubOwner = githubOwner;
         this.githubRepo = githubRepo;
         this.githubAsset = githubAsset;
@@ -28,6 +30,7 @@ public final class AppBuildInfo {
 
         return new AppBuildInfo(
                 properties.getProperty("app.version", "0.0.0"),
+                properties.getProperty("app.channel", "dev"),
                 properties.getProperty("github.owner", "blackarcadia"),
                 properties.getProperty("github.repo", "axial-client"),
                 properties.getProperty("github.asset", "AxialLauncher.app.zip")
@@ -36,6 +39,10 @@ public final class AppBuildInfo {
 
     public String appVersion() {
         return appVersion;
+    }
+
+    public String appChannel() {
+        return appChannel;
     }
 
     public String githubOwner() {
