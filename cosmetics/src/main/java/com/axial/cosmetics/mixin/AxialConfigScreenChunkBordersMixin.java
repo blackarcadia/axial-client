@@ -34,33 +34,27 @@ public abstract class AxialConfigScreenChunkBordersMixin {
                 return;
             }
 
-            Object anchorTile = null;
+            Object scoreBoardTile = null;
+            Object worldBorderTile = null;
             for (Object tile : tiles) {
                 String label = axial_cosmetics$getTileLabel(tile);
                 if ("CHUNK BORDERS".equals(label)) {
                     return;
                 }
-                if ("ITEM SCALER".equals(label)) {
-                    anchorTile = tile;
-                    break;
+                if ("SCOREBOARD".equals(label)) {
+                    scoreBoardTile = tile;
+                } else if ("WORLD BORDER".equals(label)) {
+                    worldBorderTile = tile;
                 }
             }
 
-            if (anchorTile == null) {
-                for (Object tile : tiles) {
-                    if ("TITLE OVERLAY".equals(axial_cosmetics$getTileLabel(tile))) {
-                        anchorTile = tile;
-                        break;
-                    }
-                }
-            }
-
+            Object anchorTile = scoreBoardTile != null ? scoreBoardTile : worldBorderTile;
             if (anchorTile == null) {
                 return;
             }
 
-            int x = axial_cosmetics$getTileX(anchorTile);
-            int y = axial_cosmetics$getTileY(anchorTile) + 30;
+            int x = scoreBoardTile != null ? axial_cosmetics$getTileX(scoreBoardTile) + 308 : axial_cosmetics$getTileX(worldBorderTile) + 154;
+            int y = axial_cosmetics$getTileY(anchorTile);
             axial_cosmetics$addActionTile(x, y, "CHUNK BORDERS", () -> MinecraftClient.getInstance().setScreen(new ChunkBordersSettingsScreen((Screen) (Object) this)));
         } catch (ReflectiveOperationException | ClassCastException ignored) {
             // Leave the upstream menu unchanged if its private layout details change.
