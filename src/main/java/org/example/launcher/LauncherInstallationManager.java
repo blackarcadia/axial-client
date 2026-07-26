@@ -85,6 +85,7 @@ public final class LauncherInstallationManager {
         deleteRecursive(destination);
         runCommand("ditto", source.toAbsolutePath().toString(), destination.toAbsolutePath().toString());
         runCommand("xattr", "-dr", "com.apple.quarantine", destination.toAbsolutePath().toString());
+        resignBundle(destination);
     }
 
     private static void launchBundle(Path bundle) throws IOException {
@@ -129,6 +130,14 @@ public final class LauncherInstallationManager {
                 } catch (IOException ignored) {
                 }
             });
+        }
+    }
+
+    private static void resignBundle(Path bundle) throws IOException {
+        try {
+            runCommand("codesign", "--force", "--deep", "--sign", "-", bundle.toAbsolutePath().toString());
+        } catch (IOException ignored) {
+            // If ad-hoc signing is unavailable, keep the bundle rather than failing the install.
         }
     }
 

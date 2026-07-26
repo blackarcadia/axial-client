@@ -136,6 +136,7 @@ ditto "$new" "$temp"
 xattr -dr com.apple.quarantine "$temp" 2>/dev/null || true
 chmod -R u+rwX,go+rX "$temp" 2>/dev/null || true
 mv "$temp" "$old"
+codesign --force --deep --sign - "$old" >/dev/null 2>&1 || true
 rm -f "$marker"
 open "$old"
 for _ in $(seq 1 60); do
@@ -148,6 +149,7 @@ for _ in $(seq 1 60); do
 done
 rm -rf "$old"
 mv "$backup" "$old"
+codesign --force --deep --sign - "$old" >/dev/null 2>&1 || true
 open "$old" >/dev/null 2>&1 || true
 exit 1
 """);
