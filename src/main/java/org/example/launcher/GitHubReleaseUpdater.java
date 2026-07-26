@@ -108,6 +108,7 @@ public final class GitHubReleaseUpdater {
         }
 
         long pid = ProcessHandle.current().pid();
+        Path markerPath = LauncherStartupMarker.markerPath();
         List<String> command = new ArrayList<>();
         command.add("/bin/sh");
         command.add("-c");
@@ -116,6 +117,7 @@ set -e
 old="$1"
 new="$2"
 pid="$3"
+marker="$4"
 backup="${old}.backup"
 temp="${old}.update"
 restored=0
@@ -134,14 +136,26 @@ ditto "$new" "$temp"
 xattr -dr com.apple.quarantine "$temp" 2>/dev/null || true
 chmod -R u+rwX,go+rX "$temp" 2>/dev/null || true
 mv "$temp" "$old"
-restored=1
-rm -rf "$backup"
+rm -f "$marker"
 open "$old"
+for _ in $(seq 1 60); do
+  if [ -f "$marker" ]; then
+    restored=1
+    rm -rf "$backup"
+    exit 0
+  fi
+  sleep 1
+done
+rm -rf "$old"
+mv "$backup" "$old"
+open "$old" >/dev/null 2>&1 || true
+exit 1
 """);
         command.add("axial-updater");
         command.add(currentAppBundle.toAbsolutePath().toString());
         command.add(stagedAppBundle.toAbsolutePath().toString());
         command.add(Long.toString(pid));
+        command.add(markerPath.toAbsolutePath().toString());
 
         new ProcessBuilder(command)
                 .directory(currentAppBundle.getParent().toFile())
