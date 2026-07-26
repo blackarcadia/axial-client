@@ -27,6 +27,12 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+processResources {
+    filesMatching('version.properties') {
+        expand(appVersion: appVersion)
+    }
+}
+
 application {
     mainClass = 'org.example.Main'
 }
@@ -190,8 +196,4 @@ tasks.register('gitSync') {
             logger.lifecycle('gitSync: no origin remote configured, commit created locally only')
         }
     }
-}
-
-tasks.named('build') {
-    finalizedBy tasks.named('gitSync')
 }

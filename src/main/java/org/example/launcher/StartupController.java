@@ -20,7 +20,8 @@ public final class StartupController {
         return t;
     });
     private LoadingScreen loadingScreen;
-    private final GitUpdater gitUpdater = new GitUpdater(Path.of("").toAbsolutePath().normalize());
+    private final AppBuildInfo buildInfo = AppBuildInfo.load();
+    private final GitHubReleaseUpdater updater = new GitHubReleaseUpdater(buildInfo);
 
     public void start() {
         try {
@@ -43,14 +44,20 @@ public final class StartupController {
             Instant startupShownAt = Instant.now();
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
                 loadingScreen.update("Checking for updates", 5);
-                GitUpdater.GitUpdateResult update = gitUpdater.syncIfNeeded();
-                if (update.updated()) {
-                    loadingScreen.update(capitalize(update.status()), 35);
-                    loadingScreen.update("Rebuilding launcher", 45);
-                    rebuildLauncher();
-                    loadingScreen.update("Restarting updated launcher", 70);
-                    relaunchUpdatedLauncher();
-                    return;
+                GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
+                if (update.available()) {
+                    loadingScreen.update(update.message(), 20);
+                    Path currentBundle = updater.detectCurrentAppBundle();
+                    if (currentBundle != null) {
+                        loadingScreen.update("Downloading update", 35);
+                        Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
+                        loadingScreen.update("Installing update", 95);
+                        updater.scheduleInstallAndRelaunch(stagedBundle, currentBundle);
+                        closeScreen();
+                        System.exit(0);
+                        return;
+                    }
+                    loadingScreen.update("Up to date", 15);
                 } else {
                     loadingScreen.update("Up to date", 15);
                 }
@@ -173,10 +180,5 @@ public final class StartupController {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    private String capitalize(String text) {
-        if (text == null || text.isBlank()) return "Up to date";
-        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 }
