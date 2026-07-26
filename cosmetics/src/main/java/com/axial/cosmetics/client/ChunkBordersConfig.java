@@ -16,9 +16,18 @@ import java.nio.file.Path;
 public final class ChunkBordersConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-chunk-borders.json");
+    private static final String DEBUG_ENTRIES_CLASS = "net.minecraft.client.gui.components.debug.DebugScreenEntries";
+    private static final String DEBUG_STATUS_CLASS = "net.minecraft.client.gui.components.debug.DebugScreenEntryStatus";
+    private static final String DEBUG_ENTRY_LIST_CLASS = "net.minecraft.client.gui.components.debug.DebugScreenEntryList";
     private static Config config = new Config();
-    private static Field renderChunkBordersField;
-    private static Method switchRenderChunkborderMethod;
+    private static Field minecraftDebugEntriesField;
+    private static Field minecraftDebugRendererField;
+    private static Method debugEntriesGetStatusMethod;
+    private static Method debugEntriesSetStatusMethod;
+    private static Method debugRendererRefreshMethod;
+    private static Object chunkBordersId;
+    private static Object enabledStatus;
+    private static Object disabledStatus;
 
     private ChunkBordersConfig() {
     }
@@ -66,33 +75,101 @@ public final class ChunkBordersConfig {
     }
 
     private static void apply(MinecraftClient client) {
-        if (client == null || client.worldRenderer == null || client.worldRenderer.debugRenderer == null) {
+        if (client == null) {
             return;
         }
 
         try {
-            boolean current = isEnabled(client);
-            if (current != config.enabled) {
-                switchRenderer(client);
+            Object debugEntries = getDebugEntries(client);
+            Object debugRenderer = getDebugRenderer(client);
+            if (debugEntries == null || debugRenderer == null) {
+                return;
             }
+
+            Object desired = config.enabled ? enabledStatus() : disabledStatus();
+            Object current = getStatus(debugEntries);
+            if (current != desired) {
+                setStatus(debugEntries, desired);
+            }
+            refreshRendererList(debugRenderer);
         } catch (ReflectiveOperationException ignored) {
         }
     }
 
-    private static void switchRenderer(MinecraftClient client) throws ReflectiveOperationException {
-        if (switchRenderChunkborderMethod == null) {
-            switchRenderChunkborderMethod = client.worldRenderer.debugRenderer.getClass().getDeclaredMethod("switchRenderChunkborder");
-            switchRenderChunkborderMethod.setAccessible(true);
+    private static Object getDebugEntries(MinecraftClient client) throws ReflectiveOperationException {
+        if (minecraftDebugEntriesField == null) {
+            minecraftDebugEntriesField = MinecraftClient.class.getDeclaredField("debugEntries");
+            minecraftDebugEntriesField.setAccessible(true);
         }
-        switchRenderChunkborderMethod.invoke(client.worldRenderer.debugRenderer);
+        return minecraftDebugEntriesField.get(client);
     }
 
-    private static boolean isEnabled(MinecraftClient client) throws ReflectiveOperationException {
-        if (renderChunkBordersField == null) {
-            renderChunkBordersField = client.worldRenderer.debugRenderer.getClass().getDeclaredField("renderChunkborder");
-            renderChunkBordersField.setAccessible(true);
+    private static Object getDebugRenderer(MinecraftClient client) throws ReflectiveOperationException {
+        if (minecraftDebugRendererField == null) {
+            minecraftDebugRendererField = MinecraftClient.class.getDeclaredField("debugRenderer");
+            minecraftDebugRendererField.setAccessible(true);
         }
-        return renderChunkBordersField.getBoolean(client.worldRenderer.debugRenderer);
+        return minecraftDebugRendererField.get(client);
+    }
+
+    private static Object getStatus(Object debugEntries) throws ReflectiveOperationException {
+        if (debugEntriesGetStatusMethod == null) {
+            Class<?> listClass = Class.forName(DEBUG_ENTRY_LIST_CLASS);
+            debugEntriesGetStatusMethod = listClass.getDeclaredMethod("getStatus", Class.forName("net.minecraft.resources.Identifier"));
+            debugEntriesGetStatusMethod.setAccessible(true);
+        }
+        return debugEntriesGetStatusMethod.invoke(debugEntries, chunkBordersId());
+    }
+
+    private static void setStatus(Object debugEntries, Object status) throws ReflectiveOperationException {
+        if (debugEntriesSetStatusMethod == null) {
+            Class<?> listClass = Class.forName(DEBUG_ENTRY_LIST_CLASS);
+            debugEntriesSetStatusMethod = listClass.getDeclaredMethod(
+                    "setStatus",
+                    Class.forName("net.minecraft.resources.Identifier"),
+                    Class.forName(DEBUG_STATUS_CLASS)
+            );
+            debugEntriesSetStatusMethod.setAccessible(true);
+        }
+        debugEntriesSetStatusMethod.invoke(debugEntries, chunkBordersId(), status);
+    }
+
+    private static void refreshRendererList(Object debugRenderer) throws ReflectiveOperationException {
+        if (debugRendererRefreshMethod == null) {
+            debugRendererRefreshMethod = debugRenderer.getClass().getDeclaredMethod("refreshRendererList");
+            debugRendererRefreshMethod.setAccessible(true);
+        }
+        debugRendererRefreshMethod.invoke(debugRenderer);
+    }
+
+    private static Object chunkBordersId() throws ReflectiveOperationException {
+        if (chunkBordersId == null) {
+            Class<?> entriesClass = Class.forName(DEBUG_ENTRIES_CLASS);
+            Field field = entriesClass.getDeclaredField("CHUNK_BORDERS");
+            field.setAccessible(true);
+            chunkBordersId = field.get(null);
+        }
+        return chunkBordersId;
+    }
+
+    private static Object enabledStatus() throws ReflectiveOperationException {
+        if (enabledStatus == null) {
+            Class<?> statusClass = Class.forName(DEBUG_STATUS_CLASS);
+            Field field = statusClass.getDeclaredField("ALWAYS_ON");
+            field.setAccessible(true);
+            enabledStatus = field.get(null);
+        }
+        return enabledStatus;
+    }
+
+    private static Object disabledStatus() throws ReflectiveOperationException {
+        if (disabledStatus == null) {
+            Class<?> statusClass = Class.forName(DEBUG_STATUS_CLASS);
+            Field field = statusClass.getDeclaredField("NEVER");
+            field.setAccessible(true);
+            disabledStatus = field.get(null);
+        }
+        return disabledStatus;
     }
 
     private static final class Config {
