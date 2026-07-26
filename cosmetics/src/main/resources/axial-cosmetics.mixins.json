@@ -16,6 +16,8 @@
     "TitleOverlayCrosshairMixin",
     "MinecraftIconsMixin",
     "MinecraftClientTitleMixin",
+    "MinecraftClientDebugAccessor",
+    "DebugRendererAccessor",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "TitleScreenBackgroundMixin",
