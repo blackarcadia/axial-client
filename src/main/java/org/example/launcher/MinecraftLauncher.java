@@ -32,7 +32,7 @@ public class MinecraftLauncher {
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
     private static final String MOD_MENU_FILE = "modmenu-17.0.0-alpha.1.jar";
     private static final String GECKOLIB_FILE = "geckolib-fabric-1.21.11-5.4.5.jar";
-    private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics-1.1.0.jar";
+    private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
     private static final String AXIAL_UTILS_FILE = "axialutils-1.0-SNAPSHOT.jar";
     private static final String AXIAL_PACK_NAME = "axial_pack";
     private static final String SIMPLE_MENU_URL = null;

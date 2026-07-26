@@ -29,10 +29,33 @@ dependencies {
 }
 
 processResources {
+    exclude('axial-cosmetics-*.jar')
     filesMatching('version.properties') {
         expand(appVersion: appVersion, appChannel: appChannel)
     }
 }
+
+def bundledModsDir = layout.buildDirectory.dir("generated/bundled-mods")
+
+tasks.register('buildCosmeticsJar', Exec) {
+    group = 'build'
+    description = 'Build the cosmetics mod jar used by the launcher package'
+    workingDir = projectDir
+    commandLine './gradlew', '-p', 'cosmetics', 'build'
+}
+
+tasks.register('bundleCosmeticsJar', Sync) {
+    dependsOn tasks.buildCosmeticsJar
+    from(fileTree('cosmetics/build/libs') {
+        include 'axial-cosmetics-*.jar'
+        exclude '*-sources.jar'
+    })
+    rename { 'axial-cosmetics.jar' }
+    into(bundledModsDir)
+}
+
+processResources.dependsOn tasks.bundleCosmeticsJar
+processResources.from(bundledModsDir)
 
 application {
     mainClass = 'org.example.Main'
