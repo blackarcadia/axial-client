@@ -8,6 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
@@ -30,6 +31,9 @@ public abstract class InGameButtonSkinMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         Screen currentScreen = client.currentScreen;
         if (currentScreen == null || currentScreen instanceof TitleScreen) {
+            return;
+        }
+        if (currentScreen instanceof CreateWorldScreen) {
             return;
         }
 
