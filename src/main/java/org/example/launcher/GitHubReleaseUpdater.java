@@ -66,7 +66,7 @@ public final class GitHubReleaseUpdater {
 
             JsonObject release = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
             String tag = normalizeVersion(release.get("tag_name").getAsString());
-            String installedTag = readInstalledClientTag();
+            String installedTag = installedClientTag();
             if (!installedTag.isBlank() && installedTag.equalsIgnoreCase(tag)) {
                 return UpdateStatus.upToDate(installedTag);
             }
@@ -183,7 +183,7 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static String readInstalledClientTag() {
+    public static String installedClientTag() {
         try {
             if (!Files.exists(CLIENT_RELEASE_MARKER)) {
                 return "";

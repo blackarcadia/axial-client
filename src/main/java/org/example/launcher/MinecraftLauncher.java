@@ -73,18 +73,19 @@ public class MinecraftLauncher {
         downloadClient(layout, request.getVersionId(), versionJson);
         downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
-        downloadToggleSprintMod(layout);
-        downloadFabricApi(layout);
-        downloadModMenu(layout);
-        installSodium(layout);
+        if (GitHubReleaseUpdater.installedClientTag().isBlank()) {
+            downloadToggleSprintMod(layout);
+            downloadFabricApi(layout);
+            downloadModMenu(layout);
+            installSodium(layout);
+            installGeckoLib(layout);
+            installAxialUtils(layout);
+            installAxialCosmetics(layout);
+        }
         removeXaeroMinimap(layout);
         removeStaticBgMod(layout);
         removeSimpleMenu(layout);
         removeCollective(layout);
-        installAxialPack(layout);
-        installGeckoLib(layout);
-        installAxialUtils(layout);
-        installAxialCosmetics(layout);
         logger.info("Installation check complete.");
     }
 
