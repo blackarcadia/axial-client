@@ -42,7 +42,8 @@ public final class StartupController {
     private void runStartup() {
         try {
             Instant startupShownAt = Instant.now();
-            Path gameDir = Path.of(System.getProperty("user.home"), ".minecraft");
+            Path gameDir = ClientPaths.clientRoot();
+            Files.createDirectories(gameDir);
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
                 loadingScreen.update("Checking for updates", 5);
                 GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
@@ -89,8 +90,9 @@ public final class StartupController {
     }
 
     private LaunchRequest buildLaunchRequest() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
-        Path gameDir = Path.of(System.getProperty("user.home"), ".minecraft");
-        Path accountsDir = gameDir.resolve("axial_accounts");
+        Path gameDir = ClientPaths.clientRoot();
+        Files.createDirectories(gameDir);
+        Path accountsDir = ClientPaths.accountsDir();
         Files.createDirectories(accountsDir);
 
         AuthResult authResult = resolveAccount(accountsDir);

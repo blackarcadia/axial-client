@@ -23,7 +23,7 @@ public class ExternalLauncherUI {
     private final JComboBox<AccountEntry> accountSelect;
     private final JButton loginButton;
     private final JButton logoutButton;
-    private final Path accountsDir = Path.of(System.getProperty("user.home"), ".minecraft", "axial_accounts");
+    private final Path accountsDir = ClientPaths.accountsDir();
     private final JLabel activeAccountLabel;
     private final JLabel headLabel;
     private final JLabel switchLabel;
@@ -169,7 +169,8 @@ public class ExternalLauncherUI {
 
                 PrintStream logTee = logStream != null ? logStream : System.out;
 
-                Path gameDir = Path.of(System.getProperty("user.home"), ".minecraft");
+                Path gameDir = ClientPaths.clientRoot();
+                Files.createDirectories(gameDir);
                 Path store = accountsDir.resolve(selected.fileName);
                 AuthManager auth = new AuthManager(store);
                 AuthResult authResult = auth.authenticate();

@@ -79,8 +79,7 @@ public class LaunchRequest {
         }
 
         public Builder gameDirDefault() {
-            String home = System.getProperty("user.home");
-            this.gameDir = Path.of(home, ".minecraft");
+            this.gameDir = ClientPaths.clientRoot();
             return this;
         }
 
