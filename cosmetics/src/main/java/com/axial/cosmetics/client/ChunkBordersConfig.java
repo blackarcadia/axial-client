@@ -1,13 +1,14 @@
 package com.axial.cosmetics.client;
 
-import com.axial.cosmetics.mixin.DebugRendererAccessor;
-import com.axial.cosmetics.mixin.WorldRendererDebugAccessor;
+import com.axial.cosmetics.mixin.MinecraftClientDebugHudEntryListAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.debug.DebugRenderer;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.gui.hud.debug.DebugHudEntries;
+import net.minecraft.client.gui.hud.debug.DebugHudEntryVisibility;
+import net.minecraft.client.gui.hud.debug.DebugHudProfile;
+import net.minecraft.util.Identifier;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -70,30 +71,23 @@ public final class ChunkBordersConfig {
             return;
         }
 
-        WorldRenderer worldRenderer = client.worldRenderer;
-        if (worldRenderer == null) {
+        if (!(client instanceof MinecraftClientDebugHudEntryListAccessor clientAccessor)) {
             return;
         }
 
-        if (!(worldRenderer instanceof WorldRendererDebugAccessor worldRendererAccessor)) {
-            return;
-        }
-
-        DebugRenderer debugRenderer = worldRendererAccessor.axial_cosmetics$getDebugRenderer();
-        if (debugRenderer == null) {
-            return;
-        }
-
-        if (!(debugRenderer instanceof DebugRendererAccessor rendererAccessor)) {
+        DebugHudProfile debugHudEntryList = clientAccessor.axial_cosmetics$getDebugHudEntryList();
+        if (debugHudEntryList == null) {
             return;
         }
 
         boolean desired = config.enabled;
-        boolean current = rendererAccessor.axial_cosmetics$isRenderChunkborder();
-        if (current != desired) {
-            rendererAccessor.axial_cosmetics$switchRenderChunkborder();
+        DebugHudEntryVisibility visibility = desired ? DebugHudEntryVisibility.ALWAYS_ON : DebugHudEntryVisibility.NEVER;
+        if (debugHudEntryList.getVisibility(CHUNK_BORDERS) != visibility) {
+            debugHudEntryList.setEntryVisibility(CHUNK_BORDERS, visibility);
         }
     }
+
+    private static final Identifier CHUNK_BORDERS = DebugHudEntries.CHUNK_BORDERS;
 
     private static final class Config {
         private boolean enabled = false;
