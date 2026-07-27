@@ -1,12 +1,13 @@
 package com.axial.cosmetics.client;
 
 import com.axial.cosmetics.mixin.DebugRendererAccessor;
-import com.axial.cosmetics.mixin.MinecraftClientDebugAccessor;
+import com.axial.cosmetics.mixin.WorldRendererDebugAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.debug.DebugRenderer;
+import net.minecraft.client.render.WorldRenderer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -69,11 +70,16 @@ public final class ChunkBordersConfig {
             return;
         }
 
-        if (!(client instanceof MinecraftClientDebugAccessor clientAccessor)) {
+        WorldRenderer worldRenderer = client.worldRenderer;
+        if (worldRenderer == null) {
             return;
         }
 
-        DebugRenderer debugRenderer = clientAccessor.axial_cosmetics$getDebugRenderer();
+        if (!(worldRenderer instanceof WorldRendererDebugAccessor worldRendererAccessor)) {
+            return;
+        }
+
+        DebugRenderer debugRenderer = worldRendererAccessor.axial_cosmetics$getDebugRenderer();
         if (debugRenderer == null) {
             return;
         }
