@@ -8,6 +8,7 @@
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
     "AxialConfigScreenMixin",
+    "AxialConfigScreenRuptureMixin",
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
     "CloseModMenuMixin",
