@@ -71,9 +71,13 @@ public final class StartupController {
             launcher.ensureInstalled(request);
 
             loadingScreen.update("Launching client", 90);
-            launcher.start(request, System.out);
-            loadingScreen.update("Up to date", 100);
+            Process minecraft = launcher.start(request, System.out);
             closeScreen();
+            int exitCode = minecraft.waitFor();
+            if (exitCode != 0) {
+                throw new IllegalStateException("Minecraft exited with code " + exitCode);
+            }
+            loadingScreen.update("Up to date", 100);
         } catch (Exception ex) {
             loadingScreen.showError("Launch failed");
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
