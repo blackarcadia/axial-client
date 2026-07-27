@@ -18,8 +18,8 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -102,66 +102,23 @@ public final class GitHubReleaseUpdater {
         return locateAppBundle(unpackDir);
     }
 
-    public void scheduleInstallAndRelaunch(Path stagedAppBundle, Path currentAppBundle) throws IOException {
-        if (stagedAppBundle == null || currentAppBundle == null) {
+    public Path installToVersionedLocation(Path stagedAppBundle, String releaseTag) throws IOException {
+        if (stagedAppBundle == null || releaseTag == null || releaseTag.isBlank()) {
             throw new IOException("Missing app bundle path for updater");
         }
 
-        long pid = ProcessHandle.current().pid();
-        Path markerPath = LauncherStartupMarker.markerPath();
-        List<String> command = new ArrayList<>();
-        command.add("/bin/sh");
-        command.add("-c");
-        command.add("""
-set -e
-old="$1"
-new="$2"
-pid="$3"
-marker="$4"
-backup="${old}.backup"
-temp="${old}.update"
-restored=0
-cleanup() {
-  if [ "$restored" -eq 0 ] && [ -d "$backup" ] && [ ! -d "$old" ]; then
-    mv "$backup" "$old" || true
-  fi
-}
-trap cleanup EXIT INT TERM
-while kill -0 "$pid" 2>/dev/null; do
-  sleep 1
-done
-rm -rf "$backup" "$temp"
-mv "$old" "$backup"
-ditto "$new" "$temp"
-xattr -dr com.apple.quarantine "$temp" 2>/dev/null || true
-chmod -R u+rwX,go+rX "$temp" 2>/dev/null || true
-mv "$temp" "$old"
-codesign --force --deep --sign - "$old" >/dev/null 2>&1 || true
-rm -f "$marker"
-open "$old"
-for _ in $(seq 1 60); do
-  if [ -f "$marker" ]; then
-    restored=1
-    rm -rf "$backup"
-    exit 0
-  fi
-  sleep 1
-done
-rm -rf "$old"
-mv "$backup" "$old"
-codesign --force --deep --sign - "$old" >/dev/null 2>&1 || true
-open "$old" >/dev/null 2>&1 || true
-exit 1
-""");
-        command.add("axial-updater");
-        command.add(currentAppBundle.toAbsolutePath().toString());
-        command.add(stagedAppBundle.toAbsolutePath().toString());
-        command.add(Long.toString(pid));
-        command.add(markerPath.toAbsolutePath().toString());
-
-        new ProcessBuilder(command)
-                .directory(currentAppBundle.getParent().toFile())
-                .start();
+        Path installedBundle = Path.of(
+                System.getProperty("user.home"),
+                "Library",
+                "Application Support",
+                "AxialLauncher",
+                "launchers",
+                releaseTag,
+                "AxialLauncher.app"
+        );
+        LauncherInstallationManager.installBundle(stagedAppBundle, installedBundle);
+        LauncherInstallationManager.activateInstall(installedBundle);
+        return installedBundle;
     }
 
     public Path detectCurrentAppBundle() {

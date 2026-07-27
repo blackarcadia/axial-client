@@ -12,12 +12,19 @@ import java.util.regex.Pattern;
 
 public final class LauncherInstallationManager {
     private static final Pattern VERSION_SPLIT = Pattern.compile("[^0-9]+");
-    private static final Path STABLE_APP_BUNDLE = Path.of(
+    private static final Path LAUNCHER_HOME = Path.of(
             System.getProperty("user.home"),
             "Library",
             "Application Support",
             "AxialLauncher",
-            "AxialLauncher.app"
+            "launchers"
+    );
+    private static final Path ACTIVE_INSTALL_POINTER = Path.of(
+            System.getProperty("user.home"),
+            "Library",
+            "Application Support",
+            "AxialLauncher",
+            "active-launcher.path"
     );
 
     private LauncherInstallationManager() {
@@ -29,23 +36,32 @@ public final class LauncherInstallationManager {
             return false;
         }
 
-        if (currentBundle.equals(STABLE_APP_BUNDLE)) {
+        Path activeBundle = activeInstallBundle();
+        if (activeBundle != null && currentBundle.equals(activeBundle)) {
             return false;
         }
 
         AppBuildInfo currentInfo = AppBuildInfo.load();
-        AppBuildInfo stableInfo = Files.exists(STABLE_APP_BUNDLE) ? loadFromBundle(STABLE_APP_BUNDLE) : null;
+        Path desiredBundle = installPathForVersion(currentInfo.appVersion());
+        AppBuildInfo activeInfo = activeBundle != null && Files.exists(activeBundle) ? loadFromBundle(activeBundle) : null;
 
-        if (stableInfo == null || isNewer(currentInfo.appVersion(), stableInfo.appVersion())) {
-            installBundle(currentBundle, STABLE_APP_BUNDLE);
+        if (activeInfo == null || isNewer(currentInfo.appVersion(), activeInfo.appVersion()) || !isBundleValid(activeBundle)) {
+            installBundle(currentBundle, desiredBundle);
+            activateInstall(desiredBundle);
+            activeBundle = desiredBundle;
         }
 
-        launchBundle(STABLE_APP_BUNDLE);
+        if (activeBundle == null) {
+            activeBundle = desiredBundle;
+        }
+
+        launchBundle(activeBundle);
         return true;
     }
 
     public static Path stableAppBundle() {
-        return STABLE_APP_BUNDLE;
+        Path activeBundle = activeInstallBundle();
+        return activeBundle != null ? activeBundle : installPathForVersion(AppBuildInfo.load().appVersion());
     }
 
     public static Path detectCurrentAppBundle() {
@@ -80,7 +96,7 @@ public final class LauncherInstallationManager {
         }
     }
 
-    private static void installBundle(Path source, Path destination) throws IOException {
+    public static void installBundle(Path source, Path destination) throws IOException {
         Files.createDirectories(destination.getParent());
         deleteRecursive(destination);
         runCommand("ditto", source.toAbsolutePath().toString(), destination.toAbsolutePath().toString());
@@ -88,8 +104,32 @@ public final class LauncherInstallationManager {
         resignBundle(destination);
     }
 
-    private static void launchBundle(Path bundle) throws IOException {
+    public static void launchBundle(Path bundle) throws IOException {
         runCommand("open", bundle.toAbsolutePath().toString());
+    }
+
+    public static void activateInstall(Path bundle) throws IOException {
+        if (bundle == null) {
+            throw new IOException("Missing launcher install path");
+        }
+        Files.createDirectories(ACTIVE_INSTALL_POINTER.getParent());
+        Files.writeString(ACTIVE_INSTALL_POINTER, bundle.toAbsolutePath().normalize().toString());
+    }
+
+    public static Path activeInstallBundle() {
+        try {
+            if (!Files.exists(ACTIVE_INSTALL_POINTER)) {
+                return null;
+            }
+            String value = Files.readString(ACTIVE_INSTALL_POINTER).trim();
+            if (value.isEmpty()) {
+                return null;
+            }
+            Path bundle = Path.of(value).toAbsolutePath().normalize();
+            return Files.exists(bundle) ? bundle : null;
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     private static Path findAppJar(Path appBundle) throws IOException {
@@ -138,6 +178,21 @@ public final class LauncherInstallationManager {
             runCommand("codesign", "--force", "--deep", "--sign", "-", bundle.toAbsolutePath().toString());
         } catch (IOException ignored) {
             // If ad-hoc signing is unavailable, keep the bundle rather than failing the install.
+        }
+    }
+
+    private static Path installPathForVersion(String version) {
+        return LAUNCHER_HOME.resolve(version == null || version.isBlank() ? "0.0.0" : version).resolve("AxialLauncher.app");
+    }
+
+    private static boolean isBundleValid(Path bundle) {
+        if (bundle == null || !Files.isDirectory(bundle)) {
+            return false;
+        }
+        try {
+            return findAppJar(bundle) != null;
+        } catch (IOException ignored) {
+            return false;
         }
     }
 

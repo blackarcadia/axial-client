@@ -47,12 +47,13 @@ public final class StartupController {
                 GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
                 if (update.available()) {
                     loadingScreen.update(update.message(), 20);
-                    Path currentBundle = updater.detectCurrentAppBundle();
-                    if (currentBundle != null) {
+                    if (updater.detectCurrentAppBundle() != null) {
                         loadingScreen.update("Downloading update", 35);
                         Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
                         loadingScreen.update("Installing update", 95);
-                        updater.scheduleInstallAndRelaunch(stagedBundle, currentBundle);
+                        Path installedBundle = updater.installToVersionedLocation(stagedBundle, update.version());
+                        loadingScreen.update("Launching update", 98);
+                        LauncherInstallationManager.launchBundle(installedBundle);
                         closeScreen();
                         System.exit(0);
                         return;
