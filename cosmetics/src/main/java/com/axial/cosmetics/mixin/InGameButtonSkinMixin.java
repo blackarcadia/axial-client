@@ -8,7 +8,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
@@ -18,6 +17,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Locale;
 
 @Mixin(PressableWidget.class)
 public abstract class InGameButtonSkinMixin {
@@ -33,12 +34,14 @@ public abstract class InGameButtonSkinMixin {
         if (currentScreen == null || currentScreen instanceof TitleScreen) {
             return;
         }
-        if (currentScreen instanceof CreateWorldScreen) {
-            return;
-        }
 
         Object self = this;
         if (!(self instanceof ClickableWidget button)) {
+            return;
+        }
+
+        String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
+        if (lower.contains("difficulty lock")) {
             return;
         }
 
