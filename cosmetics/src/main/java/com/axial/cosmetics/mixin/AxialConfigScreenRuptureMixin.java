@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,13 +23,11 @@ public abstract class AxialConfigScreenRuptureMixin {
     private static Method axial_cosmetics$currentViewportHeightMethod;
     private static Method axial_cosmetics$getCurrentScrollOffsetMethod;
     private static Method axial_cosmetics$tileContainsMethod;
-    private static Method axial_cosmetics$eventMouseXMethod;
-    private static Method axial_cosmetics$eventMouseYMethod;
     private static Constructor<?> axial_cosmetics$screenConstructor;
     private static Object axial_cosmetics$ruptureMode;
 
     @Inject(method = "method_25402", at = @At("RETURN"), cancellable = true, remap = false)
-    private void axial_cosmetics$openRuptureHighlightsFallback(Object event, boolean focused, CallbackInfoReturnable<Boolean> cir) {
+    private void axial_cosmetics$openRuptureHighlightsFallback(Click event, boolean focused, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) {
             return;
         }
@@ -47,8 +46,8 @@ public abstract class AxialConfigScreenRuptureMixin {
             int panelBaseY = axial_cosmetics$currentPanelBaseY();
             int scrollOffset = axial_cosmetics$getCurrentScrollOffset();
             int viewportHeight = axial_cosmetics$currentViewportHeight();
-            double mouseX = axial_cosmetics$eventMouseX(event);
-            double mouseY = axial_cosmetics$eventMouseY(event);
+            double mouseX = event.x();
+            double mouseY = event.y();
 
             for (Object tile : tiles) {
                 if (!RUPTURE_LABEL.equals(axial_cosmetics$getTileLabel(tile))) {
@@ -128,22 +127,6 @@ public abstract class AxialConfigScreenRuptureMixin {
             axial_cosmetics$tileContainsMethod.setAccessible(true);
         }
         return (boolean) axial_cosmetics$tileContainsMethod.invoke(tile, mouseX, mouseY, panelBaseY, scrollOffset, viewportHeight);
-    }
-
-    private double axial_cosmetics$eventMouseX(Object event) throws ReflectiveOperationException {
-        if (axial_cosmetics$eventMouseXMethod == null) {
-            axial_cosmetics$eventMouseXMethod = event.getClass().getDeclaredMethod("comp_4798");
-            axial_cosmetics$eventMouseXMethod.setAccessible(true);
-        }
-        return ((Number) axial_cosmetics$eventMouseXMethod.invoke(event)).doubleValue();
-    }
-
-    private double axial_cosmetics$eventMouseY(Object event) throws ReflectiveOperationException {
-        if (axial_cosmetics$eventMouseYMethod == null) {
-            axial_cosmetics$eventMouseYMethod = event.getClass().getDeclaredMethod("comp_4799");
-            axial_cosmetics$eventMouseYMethod.setAccessible(true);
-        }
-        return ((Number) axial_cosmetics$eventMouseYMethod.invoke(event)).doubleValue();
     }
 
     private Screen axial_cosmetics$newRuptureScreen() throws ReflectiveOperationException {
