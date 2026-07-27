@@ -41,22 +41,13 @@ public final class LauncherInstallationManager {
             return false;
         }
 
-        Path activeBundle = activeInstallBundle();
         AppBuildInfo currentInfo = AppBuildInfo.load();
         Path desiredBundle = installPathForVersion(currentInfo.appVersion());
-        AppBuildInfo activeInfo = activeBundle != null && Files.exists(activeBundle) ? loadFromBundle(activeBundle) : null;
 
-        if (activeInfo == null || isNewer(currentInfo.appVersion(), activeInfo.appVersion()) || !isBundleValid(activeBundle)) {
-            installBundle(currentBundle, desiredBundle);
-            activateInstall(desiredBundle);
-            activeBundle = desiredBundle;
-        }
+        installBundle(currentBundle, desiredBundle);
+        activateInstall(desiredBundle);
 
-        if (activeBundle == null) {
-            activeBundle = desiredBundle;
-        }
-
-        launchBundle(activeBundle);
+        launchBundle(desiredBundle);
         return true;
     }
 
