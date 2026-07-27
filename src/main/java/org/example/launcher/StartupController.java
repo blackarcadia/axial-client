@@ -42,18 +42,17 @@ public final class StartupController {
     private void runStartup() {
         try {
             Instant startupShownAt = Instant.now();
+            Path gameDir = Path.of(System.getProperty("user.home"), ".minecraft");
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
                 loadingScreen.update("Checking for updates", 5);
                 GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
                 if (update.available()) {
                     loadingScreen.update(update.message(), 20);
-                    if (updater.detectCurrentAppBundle() != null) {
-                        loadingScreen.update("Downloading update", 35);
-                        Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
-                        loadingScreen.update("Installing update", 95);
-                        updater.installToVersionedLocation(stagedBundle, update.version());
-                    }
-                    loadingScreen.update("Up to date", 15);
+                    loadingScreen.update("Downloading client update", 35);
+                    Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
+                    loadingScreen.update("Installing client update", 95);
+                    updater.installClientUpdate(stagedBundle, update.version(), gameDir);
+                    loadingScreen.update("Client updated", 15);
                 } else {
                     loadingScreen.update("Up to date", 15);
                 }
