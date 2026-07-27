@@ -47,7 +47,17 @@ public final class LauncherInstallationManager {
 
         if (isBundleValid(activeBundle)) {
             AppBuildInfo activeInfo = loadFromBundle(activeBundle);
-            if (activeInfo != null && !isNewer(currentInfo.appVersion(), activeInfo.appVersion())) {
+            if (activeInfo != null) {
+                if (!"release".equalsIgnoreCase(currentInfo.appChannel())) {
+                    launchBundle(activeBundle);
+                    return true;
+                }
+
+                if (!isNewer(currentInfo.appVersion(), activeInfo.appVersion())) {
+                    launchBundle(activeBundle);
+                    return true;
+                }
+            } else {
                 launchBundle(activeBundle);
                 return true;
             }
