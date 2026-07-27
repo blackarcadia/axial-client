@@ -31,6 +31,7 @@ public class MinecraftLauncher {
     private static final String FABRIC_API_FILE = "fabric-api-0.141.1+1.21.11.jar";
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
     private static final String MOD_MENU_FILE = "modmenu-17.0.0-alpha.1.jar";
+    private static final String SODIUM_FILE = "sodium-fabric-0.8.13+mc1.21.11.jar";
     private static final String GECKOLIB_FILE = "geckolib-fabric-1.21.11-5.4.5.jar";
     private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
     private static final String AXIAL_UTILS_FILE = "axialutils-1.0-SNAPSHOT.jar";
@@ -78,6 +79,7 @@ public class MinecraftLauncher {
         downloadXaeroMinimap(layout);
         downloadFabricApi(layout);
         downloadModMenu(layout);
+        installSodium(layout);
         removeStaticBgMod(layout);
         removeSimpleMenu(layout);
         removeCollective(layout);
@@ -544,6 +546,33 @@ public class MinecraftLauncher {
             }
             Files.copy(in, target);
             logger.info("Installed GeckoLib mod: " + GECKOLIB_FILE);
+        }
+    }
+
+    private void installSodium(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(p -> {
+                        String name = p.getFileName().toString();
+                        return name.equals("sodium.jar")
+                                || name.startsWith("sodium-fabric-")
+                                || name.startsWith("sodium-extra-")
+                                || name.startsWith("reeses-sodium-options-");
+                    })
+                    .forEach(p -> {
+                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                    });
+        }
+
+        Path target = mods.resolve(SODIUM_FILE);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + SODIUM_FILE)) {
+            if (in == null) {
+                logger.info("Sodium jar not packaged; skipping install.");
+                return;
+            }
+            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Installed Sodium mod: " + SODIUM_FILE);
         }
     }
 
