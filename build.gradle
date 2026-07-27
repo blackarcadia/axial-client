@@ -30,6 +30,10 @@ dependencies {
 
 processResources {
     exclude('axial-cosmetics-*.jar')
+    exclude('staticbgmod-1.0.0.jar')
+    exclude('staticbgmod-1.0.1.jar')
+    exclude('staticbgmod-1.0.2.jar')
+    exclude('staticbgmod-1.0.3.jar')
     filesMatching('version.properties') {
         expand(appVersion: appVersion, appChannel: appChannel)
     }
