@@ -77,6 +77,7 @@ public class MinecraftLauncher {
         downloadFabricApi(layout);
         downloadModMenu(layout);
         installSodium(layout);
+        removeXaeroMinimap(layout);
         removeStaticBgMod(layout);
         removeSimpleMenu(layout);
         removeCollective(layout);
@@ -560,6 +561,18 @@ public class MinecraftLauncher {
             }
             Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             logger.info("Installed Sodium mod: " + SODIUM_FILE);
+        }
+    }
+
+    private void removeXaeroMinimap(FileLayout layout) throws IOException {
+        Files.createDirectories(layout.modsDir());
+        try (var stream = Files.list(layout.modsDir())) {
+            for (Path p : stream.toList()) {
+                String name = p.getFileName().toString().toLowerCase(Locale.ROOT);
+                if (name.startsWith("xaerominimap-") || name.startsWith("xaero-")) {
+                    Files.deleteIfExists(p);
+                }
+            }
         }
     }
 
