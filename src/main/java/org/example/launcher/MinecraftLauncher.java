@@ -33,6 +33,7 @@ public class MinecraftLauncher {
     private static final String GECKOLIB_FILE = "geckolib-fabric-1.21.11-5.4.5.jar";
     private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
     private static final String AXIAL_UTILS_FILE = "axialutils-1.0-SNAPSHOT.jar";
+    private static final String LITHIUM_FILE = "lithium-fabric-0.21.4+mc1.21.11.jar";
     private static final String AXIAL_PACK_NAME = "axial_pack";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
@@ -78,6 +79,7 @@ public class MinecraftLauncher {
             downloadFabricApi(layout);
             downloadModMenu(layout);
             installSodium(layout);
+            installLithium(layout);
             installGeckoLib(layout);
             installAxialUtils(layout);
             installAxialCosmetics(layout);
@@ -562,6 +564,31 @@ public class MinecraftLauncher {
             }
             Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             logger.info("Installed Sodium mod: " + SODIUM_FILE);
+        }
+    }
+
+    private void installLithium(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(p -> {
+                        String name = p.getFileName().toString();
+                        return name.equals("lithium.jar")
+                                || name.startsWith("lithium-fabric-");
+                    })
+                    .forEach(p -> {
+                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                    });
+        }
+
+        Path target = mods.resolve(LITHIUM_FILE);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + LITHIUM_FILE)) {
+            if (in == null) {
+                logger.info("Lithium jar not packaged; skipping install.");
+                return;
+            }
+            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Installed Lithium mod: " + LITHIUM_FILE);
         }
     }
 

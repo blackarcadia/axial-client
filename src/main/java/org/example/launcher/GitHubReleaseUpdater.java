@@ -40,6 +40,7 @@ public final class GitHubReleaseUpdater {
     private static final String AXIAL_UTILS_ENTRY = "axialutils-1.0-SNAPSHOT.jar";
     private static final String GECKOLIB_ENTRY = "geckolib-fabric-1.21.11-5.4.5.jar";
     private static final String SODIUM_ENTRY = "sodium-fabric-0.8.13+mc1.21.11.jar";
+    private static final String LITHIUM_ENTRY = "lithium-fabric-0.21.4+mc1.21.11.jar";
     private static final String STATIC_BG_ENTRY = "staticbgmod-1.0.4.jar";
 
     private final OkHttpClient client = new OkHttpClient();
@@ -135,6 +136,7 @@ public final class GitHubReleaseUpdater {
             installExactJarFromBundle(jarFile, modsDir, AXIAL_UTILS_ENTRY, "axialutils", "axialutils-");
             installExactJarFromBundle(jarFile, modsDir, GECKOLIB_ENTRY, "geckolib-fabric", "geckolib-fabric-");
             installExactJarFromBundle(jarFile, modsDir, SODIUM_ENTRY, "sodium-fabric", "sodium-fabric-", "sodium-extra-", "reeses-sodium-options-");
+            installExactJarFromBundle(jarFile, modsDir, LITHIUM_ENTRY, "lithium-fabric", "lithium-fabric-");
             installExactJarFromBundle(jarFile, modsDir, STATIC_BG_ENTRY, "staticbgmod", "staticbgmod-");
         }
 
