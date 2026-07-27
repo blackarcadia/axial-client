@@ -17,4 +17,8 @@ final class ClientPaths {
     static Path accountsDir() {
         return appRoot().resolve("accounts");
     }
+
+    static Path clientReadyMarker() {
+        return clientRoot().resolve(".client-ready");
+    }
 }

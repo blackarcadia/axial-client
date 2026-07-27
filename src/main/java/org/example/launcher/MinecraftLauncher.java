@@ -57,6 +57,11 @@ public class MinecraftLauncher {
         Files.createDirectories(layout.librariesDir());
         Files.createDirectories(layout.assetsDir());
 
+        if (isClientReady(layout, request.getVersionId())) {
+            logger.info("Client install already present.");
+            return;
+        }
+
         VersionManifest manifest = loadVersionManifest();
         JsonObject versionJson;
         VersionRef ref = manifest.find(request.getVersionId()).orElse(null);
@@ -89,6 +94,7 @@ public class MinecraftLauncher {
             removeSimpleMenu(layout);
             removeCollective(layout);
         }
+        writeClientReadyMarker(layout);
         logger.info("Installation check complete.");
     }
 
@@ -491,6 +497,25 @@ public class MinecraftLauncher {
     private void removeCollective(FileLayout layout) throws IOException {
         Path target = layout.modsDir().resolve(COLLECTIVE_FILE);
         Files.deleteIfExists(target);
+    }
+
+    private boolean isClientReady(FileLayout layout, String versionId) throws IOException {
+        if (!Files.exists(ClientPaths.clientReadyMarker())) {
+            return false;
+        }
+        if (!Files.exists(layout.versionJson(versionId))) {
+            return false;
+        }
+        return Files.exists(layout.clientJar(versionId));
+    }
+
+    private void writeClientReadyMarker(FileLayout layout) throws IOException {
+        Path marker = ClientPaths.clientReadyMarker();
+        Files.createDirectories(marker.getParent());
+        Files.writeString(marker, "ready" + System.lineSeparator(),
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
+                java.nio.file.StandardOpenOption.WRITE);
     }
 
     private void installAxialCosmetics(FileLayout layout) throws IOException {

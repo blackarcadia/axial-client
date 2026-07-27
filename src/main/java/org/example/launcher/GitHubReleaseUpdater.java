@@ -137,6 +137,7 @@ public final class GitHubReleaseUpdater {
         }
 
         writeInstalledClientTag(releaseTag);
+        writeClientReadyMarker();
     }
 
     private static Path locateAppJar(Path appBundle) throws IOException {
@@ -226,6 +227,12 @@ public final class GitHubReleaseUpdater {
     private static void writeInstalledClientTag(String releaseTag) throws IOException {
         Files.createDirectories(CLIENT_RELEASE_MARKER.getParent());
         Files.writeString(CLIENT_RELEASE_MARKER, releaseTag + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+    }
+
+    private static void writeClientReadyMarker() throws IOException {
+        Path marker = ClientPaths.clientReadyMarker();
+        Files.createDirectories(marker.getParent());
+        Files.writeString(marker, "ready" + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
     private static List<String> readInstalledClientManifest() {
