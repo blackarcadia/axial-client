@@ -132,12 +132,12 @@ public final class GitHubReleaseUpdater {
         }
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
-            installExactJarFromBundle(jarFile, modsDir, AXIAL_COSMETICS_ENTRY, "axial-cosmetics", "axial-cosmetics-");
-            installExactJarFromBundle(jarFile, modsDir, AXIAL_UTILS_ENTRY, "axialutils", "axialutils-");
-            installExactJarFromBundle(jarFile, modsDir, GECKOLIB_ENTRY, "geckolib-fabric", "geckolib-fabric-");
-            installExactJarFromBundle(jarFile, modsDir, SODIUM_ENTRY, "sodium-fabric", "sodium-fabric-", "sodium-extra-", "reeses-sodium-options-");
-            installExactJarFromBundle(jarFile, modsDir, LITHIUM_ENTRY, "lithium-fabric", "lithium-fabric-");
-            installExactJarFromBundle(jarFile, modsDir, STATIC_BG_ENTRY, "staticbgmod", "staticbgmod-");
+            requireExactJarFromBundle(jarFile, modsDir, AXIAL_COSMETICS_ENTRY, "axial-cosmetics", "axial-cosmetics-");
+            requireExactJarFromBundle(jarFile, modsDir, AXIAL_UTILS_ENTRY, "axialutils", "axialutils-");
+            requireExactJarFromBundle(jarFile, modsDir, GECKOLIB_ENTRY, "geckolib-fabric", "geckolib-fabric-");
+            requireExactJarFromBundle(jarFile, modsDir, SODIUM_ENTRY, "sodium-fabric", "sodium-fabric-", "sodium-extra-", "reeses-sodium-options-");
+            requireExactJarFromBundle(jarFile, modsDir, LITHIUM_ENTRY, "lithium-fabric", "lithium-fabric-");
+            requireExactJarFromBundle(jarFile, modsDir, STATIC_BG_ENTRY, "staticbgmod", "staticbgmod-");
         }
 
         writeInstalledClientTag(releaseTag);
@@ -157,11 +157,11 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static void installExactJarFromBundle(JarFile jarFile, Path modsDir, String entryName, String targetPrefix, String... deletePrefixes) throws IOException {
+    private static void requireExactJarFromBundle(JarFile jarFile, Path modsDir, String entryName, String targetPrefix, String... deletePrefixes) throws IOException {
         deleteMatchingMods(modsDir, targetPrefix, deletePrefixes);
         var jarEntry = jarFile.getJarEntry(entryName);
         if (jarEntry == null) {
-            return;
+            throw new IOException("Expected packaged mod jar missing from release bundle: " + entryName);
         }
 
         Path target = modsDir.resolve(entryName);

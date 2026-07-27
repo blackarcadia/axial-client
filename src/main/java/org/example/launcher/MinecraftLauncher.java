@@ -74,7 +74,8 @@ public class MinecraftLauncher {
         downloadClient(layout, request.getVersionId(), versionJson);
         downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
-        if (GitHubReleaseUpdater.installedClientTag().isBlank()) {
+        boolean firstInstall = GitHubReleaseUpdater.installedClientTag().isBlank();
+        if (firstInstall) {
             downloadToggleSprintMod(layout);
             downloadFabricApi(layout);
             downloadModMenu(layout);
@@ -83,11 +84,11 @@ public class MinecraftLauncher {
             installGeckoLib(layout);
             installAxialUtils(layout);
             installAxialCosmetics(layout);
+            removeXaeroMinimap(layout);
+            removeStaticBgMod(layout);
+            removeSimpleMenu(layout);
+            removeCollective(layout);
         }
-        removeXaeroMinimap(layout);
-        removeStaticBgMod(layout);
-        removeSimpleMenu(layout);
-        removeCollective(layout);
         logger.info("Installation check complete.");
     }
 
