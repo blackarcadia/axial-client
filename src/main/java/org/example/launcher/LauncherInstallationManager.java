@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 public final class LauncherInstallationManager {
     private static final Pattern VERSION_SPLIT = Pattern.compile("[^0-9]+");
+    private static final String ACTIVE_INSTALL_MARKER = ".axial-active-install";
     private static final Path LAUNCHER_HOME = Path.of(
             System.getProperty("user.home"),
             "Library",
@@ -36,11 +37,11 @@ public final class LauncherInstallationManager {
             return false;
         }
 
-        Path activeBundle = activeInstallBundle();
-        if (activeBundle != null && currentBundle.equals(activeBundle)) {
+        if (isActiveInstall(currentBundle)) {
             return false;
         }
 
+        Path activeBundle = activeInstallBundle();
         AppBuildInfo currentInfo = AppBuildInfo.load();
         Path desiredBundle = installPathForVersion(currentInfo.appVersion());
         AppBuildInfo activeInfo = activeBundle != null && Files.exists(activeBundle) ? loadFromBundle(activeBundle) : null;
@@ -101,6 +102,7 @@ public final class LauncherInstallationManager {
         deleteRecursive(destination);
         runCommand("ditto", source.toAbsolutePath().toString(), destination.toAbsolutePath().toString());
         runCommand("xattr", "-dr", "com.apple.quarantine", destination.toAbsolutePath().toString());
+        writeActiveMarker(destination);
         resignBundle(destination);
     }
 
@@ -194,6 +196,19 @@ public final class LauncherInstallationManager {
         } catch (IOException ignored) {
             return false;
         }
+    }
+
+    private static boolean isActiveInstall(Path bundle) {
+        if (bundle == null) {
+            return false;
+        }
+        return Files.exists(bundle.resolve("Contents").resolve("Resources").resolve(ACTIVE_INSTALL_MARKER));
+    }
+
+    private static void writeActiveMarker(Path bundle) throws IOException {
+        Path marker = bundle.resolve("Contents").resolve("Resources").resolve(ACTIVE_INSTALL_MARKER);
+        Files.createDirectories(marker.getParent());
+        Files.writeString(marker, AppBuildInfo.load().appVersion() + System.lineSeparator());
     }
 
     public static boolean isNewer(String latest, String current) {
