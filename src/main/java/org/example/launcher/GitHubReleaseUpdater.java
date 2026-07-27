@@ -36,13 +36,13 @@ public final class GitHubReleaseUpdater {
             "AxialLauncher",
             "client-release.tag"
     );
-    private static final String AXIAL_COSMETICS_ENTRY = "axial-cosmetics.jar";
-    private static final String AXIAL_UTILS_ENTRY = "axialutils-1.0-SNAPSHOT.jar";
-    private static final String GECKOLIB_ENTRY = "geckolib-fabric-1.21.11-5.4.5.jar";
-    private static final String SODIUM_ENTRY = "sodium-fabric-0.8.13+mc1.21.11.jar";
-    private static final String LITHIUM_ENTRY = "lithium-fabric-0.21.4+mc1.21.11.jar";
-    private static final String STATIC_BG_ENTRY = "staticbgmod-1.0.4.jar";
-
+    private static final Path CLIENT_RELEASE_MANIFEST = Path.of(
+            System.getProperty("user.home"),
+            "Library",
+            "Application Support",
+            "AxialLauncher",
+            "client-release.files"
+    );
     private final OkHttpClient client = new OkHttpClient();
     private final AppBuildInfo buildInfo;
 
@@ -132,12 +132,8 @@ public final class GitHubReleaseUpdater {
         }
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
-            requireExactJarFromBundle(jarFile, modsDir, AXIAL_COSMETICS_ENTRY, "axial-cosmetics", "axial-cosmetics-");
-            requireExactJarFromBundle(jarFile, modsDir, AXIAL_UTILS_ENTRY, "axialutils", "axialutils-");
-            requireExactJarFromBundle(jarFile, modsDir, GECKOLIB_ENTRY, "geckolib-fabric", "geckolib-fabric-");
-            requireExactJarFromBundle(jarFile, modsDir, SODIUM_ENTRY, "sodium-fabric", "sodium-fabric-", "sodium-extra-", "reeses-sodium-options-");
-            requireExactJarFromBundle(jarFile, modsDir, LITHIUM_ENTRY, "lithium-fabric", "lithium-fabric-");
-            requireExactJarFromBundle(jarFile, modsDir, STATIC_BG_ENTRY, "staticbgmod", "staticbgmod-");
+            List<String> installedFiles = installPackagedJarsFromBundle(jarFile, modsDir);
+            writeInstalledClientManifest(installedFiles);
         }
 
         writeInstalledClientTag(releaseTag);
@@ -157,28 +153,59 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static void requireExactJarFromBundle(JarFile jarFile, Path modsDir, String entryName, String targetPrefix, String... deletePrefixes) throws IOException {
-        deleteMatchingMods(modsDir, targetPrefix, deletePrefixes);
-        var jarEntry = jarFile.getJarEntry(entryName);
-        if (jarEntry == null) {
-            throw new IOException("Expected packaged mod jar missing from release bundle: " + entryName);
+    private static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
+        deleteManagedMods(modsDir);
+
+        int installed = 0;
+        List<String> installedFiles = new ArrayList<>();
+        var entries = jarFile.entries();
+        while (entries.hasMoreElements()) {
+            var entry = entries.nextElement();
+            if (entry.isDirectory()) {
+                continue;
+            }
+            String name = entry.getName();
+            if (!name.endsWith(".jar")) {
+                continue;
+            }
+            if (name.contains("/")) {
+                continue;
+            }
+
+            Path target = modsDir.resolve(name);
+            try (InputStream in = jarFile.getInputStream(entry);
+                 OutputStream out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                in.transferTo(out);
+            }
+            installed++;
+            installedFiles.add(name);
         }
 
-        Path target = modsDir.resolve(entryName);
-        try (InputStream in = jarFile.getInputStream(jarEntry);
-             OutputStream out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-            in.transferTo(out);
+        if (installed == 0) {
+            throw new IOException("No packaged mod jars found in release bundle");
         }
+        return installedFiles;
     }
 
-    private static void deleteMatchingMods(Path modsDir, String prefix, String... deletePrefixes) throws IOException {
+    private static void deleteManagedMods(Path modsDir) throws IOException {
+        List<String> previous = readInstalledClientManifest();
+        if (!previous.isEmpty()) {
+            for (String fileName : previous) {
+                Files.deleteIfExists(modsDir.resolve(fileName));
+            }
+            return;
+        }
+
         if (!Files.isDirectory(modsDir)) {
             return;
         }
         try (var stream = Files.list(modsDir)) {
             for (Path path : stream.toList()) {
                 String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
-                if (name.equals(prefix + ".jar") || Arrays.stream(deletePrefixes).anyMatch(name::startsWith)) {
+                if (name.endsWith(".jar") && (name.startsWith("axial-") || name.startsWith("axialutils-")
+                        || name.startsWith("geckolib-fabric-") || name.startsWith("sodium-fabric-")
+                        || name.startsWith("sodium-extra-") || name.startsWith("reeses-sodium-options-")
+                        || name.startsWith("lithium-fabric-") || name.startsWith("staticbgmod-"))) {
                     Files.deleteIfExists(path);
                 }
             }
@@ -199,6 +226,25 @@ public final class GitHubReleaseUpdater {
     private static void writeInstalledClientTag(String releaseTag) throws IOException {
         Files.createDirectories(CLIENT_RELEASE_MARKER.getParent());
         Files.writeString(CLIENT_RELEASE_MARKER, releaseTag + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+    }
+
+    private static List<String> readInstalledClientManifest() {
+        try {
+            if (!Files.exists(CLIENT_RELEASE_MANIFEST)) {
+                return List.of();
+            }
+            return Files.readAllLines(CLIENT_RELEASE_MANIFEST).stream()
+                    .map(String::trim)
+                    .filter(line -> !line.isBlank())
+                    .toList();
+        } catch (IOException ignored) {
+            return List.of();
+        }
+    }
+
+    private static void writeInstalledClientManifest(List<String> fileNames) throws IOException {
+        Files.createDirectories(CLIENT_RELEASE_MANIFEST.getParent());
+        Files.write(CLIENT_RELEASE_MANIFEST, fileNames, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
     public Path detectCurrentAppBundle() {
