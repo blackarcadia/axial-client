@@ -25,8 +25,6 @@ public class MinecraftLauncher {
     private static final String VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
     private static final String TOGGLE_MOD_URL = "https://cdn.modrinth.com/data/gejCNKwT/versions/731Py1cq/togglesneakhotkey-1.0.2.jar";
     private static final String TOGGLE_MOD_FILE = "togglesneakhotkey-1.0.2.jar";
-    private static final String XAERO_MINIMAP_URL = "https://cdn.modrinth.com/data/1bokaNcj/versions/avSqR3vF/xaerominimap-fabric-1.21.11-25.3.10.jar";
-    private static final String XAERO_MINIMAP_FILE = "xaerominimap-fabric-1.21.11-25.3.10.jar";
     private static final String FABRIC_API_URL = "https://edge.forgecdn.net/files/7422/501/fabric-api-0.141.1+1.21.11.jar";
     private static final String FABRIC_API_FILE = "fabric-api-0.141.1+1.21.11.jar";
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
@@ -76,7 +74,6 @@ public class MinecraftLauncher {
         downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
         downloadToggleSprintMod(layout);
-        downloadXaeroMinimap(layout);
         downloadFabricApi(layout);
         downloadModMenu(layout);
         installSodium(layout);
@@ -455,16 +452,6 @@ public class MinecraftLauncher {
         }
         logger.info("Fetching Toggle Sprint mod...");
         downloadTo(TOGGLE_MOD_URL, target);
-    }
-
-    private void downloadXaeroMinimap(FileLayout layout) throws IOException {
-        Files.createDirectories(layout.modsDir());
-        Path target = layout.modsDir().resolve(XAERO_MINIMAP_FILE);
-        if (Files.exists(target)) {
-            return;
-        }
-        logger.info("Fetching Xaero's Minimap...");
-        downloadTo(XAERO_MINIMAP_URL, target);
     }
 
     private void downloadFabricApi(FileLayout layout) throws IOException {
