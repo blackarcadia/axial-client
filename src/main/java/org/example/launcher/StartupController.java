@@ -51,12 +51,7 @@ public final class StartupController {
                         loadingScreen.update("Downloading update", 35);
                         Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
                         loadingScreen.update("Installing update", 95);
-                        Path installedBundle = updater.installToVersionedLocation(stagedBundle, update.version());
-                        loadingScreen.update("Launching update", 98);
-                        LauncherInstallationManager.launchBundle(installedBundle);
-                        closeScreen();
-                        System.exit(0);
-                        return;
+                        updater.installToVersionedLocation(stagedBundle, update.version());
                     }
                     loadingScreen.update("Up to date", 15);
                 } else {
