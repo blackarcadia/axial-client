@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.List;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -35,10 +36,11 @@ public final class GitHubReleaseUpdater {
             "AxialLauncher",
             "client-release.tag"
     );
-    private static final String AXIAL_COSMETICS_PREFIX = "axial-cosmetics-";
-    private static final String AXIAL_UTILS_PREFIX = "axialutils-";
-    private static final String GECKOLIB_PREFIX = "geckolib-fabric-";
-    private static final String STATIC_BG_PREFIX = "staticbgmod-";
+    private static final String AXIAL_COSMETICS_ENTRY = "axial-cosmetics.jar";
+    private static final String AXIAL_UTILS_ENTRY = "axialutils-1.0-SNAPSHOT.jar";
+    private static final String GECKOLIB_ENTRY = "geckolib-fabric-1.21.11-5.4.5.jar";
+    private static final String SODIUM_ENTRY = "sodium-fabric-0.8.13+mc1.21.11.jar";
+    private static final String STATIC_BG_ENTRY = "staticbgmod-1.0.4.jar";
 
     private final OkHttpClient client = new OkHttpClient();
     private final AppBuildInfo buildInfo;
@@ -129,10 +131,11 @@ public final class GitHubReleaseUpdater {
         }
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
-            installJarFromBundle(jarFile, modsDir, "axial-cosmetics", AXIAL_COSMETICS_PREFIX);
-            installJarFromBundle(jarFile, modsDir, "axialutils", AXIAL_UTILS_PREFIX);
-            installJarFromBundle(jarFile, modsDir, "geckolib-fabric", GECKOLIB_PREFIX);
-            installJarFromBundle(jarFile, modsDir, "staticbgmod", STATIC_BG_PREFIX);
+            installExactJarFromBundle(jarFile, modsDir, AXIAL_COSMETICS_ENTRY, "axial-cosmetics", "axial-cosmetics-");
+            installExactJarFromBundle(jarFile, modsDir, AXIAL_UTILS_ENTRY, "axialutils", "axialutils-");
+            installExactJarFromBundle(jarFile, modsDir, GECKOLIB_ENTRY, "geckolib-fabric", "geckolib-fabric-");
+            installExactJarFromBundle(jarFile, modsDir, SODIUM_ENTRY, "sodium-fabric", "sodium-fabric-", "sodium-extra-", "reeses-sodium-options-");
+            installExactJarFromBundle(jarFile, modsDir, STATIC_BG_ENTRY, "staticbgmod", "staticbgmod-");
         }
 
         writeInstalledClientTag(releaseTag);
@@ -152,84 +155,28 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static void installJarFromBundle(JarFile jarFile, Path modsDir, String prefix, String targetPrefix) throws IOException {
-        List<String> entries = new ArrayList<>();
-        jarFile.stream()
-                .filter(entry -> !entry.isDirectory())
-                .map(ZipEntry::getName)
-                .filter(name -> name.endsWith(".jar"))
-                .filter(name -> {
-                    String lower = name.toLowerCase(Locale.ROOT);
-                    return lower.equals(prefix + ".jar") || lower.startsWith(prefix + "-");
-                })
-                .forEach(entries::add);
-
-        if (entries.isEmpty()) {
+    private static void installExactJarFromBundle(JarFile jarFile, Path modsDir, String entryName, String targetPrefix, String... deletePrefixes) throws IOException {
+        deleteMatchingMods(modsDir, targetPrefix, deletePrefixes);
+        var jarEntry = jarFile.getJarEntry(entryName);
+        if (jarEntry == null) {
             return;
         }
 
-        String selected = entries.stream()
-                .max((left, right) -> compareJarNames(left, right, prefix))
-                .orElse(null);
-        if (selected == null) {
-            return;
-        }
-
-        String targetName = Path.of(selected).getFileName().toString();
-        deleteMatchingMods(modsDir, targetPrefix);
-        Path target = modsDir.resolve(targetName);
-        try (InputStream in = jarFile.getInputStream(jarFile.getJarEntry(selected));
+        Path target = modsDir.resolve(entryName);
+        try (InputStream in = jarFile.getInputStream(jarEntry);
              OutputStream out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
             in.transferTo(out);
         }
     }
 
-    private static int compareJarNames(String left, String right, String prefix) {
-        String leftVersion = extractVersionPart(left, prefix);
-        String rightVersion = extractVersionPart(right, prefix);
-        int cmp = compareVersions(leftVersion, rightVersion);
-        if (cmp != 0) {
-            return cmp;
-        }
-        return left.compareToIgnoreCase(right);
-    }
-
-    private static String extractVersionPart(String name, String prefix) {
-        String base = Path.of(name).getFileName().toString();
-        if (base.equalsIgnoreCase(prefix + ".jar")) {
-            return "0";
-        }
-        String lower = base.toLowerCase(Locale.ROOT);
-        int start = lower.indexOf(prefix.toLowerCase(Locale.ROOT));
-        if (start < 0) {
-            return "0";
-        }
-        String version = base.substring(start + prefix.length(), base.length() - 4);
-        return version.isBlank() ? "0" : version;
-    }
-
-    private static int compareVersions(String left, String right) {
-        int[] l = parseVersion(left);
-        int[] r = parseVersion(right);
-        int len = Math.max(l.length, r.length);
-        for (int i = 0; i < len; i++) {
-            int a = i < l.length ? l[i] : 0;
-            int b = i < r.length ? r[i] : 0;
-            if (a != b) {
-                return Integer.compare(a, b);
-            }
-        }
-        return 0;
-    }
-
-    private static void deleteMatchingMods(Path modsDir, String prefix) throws IOException {
+    private static void deleteMatchingMods(Path modsDir, String prefix, String... deletePrefixes) throws IOException {
         if (!Files.isDirectory(modsDir)) {
             return;
         }
         try (var stream = Files.list(modsDir)) {
             for (Path path : stream.toList()) {
                 String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
-                if (name.equals(prefix + ".jar") || name.startsWith(prefix + "-")) {
+                if (name.equals(prefix + ".jar") || Arrays.stream(deletePrefixes).anyMatch(name::startsWith)) {
                     Files.deleteIfExists(path);
                 }
             }
