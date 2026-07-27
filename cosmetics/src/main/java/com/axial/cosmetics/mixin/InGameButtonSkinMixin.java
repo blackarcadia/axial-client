@@ -41,7 +41,8 @@ public abstract class InGameButtonSkinMixin {
         }
 
         String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
-        if (lower.contains("difficulty lock")) {
+        String buttonClass = button.getClass().getName().toLowerCase(Locale.ROOT);
+        if (lower.contains("difficulty lock") || lower.contains("knowledge book") || lower.contains("recipe book") || buttonClass.contains("recipebook")) {
             return;
         }
 
