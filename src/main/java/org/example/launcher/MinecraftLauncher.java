@@ -57,11 +57,6 @@ public class MinecraftLauncher {
         Files.createDirectories(layout.librariesDir());
         Files.createDirectories(layout.assetsDir());
 
-        if (isClientReady(layout, request.getVersionId())) {
-            logger.info("Client install already present.");
-            return;
-        }
-
         VersionManifest manifest = loadVersionManifest();
         JsonObject versionJson;
         VersionRef ref = manifest.find(request.getVersionId()).orElse(null);
@@ -74,6 +69,13 @@ public class MinecraftLauncher {
         if (versionJson.has("inheritsFrom")) {
             String base = versionJson.get("inheritsFrom").getAsString();
             ensureVanilla(base, layout, manifest);
+        }
+
+        ensureRequiredClientMods(layout);
+
+        if (isClientReady(layout, request.getVersionId())) {
+            logger.info("Client install already present.");
+            return;
         }
 
         downloadClient(layout, request.getVersionId(), versionJson);
@@ -497,6 +499,12 @@ public class MinecraftLauncher {
     private void removeCollective(FileLayout layout) throws IOException {
         Path target = layout.modsDir().resolve(COLLECTIVE_FILE);
         Files.deleteIfExists(target);
+    }
+
+    private void ensureRequiredClientMods(FileLayout layout) throws IOException {
+        if (!Files.exists(layout.modsDir().resolve(FABRIC_API_FILE))) {
+            downloadFabricApi(layout);
+        }
     }
 
     private boolean isClientReady(FileLayout layout, String versionId) throws IOException {
