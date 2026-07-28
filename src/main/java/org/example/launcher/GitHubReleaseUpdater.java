@@ -43,6 +43,7 @@ public final class GitHubReleaseUpdater {
             "AxialLauncher",
             "client-release.files"
     );
+    private static final String STATIC_BG_ENTRY = "staticbgmod-1.0.4.jar";
     private final OkHttpClient client = new OkHttpClient();
     private final AppBuildInfo buildInfo;
 
@@ -172,6 +173,9 @@ public final class GitHubReleaseUpdater {
             if (name.contains("/")) {
                 continue;
             }
+            if (name.equalsIgnoreCase(STATIC_BG_ENTRY) || name.toLowerCase(Locale.ROOT).startsWith("staticbgmod-")) {
+                continue;
+            }
 
             Path target = modsDir.resolve(name);
             try (InputStream in = jarFile.getInputStream(entry);
@@ -194,6 +198,7 @@ public final class GitHubReleaseUpdater {
             for (String fileName : previous) {
                 Files.deleteIfExists(modsDir.resolve(fileName));
             }
+            Files.deleteIfExists(modsDir.resolve(STATIC_BG_ENTRY));
             return;
         }
 
@@ -211,6 +216,7 @@ public final class GitHubReleaseUpdater {
                 }
             }
         }
+        Files.deleteIfExists(modsDir.resolve(STATIC_BG_ENTRY));
     }
 
     public static String installedClientTag() {

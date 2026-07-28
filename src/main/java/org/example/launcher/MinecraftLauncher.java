@@ -72,6 +72,7 @@ public class MinecraftLauncher {
         }
 
         ensureRequiredClientMods(layout);
+        removeStaticBgMod(layout);
 
         if (isClientReady(layout, request.getVersionId())) {
             logger.info("Client install already present.");
