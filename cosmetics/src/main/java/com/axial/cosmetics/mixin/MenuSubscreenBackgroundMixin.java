@@ -57,15 +57,15 @@ public abstract class MenuSubscreenBackgroundMixin {
             return;
         }
 
-        int x = Math.max(0, (screen.width - AXIAL_MENU_BACKGROUND_WIDTH) / 2);
-        int y = Math.max(0, (screen.height - AXIAL_MENU_BACKGROUND_HEIGHT) / 2);
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
                 AXIAL_MENU_BACKGROUND,
-                x,
-                y,
+                0,
+                0,
                 0.0f,
                 0.0f,
+                screen.width,
+                screen.height,
                 AXIAL_MENU_BACKGROUND_WIDTH,
                 AXIAL_MENU_BACKGROUND_HEIGHT,
                 AXIAL_MENU_BACKGROUND_WIDTH,
