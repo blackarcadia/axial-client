@@ -26,15 +26,15 @@ public abstract class TitleScreenBackgroundMixin {
             )
     )
     private void axial_cosmetics$renderCustomBackground(TitleScreen screen, DrawContext context, float deltaTicks) {
+        int x = Math.max(0, (screen.width - AXIAL_TITLE_BACKGROUND_WIDTH) / 2);
+        int y = Math.max(0, (screen.height - AXIAL_TITLE_BACKGROUND_HEIGHT) / 2);
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
                 AXIAL_TITLE_BACKGROUND,
-                0,
-                0,
+                x,
+                y,
                 0.0f,
                 0.0f,
-                screen.width,
-                screen.height,
                 AXIAL_TITLE_BACKGROUND_WIDTH,
                 AXIAL_TITLE_BACKGROUND_HEIGHT,
                 AXIAL_TITLE_BACKGROUND_WIDTH,
