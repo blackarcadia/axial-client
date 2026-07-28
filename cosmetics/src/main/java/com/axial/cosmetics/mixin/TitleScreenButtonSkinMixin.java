@@ -78,11 +78,11 @@ public abstract class TitleScreenButtonSkinMixin {
         boolean highlighted = button.isHovered() || button.isFocused();
         axial_cosmetics$hoverProgress += ((highlighted ? 1.0f : 0.0f) - axial_cosmetics$hoverProgress) * 0.34f;
 
-        int renderedWidth = button.getWidth() + Math.round(axial_cosmetics$hoverProgress * axial_cosmetics$guiPixels(BUTTON_HOVER_EXPAND));
+        int renderedWidth = BUTTON_TEXTURE_WIDTH + Math.round(axial_cosmetics$hoverProgress * BUTTON_HOVER_EXPAND);
         button.setWidth(renderedWidth);
 
         int x = lower.contains("quit")
-                ? Math.max(axial_cosmetics$guiPixels(RIGHT_MARGIN), titleScreen.width - axial_cosmetics$guiPixels(RIGHT_MARGIN) - renderedWidth)
+                ? Math.max(RIGHT_MARGIN, titleScreen.width - RIGHT_MARGIN - renderedWidth)
                 : button.getX();
         button.setX(x);
 
@@ -104,21 +104,11 @@ public abstract class TitleScreenButtonSkinMixin {
 
         TextRenderer textRenderer = client.textRenderer;
         int textColor = ColorHelper.getWhite(button.getAlpha());
-        int scaleFactor = Math.max(1, (int) Math.round(client.getWindow().getScaleFactor()));
+        int textY = button.getY() + (BUTTON_TEXTURE_HEIGHT - 8) / 2;
         Text buttonText = Text.literal(button.getMessage().getString().toUpperCase(Locale.ROOT))
                 .styled(style -> style.withFont(UI_FONT));
-        var matrices = context.getMatrices();
-        matrices.pushMatrix();
-        matrices.scale(1.0f / scaleFactor, 1.0f / scaleFactor);
-        int textX = x * scaleFactor + axial_cosmetics$guiPixels(12) * scaleFactor;
-        int textY = button.getY() * scaleFactor + ((button.getHeight() * scaleFactor) - 8) / 2;
+        int textX = x + 12;
         context.drawTextWithShadow(textRenderer, buttonText, textX, textY, textColor);
-        matrices.popMatrix();
         ci.cancel();
-    }
-
-    private static int axial_cosmetics$guiPixels(int pixels) {
-        double scaleFactor = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        return Math.max(1, (int) Math.round(pixels / scaleFactor));
     }
 }
