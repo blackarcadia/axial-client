@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenBackgroundMixin {
     private static final Identifier AXIAL_TITLE_BACKGROUND = AxialCosmetics.id("textures/gui/title/main_menu_background.png");
-    private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1536;
-    private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 1024;
+    private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1717;
+    private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 916;
 
     @Redirect(
             method = "render",
