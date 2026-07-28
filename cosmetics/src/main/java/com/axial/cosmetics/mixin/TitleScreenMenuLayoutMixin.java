@@ -36,11 +36,6 @@ public abstract class TitleScreenMenuLayoutMixin {
         axial_cosmetics$applyLayout();
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void axial_cosmetics$keepLayout(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        axial_cosmetics$applyLayout();
-    }
-
     private void axial_cosmetics$applyLayout() {
         List<?> children = ((TitleScreen) (Object) this).children();
         List<ButtonWidget> buttons = new ArrayList<>();
