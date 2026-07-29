@@ -107,6 +107,20 @@ public final class StartupController {
     }
 
     private AuthResult resolveAccount(Path accountsDir) throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
+        Path activePointer = ClientPaths.activeAccountPointer();
+        if (Files.exists(activePointer)) {
+            String activeValue = Files.readString(activePointer).trim();
+            if (!activeValue.isBlank()) {
+                Path activeFile = accountsDir.resolve(activeValue);
+                if (Files.exists(activeFile)) {
+                    AuthResult active = AuthManager.peek(activeFile);
+                    if (active != null) {
+                        return active;
+                    }
+                }
+            }
+        }
+
         if (Files.isDirectory(accountsDir)) {
             try (var stream = Files.list(accountsDir)) {
                 List<Path> files = new ArrayList<>();

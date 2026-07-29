@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
+import com.axial.cosmetics.client.AccountsScreen;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -177,38 +179,7 @@ public abstract class TitleScreenMenuLayoutMixin {
     }
 
     private void axial_cosmetics$openAccountsManager() {
-        try {
-            Path bundle = axial_cosmetics$locateLauncherBundle();
-            if (bundle == null) {
-                return;
-            }
-            new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
-        } catch (IOException ignored) {
-        }
-    }
-
-    private static Path axial_cosmetics$locateLauncherBundle() throws IOException {
-        if (Files.exists(AXIAL_LAUNCHER_POINTER)) {
-            String stored = Files.readString(AXIAL_LAUNCHER_POINTER).trim();
-            if (!stored.isBlank()) {
-                Path bundle = Path.of(stored);
-                if (Files.exists(bundle)) {
-                    return bundle;
-                }
-            }
-        }
-
-        Path launchersDir = AXIAL_LAUNCHER_POINTER.getParent().resolve("launchers");
-        if (!Files.isDirectory(launchersDir)) {
-            return null;
-        }
-
-        try (var stream = Files.list(launchersDir)) {
-            return stream
-                    .filter(path -> path.getFileName().toString().endsWith(".app"))
-                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
-                    .orElse(null);
-        }
+        MinecraftClient.getInstance().setScreen(new AccountsScreen((TitleScreen) (Object) this));
     }
 
     private void removeRealmsWidgets() {
