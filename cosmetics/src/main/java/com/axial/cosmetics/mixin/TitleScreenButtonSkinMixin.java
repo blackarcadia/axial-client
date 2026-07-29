@@ -45,20 +45,21 @@ public abstract class TitleScreenButtonSkinMixin {
         }
 
         double scaleFactor = client.getWindow().getScaleFactor();
-        int buttonX = (int) Math.round(BUTTON_X / scaleFactor);
-        int singleY = (int) Math.round(SINGLE_Y / scaleFactor);
-        int multiY = (int) Math.round((SINGLE_Y + BUTTON_SPACING) / scaleFactor);
-        int optionsY = (int) Math.round((SINGLE_Y + (BUTTON_SPACING * 2)) / scaleFactor);
-        int buttonWidth = Math.max(1, (int) Math.round(BUTTON_TEXTURE_WIDTH / scaleFactor));
-        int buttonHeight = Math.max(1, (int) Math.round(BUTTON_TEXTURE_HEIGHT / scaleFactor));
-        int quitX = Math.max((int) Math.round(RIGHT_MARGIN / scaleFactor), screen.width - (int) Math.round(RIGHT_MARGIN / scaleFactor) - (int) Math.round(QUIT_SIZE / scaleFactor));
-        int quitY = (int) Math.round(QUIT_Y / scaleFactor);
-        int quitSize = Math.max(1, (int) Math.round(QUIT_SIZE / scaleFactor));
+        int rawMouseX = (int) Math.round(mouseX * scaleFactor);
+        int rawMouseY = (int) Math.round(mouseY * scaleFactor);
 
-        axial_cosmetics$drawButton(context, mouseX, mouseY, buttonX, singleY, buttonWidth, buttonHeight, "single");
-        axial_cosmetics$drawButton(context, mouseX, mouseY, buttonX, multiY, buttonWidth, buttonHeight, "multi");
-        axial_cosmetics$drawButton(context, mouseX, mouseY, buttonX, optionsY, buttonWidth, buttonHeight, "options");
-        axial_cosmetics$drawQuitButton(context, mouseX, mouseY, quitX, quitY, quitSize);
+        var matrices = context.getMatrices();
+        matrices.pushMatrix();
+        matrices.scale((float) (1.0 / scaleFactor), (float) (1.0 / scaleFactor));
+
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "single");
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y + BUTTON_SPACING, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "multi");
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y + (BUTTON_SPACING * 2), BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "options");
+
+        int quitX = Math.max(RIGHT_MARGIN, client.getWindow().getWidth() - RIGHT_MARGIN - QUIT_SIZE);
+        axial_cosmetics$drawQuitButton(context, rawMouseX, rawMouseY, quitX, QUIT_Y, QUIT_SIZE);
+
+        matrices.popMatrix();
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
@@ -69,27 +70,20 @@ public abstract class TitleScreenButtonSkinMixin {
         }
 
         double scaleFactor = client.getWindow().getScaleFactor();
-        int buttonX = (int) Math.round(BUTTON_X / scaleFactor);
-        int singleY = (int) Math.round(SINGLE_Y / scaleFactor);
-        int multiY = (int) Math.round((SINGLE_Y + BUTTON_SPACING) / scaleFactor);
-        int optionsY = (int) Math.round((SINGLE_Y + (BUTTON_SPACING * 2)) / scaleFactor);
-        int buttonWidth = Math.max(1, (int) Math.round(BUTTON_TEXTURE_WIDTH / scaleFactor));
-        int buttonHeight = Math.max(1, (int) Math.round(BUTTON_TEXTURE_HEIGHT / scaleFactor));
-        int quitX = Math.max((int) Math.round(RIGHT_MARGIN / scaleFactor), screen.width - (int) Math.round(RIGHT_MARGIN / scaleFactor) - (int) Math.round(QUIT_SIZE / scaleFactor));
-        int quitY = (int) Math.round(QUIT_Y / scaleFactor);
-        int quitSize = Math.max(1, (int) Math.round(QUIT_SIZE / scaleFactor));
+        int rawMouseX = (int) Math.round(click.x() * scaleFactor);
+        int rawMouseY = (int) Math.round(click.y() * scaleFactor);
 
-        if (axial_cosmetics$clickTitleButton(screen.children(), click.x(), click.y(), buttonX, singleY, buttonWidth, buttonHeight, "single")
-                || axial_cosmetics$clickTitleButton(screen.children(), click.x(), click.y(), buttonX, multiY, buttonWidth, buttonHeight, "multi")
-                || axial_cosmetics$clickTitleButton(screen.children(), click.x(), click.y(), buttonX, optionsY, buttonWidth, buttonHeight, "options")
-                || axial_cosmetics$clickQuitButton(screen.children(), click.x(), click.y(), quitX, quitY, quitSize)) {
+        if (axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "single")
+                || axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "multi")
+                || axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "options")
+                || axial_cosmetics$clickQuitButton(screen.children(), rawMouseX, rawMouseY)) {
             cir.setReturnValue(true);
             cir.cancel();
         }
     }
 
-    private static void axial_cosmetics$drawButton(DrawContext context, int mouseX, int mouseY, int x, int y, int width, int height, String label) {
-        boolean hovered = axial_cosmetics$inRawRect(mouseX, mouseY, x, y, width, height);
+    private static void axial_cosmetics$drawButton(DrawContext context, int rawMouseX, int rawMouseY, int x, int y, int width, int height, String label) {
+        boolean hovered = axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, width, height);
         Identifier texture = hovered ? BUTTON_2 : BUTTON_1;
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
@@ -112,8 +106,8 @@ public abstract class TitleScreenButtonSkinMixin {
         context.drawTextWithShadow(textRenderer, buttonText, x + 12, y + (height - 8) / 2, textColor);
     }
 
-    private static void axial_cosmetics$drawQuitButton(DrawContext context, int mouseX, int mouseY, int x, int y, int size) {
-        boolean hovered = axial_cosmetics$inRawRect(mouseX, mouseY, x, y, size, size);
+    private static void axial_cosmetics$drawQuitButton(DrawContext context, int rawMouseX, int rawMouseY, int x, int y, int size) {
+        boolean hovered = axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, size, size);
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
                 hovered ? QUIT_ICON_HOVER : QUIT_ICON,
@@ -130,13 +124,21 @@ public abstract class TitleScreenButtonSkinMixin {
         );
     }
 
-    private static boolean axial_cosmetics$clickTitleButton(List<?> children, double mouseX, double mouseY, int x, int y, int width, int height, String labelNeedle) {
+    private static boolean axial_cosmetics$clickTitleButton(List<?> children, int rawMouseX, int rawMouseY, String labelNeedle) {
         ButtonWidget button = axial_cosmetics$findTitleButton(children, labelNeedle);
         if (button == null) {
             return false;
         }
 
-        if (!axial_cosmetics$inRawRect((int) Math.round(mouseX), (int) Math.round(mouseY), x, y, width, height)) {
+        int x = BUTTON_X;
+        int y = switch (labelNeedle) {
+            case "single" -> SINGLE_Y;
+            case "multi" -> SINGLE_Y + BUTTON_SPACING;
+            case "options" -> SINGLE_Y + (BUTTON_SPACING * 2);
+            default -> SINGLE_Y;
+        };
+
+        if (!axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT)) {
             return false;
         }
 
@@ -144,13 +146,14 @@ public abstract class TitleScreenButtonSkinMixin {
         return true;
     }
 
-    private static boolean axial_cosmetics$clickQuitButton(List<?> children, double mouseX, double mouseY, int x, int y, int size) {
+    private static boolean axial_cosmetics$clickQuitButton(List<?> children, int rawMouseX, int rawMouseY) {
         ButtonWidget button = axial_cosmetics$findTitleButton(children, "quit");
         if (button == null) {
             return false;
         }
 
-        if (!axial_cosmetics$inRawRect((int) Math.round(mouseX), (int) Math.round(mouseY), x, y, size, size)) {
+        int x = Math.max(RIGHT_MARGIN, MinecraftClient.getInstance().getWindow().getWidth() - RIGHT_MARGIN - QUIT_SIZE);
+        if (!axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, QUIT_Y, QUIT_SIZE, QUIT_SIZE)) {
             return false;
         }
 
