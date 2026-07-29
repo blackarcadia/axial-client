@@ -5,15 +5,10 @@ import java.util.Locale;
 import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
-import com.axial.cosmetics.client.AccountsScreen;
+import com.axial.cosmetics.client.TitleScreenAccountsDropdown;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -38,13 +33,6 @@ public abstract class TitleScreenMenuLayoutMixin {
     private static final int AXIAL_TITLE_MUSIC_SLIDER_GAP = 8;
     private static final int AXIAL_TITLE_ACCOUNTS_Y = AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 3);
     private static final String ACCOUNTS_LABEL = "Accounts";
-    private static final Path AXIAL_LAUNCHER_POINTER = Path.of(
-            System.getProperty("user.home"),
-            "Library",
-            "Application Support",
-            "AxialLauncher",
-            "active-launcher.path"
-    );
     private static final List<String> SCREEN_CHILD_LIST_FIELDS = Arrays.asList("field_22786", "field_33816", "field_33815");
 
     @Inject(method = "init", at = @At("TAIL"))
@@ -145,7 +133,7 @@ public abstract class TitleScreenMenuLayoutMixin {
             }
         }
 
-        ButtonWidget accountsButton = ButtonWidget.builder(Text.literal(ACCOUNTS_LABEL), button -> axial_cosmetics$openAccountsManager())
+        ButtonWidget accountsButton = ButtonWidget.builder(Text.literal(ACCOUNTS_LABEL), button -> TitleScreenAccountsDropdown.toggle())
                 .build();
         axial_cosmetics$addToScreenLists(accountsButton);
     }
@@ -176,10 +164,6 @@ public abstract class TitleScreenMenuLayoutMixin {
             }
             type = type.getSuperclass();
         }
-    }
-
-    private void axial_cosmetics$openAccountsManager() {
-        MinecraftClient.getInstance().setScreen(new AccountsScreen((TitleScreen) (Object) this));
     }
 
     private void removeRealmsWidgets() {
