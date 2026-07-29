@@ -160,7 +160,7 @@ public final class TitleScreenAccountsDropdown {
         int footerWidth = (panelWidth - (PANEL_PADDING * 3)) / 2;
         int footerX = panelX + PANEL_PADDING;
         if (inRect(mouseX, mouseY, footerX, footerY, footerWidth, FOOTER_HEIGHT)) {
-            openLauncherAccountManager();
+            MinecraftClient.getInstance().setScreen(new MicrosoftAccountLoginScreen(MinecraftClient.getInstance().currentScreen));
             open = false;
             return true;
         }
@@ -231,40 +231,6 @@ public final class TitleScreenAccountsDropdown {
         context.fill(x, y, x + width, y + height, hovered ? 0xBF20283A : 0xAA131826);
         context.drawStrokedRectangle(x, y, width, height, hovered ? 0xFFE7D9FF : 0xD08F5DFF);
         drawOutlinedText(context, textRenderer, uiText(label), x + 8, y + 6, 0xFFFFFFFF, 0xFF000000);
-    }
-
-    private static void openLauncherAccountManager() {
-        try {
-            Path bundle = locateLauncherBundle();
-            if (bundle != null) {
-                new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
-            }
-        } catch (IOException ignored) {
-        }
-    }
-
-    private static Path locateLauncherBundle() throws IOException {
-        if (Files.exists(ACTIVE_LAUNCHER_POINTER)) {
-            String stored = Files.readString(ACTIVE_LAUNCHER_POINTER).trim();
-            if (!stored.isBlank()) {
-                Path bundle = Path.of(stored);
-                if (Files.exists(bundle)) {
-                    return bundle;
-                }
-            }
-        }
-
-        Path launchersDir = ACTIVE_LAUNCHER_POINTER.getParent().resolve("launchers");
-        if (!Files.isDirectory(launchersDir)) {
-            return null;
-        }
-
-        try (var stream = Files.list(launchersDir)) {
-            return stream
-                    .filter(path -> path.getFileName().toString().endsWith(".app"))
-                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
-                    .orElse(null);
-        }
     }
 
     private static AccountEntry parseAccount(Path path) {
