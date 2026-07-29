@@ -85,6 +85,10 @@ tasks.register('fatJar', Jar) {
 
 def isMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX()
 def mainJarName = "${project.name}-${version}-all.jar"
+def javafxModulePath = configurations.runtimeClasspath.files
+        .findAll { it.name.startsWith('javafx-') }
+        .collect { it.absolutePath }
+        .join(File.pathSeparator)
 
 tasks.register('runtimeImage', Exec) {
     group = 'distribution'
@@ -95,6 +99,7 @@ tasks.register('runtimeImage', Exec) {
         delete "${buildDir}/runtime"
     }
     commandLine 'jlink',
+            '--module-path', "${System.getProperty('java.home')}/jmods${File.pathSeparator}${javafxModulePath}",
             '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.unsupported,jdk.zipfs,javafx.web',
             '--strip-debug',
             '--no-header-files',
