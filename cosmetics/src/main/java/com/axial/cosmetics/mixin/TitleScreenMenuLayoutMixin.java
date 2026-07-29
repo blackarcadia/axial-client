@@ -1,13 +1,11 @@
 package com.axial.cosmetics.mixin;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.ArrayList;
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
-import net.minecraft.client.gui.DrawContext;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -18,78 +16,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMenuLayoutMixin {
-    private static final int AXIAL_TITLE_BUTTON_X = 20;
-    private static final int AXIAL_TITLE_BUTTON_Y = 144;
-    private static final int AXIAL_TITLE_QUIT_Y = 20;
-    private static final int AXIAL_TITLE_BUTTON_RIGHT_MARGIN = 20;
-    private static final int AXIAL_TITLE_BUTTON_SPACING = 28;
-    private static final int AXIAL_TITLE_BUTTON_BASE_WIDTH = 208;
-    private static final int AXIAL_TITLE_QUIT_BUTTON_SIZE = 32;
     private static final int AXIAL_TITLE_MUSIC_SLIDER_WIDTH = 112;
     private static final int AXIAL_TITLE_MUSIC_SLIDER_HEIGHT = 18;
-    private static final int AXIAL_TITLE_MUSIC_SLIDER_GAP = 8;
     private static final List<String> SCREEN_CHILD_LIST_FIELDS = Arrays.asList("field_22786", "field_33816", "field_33815");
 
     @Inject(method = "init", at = @At("TAIL"))
     private void axial_cosmetics$layoutTitleMenu(CallbackInfo ci) {
         axial_cosmetics$ensureMusicSlider();
-        axial_cosmetics$applyLayout();
+        axial_cosmetics$hideVanillaTitleButtons();
+        removeRealmsWidgets();
     }
 
-    private void axial_cosmetics$applyLayout() {
+    private void axial_cosmetics$hideVanillaTitleButtons() {
         List<?> children = ((TitleScreen) (Object) this).children();
-        List<ButtonWidget> buttons = new ArrayList<>();
         for (Object child : children) {
-            if (!(child instanceof ClickableWidget widget)) {
+            if (!(child instanceof ButtonWidget button)) {
                 continue;
             }
 
-            if (widget instanceof ButtonWidget button) {
-                buttons.add(button);
+            String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
+            if (lower.contains("single") || lower.contains("multi") || lower.contains("options") || lower.contains("quit")) {
+                button.visible = false;
+                button.active = false;
             }
         }
-
-        for (ButtonWidget button : buttons) {
-            String label = button.getMessage().getString();
-            String lower = label.toLowerCase(Locale.ROOT);
-            if (lower.contains("quit")) {
-                button.setWidth(AXIAL_TITLE_QUIT_BUTTON_SIZE);
-                button.setHeight(AXIAL_TITLE_QUIT_BUTTON_SIZE);
-                button.setPosition(
-                        Math.max(AXIAL_TITLE_BUTTON_RIGHT_MARGIN, ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE),
-                        AXIAL_TITLE_QUIT_Y
-                );
-            } else if (lower.contains("single")) {
-                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
-                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y);
-            } else if (lower.contains("multi")) {
-                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
-                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + AXIAL_TITLE_BUTTON_SPACING);
-            } else if (lower.contains("options")) {
-                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
-                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 2));
-            } else {
-                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
-                button.setPosition(AXIAL_TITLE_BUTTON_X, button.getY());
-            }
-        }
-
-        for (Object child : children) {
-            if (child instanceof MenuMusicVolumeSliderWidget slider) {
-                int x = Math.max(
-                        AXIAL_TITLE_BUTTON_X,
-                        ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_GAP - AXIAL_TITLE_MUSIC_SLIDER_WIDTH
-                );
-                int y = AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2);
-                slider.setDimensionsAndPosition(AXIAL_TITLE_MUSIC_SLIDER_WIDTH, AXIAL_TITLE_MUSIC_SLIDER_HEIGHT, x, y);
-            }
-        }
-
-        removeRealmsWidgets();
     }
 
     private void axial_cosmetics$ensureMusicSlider() {
@@ -100,11 +50,9 @@ public abstract class TitleScreenMenuLayoutMixin {
             }
         }
 
-        int x = Math.max(
-                AXIAL_TITLE_BUTTON_X,
-                ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_GAP - AXIAL_TITLE_MUSIC_SLIDER_WIDTH
-        );
-        int y = AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2);
+        TitleScreen screen = (TitleScreen) (Object) this;
+        int x = Math.max(20, screen.width - 20 - 32 - 8 - AXIAL_TITLE_MUSIC_SLIDER_WIDTH);
+        int y = 20 + ((32 - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2);
         MenuMusicVolumeSliderWidget slider = new MenuMusicVolumeSliderWidget(
                 x,
                 y,

@@ -1,26 +1,27 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
+import java.util.List;
+import java.util.Locale;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.PressableWidget;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
+import net.minecraft.client.input.MouseInput;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Locale;
-
-@Mixin(PressableWidget.class)
+@Mixin(TitleScreen.class)
 public abstract class TitleScreenButtonSkinMixin {
     private static final Identifier BUTTON_1 = AxialCosmetics.id("textures/gui/title/button1.png");
     private static final Identifier BUTTON_2 = AxialCosmetics.id("textures/gui/title/button2.png");
@@ -29,86 +30,153 @@ public abstract class TitleScreenButtonSkinMixin {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     private static final int BUTTON_TEXTURE_WIDTH = 208;
     private static final int BUTTON_TEXTURE_HEIGHT = 22;
-    private static final int BUTTON_HOVER_EXPAND = 12;
+    private static final int BUTTON_X = 20;
+    private static final int SINGLE_Y = 144;
+    private static final int BUTTON_SPACING = 28;
+    private static final int QUIT_Y = 20;
+    private static final int QUIT_SIZE = 32;
     private static final int RIGHT_MARGIN = 20;
-    private static final int QUIT_ICON_SIZE = 18;
 
-    @Unique
-    private float axial_cosmetics$hoverProgress;
-
-    @Inject(method = "renderWidget", at = @At("HEAD"), cancellable = true)
-    private void axial_cosmetics$renderTitleButton(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("TAIL"))
+    private void axial_cosmetics$renderFixedTitleOverlay(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!(client.currentScreen instanceof TitleScreen titleScreen)) {
+        if (!(client.currentScreen instanceof TitleScreen screen)) {
             return;
         }
 
-        Object self = this;
-        if (!(self instanceof ButtonWidget button)) {
+        double scaleFactor = client.getWindow().getScaleFactor();
+        int rawMouseX = (int) Math.round(mouseX * scaleFactor);
+        int rawMouseY = (int) Math.round(mouseY * scaleFactor);
+
+        var matrices = context.getMatrices();
+        matrices.pushMatrix();
+        matrices.scale((float) (1.0 / scaleFactor), (float) (1.0 / scaleFactor));
+
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "single");
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y + BUTTON_SPACING, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "multi");
+        axial_cosmetics$drawButton(context, rawMouseX, rawMouseY, BUTTON_X, SINGLE_Y + (BUTTON_SPACING * 2), BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT, "options");
+
+        int quitX = Math.max(RIGHT_MARGIN, client.getWindow().getWidth() - RIGHT_MARGIN - QUIT_SIZE);
+        axial_cosmetics$drawQuitButton(context, rawMouseX, rawMouseY, quitX, QUIT_Y, QUIT_SIZE);
+
+        matrices.popMatrix();
+    }
+
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void axial_cosmetics$handleFixedTitleClick(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (!(client.currentScreen instanceof TitleScreen screen)) {
             return;
         }
 
-        String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
-        boolean isTitleButton = lower.contains("single") || lower.contains("multi") || lower.contains("options") || lower.contains("quit");
-        if (!isTitleButton) {
-            return;
+        double scaleFactor = client.getWindow().getScaleFactor();
+        int rawMouseX = (int) Math.round(click.x() * scaleFactor);
+        int rawMouseY = (int) Math.round(click.y() * scaleFactor);
+
+        if (axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "single")
+                || axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "multi")
+                || axial_cosmetics$clickTitleButton(screen.children(), rawMouseX, rawMouseY, "options")
+                || axial_cosmetics$clickQuitButton(screen.children(), rawMouseX, rawMouseY)) {
+            cir.setReturnValue(true);
+            cir.cancel();
         }
+    }
 
-        if (lower.contains("quit")) {
-            boolean highlighted = button.isHovered() || button.isFocused();
-            int size = button.getWidth();
-            context.drawTexture(
-                    RenderPipelines.GUI_TEXTURED,
-                    highlighted ? QUIT_ICON_HOVER : QUIT_ICON,
-                    button.getX(),
-                    button.getY(),
-                    0.0f,
-                    0.0f,
-                    size,
-                    size,
-                    1024,
-                    1024,
-                    1024,
-                    1024
-            );
-            ci.cancel();
-            return;
-        }
-
-        boolean highlighted = button.isHovered() || button.isFocused();
-        axial_cosmetics$hoverProgress += ((highlighted ? 1.0f : 0.0f) - axial_cosmetics$hoverProgress) * 0.34f;
-
-        int renderedWidth = BUTTON_TEXTURE_WIDTH + Math.round(axial_cosmetics$hoverProgress * BUTTON_HOVER_EXPAND);
-        button.setWidth(renderedWidth);
-
-        int x = lower.contains("quit")
-                ? Math.max(RIGHT_MARGIN, titleScreen.width - RIGHT_MARGIN - renderedWidth)
-                : button.getX();
-        button.setX(x);
-
-        Identifier texture = highlighted ? BUTTON_2 : BUTTON_1;
+    private static void axial_cosmetics$drawButton(DrawContext context, int rawMouseX, int rawMouseY, int x, int y, int width, int height, String label) {
+        boolean hovered = axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, width, height);
+        Identifier texture = hovered ? BUTTON_2 : BUTTON_1;
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
                 texture,
                 x,
-                button.getY(),
+                y,
                 0.0f,
                 0.0f,
-                renderedWidth,
-                BUTTON_TEXTURE_HEIGHT,
+                width,
+                height,
                 BUTTON_TEXTURE_WIDTH,
                 BUTTON_TEXTURE_HEIGHT,
                 BUTTON_TEXTURE_WIDTH,
                 BUTTON_TEXTURE_HEIGHT
         );
 
-        TextRenderer textRenderer = client.textRenderer;
-        int textColor = ColorHelper.getWhite(button.getAlpha());
-        int textY = button.getY() + (BUTTON_TEXTURE_HEIGHT - 8) / 2;
-        Text buttonText = Text.literal(button.getMessage().getString().toUpperCase(Locale.ROOT))
-                .styled(style -> style.withFont(UI_FONT));
-        int textX = x + 12;
-        context.drawTextWithShadow(textRenderer, buttonText, textX, textY, textColor);
-        ci.cancel();
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        int textColor = ColorHelper.getWhite(1.0f);
+        Text buttonText = Text.literal(label.toUpperCase(Locale.ROOT)).styled(style -> style.withFont(UI_FONT));
+        context.drawTextWithShadow(textRenderer, buttonText, x + 12, y + (height - 8) / 2, textColor);
+    }
+
+    private static void axial_cosmetics$drawQuitButton(DrawContext context, int rawMouseX, int rawMouseY, int x, int y, int size) {
+        boolean hovered = axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, size, size);
+        context.drawTexture(
+                RenderPipelines.GUI_TEXTURED,
+                hovered ? QUIT_ICON_HOVER : QUIT_ICON,
+                x,
+                y,
+                0.0f,
+                0.0f,
+                size,
+                size,
+                1024,
+                1024,
+                1024,
+                1024
+        );
+    }
+
+    private static boolean axial_cosmetics$clickTitleButton(List<?> children, int rawMouseX, int rawMouseY, String labelNeedle) {
+        ButtonWidget button = axial_cosmetics$findTitleButton(children, labelNeedle);
+        if (button == null) {
+            return false;
+        }
+
+        int x = BUTTON_X;
+        int y = switch (labelNeedle) {
+            case "single" -> SINGLE_Y;
+            case "multi" -> SINGLE_Y + BUTTON_SPACING;
+            case "options" -> SINGLE_Y + (BUTTON_SPACING * 2);
+            default -> SINGLE_Y;
+        };
+
+        if (!axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, y, BUTTON_TEXTURE_WIDTH, BUTTON_TEXTURE_HEIGHT)) {
+            return false;
+        }
+
+        button.onPress(new MouseInput(0, 0));
+        return true;
+    }
+
+    private static boolean axial_cosmetics$clickQuitButton(List<?> children, int rawMouseX, int rawMouseY) {
+        ButtonWidget button = axial_cosmetics$findTitleButton(children, "quit");
+        if (button == null) {
+            return false;
+        }
+
+        int x = Math.max(RIGHT_MARGIN, MinecraftClient.getInstance().getWindow().getWidth() - RIGHT_MARGIN - QUIT_SIZE);
+        if (!axial_cosmetics$inRawRect(rawMouseX, rawMouseY, x, QUIT_Y, QUIT_SIZE, QUIT_SIZE)) {
+            return false;
+        }
+
+        button.onPress(new MouseInput(0, 0));
+        return true;
+    }
+
+    private static ButtonWidget axial_cosmetics$findTitleButton(List<?> children, String labelNeedle) {
+        for (Object child : children) {
+            if (!(child instanceof ButtonWidget button)) {
+                continue;
+            }
+
+            String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
+            if (lower.contains(labelNeedle)) {
+                return button;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean axial_cosmetics$inRawRect(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height);
     }
 }
