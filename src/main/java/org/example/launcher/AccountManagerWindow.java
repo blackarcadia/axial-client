@@ -207,6 +207,7 @@ final class AccountManagerWindow {
             try {
                 Files.createDirectories(accountsDir);
                 Path temp = accountsDir.resolve("temp.json");
+                Files.deleteIfExists(temp);
                 AuthManager auth = new AuthManager(temp);
                 AuthResult result = auth.authenticate();
                 Path target = accountsDir.resolve(result.playerName + ".json");
