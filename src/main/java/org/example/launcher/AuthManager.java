@@ -17,6 +17,7 @@ import java.nio.file.Path;
 public class AuthManager {
     private final Path storeFile;
     private final HttpClient httpClient;
+    private MicrosoftSignInWindow signInWindow;
 
     public AuthManager(Path storeFile) {
         this.storeFile = storeFile;
@@ -24,36 +25,38 @@ public class AuthManager {
     }
 
     public AuthResult authenticate() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
-        JavaAuthManager authManager;
-        if (Files.exists(storeFile)) {
-            JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
-            authManager = JavaAuthManager.fromJson(httpClient, json);
-        } else {
-            ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
-                    (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, consumer);
-            authManager = JavaAuthManager.create(httpClient).login(supplier, (MsaDeviceCode code) -> {
-                showDeviceCodeUi(code);
-            });
-            persist(authManager);
-        }
-
-        // persist on any token update
-        authManager.getChangeListeners().add(() -> {
-            try {
+        try {
+            JavaAuthManager authManager;
+            if (Files.exists(storeFile)) {
+                JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
+                authManager = JavaAuthManager.fromJson(httpClient, json);
+            } else {
+                ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
+                        (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, consumer);
+                authManager = JavaAuthManager.create(httpClient).login(supplier, this::showDeviceCodeUi);
                 persist(authManager);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-        });
 
-        String accessToken = authManager.getMinecraftToken().getUpToDate().getToken();
-        var profile = authManager.getMinecraftProfile().getUpToDate();
-        String name = profile.getName();
-        String uuid = profile.getId().toString();
+            // persist on any token update
+            authManager.getChangeListeners().add(() -> {
+                try {
+                    persist(authManager);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-        String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
+            String accessToken = authManager.getMinecraftToken().getUpToDate().getToken();
+            var profile = authManager.getMinecraftProfile().getUpToDate();
+            String name = profile.getName();
+            String uuid = profile.getId().toString();
 
-        return new AuthResult(name, uuid, accessToken, xuid);
+            String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
+
+            return new AuthResult(name, uuid, accessToken, xuid);
+        } finally {
+            closeSignInWindow();
+        }
     }
 
     private void persist(JavaAuthManager authManager) throws IOException {
@@ -72,18 +75,26 @@ public class AuthManager {
     }
 
     private void showDeviceCodeUi(MsaDeviceCode code) {
-        String msg = "To sign in, go to:\n" + code.getVerificationUri() +
-                "\nCode: " + code.getUserCode() +
-                "\n\n(You can close this window after signing in.)";
-        try {
-            java.awt.Desktop.getDesktop().browse(java.net.URI.create(code.getDirectVerificationUri()));
-        } catch (Exception ignored) {
+        if (signInWindow == null) {
+            signInWindow = MicrosoftSignInWindow.show(
+                    code.getVerificationUri(),
+                    code.getDirectVerificationUri(),
+                    code.getUserCode()
+            );
+        } else {
+            signInWindow.update(
+                    code.getVerificationUri(),
+                    code.getDirectVerificationUri(),
+                    code.getUserCode(),
+                    "Use the code shown below to sign in."
+            );
         }
-        javax.swing.SwingUtilities.invokeLater(() ->
-                javax.swing.JOptionPane.showMessageDialog(
-                        null,
-                        msg,
-                        "Microsoft Sign-In",
-                        javax.swing.JOptionPane.INFORMATION_MESSAGE));
+    }
+
+    private void closeSignInWindow() {
+        if (signInWindow != null) {
+            signInWindow.close();
+            signInWindow = null;
+        }
     }
 }
