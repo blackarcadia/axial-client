@@ -5,9 +5,7 @@ import com.google.gson.JsonParser;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
-import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
-import net.raphimc.minecraftauth.msa.service.util.ParamMsaAuthServiceSupplier;
+import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +15,6 @@ import java.nio.file.Path;
 public class AuthManager {
     private final Path storeFile;
     private final HttpClient httpClient;
-    private MicrosoftSignInWindow signInWindow;
 
     public AuthManager(Path storeFile) {
         this.storeFile = storeFile;
@@ -25,38 +22,33 @@ public class AuthManager {
     }
 
     public AuthResult authenticate() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
-        try {
-            JavaAuthManager authManager;
-            if (Files.exists(storeFile)) {
-                JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
-                authManager = JavaAuthManager.fromJson(httpClient, json);
-            } else {
-                ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
-                        (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, consumer);
-                authManager = JavaAuthManager.create(httpClient).login(supplier, this::showDeviceCodeUi);
-                persist(authManager);
-            }
-
-            // persist on any token update
-            authManager.getChangeListeners().add(() -> {
-                try {
-                    persist(authManager);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-
-            String accessToken = authManager.getMinecraftToken().getUpToDate().getToken();
-            var profile = authManager.getMinecraftProfile().getUpToDate();
-            String name = profile.getName();
-            String uuid = profile.getId().toString();
-
-            String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
-
-            return new AuthResult(name, uuid, accessToken, xuid);
-        } finally {
-            closeSignInWindow();
+        JavaAuthManager authManager;
+        if (Files.exists(storeFile)) {
+            JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
+            authManager = JavaAuthManager.fromJson(httpClient, json);
+        } else {
+            authManager = JavaAuthManager.create(httpClient)
+                    .login((client, appConfig) -> new JfxWebViewMsaAuthService(client, appConfig));
+            persist(authManager);
         }
+
+        // persist on any token update
+        authManager.getChangeListeners().add(() -> {
+            try {
+                persist(authManager);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        String accessToken = authManager.getMinecraftToken().getUpToDate().getToken();
+        var profile = authManager.getMinecraftProfile().getUpToDate();
+        String name = profile.getName();
+        String uuid = profile.getId().toString();
+
+        String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
+
+        return new AuthResult(name, uuid, accessToken, xuid);
     }
 
     private void persist(JavaAuthManager authManager) throws IOException {
@@ -74,27 +66,4 @@ public class AuthManager {
         return new AuthResult(name, uuid, "", "0");
     }
 
-    private void showDeviceCodeUi(MsaDeviceCode code) {
-        if (signInWindow == null) {
-            signInWindow = MicrosoftSignInWindow.show(
-                    code.getVerificationUri(),
-                    code.getDirectVerificationUri(),
-                    code.getUserCode()
-            );
-        } else {
-            signInWindow.update(
-                    code.getVerificationUri(),
-                    code.getDirectVerificationUri(),
-                    code.getUserCode(),
-                    "Use the code shown below to sign in."
-            );
-        }
-    }
-
-    private void closeSignInWindow() {
-        if (signInWindow != null) {
-            signInWindow.close();
-            signInWindow = null;
-        }
-    }
 }
