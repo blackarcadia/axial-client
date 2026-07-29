@@ -29,10 +29,11 @@ public abstract class TitleScreenBackgroundMixin {
     private static final Identifier AXIAL_TITLE_BACKGROUND = AxialCosmetics.id("textures/gui/title/main_menu_background.png");
     private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1717;
     private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 916;
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
+    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean_large"));
     private static final String OFFICIAL_GAMEMODES = "OFFICIAL GAMEMODES";
     private static final int OFFICIAL_GAMEMODES_RIGHT_MARGIN = 24;
     private static final int OFFICIAL_GAMEMODES_TOP = 126;
+    private static final int OFFICIAL_GAMEMODES_LABEL_HEIGHT = 12;
     private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
     private static final String AXIAL_SERVER_IP = "mc.axialprisons.com";
     private static final String AXIAL_SERVER_NAME = "Axial Prisons";
@@ -115,7 +116,7 @@ public abstract class TitleScreenBackgroundMixin {
                 OFFICIAL_GAMEMODES_RIGHT_MARGIN,
                 screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
         );
-        int buttonY = y + textRenderer.fontHeight + OFFICIAL_GAMEMODES_BUTTON_GAP;
+        int buttonY = y + OFFICIAL_GAMEMODES_LABEL_HEIGHT + OFFICIAL_GAMEMODES_BUTTON_GAP;
         boolean hovered = axial_cosmetics$inRect(mouseX, mouseY, buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT);
         context.drawTexture(
                 RenderPipelines.GUI_TEXTURED,
@@ -151,7 +152,7 @@ public abstract class TitleScreenBackgroundMixin {
                 OFFICIAL_GAMEMODES_RIGHT_MARGIN,
                 screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
         );
-        int buttonY = OFFICIAL_GAMEMODES_TOP + MinecraftClient.getInstance().textRenderer.fontHeight + OFFICIAL_GAMEMODES_BUTTON_GAP;
+        int buttonY = OFFICIAL_GAMEMODES_TOP + OFFICIAL_GAMEMODES_LABEL_HEIGHT + OFFICIAL_GAMEMODES_BUTTON_GAP;
         if (!axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT)) {
             return;
         }
