@@ -36,8 +36,8 @@ public abstract class TitleScreenBackgroundMixin {
     private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
     private static final String AXIAL_SERVER_IP = "mc.axialprisons.com";
     private static final String AXIAL_SERVER_NAME = "Axial Prisons";
-    private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 224;
-    private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 96;
+    private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 176;
+    private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 77;
     private static final int OFFICIAL_GAMEMODES_BUTTON_GAP = 18;
 
     @Redirect(
