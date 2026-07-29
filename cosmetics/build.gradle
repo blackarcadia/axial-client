@@ -15,7 +15,7 @@ dependencies {
     mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
     modImplementation 'net.fabricmc:fabric-loader:0.18.1'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
-    implementation 'net.raphimc:MinecraftAuth:5.0.0'
+    include implementation('net.raphimc:MinecraftAuth:5.0.0')
     compileOnly files('../src/main/resources/axialutils-1.0-SNAPSHOT.jar')
     implementation 'com.google.code.gson:gson:2.11.0'
 }
