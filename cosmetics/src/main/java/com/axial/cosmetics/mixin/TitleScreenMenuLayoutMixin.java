@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -54,47 +53,39 @@ public abstract class TitleScreenMenuLayoutMixin {
             String label = button.getMessage().getString();
             String lower = label.toLowerCase(Locale.ROOT);
             if (lower.contains("quit")) {
-                button.setWidth(axial_cosmetics$guiPixels(AXIAL_TITLE_QUIT_BUTTON_SIZE));
-                button.setHeight(axial_cosmetics$guiPixels(AXIAL_TITLE_QUIT_BUTTON_SIZE));
+                button.setWidth(AXIAL_TITLE_QUIT_BUTTON_SIZE);
+                button.setHeight(AXIAL_TITLE_QUIT_BUTTON_SIZE);
                 button.setPosition(
-                        Math.max(
-                                axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_RIGHT_MARGIN),
-                                ((TitleScreen) (Object) this).width - axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_RIGHT_MARGIN + AXIAL_TITLE_QUIT_BUTTON_SIZE)
-                        ),
-                        axial_cosmetics$guiPixels(AXIAL_TITLE_QUIT_Y)
+                        Math.max(AXIAL_TITLE_BUTTON_RIGHT_MARGIN, ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE),
+                        AXIAL_TITLE_QUIT_Y
                 );
             } else if (lower.contains("single")) {
-                button.setWidth(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_BASE_WIDTH));
-                button.setHeight(axial_cosmetics$guiPixels(22));
-                button.setPosition(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X), axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_Y));
+                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
+                button.setHeight(22);
+                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y);
             } else if (lower.contains("multi")) {
-                button.setWidth(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_BASE_WIDTH));
-                button.setHeight(axial_cosmetics$guiPixels(22));
-                button.setPosition(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X), axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_Y + AXIAL_TITLE_BUTTON_SPACING));
+                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
+                button.setHeight(22);
+                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + AXIAL_TITLE_BUTTON_SPACING);
             } else if (lower.contains("options")) {
-                button.setWidth(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_BASE_WIDTH));
-                button.setHeight(axial_cosmetics$guiPixels(22));
-                button.setPosition(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X), axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 2)));
+                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
+                button.setHeight(22);
+                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 2));
             } else {
-                button.setWidth(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_BASE_WIDTH));
-                button.setHeight(axial_cosmetics$guiPixels(22));
-                button.setPosition(axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X), button.getY());
+                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
+                button.setHeight(22);
+                button.setPosition(AXIAL_TITLE_BUTTON_X, button.getY());
             }
         }
 
         for (Object child : children) {
             if (child instanceof MenuMusicVolumeSliderWidget slider) {
                 int x = Math.max(
-                        axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X),
-                        ((TitleScreen) (Object) this).width - axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_RIGHT_MARGIN + AXIAL_TITLE_QUIT_BUTTON_SIZE + AXIAL_TITLE_MUSIC_SLIDER_GAP + AXIAL_TITLE_MUSIC_SLIDER_WIDTH)
+                        AXIAL_TITLE_BUTTON_X,
+                        ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_GAP - AXIAL_TITLE_MUSIC_SLIDER_WIDTH
                 );
-                int y = axial_cosmetics$guiPixels(AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2));
-                slider.setDimensionsAndPosition(
-                        axial_cosmetics$guiPixels(AXIAL_TITLE_MUSIC_SLIDER_WIDTH),
-                        axial_cosmetics$guiPixels(AXIAL_TITLE_MUSIC_SLIDER_HEIGHT),
-                        x,
-                        y
-                );
+                int y = AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2);
+                slider.setDimensionsAndPosition(AXIAL_TITLE_MUSIC_SLIDER_WIDTH, AXIAL_TITLE_MUSIC_SLIDER_HEIGHT, x, y);
             }
         }
 
@@ -110,23 +101,18 @@ public abstract class TitleScreenMenuLayoutMixin {
         }
 
         int x = Math.max(
-                axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_X),
-                ((TitleScreen) (Object) this).width - axial_cosmetics$guiPixels(AXIAL_TITLE_BUTTON_RIGHT_MARGIN + AXIAL_TITLE_QUIT_BUTTON_SIZE + AXIAL_TITLE_MUSIC_SLIDER_GAP + AXIAL_TITLE_MUSIC_SLIDER_WIDTH)
+                AXIAL_TITLE_BUTTON_X,
+                ((TitleScreen) (Object) this).width - AXIAL_TITLE_BUTTON_RIGHT_MARGIN - AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_GAP - AXIAL_TITLE_MUSIC_SLIDER_WIDTH
         );
-        int y = axial_cosmetics$guiPixels(AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2));
+        int y = AXIAL_TITLE_QUIT_Y + ((AXIAL_TITLE_QUIT_BUTTON_SIZE - AXIAL_TITLE_MUSIC_SLIDER_HEIGHT) / 2);
         MenuMusicVolumeSliderWidget slider = new MenuMusicVolumeSliderWidget(
                 x,
                 y,
-                axial_cosmetics$guiPixels(AXIAL_TITLE_MUSIC_SLIDER_WIDTH),
-                axial_cosmetics$guiPixels(AXIAL_TITLE_MUSIC_SLIDER_HEIGHT),
+                AXIAL_TITLE_MUSIC_SLIDER_WIDTH,
+                AXIAL_TITLE_MUSIC_SLIDER_HEIGHT,
                 MenuMusicConfig.volume()
         );
         axial_cosmetics$addToScreenLists(slider);
-    }
-
-    private static int axial_cosmetics$guiPixels(int pixels) {
-        double scaleFactor = MinecraftClient.getInstance().getWindow().getScaleFactor();
-        return Math.max(1, (int) Math.round(pixels / scaleFactor));
     }
 
     private void axial_cosmetics$addToScreenLists(MenuMusicVolumeSliderWidget slider) {
