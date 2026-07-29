@@ -7,17 +7,17 @@ import org.example.launcher.StartupController;
 
 public class Main {
     public static void main(String[] args) {
+        if (hasArg(args, "--add-account")) {
+            new AccountLoginController().start();
+            return;
+        }
+
         try {
             if (LauncherInstallationManager.bootstrapStableInstall()) {
                 return;
             }
         } catch (Exception e) {
             System.err.println("Launcher install bootstrap failed: " + e.getMessage());
-        }
-
-        if (hasArg(args, "--add-account")) {
-            new AccountLoginController().start();
-            return;
         }
 
         LauncherStartupMarker.markStarted();
