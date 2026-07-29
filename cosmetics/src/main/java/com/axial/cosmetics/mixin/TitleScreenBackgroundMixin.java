@@ -1,13 +1,19 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
+import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.LogoDrawer;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.SplashTextRenderer;
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
+import net.minecraft.client.network.CookieStorage;
+import net.minecraft.client.network.ServerAddress;
+import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -15,6 +21,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TitleScreen.class)
@@ -26,6 +33,12 @@ public abstract class TitleScreenBackgroundMixin {
     private static final String OFFICIAL_GAMEMODES = "OFFICIAL GAMEMODES";
     private static final int OFFICIAL_GAMEMODES_RIGHT_MARGIN = 24;
     private static final int OFFICIAL_GAMEMODES_TOP = 126;
+    private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
+    private static final String AXIAL_SERVER_IP = "mc.axialprisons.com";
+    private static final String AXIAL_SERVER_NAME = "Axial Prisons";
+    private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 224;
+    private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 96;
+    private static final int OFFICIAL_GAMEMODES_BUTTON_GAP = 18;
 
     @Redirect(
             method = "render",
@@ -97,6 +110,30 @@ public abstract class TitleScreenBackgroundMixin {
         int y = OFFICIAL_GAMEMODES_TOP;
 
         drawOutlinedText(context, textRenderer, label, x, y, 0xFFFFFFFF, 0xFF000000);
+
+        int buttonX = Math.max(
+                OFFICIAL_GAMEMODES_RIGHT_MARGIN,
+                screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
+        );
+        int buttonY = y + textRenderer.fontHeight + OFFICIAL_GAMEMODES_BUTTON_GAP;
+        boolean hovered = axial_cosmetics$inRect(mouseX, mouseY, buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT);
+        context.drawTexture(
+                RenderPipelines.GUI_TEXTURED,
+                OFFICIAL_GAMEMODES_BUTTON,
+                buttonX,
+                buttonY,
+                0.0f,
+                0.0f,
+                OFFICIAL_GAMEMODES_BUTTON_WIDTH,
+                OFFICIAL_GAMEMODES_BUTTON_HEIGHT,
+                OFFICIAL_GAMEMODES_BUTTON_WIDTH,
+                OFFICIAL_GAMEMODES_BUTTON_HEIGHT,
+                OFFICIAL_GAMEMODES_BUTTON_WIDTH,
+                OFFICIAL_GAMEMODES_BUTTON_HEIGHT
+        );
+        if (hovered) {
+            context.fill(buttonX, buttonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT, 0x18000000);
+        }
     }
 
     private static void drawOutlinedText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int fillColor, int outlineColor) {
@@ -105,5 +142,33 @@ public abstract class TitleScreenBackgroundMixin {
         context.drawText(textRenderer, text, x, y - 1, outlineColor, false);
         context.drawText(textRenderer, text, x, y + 1, outlineColor, false);
         context.drawText(textRenderer, text, x, y, fillColor, false);
+    }
+
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void axial_cosmetics$connectOfficialGamemodes(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        TitleScreen screen = (TitleScreen) (Object) this;
+        int buttonX = Math.max(
+                OFFICIAL_GAMEMODES_RIGHT_MARGIN,
+                screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
+        );
+        int buttonY = OFFICIAL_GAMEMODES_TOP + MinecraftClient.getInstance().textRenderer.fontHeight + OFFICIAL_GAMEMODES_BUTTON_GAP;
+        if (!axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT)) {
+            return;
+        }
+
+        ConnectScreen.connect(
+                screen,
+                MinecraftClient.getInstance(),
+                ServerAddress.parse(AXIAL_SERVER_IP),
+                new ServerInfo(AXIAL_SERVER_NAME, AXIAL_SERVER_IP, ServerInfo.ServerType.OTHER),
+                false,
+                new CookieStorage(Map.of(), Map.of(), false)
+        );
+        cir.setReturnValue(true);
+        cir.cancel();
+    }
+
+    private static boolean axial_cosmetics$inRect(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height);
     }
 }
