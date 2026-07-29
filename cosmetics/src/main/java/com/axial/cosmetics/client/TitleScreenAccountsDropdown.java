@@ -234,21 +234,22 @@ public final class TitleScreenAccountsDropdown {
 
     private static void openLauncherAccountManager() {
         try {
-            Path bundle = locateLauncherBundle();
-            if (bundle != null) {
-                new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
+            Path executable = locateLauncherExecutable();
+            if (executable != null) {
+                new ProcessBuilder(executable.toAbsolutePath().toString(), "--add-account").start();
             }
         } catch (IOException ignored) {
         }
     }
 
-    private static Path locateLauncherBundle() throws IOException {
+    private static Path locateLauncherExecutable() throws IOException {
         if (Files.exists(ACTIVE_LAUNCHER_POINTER)) {
             String stored = Files.readString(ACTIVE_LAUNCHER_POINTER).trim();
             if (!stored.isBlank()) {
                 Path bundle = Path.of(stored);
-                if (Files.exists(bundle)) {
-                    return bundle;
+                Path executable = macLauncherExecutable(bundle);
+                if (Files.exists(executable)) {
+                    return executable;
                 }
             }
         }
@@ -259,11 +260,20 @@ public final class TitleScreenAccountsDropdown {
         }
 
         try (var stream = Files.list(launchersDir)) {
-            return stream
+            Path bundle = stream
                     .filter(path -> path.getFileName().toString().endsWith(".app"))
                     .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
                     .orElse(null);
+            return bundle == null ? null : macLauncherExecutable(bundle);
         }
+    }
+
+    private static Path macLauncherExecutable(Path bundle) {
+        String name = bundle.getFileName().toString();
+        if (name.endsWith(".app")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        return bundle.resolve("Contents").resolve("MacOS").resolve(name);
     }
 
     private static AccountEntry parseAccount(Path path) {
