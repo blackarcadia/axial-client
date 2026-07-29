@@ -1,22 +1,31 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.LogoDrawer;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.SplashTextRenderer;
-import net.minecraft.client.font.TextRenderer;
+import net.minecraft.text.StyleSpriteSource;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenBackgroundMixin {
     private static final Identifier AXIAL_TITLE_BACKGROUND = AxialCosmetics.id("textures/gui/title/main_menu_background.png");
     private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1717;
     private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 916;
+    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
+    private static final String OFFICIAL_GAMEMODES = "OFFICIAL GAMEMODES";
+    private static final int OFFICIAL_GAMEMODES_RIGHT_MARGIN = 24;
+    private static final int OFFICIAL_GAMEMODES_TOP = 126;
 
     @Redirect(
             method = "render",
@@ -76,5 +85,25 @@ public abstract class TitleScreenBackgroundMixin {
         TitleScreen screen = (TitleScreen) (Object) this;
         int rightX = Math.max(2, screen.width - textRenderer.getWidth(text) - 2);
         context.drawTextWithShadow(textRenderer, text, rightX, y, color);
+    }
+
+    @Inject(method = "render", at = @At("TAIL"))
+    private void axial_cosmetics$drawOfficialGamemodes(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        TitleScreen screen = (TitleScreen) (Object) this;
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Text label = Text.literal(OFFICIAL_GAMEMODES).styled(style -> style.withFont(UI_FONT));
+        int textWidth = textRenderer.getWidth(label);
+        int x = Math.max(OFFICIAL_GAMEMODES_RIGHT_MARGIN, screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - textWidth);
+        int y = OFFICIAL_GAMEMODES_TOP;
+
+        drawOutlinedText(context, textRenderer, label, x, y, 0xFFFFFFFF, 0xFF000000);
+    }
+
+    private static void drawOutlinedText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int fillColor, int outlineColor) {
+        context.drawText(textRenderer, text, x - 1, y, outlineColor, false);
+        context.drawText(textRenderer, text, x + 1, y, outlineColor, false);
+        context.drawText(textRenderer, text, x, y - 1, outlineColor, false);
+        context.drawText(textRenderer, text, x, y + 1, outlineColor, false);
+        context.drawText(textRenderer, text, x, y, fillColor, false);
     }
 }
