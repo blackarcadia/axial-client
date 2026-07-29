@@ -28,8 +28,8 @@ public abstract class TitleScreenButtonSkinMixin {
     private static final Identifier QUIT_ICON = AxialCosmetics.id("textures/gui/title/quit-button-icon.png");
     private static final Identifier QUIT_ICON_HOVER = AxialCosmetics.id("textures/gui/title/quit-button-icon-hover.png");
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
-    private static final int BUTTON_TEXTURE_WIDTH = 224;
-    private static final int BUTTON_TEXTURE_HEIGHT = 24;
+    private static final int BUTTON_TEXTURE_WIDTH = 208;
+    private static final int BUTTON_TEXTURE_HEIGHT = 22;
     private static final int BUTTON_X = 20;
     private static final int SINGLE_Y = 144;
     private static final int BUTTON_SPACING = 28;
