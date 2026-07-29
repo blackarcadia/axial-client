@@ -157,7 +157,7 @@ public abstract class TitleScreenBackgroundMixin {
 
         Text count = Text.literal(axial_cosmetics$serverCountText).styled(style -> style.withFont(UI_FONT));
         int countX = buttonX + OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING;
-        int countY = buttonY + Math.max(0, (OFFICIAL_GAMEMODES_BUTTON_HEIGHT - textRenderer.fontHeight) / 2);
+        int countY = buttonY - textRenderer.fontHeight - 4;
         drawOutlinedText(context, textRenderer, count, countX, countY, 0xFFFFFFFF, 0xFF000000);
     }
 
