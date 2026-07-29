@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMenuLayoutMixin {
     private static final int AXIAL_TITLE_BUTTON_X = 20;
-    private static final int AXIAL_TITLE_BUTTON_Y = 144;
+    private static final int AXIAL_TITLE_BUTTON_Y = 152;
     private static final int AXIAL_TITLE_QUIT_Y = 20;
     private static final int AXIAL_TITLE_BUTTON_RIGHT_MARGIN = 20;
     private static final int AXIAL_TITLE_BUTTON_SPACING = 28;
