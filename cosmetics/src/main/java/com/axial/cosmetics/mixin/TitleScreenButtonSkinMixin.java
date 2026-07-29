@@ -49,7 +49,7 @@ public abstract class TitleScreenButtonSkinMixin {
         }
 
         String lower = button.getMessage().getString().toLowerCase(Locale.ROOT);
-        boolean isTitleButton = lower.contains("single") || lower.contains("multi") || lower.contains("options") || lower.contains("quit");
+        boolean isTitleButton = lower.contains("single") || lower.contains("multi") || lower.contains("options") || lower.contains("accounts") || lower.contains("quit");
         if (!isTitleButton) {
             return;
         }
