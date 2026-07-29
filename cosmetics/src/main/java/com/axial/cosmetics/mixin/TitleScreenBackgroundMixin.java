@@ -46,8 +46,8 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int OFFICIAL_GAMEMODES_TOP = 126;
     private static final int OFFICIAL_GAMEMODES_LABEL_HEIGHT = 12;
     private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
-    private static final String AXIAL_SERVER_HOST = "185.206.149.12";
-    private static final int AXIAL_SERVER_PORT = 25574;
+    private static final String AXIAL_SERVER_HOST = "37.230.138.62";
+    private static final int AXIAL_SERVER_PORT = 25603;
     private static final String AXIAL_SERVER_IP = AXIAL_SERVER_HOST + ":" + AXIAL_SERVER_PORT;
     private static final String AXIAL_SERVER_NAME = "Axial Prisons";
     private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 168;
