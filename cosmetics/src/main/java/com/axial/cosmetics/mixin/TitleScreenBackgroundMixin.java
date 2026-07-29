@@ -46,7 +46,9 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int OFFICIAL_GAMEMODES_TOP = 126;
     private static final int OFFICIAL_GAMEMODES_LABEL_HEIGHT = 12;
     private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
-    private static final String AXIAL_SERVER_IP = "mc.axialprisons.com";
+    private static final String AXIAL_SERVER_HOST = "185.206.149.12";
+    private static final int AXIAL_SERVER_PORT = 25574;
+    private static final String AXIAL_SERVER_IP = AXIAL_SERVER_HOST + ":" + AXIAL_SERVER_PORT;
     private static final String AXIAL_SERVER_NAME = "Axial Prisons";
     private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 168;
     private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 72;
@@ -181,14 +183,14 @@ public abstract class TitleScreenBackgroundMixin {
             return;
         }
 
-        ConnectScreen.connect(
-                screen,
-                MinecraftClient.getInstance(),
-                ServerAddress.parse(AXIAL_SERVER_IP),
-                new ServerInfo(AXIAL_SERVER_NAME, AXIAL_SERVER_IP, ServerInfo.ServerType.OTHER),
-                false,
-                new CookieStorage(Map.of(), Map.of(), false)
-        );
+            ConnectScreen.connect(
+                    screen,
+                    MinecraftClient.getInstance(),
+                    ServerAddress.parse(AXIAL_SERVER_IP),
+                    new ServerInfo(AXIAL_SERVER_NAME, AXIAL_SERVER_IP, ServerInfo.ServerType.OTHER),
+                    false,
+                    new CookieStorage(Map.of(), Map.of(), false)
+            );
         cir.setReturnValue(true);
         cir.cancel();
     }
@@ -219,7 +221,7 @@ public abstract class TitleScreenBackgroundMixin {
 
     private String axial_cosmetics$fetchServerCount() throws IOException {
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(AXIAL_SERVER_IP, 25565), 2500);
+            socket.connect(new InetSocketAddress(AXIAL_SERVER_HOST, AXIAL_SERVER_PORT), 2500);
             socket.setSoTimeout(2500);
 
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
