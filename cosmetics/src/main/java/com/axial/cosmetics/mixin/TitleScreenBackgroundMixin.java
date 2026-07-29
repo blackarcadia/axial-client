@@ -2,6 +2,16 @@ package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.concurrent.CompletableFuture;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
@@ -17,6 +27,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.SharedConstants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -40,6 +51,12 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 168;
     private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 72;
     private static final int OFFICIAL_GAMEMODES_BUTTON_GAP = 18;
+    private static final int OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING = 14;
+    private static final long OFFICIAL_GAMEMODES_REFRESH_INTERVAL_MS = 30_000L;
+    private static final Pattern OFFICIAL_GAMEMODES_ONLINE_PATTERN = Pattern.compile("\"online\"\\s*:\\s*(\\d+)");
+    private volatile String axial_cosmetics$serverCountText = "Loading";
+    private volatile boolean axial_cosmetics$serverCountLoading;
+    private volatile long axial_cosmetics$serverCountLastRefresh;
 
     @Redirect(
             method = "render",
@@ -103,6 +120,8 @@ public abstract class TitleScreenBackgroundMixin {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void axial_cosmetics$drawOfficialGamemodes(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        axial_cosmetics$ensureServerCount();
+
         TitleScreen screen = (TitleScreen) (Object) this;
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         Text label = Text.literal(OFFICIAL_GAMEMODES).styled(style -> style.withFont(UI_FONT));
@@ -135,6 +154,11 @@ public abstract class TitleScreenBackgroundMixin {
         if (hovered) {
             context.fill(buttonX, buttonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT, 0x18000000);
         }
+
+        Text count = Text.literal(axial_cosmetics$serverCountText).styled(style -> style.withFont(UI_FONT));
+        int countX = buttonX + OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING;
+        int countY = buttonY + Math.max(0, (OFFICIAL_GAMEMODES_BUTTON_HEIGHT - textRenderer.fontHeight) / 2);
+        drawOutlinedText(context, textRenderer, count, countX, countY, 0xFFFFFFFF, 0xFF000000);
     }
 
     private static void drawOutlinedText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int fillColor, int outlineColor) {
@@ -167,6 +191,130 @@ public abstract class TitleScreenBackgroundMixin {
         );
         cir.setReturnValue(true);
         cir.cancel();
+    }
+
+    private void axial_cosmetics$ensureServerCount() {
+        long now = System.currentTimeMillis();
+        if (axial_cosmetics$serverCountLoading) {
+            return;
+        }
+        if (now - axial_cosmetics$serverCountLastRefresh < OFFICIAL_GAMEMODES_REFRESH_INTERVAL_MS && !"Loading".equals(axial_cosmetics$serverCountText)) {
+            return;
+        }
+
+        axial_cosmetics$serverCountLoading = true;
+        axial_cosmetics$serverCountLastRefresh = now;
+        CompletableFuture.runAsync(() -> {
+            String countText = "Offline";
+            try {
+                countText = axial_cosmetics$fetchServerCount();
+            } catch (IOException ignored) {
+                countText = "Offline";
+            } finally {
+                axial_cosmetics$serverCountText = countText;
+                axial_cosmetics$serverCountLoading = false;
+            }
+        });
+    }
+
+    private String axial_cosmetics$fetchServerCount() throws IOException {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(AXIAL_SERVER_IP, 25565), 2500);
+            socket.setSoTimeout(2500);
+
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            ByteArrayOutputStream handshakeBytes = new ByteArrayOutputStream();
+            DataOutputStream handshakeOut = new DataOutputStream(handshakeBytes);
+            axial_cosmetics$writeVarInt(handshakeOut, 0);
+            axial_cosmetics$writeVarInt(handshakeOut, axial_cosmetics$getProtocolVersion());
+            axial_cosmetics$writeString(handshakeOut, AXIAL_SERVER_IP);
+            handshakeOut.writeShort(25565);
+            axial_cosmetics$writeVarInt(handshakeOut, 1);
+            axial_cosmetics$writePacket(out, handshakeBytes.toByteArray());
+            axial_cosmetics$writePacket(out, new byte[] {0});
+            out.flush();
+
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            int packetLength = axial_cosmetics$readVarInt(in);
+            byte[] packet = in.readNBytes(packetLength);
+            DataInputStream packetIn = new DataInputStream(new ByteArrayInputStream(packet));
+            if (axial_cosmetics$readVarInt(packetIn) != 0) {
+                return "Offline";
+            }
+
+            String response = axial_cosmetics$readString(packetIn);
+            Matcher matcher = OFFICIAL_GAMEMODES_ONLINE_PATTERN.matcher(response);
+            if (matcher.find()) {
+                return matcher.group(1) + " online";
+            }
+            return "Online";
+        }
+    }
+
+    private static void axial_cosmetics$writePacket(DataOutputStream out, byte[] payload) throws IOException {
+        axial_cosmetics$writeVarInt(out, payload.length);
+        out.write(payload);
+    }
+
+    private static void axial_cosmetics$writeString(DataOutputStream out, String value) throws IOException {
+        byte[] bytes = value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        axial_cosmetics$writeVarInt(out, bytes.length);
+        out.write(bytes);
+    }
+
+    private static int axial_cosmetics$readVarInt(DataInputStream in) throws IOException {
+        int numRead = 0;
+        int result = 0;
+        byte read;
+        do {
+            read = in.readByte();
+            int value = (read & 0x7F);
+            result |= (value << (7 * numRead));
+            numRead++;
+            if (numRead > 5) {
+                throw new IOException("VarInt too big");
+            }
+        } while ((read & 0x80) != 0);
+        return result;
+    }
+
+    private static void axial_cosmetics$writeVarInt(DataOutputStream out, int value) throws IOException {
+        do {
+            int temp = value & 0x7F;
+            value >>>= 7;
+            if (value != 0) {
+                temp |= 0x80;
+            }
+            out.writeByte(temp);
+        } while (value != 0);
+    }
+
+    private static String axial_cosmetics$readString(DataInputStream in) throws IOException {
+        int length = axial_cosmetics$readVarInt(in);
+        byte[] bytes = new byte[length];
+        in.readFully(bytes);
+        return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private static int axial_cosmetics$getProtocolVersion() {
+        try {
+            var versionMethod = SharedConstants.class.getDeclaredMethod("getCurrentVersion");
+            versionMethod.setAccessible(true);
+            Object version = versionMethod.invoke(null);
+            if (version == null) {
+                return 0;
+            }
+
+            var protocolMethod = version.getClass().getDeclaredMethod("getProtocolVersion");
+            protocolMethod.setAccessible(true);
+            Object value = protocolMethod.invoke(version);
+            if (value instanceof Integer integer) {
+                return integer;
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        return 0;
     }
 
     private static boolean axial_cosmetics$inRect(int mouseX, int mouseY, int x, int y, int width, int height) {
