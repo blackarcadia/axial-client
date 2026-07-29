@@ -5,12 +5,17 @@ import java.util.Locale;
 import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,15 +29,26 @@ public abstract class TitleScreenMenuLayoutMixin {
     private static final int AXIAL_TITLE_BUTTON_RIGHT_MARGIN = 20;
     private static final int AXIAL_TITLE_BUTTON_SPACING = 28;
     private static final int AXIAL_TITLE_BUTTON_BASE_WIDTH = 208;
+    private static final int AXIAL_TITLE_BUTTON_HEIGHT = 22;
     private static final int AXIAL_TITLE_QUIT_BUTTON_SIZE = 32;
     private static final int AXIAL_TITLE_MUSIC_SLIDER_WIDTH = 112;
     private static final int AXIAL_TITLE_MUSIC_SLIDER_HEIGHT = 18;
     private static final int AXIAL_TITLE_MUSIC_SLIDER_GAP = 8;
+    private static final int AXIAL_TITLE_ACCOUNTS_Y = AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 3);
+    private static final String ACCOUNTS_LABEL = "Accounts";
+    private static final Path AXIAL_LAUNCHER_POINTER = Path.of(
+            System.getProperty("user.home"),
+            "Library",
+            "Application Support",
+            "AxialLauncher",
+            "active-launcher.path"
+    );
     private static final List<String> SCREEN_CHILD_LIST_FIELDS = Arrays.asList("field_22786", "field_33816", "field_33815");
 
     @Inject(method = "init", at = @At("TAIL"))
     private void axial_cosmetics$layoutTitleMenu(CallbackInfo ci) {
         axial_cosmetics$ensureMusicSlider();
+        axial_cosmetics$ensureAccountsButton();
         axial_cosmetics$applyLayout();
     }
 
@@ -69,11 +85,15 @@ public abstract class TitleScreenMenuLayoutMixin {
                 button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + AXIAL_TITLE_BUTTON_SPACING);
             } else if (lower.contains("options")) {
                 button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
+                button.setHeight(AXIAL_TITLE_BUTTON_HEIGHT);
                 button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_BUTTON_Y + (AXIAL_TITLE_BUTTON_SPACING * 2));
+            } else if (lower.contains("accounts")) {
+                button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
+                button.setHeight(AXIAL_TITLE_BUTTON_HEIGHT);
+                button.setPosition(AXIAL_TITLE_BUTTON_X, AXIAL_TITLE_ACCOUNTS_Y);
             } else {
                 button.setWidth(AXIAL_TITLE_BUTTON_BASE_WIDTH);
-                button.setHeight(22);
+                button.setHeight(AXIAL_TITLE_BUTTON_HEIGHT);
                 button.setPosition(AXIAL_TITLE_BUTTON_X, button.getY());
             }
         }
@@ -115,7 +135,28 @@ public abstract class TitleScreenMenuLayoutMixin {
         axial_cosmetics$addToScreenLists(slider);
     }
 
+    private void axial_cosmetics$ensureAccountsButton() {
+        List<?> children = ((TitleScreen) (Object) this).children();
+        for (Object child : children) {
+            if (child instanceof ButtonWidget button && ACCOUNTS_LABEL.equals(button.getMessage().getString())) {
+                return;
+            }
+        }
+
+        ButtonWidget accountsButton = ButtonWidget.builder(Text.literal(ACCOUNTS_LABEL), button -> axial_cosmetics$openAccountsManager())
+                .build();
+        axial_cosmetics$addToScreenLists(accountsButton);
+    }
+
     private void axial_cosmetics$addToScreenLists(MenuMusicVolumeSliderWidget slider) {
+        axial_cosmetics$addToScreenLists0(slider);
+    }
+
+    private void axial_cosmetics$addToScreenLists(ButtonWidget button) {
+        axial_cosmetics$addToScreenLists0(button);
+    }
+
+    private void axial_cosmetics$addToScreenLists0(Object widget) {
         Class<?> type = ((TitleScreen) (Object) this).getClass();
         while (type != null) {
             for (String fieldName : SCREEN_CHILD_LIST_FIELDS) {
@@ -123,15 +164,50 @@ public abstract class TitleScreenMenuLayoutMixin {
                     Field field = type.getDeclaredField(fieldName);
                     field.setAccessible(true);
                     Object value = field.get(this);
-                    if (value instanceof List<?> list && !list.contains(slider)) {
+                    if (value instanceof List<?> list && !list.contains(widget)) {
                         @SuppressWarnings("unchecked")
                         List<Object> mutableList = (List<Object>) list;
-                        mutableList.add(slider);
+                        mutableList.add(widget);
                     }
                 } catch (NoSuchFieldException | IllegalAccessException ignored) {
                 }
             }
             type = type.getSuperclass();
+        }
+    }
+
+    private void axial_cosmetics$openAccountsManager() {
+        try {
+            Path bundle = axial_cosmetics$locateLauncherBundle();
+            if (bundle == null) {
+                return;
+            }
+            new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static Path axial_cosmetics$locateLauncherBundle() throws IOException {
+        if (Files.exists(AXIAL_LAUNCHER_POINTER)) {
+            String stored = Files.readString(AXIAL_LAUNCHER_POINTER).trim();
+            if (!stored.isBlank()) {
+                Path bundle = Path.of(stored);
+                if (Files.exists(bundle)) {
+                    return bundle;
+                }
+            }
+        }
+
+        Path launchersDir = AXIAL_LAUNCHER_POINTER.getParent().resolve("launchers");
+        if (!Files.isDirectory(launchersDir)) {
+            return null;
+        }
+
+        try (var stream = Files.list(launchersDir)) {
+            return stream
+                    .filter(path -> path.getFileName().toString().endsWith(".app"))
+                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
+                    .orElse(null);
         }
     }
 
