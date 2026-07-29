@@ -10,6 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import net.minecraft.client.MinecraftClient;
@@ -183,16 +185,31 @@ public abstract class TitleScreenBackgroundMixin {
             return;
         }
 
-            ConnectScreen.connect(
-                    screen,
+        axial_cosmetics$connectDirectly(screen);
+        cir.setReturnValue(true);
+        cir.cancel();
+    }
+
+    private static void axial_cosmetics$connectDirectly(TitleScreen screen) {
+        try {
+            Method connect = ConnectScreen.class.getDeclaredMethod(
+                    "connect",
+                    MinecraftClient.class,
+                    ServerAddress.class,
+                    ServerInfo.class,
+                    CookieStorage.class
+            );
+            connect.setAccessible(true);
+            connect.invoke(
+                    null,
                     MinecraftClient.getInstance(),
                     ServerAddress.parse(AXIAL_SERVER_IP),
                     new ServerInfo(AXIAL_SERVER_NAME, AXIAL_SERVER_IP, ServerInfo.ServerType.OTHER),
-                    false,
                     new CookieStorage(Map.of(), Map.of(), false)
             );
-        cir.setReturnValue(true);
-        cir.cancel();
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalStateException("Failed to open the official gamemodes server", e);
+        }
     }
 
     private void axial_cosmetics$ensureServerCount() {
