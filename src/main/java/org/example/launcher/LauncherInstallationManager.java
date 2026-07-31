@@ -48,26 +48,20 @@ public final class LauncherInstallationManager {
         if (isBundleValid(activeBundle)) {
             AppBuildInfo activeInfo = loadFromBundle(activeBundle);
             if (activeInfo != null) {
-                if (!"release".equalsIgnoreCase(currentInfo.appChannel())) {
-                    launchBundle(activeBundle);
-                    return true;
-                }
-
-                if (!isNewer(currentInfo.appVersion(), activeInfo.appVersion())) {
-                    launchBundle(activeBundle);
-                    return true;
+                if (!"release".equalsIgnoreCase(currentInfo.appChannel())
+                        || !isNewer(currentInfo.appVersion(), activeInfo.appVersion())) {
+                    activateInstall(activeBundle);
+                    return false;
                 }
             } else {
-                launchBundle(activeBundle);
-                return true;
+                activateInstall(activeBundle);
+                return false;
             }
         }
 
         installBundle(currentBundle, desiredBundle);
         activateInstall(desiredBundle);
-
-        launchBundle(desiredBundle);
-        return true;
+        return false;
     }
 
     public static Path stableAppBundle() {
