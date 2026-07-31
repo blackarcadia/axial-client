@@ -72,7 +72,7 @@ public final class StartupController {
 
             loadingScreen.update("Launching client", 90);
             Process minecraft = launcher.start(request, System.out);
-            closeScreen();
+            loadingScreen.update("Client running", 100);
             int exitCode = minecraft.waitFor();
             if (exitCode != 0) {
                 throw new IllegalStateException("Minecraft exited with code " + exitCode);
