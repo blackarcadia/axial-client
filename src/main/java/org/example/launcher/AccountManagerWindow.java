@@ -11,7 +11,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javafx.embed.swing.JFXPanel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -29,10 +28,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 final class AccountManagerWindow {
-    private static final AtomicBoolean JAVAFX_INITIALIZED = new AtomicBoolean();
     private final JFrame frame;
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final DefaultListModel<AccountEntry> model = new DefaultListModel<>();
@@ -129,7 +126,6 @@ final class AccountManagerWindow {
     }
 
     static void show() {
-        ensureJavaFx();
         SwingUtilities.invokeLater(() -> {
             AccountManagerWindow window = new AccountManagerWindow();
             window.frame.setVisible(true);
@@ -206,7 +202,6 @@ final class AccountManagerWindow {
     }
 
     private void loginNewAccount() {
-        ensureJavaFx();
         addAccountButton.setEnabled(false);
         executor.submit(() -> {
             try {
@@ -280,12 +275,6 @@ final class AccountManagerWindow {
         button.setBackground(new Color(34, 39, 52));
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-    }
-
-    private static void ensureJavaFx() {
-        if (JAVAFX_INITIALIZED.compareAndSet(false, true)) {
-            new JFXPanel();
-        }
     }
 
     private record AccountEntry(String displayName, String uuid, String fileName) {

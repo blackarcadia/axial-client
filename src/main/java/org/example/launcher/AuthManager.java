@@ -5,12 +5,14 @@ import com.google.gson.JsonParser;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
+import net.raphimc.minecraftauth.msa.service.impl.LocalWebServerMsaAuthService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.awt.Desktop;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.URL;
 
 public class AuthManager {
     private final Path storeFile;
@@ -28,7 +30,7 @@ public class AuthManager {
             authManager = JavaAuthManager.fromJson(httpClient, json);
         } else {
             authManager = JavaAuthManager.create(httpClient)
-                    .login((client, appConfig) -> new JfxWebViewMsaAuthService(client, appConfig));
+                    .login((client, appConfig) -> new LocalWebServerMsaAuthService(client, appConfig, AuthManager::openBrowser));
             persist(authManager);
         }
 
@@ -49,6 +51,21 @@ public class AuthManager {
         String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
 
         return new AuthResult(name, uuid, accessToken, xuid);
+    }
+
+    private static void openBrowser(URL url) {
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(url.toURI());
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            new ProcessBuilder("open", url.toString()).start();
+        } catch (IOException ignored) {
+        }
     }
 
     private void persist(JavaAuthManager authManager) throws IOException {
