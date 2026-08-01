@@ -20,7 +20,6 @@ public final class AccountsScreen extends Screen {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(net.minecraft.util.Identifier.of("axialutils", "ui_clean_large"));
     private static final Path ACCOUNTS_DIR = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "accounts");
     private static final Path ACTIVE_ACCOUNT_POINTER = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "active-account.path");
-    private static final Path ACTIVE_LAUNCHER_POINTER = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "active-launcher.path");
 
     private final Screen parent;
     private final List<AccountEntry> entries = new ArrayList<>();
@@ -157,12 +156,9 @@ public final class AccountsScreen extends Screen {
     }
 
     private void openLauncherAccountManager() {
-        try {
-            Path bundle = locateLauncherBundle();
-            if (bundle != null) {
-                new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
-            }
-        } catch (IOException ignored) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.currentScreen != null) {
+            client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
         }
     }
 
@@ -221,30 +217,6 @@ public final class AccountsScreen extends Screen {
         } catch (IOException ignored) {
         }
         return null;
-    }
-
-    private static Path locateLauncherBundle() throws IOException {
-        if (Files.exists(ACTIVE_LAUNCHER_POINTER)) {
-            String stored = Files.readString(ACTIVE_LAUNCHER_POINTER).trim();
-            if (!stored.isBlank()) {
-                Path bundle = Path.of(stored);
-                if (Files.exists(bundle)) {
-                    return bundle;
-                }
-            }
-        }
-
-        Path launchersDir = ACTIVE_LAUNCHER_POINTER.getParent().resolve("launchers");
-        if (!Files.isDirectory(launchersDir)) {
-            return null;
-        }
-
-        try (var stream = Files.list(launchersDir)) {
-            return stream
-                    .filter(path -> path.getFileName().toString().endsWith(".app"))
-                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
-                    .orElse(null);
-        }
     }
 
     private static Text uiText(String value) {
