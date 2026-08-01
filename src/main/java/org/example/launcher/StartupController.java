@@ -113,7 +113,7 @@ public final class StartupController {
             if (!activeValue.isBlank()) {
                 Path activeFile = accountsDir.resolve(activeValue);
                 if (Files.exists(activeFile)) {
-                    AuthResult active = AuthManager.peek(activeFile);
+                    AuthResult active = authenticateStoredAccount(activeFile, activePointer);
                     if (active != null) {
                         return active;
                     }
@@ -128,9 +128,9 @@ public final class StartupController {
                         .sorted()
                         .forEach(files::add);
                 for (Path file : files) {
-                    AuthResult peek = AuthManager.peek(file);
-                    if (peek != null) {
-                        return peek;
+                    AuthResult auth = authenticateStoredAccount(file, null);
+                    if (auth != null) {
+                        return auth;
                     }
                 }
             }
@@ -143,6 +143,20 @@ public final class StartupController {
         Files.deleteIfExists(target);
         Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return result;
+    }
+
+    private AuthResult authenticateStoredAccount(Path storeFile, Path activePointerToClear)
+            throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
+        try {
+            AuthManager auth = new AuthManager(storeFile);
+            return auth.authenticate();
+        } catch (Exception ex) {
+            Files.deleteIfExists(storeFile);
+            if (activePointerToClear != null) {
+                Files.deleteIfExists(activePointerToClear);
+            }
+            return null;
+        }
     }
 
     private void rebuildLauncher() throws IOException, InterruptedException {

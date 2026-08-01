@@ -64,6 +64,7 @@ public class AuthManager {
             authManager.getJavaXstsToken().refreshIfExpired();
             authManager.getMinecraftToken().refreshIfExpired();
             authManager.getMinecraftProfile().getUpToDate();
+            persist(authManager);
             return authManager;
         } catch (Exception ex) {
             Files.deleteIfExists(storeFile);
