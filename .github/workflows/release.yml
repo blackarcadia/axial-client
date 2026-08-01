@@ -43,4 +43,3 @@ jobs:
           prerelease: false
           files: |
             build/jpackage/AxialLauncher.app.zip
-            build/jpackage/AxialLauncher-*.dmg

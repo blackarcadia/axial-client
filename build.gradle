@@ -109,7 +109,7 @@ tasks.register('runtimeImage', Exec) {
 
 tasks.register('jpackageMac') {
     group = 'distribution'
-    description = 'Package macOS .dmg app (requires macOS + jpackage)'
+    description = 'Package macOS app image (requires macOS + jpackage)'
     dependsOn tasks.runtimeImage
     onlyIf { isMac }
     doLast {
@@ -117,9 +117,7 @@ tasks.register('jpackageMac') {
         def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
         def packageDir = layout.buildDirectory.dir("jpackage").get().asFile
         def appImageDir = new File(packageDir, "AxialLauncher.app")
-        def outImage = new File(packageDir, "AxialLauncher-${appVersion}.dmg")
 
-        delete outImage
         delete appImageDir
         packageDir.mkdirs()
 
@@ -155,27 +153,6 @@ tasks.register('jpackageMac') {
 
         if (!appImageDir.exists()) {
             throw new GradleException("Expected app image was not created: ${appImageDir.absolutePath}")
-        }
-
-        def dmgCommand = [
-                'jpackage',
-                '--type', 'dmg',
-                '--name', 'AxialLauncher',
-                '--app-version', appVersion,
-                '--mac-package-identifier', 'com.axial.launcher',
-                '--input', libsDir.absolutePath,
-                '--main-jar', mainJarName,
-                '--main-class', application.mainClass.get(),
-                '--runtime-image', runtimeDir.absolutePath,
-                '--dest', packageDir.absolutePath
-        ]
-        if (iconPath.exists()) {
-            dmgCommand += ['--icon', iconPath.absolutePath]
-        }
-        runCommand(dmgCommand)
-
-        if (!outImage.exists()) {
-            throw new GradleException("Expected DMG was not created: ${outImage.absolutePath}")
         }
     }
 }
