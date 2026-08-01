@@ -25,16 +25,16 @@ public final class CrosshairSettingsScreen extends Screen {
     private static final int CONTROLS_TOP_OFFSET = 108;
     private static final int ROW_GAP = 10;
     private static final int ROW_HEIGHT = 20;
-    private static final int STYLE_ROW_OFFSET = 0;
-    private static final int SIZE_ROW_OFFSET = 36;
-    private static final int LENGTH_ROW_OFFSET = 74;
-    private static final int WIDTH_ROW_OFFSET = 112;
-    private static final int GAP_ROW_OFFSET = 150;
-    private static final int COLOR_ROW_OFFSET = 188;
-    private static final int OUTLINE_ROW_OFFSET = 264;
-    private static final int DYNAMIC_ROW_OFFSET = 302;
-    private static final int ENABLED_ROW_OFFSET = 340;
-    private static final int CONTENT_HEIGHT = 382;
+    private static final int ENABLED_ROW_OFFSET = 0;
+    private static final int STYLE_ROW_OFFSET = 36;
+    private static final int SIZE_ROW_OFFSET = 72;
+    private static final int LENGTH_ROW_OFFSET = 110;
+    private static final int WIDTH_ROW_OFFSET = 148;
+    private static final int GAP_ROW_OFFSET = 186;
+    private static final int COLOR_ROW_OFFSET = 224;
+    private static final int OUTLINE_ROW_OFFSET = 300;
+    private static final int DYNAMIC_ROW_OFFSET = 338;
+    private static final int CONTENT_HEIGHT = 418;
     private static final float SIZE_MIN = 0.1f;
     private static final float SIZE_MAX = 4.0f;
     private static final float LENGTH_MIN = 0.0f;
@@ -255,8 +255,8 @@ public final class CrosshairSettingsScreen extends Screen {
     }
 
     private void drawScrollableControls(DrawContext context, int mouseX, int mouseY) {
-        drawStyleCycleButton(context, mouseX, mouseY);
         drawEnabledControl(context, mouseX, mouseY);
+        drawStyleCycleButton(context, mouseX, mouseY);
         drawSliderLabels(context);
         drawSliderChrome(context, sizeSlider, mouseX, mouseY);
         drawSliderChrome(context, lengthSlider, mouseX, mouseY);
