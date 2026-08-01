@@ -35,8 +35,10 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     private volatile String userCode = "";
     private volatile boolean success;
     private volatile boolean browserOpened;
+    private volatile boolean loginStarted;
     private int panelX;
     private int panelY;
+    private ButtonWidget signInButton;
     private ButtonWidget openBrowserButton;
     private ButtonWidget cancelButton;
 
@@ -48,12 +50,13 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     @Override
     protected void init() {
         rebuildLayout();
+        signInButton = ButtonWidget.builder(uiText("SIGN IN"), btn -> startLogin()).build();
         openBrowserButton = ButtonWidget.builder(uiText("OPEN BROWSER"), btn -> openBrowser()).build();
         cancelButton = ButtonWidget.builder(uiText("CANCEL"), btn -> close()).build();
+        addDrawableChild(signInButton);
         addDrawableChild(openBrowserButton);
         addDrawableChild(cancelButton);
         layoutButtons();
-        startLogin();
     }
 
     @Override
@@ -69,15 +72,19 @@ public final class MicrosoftAccountLoginScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, uiText("SIGN IN WITH YOUR MICROSOFT ACCOUNT."), panelX + 200, panelY + 24, 0xFFC6D0F3);
 
         context.drawCenteredTextWithShadow(textRenderer, uiText(statusLine), panelX + 200, panelY + 58, 0xFFFFFFFF);
-        if (!verificationUri.isBlank()) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("VISIT"), panelX + 200, panelY + 82, 0xFFC6D0F3);
-            context.drawCenteredTextWithShadow(textRenderer, uiText(verificationUri), panelX + 200, panelY + 96, 0xFFFFFFFF);
-        }
-        if (!userCode.isBlank()) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("CODE: " + userCode), panelX + 200, panelY + 122, 0xFFFFFFFF);
-        }
-        if (success) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED. RETURNING TO TITLE..."), panelX + 200, panelY + 148, 0xFF8AF0C2);
+        if (loginStarted) {
+            if (!verificationUri.isBlank()) {
+                context.drawCenteredTextWithShadow(textRenderer, uiText("VISIT"), panelX + 200, panelY + 82, 0xFFC6D0F3);
+                context.drawCenteredTextWithShadow(textRenderer, uiText(verificationUri), panelX + 200, panelY + 96, 0xFFFFFFFF);
+            }
+            if (!userCode.isBlank()) {
+                context.drawCenteredTextWithShadow(textRenderer, uiText("CODE: " + userCode), panelX + 200, panelY + 122, 0xFFFFFFFF);
+            }
+            if (success) {
+                context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED. RETURNING TO TITLE..."), panelX + 200, panelY + 148, 0xFF8AF0C2);
+            }
+        } else {
+            context.drawCenteredTextWithShadow(textRenderer, uiText("CLICK SIGN IN TO START AUTHENTICATION."), panelX + 200, panelY + 82, 0xFFC6D0F3);
         }
 
         layoutButtons();
@@ -85,6 +92,11 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     }
 
     private void startLogin() {
+        if (loginStarted) {
+            return;
+        }
+        loginStarted = true;
+        statusLine = "Starting Microsoft sign-in...";
         CompletableFuture.runAsync(() -> {
             try {
                 ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
@@ -150,16 +162,21 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     }
 
     private void layoutButtons() {
-        int buttonWidth = 116;
+        int buttonWidth = 90;
         int buttonY = panelY + 176;
+        if (signInButton != null) {
+            signInButton.setPosition(panelX + 60, buttonY);
+            signInButton.setWidth(buttonWidth);
+            signInButton.setHeight(20);
+        }
         if (openBrowserButton != null) {
-            openBrowserButton.setPosition(panelX + 72, buttonY);
+            openBrowserButton.setPosition(panelX + 160, buttonY);
             openBrowserButton.setWidth(buttonWidth);
             openBrowserButton.setHeight(20);
         }
         if (cancelButton != null) {
-            cancelButton.setPosition(panelX + 212, buttonY);
-            cancelButton.setWidth(buttonWidth);
+            cancelButton.setPosition(panelX + 260, buttonY);
+            cancelButton.setWidth(80);
             cancelButton.setHeight(20);
         }
     }
