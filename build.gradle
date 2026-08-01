@@ -15,7 +15,7 @@ repositories {
 
 javafx {
     version = '21.0.7'
-    modules = [ 'javafx.controls', 'javafx.media', 'javafx.swing', 'javafx.web' ]
+    modules = [ 'javafx.controls', 'javafx.media', 'javafx.swing' ]
 }
 
 dependencies {
@@ -100,7 +100,7 @@ tasks.register('runtimeImage', Exec) {
     }
     commandLine 'jlink',
             '--module-path', "${System.getProperty('java.home')}/jmods${File.pathSeparator}${javafxModulePath}",
-            '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.unsupported,jdk.zipfs,javafx.web',
+            '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.unsupported,jdk.zipfs',
             '--strip-debug',
             '--no-header-files',
             '--no-man-pages',

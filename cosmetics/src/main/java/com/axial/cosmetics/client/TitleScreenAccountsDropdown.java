@@ -5,7 +5,6 @@ import com.google.gson.JsonParser;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Click;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
@@ -160,7 +159,7 @@ public final class TitleScreenAccountsDropdown {
         int footerWidth = (panelWidth - (PANEL_PADDING * 3)) / 2;
         int footerX = panelX + PANEL_PADDING;
         if (inRect(mouseX, mouseY, footerX, footerY, footerWidth, FOOTER_HEIGHT)) {
-            openClientAccountManager();
+            openLauncherAccountManager();
             open = false;
             return true;
         }
@@ -233,11 +232,48 @@ public final class TitleScreenAccountsDropdown {
         drawOutlinedText(context, textRenderer, uiText(label), x + 8, y + 6, 0xFFFFFFFF, 0xFF000000);
     }
 
-    private static void openClientAccountManager() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client != null) {
-            client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
+    private static void openLauncherAccountManager() {
+        try {
+            Path executable = locateLauncherExecutable();
+            if (executable != null) {
+                new ProcessBuilder(executable.toAbsolutePath().toString(), "--add-account").start();
+            }
+        } catch (IOException ignored) {
         }
+    }
+
+    private static Path locateLauncherExecutable() throws IOException {
+        if (Files.exists(ACTIVE_LAUNCHER_POINTER)) {
+            String stored = Files.readString(ACTIVE_LAUNCHER_POINTER).trim();
+            if (!stored.isBlank()) {
+                Path bundle = Path.of(stored);
+                Path executable = macLauncherExecutable(bundle);
+                if (Files.exists(executable)) {
+                    return executable;
+                }
+            }
+        }
+
+        Path launchersDir = ACTIVE_LAUNCHER_POINTER.getParent().resolve("launchers");
+        if (!Files.isDirectory(launchersDir)) {
+            return null;
+        }
+
+        try (var stream = Files.list(launchersDir)) {
+            Path bundle = stream
+                    .filter(path -> path.getFileName().toString().endsWith(".app"))
+                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
+                    .orElse(null);
+            return bundle == null ? null : macLauncherExecutable(bundle);
+        }
+    }
+
+    private static Path macLauncherExecutable(Path bundle) {
+        String name = bundle.getFileName().toString();
+        if (name.endsWith(".app")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        return bundle.resolve("Contents").resolve("MacOS").resolve(name);
     }
 
     private static AccountEntry parseAccount(Path path) {
