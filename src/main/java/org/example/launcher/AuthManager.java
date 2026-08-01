@@ -25,15 +25,13 @@ public class AuthManager {
     }
 
     public AuthResult authenticate() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
-        JavaAuthManager authManager;
-        if (Files.exists(storeFile)) {
-            JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
-            authManager = JavaAuthManager.fromJson(httpClient, json);
-        } else {
-            authManager = JavaAuthManager.create(httpClient)
+        JavaAuthManager loadedAuth = loadStoredAuth();
+        if (loadedAuth == null) {
+            loadedAuth = JavaAuthManager.create(httpClient)
                     .login((client, appConfig) -> new DeviceCodeMsaAuthService(client, appConfig, AuthManager::handleDeviceCode));
-            persist(authManager);
+            persist(loadedAuth);
         }
+        final JavaAuthManager authManager = loadedAuth;
 
         // persist on any token update
         authManager.getChangeListeners().add(() -> {
@@ -52,6 +50,25 @@ public class AuthManager {
         String xuid = authManager.getJavaXstsToken().getUpToDate().getUserHash();
 
         return new AuthResult(name, uuid, accessToken, xuid);
+    }
+
+    private JavaAuthManager loadStoredAuth() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
+        if (!Files.exists(storeFile)) {
+            return null;
+        }
+
+        try {
+            JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
+            JavaAuthManager authManager = JavaAuthManager.fromJson(httpClient, json);
+            authManager.getMsaToken().refreshIfExpired();
+            authManager.getJavaXstsToken().refreshIfExpired();
+            authManager.getMinecraftToken().refreshIfExpired();
+            authManager.getMinecraftProfile().getUpToDate();
+            return authManager;
+        } catch (Exception ex) {
+            Files.deleteIfExists(storeFile);
+            return null;
+        }
     }
 
     private static void openBrowser(URL url) {
