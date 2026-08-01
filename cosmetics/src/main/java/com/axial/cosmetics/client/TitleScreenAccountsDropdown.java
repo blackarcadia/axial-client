@@ -235,9 +235,7 @@ public final class TitleScreenAccountsDropdown {
 
     private static void openClientLogin() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.currentScreen != null) {
-            client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
-        }
+        client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
     }
 
     private static AccountEntry parseAccount(Path path) {

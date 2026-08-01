@@ -157,9 +157,7 @@ public final class AccountsScreen extends Screen {
 
     private void openLauncherAccountManager() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.currentScreen != null) {
-            client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
-        }
+        client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
     }
 
     private void reloadEntries() {
