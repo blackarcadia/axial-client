@@ -10,12 +10,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
-import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
-import net.raphimc.minecraftauth.msa.service.util.ParamMsaAuthServiceSupplier;
+import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
 
 import javax.swing.SwingUtilities;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -31,13 +28,9 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     private final Screen parent;
     private final CompletableFuture<Void> authFuture = new CompletableFuture<>();
     private volatile String statusLine = "Starting Microsoft sign-in...";
-    private volatile String verificationUri = "";
-    private volatile String userCode = "";
     private volatile boolean success;
-    private volatile boolean browserOpened;
     private int panelX;
     private int panelY;
-    private ButtonWidget openBrowserButton;
     private ButtonWidget cancelButton;
 
     public MicrosoftAccountLoginScreen(Screen parent) {
@@ -48,9 +41,7 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     @Override
     protected void init() {
         rebuildLayout();
-        openBrowserButton = ButtonWidget.builder(uiText("OPEN BROWSER"), btn -> openBrowser()).build();
         cancelButton = ButtonWidget.builder(uiText("CANCEL"), btn -> close()).build();
-        addDrawableChild(openBrowserButton);
         addDrawableChild(cancelButton);
         layoutButtons();
         startLogin();
@@ -67,17 +58,9 @@ public final class MicrosoftAccountLoginScreen extends Screen {
         drawPanel(context);
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + 200, panelY + 10, 0xFFF7F7FF);
         context.drawCenteredTextWithShadow(textRenderer, uiText("SIGN IN WITH YOUR MICROSOFT ACCOUNT."), panelX + 200, panelY + 24, 0xFFC6D0F3);
-
         context.drawCenteredTextWithShadow(textRenderer, uiText(statusLine), panelX + 200, panelY + 58, 0xFFFFFFFF);
-        if (!verificationUri.isBlank()) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("VISIT"), panelX + 200, panelY + 82, 0xFFC6D0F3);
-            context.drawCenteredTextWithShadow(textRenderer, uiText(verificationUri), panelX + 200, panelY + 96, 0xFFFFFFFF);
-        }
-        if (!userCode.isBlank()) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("CODE: " + userCode), panelX + 200, panelY + 122, 0xFFFFFFFF);
-        }
         if (success) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED. RETURNING TO TITLE..."), panelX + 200, panelY + 148, 0xFF8AF0C2);
+            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED. RETURNING TO TITLE..."), panelX + 200, panelY + 120, 0xFF8AF0C2);
         }
 
         layoutButtons();
@@ -87,20 +70,8 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     private void startLogin() {
         CompletableFuture.runAsync(() -> {
             try {
-                ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
-                        (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, code -> {
-                            verificationUri = code.getVerificationUri();
-                            userCode = code.getUserCode();
-                            statusLine = "Use the code shown below to sign in.";
-                            if (!browserOpened) {
-                                browserOpened = true;
-                                openBrowser(code.getDirectVerificationUri());
-                            }
-                            consumer.accept(code);
-                        });
-
                 JavaAuthManager authManager = JavaAuthManager.create(MinecraftAuth.createHttpClient("AxialLauncher/1.0"))
-                        .login(supplier, code -> {});
+                        .login((client, appConfig) -> new JfxWebViewMsaAuthService(client, appConfig));
 
                 persist(authManager);
                 AuthData data = new AuthData(
@@ -134,31 +105,11 @@ public final class MicrosoftAccountLoginScreen extends Screen {
         writeActivePointer(target.getFileName().toString());
     }
 
-    private void openBrowser() {
-        if (!verificationUri.isBlank()) {
-            openBrowser(verificationUri);
-        }
-    }
-
-    private void openBrowser(String uri) {
-        try {
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(java.net.URI.create(uri));
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
     private void layoutButtons() {
         int buttonWidth = 116;
         int buttonY = panelY + 176;
-        if (openBrowserButton != null) {
-            openBrowserButton.setPosition(panelX + 72, buttonY);
-            openBrowserButton.setWidth(buttonWidth);
-            openBrowserButton.setHeight(20);
-        }
         if (cancelButton != null) {
-            cancelButton.setPosition(panelX + 212, buttonY);
+            cancelButton.setPosition(panelX + 142, buttonY);
             cancelButton.setWidth(buttonWidth);
             cancelButton.setHeight(20);
         }
