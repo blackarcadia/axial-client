@@ -5,7 +5,8 @@ import com.google.gson.JsonParser;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.service.impl.LocalWebServerMsaAuthService;
+import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
+import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +31,7 @@ public class AuthManager {
             authManager = JavaAuthManager.fromJson(httpClient, json);
         } else {
             authManager = JavaAuthManager.create(httpClient)
-                    .login((client, appConfig) -> new LocalWebServerMsaAuthService(client, appConfig, AuthManager::openBrowser));
+                    .login((client, appConfig) -> new DeviceCodeMsaAuthService(client, appConfig, AuthManager::handleDeviceCode));
             persist(authManager);
         }
 
@@ -65,6 +66,13 @@ public class AuthManager {
         try {
             new ProcessBuilder("open", url.toString()).start();
         } catch (IOException ignored) {
+        }
+    }
+
+    private static void handleDeviceCode(MsaDeviceCode code) {
+        try {
+            openBrowser(new URL(code.getDirectVerificationUri()));
+        } catch (Exception ignored) {
         }
     }
 
