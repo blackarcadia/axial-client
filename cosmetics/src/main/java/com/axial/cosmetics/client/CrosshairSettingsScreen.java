@@ -33,7 +33,8 @@ public final class CrosshairSettingsScreen extends Screen {
     private static final int COLOR_ROW_OFFSET = 188;
     private static final int OUTLINE_ROW_OFFSET = 264;
     private static final int DYNAMIC_ROW_OFFSET = 302;
-    private static final int CONTENT_HEIGHT = 344;
+    private static final int ENABLED_ROW_OFFSET = 340;
+    private static final int CONTENT_HEIGHT = 382;
     private static final float SIZE_MIN = 0.1f;
     private static final float SIZE_MAX = 4.0f;
     private static final float LENGTH_MIN = 0.0f;
@@ -118,6 +119,12 @@ public final class CrosshairSettingsScreen extends Screen {
         CrosshairConfig config = CrosshairConfigManager.get();
         if (inside(click.x(), click.y(), styleButtonX(), styleButtonY(), CONTROL_WIDTH, 20)) {
             cycleStyle();
+            return true;
+        }
+
+        if (inside(click.x(), click.y(), enabledToggleX(), enabledToggleY(), CONTROL_WIDTH, 20)) {
+            config.enabled = !config.enabled;
+            CrosshairConfigManager.save();
             return true;
         }
 
@@ -249,6 +256,7 @@ public final class CrosshairSettingsScreen extends Screen {
 
     private void drawScrollableControls(DrawContext context, int mouseX, int mouseY) {
         drawStyleCycleButton(context, mouseX, mouseY);
+        drawEnabledControl(context, mouseX, mouseY);
         drawSliderLabels(context);
         drawSliderChrome(context, sizeSlider, mouseX, mouseY);
         drawSliderChrome(context, lengthSlider, mouseX, mouseY);
@@ -328,6 +336,16 @@ public final class CrosshairSettingsScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, uiText(config.dynamicEnabled ? "ON" : "OFF"), x + CONTROL_WIDTH - 28, y + 5, config.dynamicEnabled ? 0xFFF7F7FF : 0xFFC6D0F3);
     }
 
+    private void drawEnabledControl(DrawContext context, int mouseX, int mouseY) {
+        CrosshairConfig config = CrosshairConfigManager.get();
+        int x = enabledToggleX();
+        int y = enabledToggleY();
+        boolean hovered = inside(mouseX, mouseY, x, y, CONTROL_WIDTH, 20);
+        drawButton(context, x, y, CONTROL_WIDTH, 20, hovered, config.enabled);
+        context.drawTextWithShadow(textRenderer, uiText("CUSTOM CROSSHAIR"), x + 8, y + 5, 0xFFC6D0F3);
+        context.drawCenteredTextWithShadow(textRenderer, uiText(config.enabled ? "ON" : "OFF"), x + CONTROL_WIDTH - 28, y + 5, config.enabled ? 0xFFF7F7FF : 0xFFC6D0F3);
+    }
+
     private void drawPanel(DrawContext context) {
         context.fill(panelX, panelY, panelX + PANEL_WIDTH, panelY + PANEL_HEIGHT, 0xE8101018);
         context.fill(panelX + 1, panelY + 1, panelX + PANEL_WIDTH - 1, panelY + 2, 0x44FFFFFF);
@@ -380,6 +398,14 @@ public final class CrosshairSettingsScreen extends Screen {
 
     private int dynamicToggleY() {
         return controlsViewportTop + DYNAMIC_ROW_OFFSET - scrollOffset;
+    }
+
+    private int enabledToggleX() {
+        return panelX + PANEL_PADDING;
+    }
+
+    private int enabledToggleY() {
+        return controlsViewportTop + ENABLED_ROW_OFFSET - scrollOffset;
     }
 
     private void cycleStyle() {
