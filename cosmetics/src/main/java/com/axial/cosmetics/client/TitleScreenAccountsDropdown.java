@@ -47,12 +47,17 @@ public final class TitleScreenAccountsDropdown {
     public static void toggle() {
         open = !open;
         if (open) {
-            refresh();
+            refreshEntries();
         }
     }
 
     public static boolean isOpen() {
         return open;
+    }
+
+    public static void refresh() {
+        lastRefreshAt = 0L;
+        refreshEntries();
     }
 
     public static boolean clickToggleButton(Click click) {
@@ -174,11 +179,11 @@ public final class TitleScreenAccountsDropdown {
 
     private static void refreshIfNeeded() {
         if (System.currentTimeMillis() - lastRefreshAt > 2000L) {
-            refresh();
+            refreshEntries();
         }
     }
 
-    private static void refresh() {
+    private static void refreshEntries() {
         entries.clear();
         selectedFileName = readActivePointer();
         if (Files.isDirectory(ACCOUNTS_DIR)) {
@@ -215,7 +220,7 @@ public final class TitleScreenAccountsDropdown {
             if (selectedFileName.equals(readActivePointer())) {
                 Files.deleteIfExists(ACTIVE_ACCOUNT_POINTER);
             }
-            refresh();
+            refreshEntries();
             if (!entries.isEmpty()) {
                 selectedFileName = entries.get(0).fileName;
                 writeActivePointer(selectedFileName);
@@ -234,8 +239,8 @@ public final class TitleScreenAccountsDropdown {
     }
 
     private static void openClientLogin() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        client.setScreen(new MicrosoftAccountLoginScreen(client.currentScreen));
+        open = false;
+        MicrosoftAccountLoginPopup.open();
     }
 
     private static AccountEntry parseAccount(Path path) {
