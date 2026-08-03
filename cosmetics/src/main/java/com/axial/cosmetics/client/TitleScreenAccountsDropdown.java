@@ -240,7 +240,8 @@ public final class TitleScreenAccountsDropdown {
 
     private static void openClientLogin() {
         open = false;
-        MicrosoftAccountLoginPopup.open();
+        MinecraftClient client = MinecraftClient.getInstance();
+        client.setScreen(new MicrosoftAccountLoginPopupScreen(client.currentScreen));
     }
 
     private static AccountEntry parseAccount(Path path) {

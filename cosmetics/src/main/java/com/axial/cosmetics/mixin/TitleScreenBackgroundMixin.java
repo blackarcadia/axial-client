@@ -1,7 +1,6 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
-import com.axial.cosmetics.client.MicrosoftAccountLoginPopup;
 import com.axial.cosmetics.client.TitleScreenAccountsDropdown;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -167,7 +166,6 @@ public abstract class TitleScreenBackgroundMixin {
     @Inject(method = "render", at = @At("TAIL"))
     private void axial_cosmetics$drawAccountsDropdown(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         TitleScreenAccountsDropdown.render(context, (TitleScreen) (Object) this, MinecraftClient.getInstance().textRenderer, mouseX, mouseY);
-        MicrosoftAccountLoginPopup.render(context, MinecraftClient.getInstance().textRenderer, mouseX, mouseY, ((TitleScreen) (Object) this).width, ((TitleScreen) (Object) this).height);
     }
 
     private static void drawOutlinedText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int fillColor, int outlineColor) {
@@ -181,12 +179,6 @@ public abstract class TitleScreenBackgroundMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void axial_cosmetics$connectOfficialGamemodes(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
         TitleScreen screen = (TitleScreen) (Object) this;
-        if (MicrosoftAccountLoginPopup.isOpen() && MicrosoftAccountLoginPopup.mouseClicked(click, screen.width, screen.height)) {
-            cir.setReturnValue(true);
-            cir.cancel();
-            return;
-        }
-
         if (TitleScreenAccountsDropdown.clickToggleButton(click)) {
             cir.setReturnValue(true);
             cir.cancel();
