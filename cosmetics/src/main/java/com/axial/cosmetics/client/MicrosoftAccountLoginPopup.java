@@ -51,7 +51,6 @@ public final class MicrosoftAccountLoginPopup {
         statusLine = "Click Sign In to start authentication.";
         verificationUri = "";
         userCode = "";
-        startLogin();
     }
 
     public static boolean isOpen() {
