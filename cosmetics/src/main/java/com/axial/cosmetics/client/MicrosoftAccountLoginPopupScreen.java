@@ -10,12 +10,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
-import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
-import net.raphimc.minecraftauth.msa.service.util.ParamMsaAuthServiceSupplier;
+import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
 
 import javax.swing.SwingUtilities;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,13 +29,9 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
 
     private final Screen parent;
     private volatile String statusLine = "Click Sign In to start authentication.";
-    private volatile String verificationUri = "";
-    private volatile String userCode = "";
     private volatile boolean success;
     private volatile boolean loginStarted;
-    private volatile boolean browserOpened;
     private ButtonWidget signInButton;
-    private ButtonWidget openBrowserButton;
     private ButtonWidget cancelButton;
 
     public MicrosoftAccountLoginPopupScreen(Screen parent) {
@@ -49,10 +42,8 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
     @Override
     protected void init() {
         signInButton = ButtonWidget.builder(uiText("SIGN IN"), btn -> startLogin()).build();
-        openBrowserButton = ButtonWidget.builder(uiText("OPEN BROWSER"), btn -> openBrowser()).build();
         cancelButton = ButtonWidget.builder(uiText("CANCEL"), btn -> close()).build();
         addDrawableChild(signInButton);
-        addDrawableChild(openBrowserButton);
         addDrawableChild(cancelButton);
         layoutButtons();
     }
@@ -79,18 +70,8 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
         context.drawCenteredTextWithShadow(textRenderer, uiText("SIGN IN WITH YOUR MICROSOFT ACCOUNT."), panelX + PANEL_WIDTH / 2, panelY + 24, 0xFFC6D0F3);
         context.drawCenteredTextWithShadow(textRenderer, uiText(statusLine), panelX + PANEL_WIDTH / 2, panelY + 58, 0xFFFFFFFF);
-
-        if (loginStarted) {
-            if (!verificationUri.isBlank()) {
-                context.drawCenteredTextWithShadow(textRenderer, uiText("VISIT"), panelX + PANEL_WIDTH / 2, panelY + 82, 0xFFC6D0F3);
-                context.drawCenteredTextWithShadow(textRenderer, uiText(verificationUri), panelX + PANEL_WIDTH / 2, panelY + 96, 0xFFFFFFFF);
-            }
-            if (!userCode.isBlank()) {
-                context.drawCenteredTextWithShadow(textRenderer, uiText("CODE: " + userCode), panelX + PANEL_WIDTH / 2, panelY + 122, 0xFFFFFFFF);
-            }
-            if (success) {
-                context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED."), panelX + PANEL_WIDTH / 2, panelY + 148, 0xFF8AF0C2);
-            }
+        if (success) {
+            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED."), panelX + PANEL_WIDTH / 2, panelY + 92, 0xFF8AF0C2);
         }
 
         layoutButtons();
@@ -102,23 +83,11 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
             return;
         }
         loginStarted = true;
-        statusLine = "Starting Microsoft sign-in...";
+        statusLine = "Opening Microsoft sign-in window...";
         CompletableFuture.runAsync(() -> {
             try {
-                ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
-                        (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, code -> {
-                            verificationUri = code.getVerificationUri();
-                            userCode = code.getUserCode();
-                            statusLine = "Use the code shown below to sign in.";
-                            if (!browserOpened) {
-                                browserOpened = true;
-                                openBrowser(code.getDirectVerificationUri());
-                            }
-                            consumer.accept(code);
-                        });
-
                 JavaAuthManager authManager = JavaAuthManager.create(MinecraftAuth.createHttpClient("AxialLauncher/1.0"))
-                        .login(supplier, code -> {});
+                        .login(JfxWebViewMsaAuthService::new);
 
                 persist(authManager);
                 statusLine = "Signed in as " + authManager.getMinecraftProfile().getUpToDate().getName() + ".";
@@ -143,21 +112,6 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
         writeActivePointer(target.getFileName().toString());
     }
 
-    private void openBrowser() {
-        if (!verificationUri.isBlank()) {
-            openBrowser(verificationUri);
-        }
-    }
-
-    private void openBrowser(String uri) {
-        try {
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(java.net.URI.create(uri));
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
     private void layoutButtons() {
         int panelX = (width - PANEL_WIDTH) / 2;
         int panelY = Math.max(30, (height - PANEL_HEIGHT) / 2);
@@ -169,13 +123,8 @@ public final class MicrosoftAccountLoginPopupScreen extends Screen {
             signInButton.setWidth(buttonWidth);
             signInButton.setHeight(20);
         }
-        if (openBrowserButton != null) {
-            openBrowserButton.setPosition(panelX + 72 + buttonWidth + buttonGap, buttonY);
-            openBrowserButton.setWidth(buttonWidth);
-            openBrowserButton.setHeight(20);
-        }
         if (cancelButton != null) {
-            cancelButton.setPosition(panelX + 72 + (buttonWidth + buttonGap) * 2, buttonY);
+            cancelButton.setPosition(panelX + 72 + buttonWidth + buttonGap, buttonY);
             cancelButton.setWidth(80);
             cancelButton.setHeight(20);
         }
