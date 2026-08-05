@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 final class AccountLoginWindow {
     private final JFrame frame;
     private final JLabel statusLabel = new JLabel("Opening Microsoft sign-in...");
+    private final JButton signInButton = new JButton("Sign In");
     private final JButton closeButton = new JButton("Close");
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Path accountsDir = ClientPaths.accountsDir();
@@ -49,11 +50,16 @@ final class AccountLoginWindow {
 
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         footer.setOpaque(false);
+        signInButton.addActionListener(e -> {
+            signInButton.setEnabled(false);
+            statusLabel.setText("Opening Microsoft sign-in...");
+            startLogin();
+        });
+        footer.add(signInButton);
         closeButton.addActionListener(e -> frame.dispose());
         footer.add(closeButton);
         root.add(footer, BorderLayout.SOUTH);
-
-        startLogin();
+        statusLabel.setText("Click Sign In to continue.");
     }
 
     static void show() {
@@ -84,6 +90,7 @@ final class AccountLoginWindow {
                 });
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> statusLabel.setText("Login failed: " + ex.getMessage()));
+                SwingUtilities.invokeLater(() -> signInButton.setEnabled(true));
             }
         });
     }
