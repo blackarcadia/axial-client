@@ -112,10 +112,12 @@ tasks.register('jpackageMac') {
         def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
         def packageDir = layout.buildDirectory.dir("jpackage").get().asFile
         def appImageDir = new File(packageDir, "AxialLauncher.app")
+        def dmgStageDir = new File('/tmp/axiallauncher-dmg-stage')
         def outImage = new File(packageDir, "AxialLauncher-${appVersion}.dmg")
 
         delete outImage
         delete appImageDir
+        delete dmgStageDir
         packageDir.mkdirs()
 
         def runCommand = { List<String> command ->
@@ -152,21 +154,40 @@ tasks.register('jpackageMac') {
             throw new GradleException("Expected app image was not created: ${appImageDir.absolutePath}")
         }
 
-        def dmgCommand = [
-                'jpackage',
-                '--type', 'dmg',
-                '--name', 'AxialLauncher',
-                '--app-version', appVersion,
-                '--mac-package-identifier', 'com.axial.launcher',
-                '--input', libsDir.absolutePath,
-                '--main-jar', mainJarName,
-                '--main-class', application.mainClass.get(),
-                '--runtime-image', runtimeDir.absolutePath,
-                '--dest', packageDir.absolutePath
-        ]
-        if (iconPath.exists()) {
-            dmgCommand += ['--icon', iconPath.absolutePath]
+        runCommand([
+                'mkdir',
+                '-p',
+                dmgStageDir.absolutePath
+        ])
+        def stagedBundle = new File(dmgStageDir, 'AxialLauncherBundle')
+        runCommand([
+                'cp',
+                '-R',
+                appImageDir.absolutePath,
+                stagedBundle.absolutePath
+        ])
+
+        def stagedLink = new File(dmgStageDir, 'AxialLauncher.app')
+        if (stagedLink.exists()) {
+            stagedLink.delete()
         }
+        runCommand([
+                'ln',
+                '-s',
+                'AxialLauncherBundle',
+                stagedLink.absolutePath
+        ])
+
+        def dmgCommand = [
+                'hdiutil',
+                'create',
+                '-fs', 'HFS+',
+                '-volname', 'AxialLauncher',
+                '-srcfolder', dmgStageDir.absolutePath,
+                '-ov',
+                '-format', 'UDZO',
+                outImage.absolutePath
+        ]
         runCommand(dmgCommand)
 
         if (!outImage.exists()) {
