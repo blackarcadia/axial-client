@@ -80,7 +80,7 @@ public class MinecraftLauncher {
         }
 
         downloadClient(layout, request.getVersionId(), versionJson);
-        downloadLibraries(layout, versionJson);
+        downloadLibraries(layout, request.getVersionId(), versionJson);
         downloadAssets(layout, versionJson);
         boolean firstInstall = GitHubReleaseUpdater.installedClientTag().isBlank();
         if (firstInstall) {
@@ -203,7 +203,7 @@ public class MinecraftLauncher {
                 .orElseThrow(() -> new IllegalArgumentException("Base version not found: " + baseVersion));
         JsonObject baseJson = fetchVersionJson(layout, base);
         downloadClient(layout, baseVersion, baseJson);
-        downloadLibraries(layout, baseJson);
+        downloadLibraries(layout, baseVersion, baseJson);
         downloadAssets(layout, baseJson);
     }
 
@@ -238,7 +238,7 @@ public class MinecraftLauncher {
         downloadTo(client.get("url").getAsString(), target);
     }
 
-    private void downloadLibraries(FileLayout layout, JsonObject versionJson) throws IOException {
+    private void downloadLibraries(FileLayout layout, String versionId, JsonObject versionJson) throws IOException {
         JsonArray libs = versionJson.getAsJsonArray("libraries");
         for (JsonElement el : libs) {
             JsonObject lib = el.getAsJsonObject();
@@ -276,7 +276,7 @@ public class MinecraftLauncher {
                 JsonObject classifierArtifact = selectNative(classifiers);
                 if (classifierArtifact != null) {
                     Path archive = downloadArtifact(layout.librariesDir(), classifierArtifact);
-                    extractNatives(archive, layout.nativesDir(versionJson.get("id").getAsString()), lib);
+                    extractNatives(archive, layout.nativesDir(versionId), lib);
                 }
             }
         }
