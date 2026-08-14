@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "axial_cosmetics:item/blaze_powder_253"
+  }
+}
