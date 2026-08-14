@@ -24,6 +24,7 @@ public class ExternalLauncherUI {
     private final JButton loginButton;
     private final JButton logoutButton;
     private final Path accountsDir = ClientPaths.accountsDir();
+    private final Path activeAccountPointer = ClientPaths.appRoot().resolve("active-account.path");
     private final JLabel activeAccountLabel;
     private final JLabel headLabel;
     private final JLabel switchLabel;
@@ -71,6 +72,7 @@ public class ExternalLauncherUI {
         panel.add(launchButton);
 
         accountSelect = new JComboBox<>();
+        accountSelect.addActionListener(e -> writeActivePointerFromSelection());
         loginButton = new JButton();
         logoutButton = new JButton("Logout");
         activeAccountLabel = new JLabel("");
@@ -218,7 +220,10 @@ public class ExternalLauncherUI {
                 Files.move(temp, target);
                 log("Logged in as " + result.playerName);
                 refreshAccounts();
-                SwingUtilities.invokeLater(() -> accountSelect.setSelectedItem(new AccountEntry(result.playerName, result.uuid, target.getFileName().toString())));
+                SwingUtilities.invokeLater(() -> {
+                    accountSelect.setSelectedItem(new AccountEntry(result.playerName, result.uuid, target.getFileName().toString()));
+                    writeActivePointer(target.getFileName().toString());
+                });
             } catch (Exception ex) {
                 log("Login failed: " + ex);
                 ex.printStackTrace(logStream != null ? logStream : System.out);
@@ -239,6 +244,9 @@ public class ExternalLauncherUI {
         Path path = accountsDir.resolve(selected.fileName);
         try {
             Files.deleteIfExists(path);
+            if (selected.fileName.equals(readActivePointer())) {
+                Files.deleteIfExists(activeAccountPointer);
+            }
             log("Removed account " + selected.displayName);
             refreshAccounts();
             SwingUtilities.invokeLater(() -> updateActiveDisplay());
@@ -267,11 +275,50 @@ public class ExternalLauncherUI {
         if (entries.isEmpty()) {
             entries.add(new AccountEntry("Click Login", "", "default.json"));
         }
+        String activeFileName = readActivePointer();
         SwingUtilities.invokeLater(() -> {
             for (AccountEntry e : entries) accountSelect.addItem(e);
-            accountSelect.setSelectedIndex(0);
+            AccountEntry selected = null;
+            if (activeFileName != null) {
+                for (AccountEntry entry : entries) {
+                    if (activeFileName.equals(entry.fileName)) {
+                        selected = entry;
+                        break;
+                    }
+                }
+            }
+            accountSelect.setSelectedItem(selected != null ? selected : entries.get(0));
             updateActiveDisplay();
         });
+    }
+
+    private void writeActivePointerFromSelection() {
+        AccountEntry selected = (AccountEntry) accountSelect.getSelectedItem();
+        if (selected == null || selected.fileName == null || selected.fileName.isBlank() || "default.json".equals(selected.fileName)) {
+            return;
+        }
+        writeActivePointer(selected.fileName);
+    }
+
+    private void writeActivePointer(String fileName) {
+        try {
+            Files.createDirectories(activeAccountPointer.getParent());
+            Files.writeString(activeAccountPointer, fileName);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private String readActivePointer() {
+        try {
+            if (Files.exists(activeAccountPointer)) {
+                String value = Files.readString(activeAccountPointer).trim();
+                if (!value.isBlank()) {
+                    return value;
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        return null;
     }
 
     private void updateActiveDisplay() {
