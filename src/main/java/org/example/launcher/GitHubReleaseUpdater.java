@@ -43,7 +43,6 @@ public final class GitHubReleaseUpdater {
             "AxialLauncher",
             "client-release.files"
     );
-    private static final String STATIC_BG_ENTRY = "staticbgmod-1.0.4.jar";
     private final OkHttpClient client = new OkHttpClient();
     private final AppBuildInfo buildInfo;
 
@@ -138,7 +137,6 @@ public final class GitHubReleaseUpdater {
         }
 
         writeInstalledClientTag(releaseTag);
-        writeClientReadyMarker();
     }
 
     private static Path locateAppJar(Path appBundle) throws IOException {
@@ -173,9 +171,6 @@ public final class GitHubReleaseUpdater {
             if (name.contains("/")) {
                 continue;
             }
-            if (name.equalsIgnoreCase(STATIC_BG_ENTRY) || name.toLowerCase(Locale.ROOT).startsWith("staticbgmod-")) {
-                continue;
-            }
 
             Path target = modsDir.resolve(name);
             try (InputStream in = jarFile.getInputStream(entry);
@@ -198,7 +193,6 @@ public final class GitHubReleaseUpdater {
             for (String fileName : previous) {
                 Files.deleteIfExists(modsDir.resolve(fileName));
             }
-            Files.deleteIfExists(modsDir.resolve(STATIC_BG_ENTRY));
             return;
         }
 
@@ -216,7 +210,6 @@ public final class GitHubReleaseUpdater {
                 }
             }
         }
-        Files.deleteIfExists(modsDir.resolve(STATIC_BG_ENTRY));
     }
 
     public static String installedClientTag() {
@@ -233,12 +226,6 @@ public final class GitHubReleaseUpdater {
     private static void writeInstalledClientTag(String releaseTag) throws IOException {
         Files.createDirectories(CLIENT_RELEASE_MARKER.getParent());
         Files.writeString(CLIENT_RELEASE_MARKER, releaseTag + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-    }
-
-    private static void writeClientReadyMarker() throws IOException {
-        Path marker = ClientPaths.clientReadyMarker();
-        Files.createDirectories(marker.getParent());
-        Files.writeString(marker, "ready" + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
     private static List<String> readInstalledClientManifest() {

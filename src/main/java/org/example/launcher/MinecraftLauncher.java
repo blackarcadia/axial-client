@@ -71,16 +71,8 @@ public class MinecraftLauncher {
             ensureVanilla(base, layout, manifest);
         }
 
-        ensureRequiredClientMods(layout);
-        removeStaticBgMod(layout);
-
-        if (isClientReady(layout, request.getVersionId())) {
-            logger.info("Client install already present.");
-            return;
-        }
-
         downloadClient(layout, request.getVersionId(), versionJson);
-        downloadLibraries(layout, request.getVersionId(), versionJson);
+        downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
         boolean firstInstall = GitHubReleaseUpdater.installedClientTag().isBlank();
         if (firstInstall) {
@@ -97,7 +89,6 @@ public class MinecraftLauncher {
             removeSimpleMenu(layout);
             removeCollective(layout);
         }
-        writeClientReadyMarker(layout);
         logger.info("Installation check complete.");
     }
 
@@ -203,7 +194,7 @@ public class MinecraftLauncher {
                 .orElseThrow(() -> new IllegalArgumentException("Base version not found: " + baseVersion));
         JsonObject baseJson = fetchVersionJson(layout, base);
         downloadClient(layout, baseVersion, baseJson);
-        downloadLibraries(layout, baseVersion, baseJson);
+        downloadLibraries(layout, baseJson);
         downloadAssets(layout, baseJson);
     }
 
@@ -238,7 +229,7 @@ public class MinecraftLauncher {
         downloadTo(client.get("url").getAsString(), target);
     }
 
-    private void downloadLibraries(FileLayout layout, String versionId, JsonObject versionJson) throws IOException {
+    private void downloadLibraries(FileLayout layout, JsonObject versionJson) throws IOException {
         JsonArray libs = versionJson.getAsJsonArray("libraries");
         for (JsonElement el : libs) {
             JsonObject lib = el.getAsJsonObject();
@@ -276,7 +267,7 @@ public class MinecraftLauncher {
                 JsonObject classifierArtifact = selectNative(classifiers);
                 if (classifierArtifact != null) {
                     Path archive = downloadArtifact(layout.librariesDir(), classifierArtifact);
-                    extractNatives(archive, layout.nativesDir(versionId), lib);
+                    extractNatives(archive, layout.nativesDir(versionJson.get("id").getAsString()), lib);
                 }
             }
         }
@@ -500,31 +491,6 @@ public class MinecraftLauncher {
     private void removeCollective(FileLayout layout) throws IOException {
         Path target = layout.modsDir().resolve(COLLECTIVE_FILE);
         Files.deleteIfExists(target);
-    }
-
-    private void ensureRequiredClientMods(FileLayout layout) throws IOException {
-        if (!Files.exists(layout.modsDir().resolve(FABRIC_API_FILE))) {
-            downloadFabricApi(layout);
-        }
-    }
-
-    private boolean isClientReady(FileLayout layout, String versionId) throws IOException {
-        if (!Files.exists(ClientPaths.clientReadyMarker())) {
-            return false;
-        }
-        if (!Files.exists(layout.versionJson(versionId))) {
-            return false;
-        }
-        return Files.exists(layout.clientJar(versionId));
-    }
-
-    private void writeClientReadyMarker(FileLayout layout) throws IOException {
-        Path marker = ClientPaths.clientReadyMarker();
-        Files.createDirectories(marker.getParent());
-        Files.writeString(marker, "ready" + System.lineSeparator(),
-                java.nio.file.StandardOpenOption.CREATE,
-                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
-                java.nio.file.StandardOpenOption.WRITE);
     }
 
     private void installAxialCosmetics(FileLayout layout) throws IOException {

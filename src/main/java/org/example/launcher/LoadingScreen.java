@@ -37,6 +37,7 @@ public final class LoadingScreen {
     public LoadingScreen() {
         frame = new JFrame("AxialClient");
         frame.setUndecorated(true);
+        frame.setAlwaysOnTop(true);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
@@ -66,6 +67,8 @@ public final class LoadingScreen {
     public void show() {
         Runnable showAction = () -> {
             frame.setVisible(true);
+            frame.toFront();
+            frame.requestFocus();
         };
         if (SwingUtilities.isEventDispatchThread()) {
             showAction.run();

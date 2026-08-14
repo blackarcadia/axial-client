@@ -172,7 +172,6 @@ public class ExternalLauncherUI {
                 Path gameDir = ClientPaths.clientRoot();
                 Files.createDirectories(gameDir);
                 Path store = accountsDir.resolve(selected.fileName);
-                writeActiveAccountPointer(selected.fileName);
                 AuthManager auth = new AuthManager(store);
                 AuthResult authResult = auth.authenticate();
 
@@ -217,7 +216,6 @@ public class ExternalLauncherUI {
                 Path target = accountsDir.resolve(result.playerName + ".json");
                 Files.deleteIfExists(target);
                 Files.move(temp, target);
-                writeActiveAccountPointer(target.getFileName().toString());
                 log("Logged in as " + result.playerName);
                 refreshAccounts();
                 SwingUtilities.invokeLater(() -> accountSelect.setSelectedItem(new AccountEntry(result.playerName, result.uuid, target.getFileName().toString())));
@@ -242,9 +240,6 @@ public class ExternalLauncherUI {
         try {
             Files.deleteIfExists(path);
             log("Removed account " + selected.displayName);
-            if (selected.fileName.equals(readActiveAccountPointer())) {
-                Files.deleteIfExists(ClientPaths.activeAccountPointer());
-            }
             refreshAccounts();
             SwingUtilities.invokeLater(() -> updateActiveDisplay());
         } catch (IOException e) {
@@ -282,7 +277,6 @@ public class ExternalLauncherUI {
     private void updateActiveDisplay() {
         AccountEntry sel = (AccountEntry) accountSelect.getSelectedItem();
         if (sel != null && sel.uuid != null && !sel.uuid.isBlank()) {
-            writeActiveAccountPointer(sel.fileName);
             setHeadAsync(sel.uuid);
             loginButton.setVisible(false);
             logoutButton.setVisible(true);
@@ -303,27 +297,6 @@ public class ExternalLauncherUI {
             }
             switchLabel.setVisible(false);
         }
-    }
-
-    private void writeActiveAccountPointer(String fileName) {
-        try {
-            Files.createDirectories(ClientPaths.activeAccountPointer().getParent());
-            Files.writeString(ClientPaths.activeAccountPointer(), fileName);
-        } catch (IOException ignored) {
-        }
-    }
-
-    private String readActiveAccountPointer() {
-        try {
-            if (Files.exists(ClientPaths.activeAccountPointer())) {
-                String value = Files.readString(ClientPaths.activeAccountPointer()).trim();
-                if (!value.isBlank()) {
-                    return value;
-                }
-            }
-        } catch (IOException ignored) {
-        }
-        return null;
     }
 
     private void setHeadAsync(String uuid) {

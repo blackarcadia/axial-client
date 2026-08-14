@@ -117,7 +117,7 @@ public final class LauncherInstallationManager {
     }
 
     public static void launchBundle(Path bundle) throws IOException {
-        runCommand("open", "-n", bundle.toAbsolutePath().toString());
+        runCommand("open", bundle.toAbsolutePath().toString());
     }
 
     public static void activateInstall(Path bundle) throws IOException {

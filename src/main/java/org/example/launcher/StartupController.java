@@ -107,21 +107,6 @@ public final class StartupController {
     }
 
     private AuthResult resolveAccount(Path accountsDir) throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
-        Path activePointer = ClientPaths.activeAccountPointer();
-        if (Files.exists(activePointer)) {
-            String activeValue = Files.readString(activePointer).trim();
-            if (!activeValue.isBlank()) {
-                Path activeFile = accountsDir.resolve(activeValue);
-                if (Files.exists(activeFile)) {
-                    try {
-                        return new AuthManager(activeFile).authenticate();
-                    } catch (Exception ignored) {
-                        // Fall through and try other stored accounts.
-                    }
-                }
-            }
-        }
-
         if (Files.isDirectory(accountsDir)) {
             try (var stream = Files.list(accountsDir)) {
                 List<Path> files = new ArrayList<>();
@@ -129,10 +114,9 @@ public final class StartupController {
                         .sorted()
                         .forEach(files::add);
                 for (Path file : files) {
-                    try {
-                        return new AuthManager(file).authenticate();
-                    } catch (Exception ignored) {
-                        // Try the next stored account.
+                    AuthResult peek = AuthManager.peek(file);
+                    if (peek != null) {
+                        return peek;
                     }
                 }
             }
