@@ -113,9 +113,10 @@ public final class StartupController {
             if (!activeValue.isBlank()) {
                 Path activeFile = accountsDir.resolve(activeValue);
                 if (Files.exists(activeFile)) {
-                    AuthResult active = AuthManager.peek(activeFile);
-                    if (active != null) {
-                        return active;
+                    try {
+                        return new AuthManager(activeFile).authenticate();
+                    } catch (Exception ignored) {
+                        // Fall through and try other stored accounts.
                     }
                 }
             }
@@ -128,9 +129,10 @@ public final class StartupController {
                         .sorted()
                         .forEach(files::add);
                 for (Path file : files) {
-                    AuthResult peek = AuthManager.peek(file);
-                    if (peek != null) {
-                        return peek;
+                    try {
+                        return new AuthManager(file).authenticate();
+                    } catch (Exception ignored) {
+                        // Try the next stored account.
                     }
                 }
             }
