@@ -108,15 +108,25 @@ public final class StartupController {
 
     private AuthResult resolveAccount(Path accountsDir) throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
         if (Files.isDirectory(accountsDir)) {
+            Path activeFile = readActiveAccount(accountsDir);
+            if (activeFile != null) {
+                try {
+                    return new AuthManager(activeFile).authenticate();
+                } catch (Exception ignored) {
+                    // Fall back to other stored accounts if the active one is stale.
+                }
+            }
+
             try (var stream = Files.list(accountsDir)) {
                 List<Path> files = new ArrayList<>();
                 stream.filter(p -> p.getFileName().toString().endsWith(".json"))
                         .sorted()
                         .forEach(files::add);
                 for (Path file : files) {
-                    AuthResult peek = AuthManager.peek(file);
-                    if (peek != null) {
-                        return peek;
+                    try {
+                        return new AuthManager(file).authenticate();
+                    } catch (Exception ignored) {
+                        // Try the next stored account.
                     }
                 }
             }
@@ -129,6 +139,25 @@ public final class StartupController {
         Files.deleteIfExists(target);
         Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return result;
+    }
+
+    private Path readActiveAccount(Path accountsDir) {
+        Path pointer = ClientPaths.appRoot().resolve("active-account.path");
+        try {
+            if (!Files.exists(pointer)) {
+                return null;
+            }
+
+            String value = Files.readString(pointer).trim();
+            if (value.isBlank()) {
+                return null;
+            }
+
+            Path activeFile = accountsDir.resolve(value);
+            return Files.exists(activeFile) ? activeFile : null;
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     private void rebuildLauncher() throws IOException, InterruptedException {
