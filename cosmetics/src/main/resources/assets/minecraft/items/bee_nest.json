@@ -1,0 +1,33 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "entries": [
+      {
+        "threshold": 257,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/custom_model_data_257"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:select",
+      "block_state_property": "honey_level",
+      "cases": [
+        {
+          "model": {
+            "type": "minecraft:model",
+            "model": "minecraft:block/bee_nest_honey"
+          },
+          "when": "5"
+        }
+      ],
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "minecraft:block/bee_nest_empty"
+      },
+      "property": "minecraft:block_state"
+    }
+  }
+}

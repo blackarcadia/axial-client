@@ -1,0 +1,23 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "entries": [
+      {
+        "threshold": 257,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/custom_model_data_257"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "minecraft:item/copper_chest",
+      "model": {
+        "type": "minecraft:chest",
+        "texture": "minecraft:copper"
+      }
+    }
+  }
+}

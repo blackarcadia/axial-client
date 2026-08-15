@@ -4,16 +4,36 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
-        "threshold": 253,
+        "threshold": 257,
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:item/blaze_powder_253"
+          "model": "minecraft:item/custom_model_data_257"
         }
       }
     ],
     "fallback": {
-      "type": "minecraft:model",
-      "model": "minecraft:item/blaze_powder"
+      "type": "minecraft:range_dispatch",
+      "property": "minecraft:custom_model_data",
+      "entries": [
+        {
+          "threshold": 257,
+          "model": {
+            "type": "minecraft:model",
+            "model": "minecraft:item/custom_model_data_257"
+          }
+        },
+        {
+          "threshold": 253,
+          "model": {
+            "type": "minecraft:model",
+            "model": "minecraft:item/blaze_powder_253"
+          }
+        }
+      ],
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/blaze_powder"
+      }
     }
   }
 }

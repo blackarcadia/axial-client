@@ -1,0 +1,52 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "entries": [
+      {
+        "threshold": 257,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/custom_model_data_257"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:select",
+      "cases": [
+        {
+          "model": {
+            "type": "minecraft:condition",
+            "on_false": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/brown_bundle"
+            },
+            "on_true": {
+              "type": "minecraft:composite",
+              "models": [
+                {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/brown_bundle_open_back"
+                },
+                {
+                  "type": "minecraft:bundle/selected_item"
+                },
+                {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/brown_bundle_open_front"
+                }
+              ]
+            },
+            "property": "minecraft:bundle/has_selected_item"
+          },
+          "when": "gui"
+        }
+      ],
+      "fallback": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/brown_bundle"
+      },
+      "property": "minecraft:display_context"
+    }
+  }
+}
