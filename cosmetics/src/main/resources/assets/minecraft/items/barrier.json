@@ -7,7 +7,7 @@
         "threshold": 232,
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:item/custom_model_data_232"
+          "model": "minecraft:block/custom/weatherdetector"
         }
       },
       {

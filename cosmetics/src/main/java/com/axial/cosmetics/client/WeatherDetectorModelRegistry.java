@@ -15,6 +15,7 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 8)
             .with(NoteBlock.POWERED, false);
+    private static final net.minecraft.block.BlockState BARRIER_STATE = Blocks.BARRIER.getDefaultState();
 
     private WeatherDetectorModelRegistry() {
     }
@@ -22,6 +23,8 @@ public final class WeatherDetectorModelRegistry {
     public static void register() {
         ModelLoadingPlugin.register(context ->
                 context.registerBlockStateResolver(Blocks.NOTE_BLOCK, WeatherDetectorModelRegistry::resolveNoteBlock));
+        ModelLoadingPlugin.register(context ->
+                context.registerBlockStateResolver(Blocks.BARRIER, WeatherDetectorModelRegistry::resolveBarrier));
     }
 
     private static void resolveNoteBlock(BlockStateResolver.Context context) {
@@ -29,5 +32,12 @@ public final class WeatherDetectorModelRegistry {
             return;
         }
         context.setModel(TARGET_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(MODEL_ID)).cached());
+    }
+
+    private static void resolveBarrier(BlockStateResolver.Context context) {
+        if (context.block() != Blocks.BARRIER) {
+            return;
+        }
+        context.setModel(BARRIER_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(MODEL_ID)).cached());
     }
 }
