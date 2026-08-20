@@ -3,7 +3,7 @@
 		"0": "block/weatherdetector",
 		"particle": "block/weatherdetector"
 	},
-  "elements": [
+	"elements": [
     {
       "from": [1, 0, 2],
       "to": [15, 2, 14],
@@ -94,8 +94,8 @@
         "down": {"uv": [6.25, 8, 6, 8.25], "texture": "#0"}
       }
     },
-    {
-      "from": [5.5, 4, 1.875],
+		{
+			"from": [5.5, 4, 1.875],
       "to": [10.5, 7, 2.375],
       "rotation": {"angle": 0, "axis": "y", "origin": [5.5, 4, 0.375]},
       "faces": {
@@ -104,8 +104,33 @@
         "south": {"uv": [4.5, 7.25, 5.75, 8], "texture": "#0"},
         "west": {"uv": [4, 8, 4.25, 8.75], "texture": "#0"},
         "up": {"uv": [7, 7.75, 5.75, 7.5], "texture": "#0"},
-        "down": {"uv": [8.25, 7.5, 7, 7.75], "texture": "#0"}
-      }
-    }
-  ]
+				"down": {"uv": [8.25, 7.5, 7, 7.75], "texture": "#0"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [0, 0, -2.25],
+			"scale": [0.6, 0.6, 0.6]
+		},
+		"thirdperson_lefthand": {
+			"translation": [0, 0, -2.5],
+			"scale": [0.6, 0.6, 0.6]
+		},
+		"firstperson_righthand": {
+			"translation": [0, 4, 0],
+			"scale": [0.6, 0.6, 0.6]
+		},
+		"firstperson_lefthand": {
+			"translation": [0, 4, 0],
+			"scale": [0.6, 0.6, 0.6]
+		},
+		"ground": {
+			"translation": [0, 5, 0]
+		},
+		"gui": {
+			"translation": [0, -3, 0],
+			"scale": [0.6, 0.6, 0.6]
+		}
+	}
 }
