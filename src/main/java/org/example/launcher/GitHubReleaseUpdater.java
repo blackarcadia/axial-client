@@ -171,6 +171,9 @@ public final class GitHubReleaseUpdater {
             if (name.contains("/")) {
                 continue;
             }
+            if (isRuntimeDependencyJar(name)) {
+                continue;
+            }
 
             Path target = modsDir.resolve(name);
             try (InputStream in = jarFile.getInputStream(entry);
@@ -205,11 +208,17 @@ public final class GitHubReleaseUpdater {
                 if (name.endsWith(".jar") && (name.startsWith("axial-") || name.startsWith("axialutils-")
                         || name.startsWith("geckolib-fabric-") || name.startsWith("sodium-fabric-")
                         || name.startsWith("sodium-extra-") || name.startsWith("reeses-sodium-options-")
-                        || name.startsWith("lithium-fabric-") || name.startsWith("staticbgmod-"))) {
+                        || name.startsWith("lithium-fabric-") || name.startsWith("staticbgmod-")
+                        || isRuntimeDependencyJar(name))) {
                     Files.deleteIfExists(path);
                 }
             }
         }
+    }
+
+    private static boolean isRuntimeDependencyJar(String fileName) {
+        String lower = fileName.toLowerCase(Locale.ROOT);
+        return lower.startsWith("javafx-");
     }
 
     public static String installedClientTag() {
