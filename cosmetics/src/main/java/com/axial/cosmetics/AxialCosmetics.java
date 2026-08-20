@@ -7,6 +7,7 @@ import com.axial.cosmetics.client.ChunkBordersConfig;
 import com.axial.cosmetics.client.ItemScalerConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
+import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.data.CosmeticManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -30,6 +31,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        WeatherDetectorModelRegistry.register();
         ItemScalerConfig.load();
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
