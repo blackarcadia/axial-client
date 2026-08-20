@@ -83,12 +83,12 @@ public class MinecraftLauncher {
             installLithium(layout);
             installGeckoLib(layout);
             installAxialUtils(layout);
-            installAxialCosmetics(layout);
             removeXaeroMinimap(layout);
             removeStaticBgMod(layout);
             removeSimpleMenu(layout);
             removeCollective(layout);
         }
+        installAxialCosmetics(layout);
         logger.info("Installation check complete.");
     }
 
