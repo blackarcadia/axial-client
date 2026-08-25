@@ -37,12 +37,16 @@ public final class LauncherInstallationManager {
             return false;
         }
 
+        AppBuildInfo currentInfo = AppBuildInfo.load();
+        if (!"release".equalsIgnoreCase(currentInfo.appChannel())) {
+            return false;
+        }
+
         if (isActiveInstall(currentBundle)) {
             return false;
         }
 
         Path activeBundle = activeInstallBundle();
-        AppBuildInfo currentInfo = AppBuildInfo.load();
         Path desiredBundle = installPathForVersion(currentInfo.appVersion());
 
         if (isBundleValid(activeBundle)) {
