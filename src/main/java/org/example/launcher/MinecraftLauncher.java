@@ -85,10 +85,12 @@ public class MinecraftLauncher {
             installAxialUtils(layout);
             removeXaeroMinimap(layout);
             removeStaticBgMod(layout);
-            removeSimpleMenu(layout);
             removeCollective(layout);
         }
         installAxialCosmetics(layout);
+        installAxialPack(layout);
+        writeSimpleMenuConfig(layout, AXIAL_PACK_NAME);
+        ensureResourcePacksEnabled(layout.optionsFile(), List.of(layout.resourcePackDir(AXIAL_PACK_NAME).toAbsolutePath().toString()));
         logger.info("Installation check complete.");
     }
 
@@ -640,12 +642,42 @@ public class MinecraftLauncher {
 
     private void installAxialPack(FileLayout layout) throws IOException {
         Path packDir = layout.resourcePackDir(AXIAL_PACK_NAME);
-        // Clean up any old custom packs we created
         deleteRecursive(packDir);
         deleteRecursive(layout.resourcePackDir("axial_panorama"));
-        // Stop here if user requested removal only
-        logger.info("axial_pack removed.");
-        return;
+
+        Files.createDirectories(packDir);
+        Path assetsDir = packDir.resolve("assets").resolve(AXIAL_PACK_NAME).resolve("textures").resolve("gui").resolve("title");
+        Files.createDirectories(assetsDir);
+
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/main_menu_background.png", assetsDir.resolve("background.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/main_menu_background.png", assetsDir.resolve("main_menu_background.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/sub_menu_background.png", assetsDir.resolve("sub_menu_background.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/button1.png", assetsDir.resolve("button1.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/button2.png", assetsDir.resolve("button2.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/official_gamemodes_button.png", assetsDir.resolve("official_gamemodes_button.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/quit-button-icon.png", assetsDir.resolve("quit-button-icon.png"));
+        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/quit-button-icon-hover.png", assetsDir.resolve("quit-button-icon-hover.png"));
+
+        Path packMeta = packDir.resolve("pack.mcmeta");
+        Files.writeString(packMeta, """
+                {
+                  "pack": {
+                    "pack_format": 75,
+                    "description": "Axial launcher resource pack"
+                  }
+                }
+                """.trim() + System.lineSeparator());
+        logger.info("Installed axial_pack resource pack.");
+    }
+
+    private void copyPackTexture(String resourcePath, Path target) throws IOException {
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IOException("Missing bundled resource: " + resourcePath);
+            }
+            Files.createDirectories(target.getParent());
+            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     private void deleteRecursive(Path p) throws IOException {
