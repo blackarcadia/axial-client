@@ -20,7 +20,9 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 public class AxialCosmetics implements ClientModInitializer {
     public static final String MOD_ID = "axial_cosmetics";
@@ -90,10 +92,12 @@ public class AxialCosmetics implements ClientModInitializer {
             Class<?> screenClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen");
             Constructor<?> ctor = screenClass.getConstructor(net.minecraft.client.gui.screen.Screen.class);
             Object screen = ctor.newInstance(client.currentScreen);
-            if (screen instanceof net.minecraft.client.gui.screen.Screen axialScreen) {
-                client.setScreen(axialScreen);
+            Class<?> minecraftScreenClass = Class.forName("net.minecraft.client.gui.screen.Screen");
+            if (minecraftScreenClass.isInstance(screen)) {
+                Method setScreen = net.minecraft.client.MinecraftClient.class.getMethod("setScreen", minecraftScreenClass);
+                setScreen.invoke(client, screen);
             }
-        } catch (ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException | RuntimeException e) {
             System.err.println("Unable to open Axial mod menu: " + e.getMessage());
         }
     }
