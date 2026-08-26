@@ -66,7 +66,7 @@ public class AxialCosmetics implements ClientModInitializer {
             }
             while (menuKey.wasPressed()) {
                 if (client.player != null) {
-                    client.setScreen(new com.axial.cosmetics.client.CosmeticMenuScreen(COSMETIC_MANAGER, client));
+                    openCosmeticMenu(client);
                 }
             }
             while (modMenuKey.wasPressed()) {
@@ -87,9 +87,35 @@ public class AxialCosmetics implements ClientModInitializer {
         return Identifier.of(MOD_ID, path);
     }
 
+    private void openCosmeticMenu(net.minecraft.client.MinecraftClient client) {
+        try {
+            Class<?> screenClass = Class.forName("com.axial.cosmetics.client.CosmeticMenuScreen");
+            Constructor<?> ctor = screenClass.getConstructor(CosmeticManager.class, net.minecraft.client.MinecraftClient.class);
+            Object screen = ctor.newInstance(COSMETIC_MANAGER, client);
+
+            Method setScreen = null;
+            for (Method candidate : net.minecraft.client.MinecraftClient.class.getMethods()) {
+                if (candidate.getName().equals("setScreen") && candidate.getParameterCount() == 1) {
+                    setScreen = candidate;
+                    break;
+                }
+            }
+            if (setScreen == null) {
+                throw new NoSuchMethodException("MinecraftClient.setScreen method not found");
+            }
+            setScreen.invoke(client, screen);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            System.err.println("Unable to open Axial cosmetic menu: " + e.getMessage());
+        }
+    }
+
     private void openAxialModMenu(net.minecraft.client.MinecraftClient client) {
         try {
             Class<?> screenClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen");
+            java.lang.reflect.Field currentScreenField = net.minecraft.client.MinecraftClient.class.getDeclaredField("currentScreen");
+            currentScreenField.setAccessible(true);
+            Object parentScreen = currentScreenField.get(client);
+
             Constructor<?> ctor = null;
             for (Constructor<?> candidate : screenClass.getConstructors()) {
                 if (candidate.getParameterCount() == 1) {
@@ -101,7 +127,7 @@ public class AxialCosmetics implements ClientModInitializer {
                 throw new NoSuchMethodException("AxialConfigScreen(Screen) constructor not found");
             }
 
-            Object screen = ctor.newInstance(client.currentScreen);
+            Object screen = ctor.newInstance(parentScreen);
             Method setScreen = null;
             for (Method candidate : net.minecraft.client.MinecraftClient.class.getMethods()) {
                 if (candidate.getName().equals("setScreen") && candidate.getParameterCount() == 1) {
