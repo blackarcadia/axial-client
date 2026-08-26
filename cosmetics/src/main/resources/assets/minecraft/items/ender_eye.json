@@ -4,24 +4,10 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
-        "threshold": 232,
-        "model": {
-          "type": "minecraft:model",
-          "model": "minecraft:item/custom_model_data_232"
-        }
-      },
-      {
         "threshold": 245,
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:item/kryosword"
-        }
-      },
-      {
-        "threshold": 257,
-        "model": {
-          "type": "minecraft:model",
-          "model": "minecraft:item/custom_model_data_257"
+          "model": "minecraft:item/kryosword_token"
         }
       }
     ],
