@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'fabric-loom' version '1.14-SNAPSHOT'
 }
 
 group = 'org.example'
@@ -11,6 +12,7 @@ def appChannel = (project.findProperty("appChannel") ?: "dev").toString()
 
 repositories {
     mavenCentral()
+    maven { url 'https://maven.fabricmc.net' }
 }
 
 javafx {
@@ -23,6 +25,12 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.apache.commons:commons-compress:1.26.0'
     implementation 'net.raphimc:MinecraftAuth:5.0.0'
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
+    modImplementation 'net.fabricmc:fabric-loader:0.18.1'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
+    include implementation('net.raphimc:MinecraftAuth:5.0.0')
+    compileOnly files('src/main/resources/axialutils-1.0-SNAPSHOT.jar')
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -42,19 +50,24 @@ processResources {
 
 def bundledModsDir = layout.buildDirectory.dir("generated/bundled-mods")
 
-tasks.register('buildCosmeticsJar', Exec) {
+def buildCosmeticsJarTask = tasks.register('buildCosmeticsJar', Jar) {
     group = 'build'
     description = 'Build the cosmetics mod jar used by the launcher package'
-    workingDir = projectDir
-    commandLine './gradlew', '-p', 'cosmetics', 'build'
+    archiveBaseName.set('axial-cosmetics')
+    archiveVersion.set(version.toString())
+    from(sourceSets.main.output.classesDirs) {
+        include 'com/axial/cosmetics/**'
+    }
+    from('src/main/resources') {
+        include 'assets/**'
+        include 'fabric.mod.json'
+        include 'axial-cosmetics.mixins.json'
+    }
 }
 
 tasks.register('bundleCosmeticsJar', Sync) {
-    dependsOn tasks.buildCosmeticsJar
-    from(fileTree('cosmetics/build/libs') {
-        include 'axial-cosmetics-*.jar'
-        exclude '*-sources.jar'
-    })
+    dependsOn buildCosmeticsJarTask
+    from(buildCosmeticsJarTask.flatMap { it.archiveFile })
     rename { 'axial-cosmetics.jar' }
     into(bundledModsDir)
 }
@@ -75,7 +88,7 @@ tasks.register('fatJar', Jar) {
     dependsOn(configurations.runtimeClasspath)
     from({
         configurations.runtimeClasspath.files
-                .findAll { it.name.endsWith('jar') }
+                .findAll { it.name.endsWith('jar') && !it.absolutePath.contains('.gradle/caches/fabric-loom') }
                 .collect { zipTree(it) }
     })
     manifest {
