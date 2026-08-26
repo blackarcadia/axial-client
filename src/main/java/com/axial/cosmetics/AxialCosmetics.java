@@ -90,13 +90,29 @@ public class AxialCosmetics implements ClientModInitializer {
     private void openAxialModMenu(net.minecraft.client.MinecraftClient client) {
         try {
             Class<?> screenClass = Class.forName("org.axial.axialutils.client.AxialConfigScreen");
-            Constructor<?> ctor = screenClass.getConstructor(net.minecraft.client.gui.screen.Screen.class);
-            Object screen = ctor.newInstance(client.currentScreen);
-            Class<?> minecraftScreenClass = Class.forName("net.minecraft.client.gui.screen.Screen");
-            if (minecraftScreenClass.isInstance(screen)) {
-                Method setScreen = net.minecraft.client.MinecraftClient.class.getMethod("setScreen", minecraftScreenClass);
-                setScreen.invoke(client, screen);
+            Constructor<?> ctor = null;
+            for (Constructor<?> candidate : screenClass.getConstructors()) {
+                if (candidate.getParameterCount() == 1) {
+                    ctor = candidate;
+                    break;
+                }
             }
+            if (ctor == null) {
+                throw new NoSuchMethodException("AxialConfigScreen(Screen) constructor not found");
+            }
+
+            Object screen = ctor.newInstance(client.currentScreen);
+            Method setScreen = null;
+            for (Method candidate : net.minecraft.client.MinecraftClient.class.getMethods()) {
+                if (candidate.getName().equals("setScreen") && candidate.getParameterCount() == 1) {
+                    setScreen = candidate;
+                    break;
+                }
+            }
+            if (setScreen == null) {
+                throw new NoSuchMethodException("MinecraftClient.setScreen method not found");
+            }
+            setScreen.invoke(client, screen);
         } catch (ReflectiveOperationException | RuntimeException e) {
             System.err.println("Unable to open Axial mod menu: " + e.getMessage());
         }
