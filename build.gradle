@@ -91,7 +91,13 @@ tasks.register('fatJar', Jar) {
         configurations.runtimeClasspath.files
                 .findAll { it.name.endsWith('jar') && !it.absolutePath.contains('.gradle/caches/fabric-loom') }
                 .collect { zipTree(it) }
-    })
+    }) {
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'META-INF/*.EC'
+        exclude 'META-INF/*.SIG'
+    }
     manifest {
         attributes 'Main-Class': application.mainClass
     }
