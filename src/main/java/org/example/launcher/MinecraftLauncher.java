@@ -90,7 +90,7 @@ public class MinecraftLauncher {
         installAxialCosmetics(layout);
         installAxialPack(layout);
         writeSimpleMenuConfig(layout, AXIAL_PACK_NAME);
-        ensureResourcePacksEnabled(layout.optionsFile(), List.of(layout.resourcePackDir(AXIAL_PACK_NAME).toAbsolutePath().toString()));
+        ensureResourcePacksEnabled(layout.optionsFile(), List.of(AXIAL_PACK_NAME));
         logger.info("Installation check complete.");
     }
 
