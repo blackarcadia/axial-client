@@ -11,6 +11,13 @@
         }
       },
       {
+        "threshold": 245,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryosword"
+        }
+      },
+      {
         "threshold": 257,
         "model": {
           "type": "minecraft:model",
