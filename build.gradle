@@ -83,6 +83,7 @@ tasks.register('fatJar', Jar) {
     group = 'build'
     description = 'Package all dependencies into a single executable jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    zip64 = true
     archiveClassifier.set('all')
     from(sourceSets.main.output)
     dependsOn(configurations.runtimeClasspath)
@@ -115,11 +116,11 @@ tasks.register('runtimeImage', Exec) {
             '--output', "${buildDir}/runtime"
 }
 
-tasks.register('jpackageMac') {
-    group = 'distribution'
-    description = 'Package macOS .dmg app (requires macOS + jpackage)'
-    dependsOn tasks.runtimeImage
-    onlyIf { isMac }
+    tasks.register('jpackageMac') {
+        group = 'distribution'
+        description = 'Package macOS .dmg app (requires macOS + jpackage)'
+        dependsOn tasks.runtimeImage
+        onlyIf { isMac }
     doLast {
         def libsDir = layout.buildDirectory.dir("libs").get().asFile
         def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
@@ -165,45 +166,6 @@ tasks.register('jpackageMac') {
 
         if (!appImageDir.exists()) {
             throw new GradleException("Expected app image was not created: ${appImageDir.absolutePath}")
-        }
-
-        runCommand([
-                'mkdir',
-                '-p',
-                dmgStageDir.absolutePath
-        ])
-        def stagedBundle = new File(dmgStageDir, 'AxialLauncherBundle')
-        runCommand([
-                'cp',
-                '-R',
-                appImageDir.absolutePath,
-                stagedBundle.absolutePath
-        ])
-
-        def stagedApp = new File(dmgStageDir, 'AxialLauncher.app')
-        if (stagedApp.exists()) {
-            delete stagedApp
-        }
-        runCommand([
-                'mv',
-                stagedBundle.absolutePath,
-                stagedApp.absolutePath
-        ])
-
-        def dmgCommand = [
-                'hdiutil',
-                'create',
-                '-fs', 'HFS+',
-                '-volname', 'AxialLauncher',
-                '-srcfolder', dmgStageDir.absolutePath,
-                '-ov',
-                '-format', 'UDZO',
-                outImage.absolutePath
-        ]
-        runCommand(dmgCommand)
-
-        if (!outImage.exists()) {
-            throw new GradleException("Expected DMG was not created: ${outImage.absolutePath}")
         }
     }
 }
