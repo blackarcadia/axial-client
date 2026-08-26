@@ -167,15 +167,14 @@ tasks.register('jpackageMac') {
                 stagedBundle.absolutePath
         ])
 
-        def stagedLink = new File(dmgStageDir, 'AxialLauncher.app')
-        if (stagedLink.exists()) {
-            stagedLink.delete()
+        def stagedApp = new File(dmgStageDir, 'AxialLauncher.app')
+        if (stagedApp.exists()) {
+            delete stagedApp
         }
         runCommand([
-                'ln',
-                '-s',
-                'AxialLauncherBundle',
-                stagedLink.absolutePath
+                'mv',
+                stagedBundle.absolutePath,
+                stagedApp.absolutePath
         ])
 
         def dmgCommand = [
