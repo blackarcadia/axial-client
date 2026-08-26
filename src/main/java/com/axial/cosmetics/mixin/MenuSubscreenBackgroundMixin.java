@@ -44,7 +44,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Screen.class)
+@Mixin(targets = "net.minecraft.client.gui.screen.Screen")
 public abstract class MenuSubscreenBackgroundMixin {
     private static final Identifier AXIAL_MENU_BACKGROUND = AxialCosmetics.id("textures/gui/title/sub_menu_background.png");
     private static final int AXIAL_MENU_BACKGROUND_WIDTH = 1717;
