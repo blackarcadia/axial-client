@@ -46,11 +46,15 @@ public class AxialCosmetics implements ClientModInitializer {
         modMenuKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.modmenu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, Category.MISC));
 
-        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
-            if (entityRenderer instanceof PlayerEntityRenderer playerRenderer) {
-                registrationHelper.register(new CosmeticFeatureRenderer(playerRenderer, COSMETIC_MANAGER));
-            }
-        });
+        try {
+            LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
+                if (entityRenderer instanceof PlayerEntityRenderer playerRenderer) {
+                    registrationHelper.register(new CosmeticFeatureRenderer(playerRenderer, COSMETIC_MANAGER));
+                }
+            });
+        } catch (Throwable t) {
+            System.err.println("Axial cosmetic feature renderer disabled: " + t.getMessage());
+        }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MenuMusicController.tick(client);
