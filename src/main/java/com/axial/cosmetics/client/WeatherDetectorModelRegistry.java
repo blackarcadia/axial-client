@@ -2,14 +2,17 @@ package com.axial.cosmetics.client;
 
 import net.fabricmc.fabric.api.client.model.loading.v1.BlockStateResolver;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.NoteBlock;
 import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.client.render.model.SimpleBlockStateModel;
+import net.minecraft.client.render.model.BlockStateModel;
 import net.minecraft.client.render.model.json.ModelVariant;
 import net.minecraft.util.Identifier;
 
 public final class WeatherDetectorModelRegistry {
+    private static final Identifier NOTE_BLOCK_MODEL_ID = Identifier.of("minecraft", "block/note_block");
     private static final Identifier WEATHER_DETECTOR_MODEL_ID = Identifier.of("minecraft", "block/custom/weatherdetector");
     private static final Identifier CUSTOM_MODEL_DATA_273_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_273");
     private static final net.minecraft.block.BlockState WEATHER_DETECTOR_STATE = Blocks.NOTE_BLOCK.getDefaultState()
@@ -20,7 +23,6 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 9)
             .with(NoteBlock.POWERED, false);
-    private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_273_BARRIER_STATE = Blocks.BARRIER.getDefaultState();
 
     private WeatherDetectorModelRegistry() {
     }
@@ -36,14 +38,23 @@ public final class WeatherDetectorModelRegistry {
         if (context.block() != Blocks.NOTE_BLOCK) {
             return;
         }
+        for (BlockState state : Blocks.NOTE_BLOCK.getStateManager().getStates()) {
+            context.setModel(state, model(NOTE_BLOCK_MODEL_ID));
+        }
         context.setModel(WEATHER_DETECTOR_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(WEATHER_DETECTOR_MODEL_ID)).cached());
-        context.setModel(CUSTOM_MODEL_DATA_273_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(CUSTOM_MODEL_DATA_273_MODEL_ID)).cached());
+        context.setModel(CUSTOM_MODEL_DATA_273_STATE, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
     }
 
     private static void resolveBarrier(BlockStateResolver.Context context) {
         if (context.block() != Blocks.BARRIER) {
             return;
         }
-        context.setModel(CUSTOM_MODEL_DATA_273_BARRIER_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(CUSTOM_MODEL_DATA_273_MODEL_ID)).cached());
+        for (BlockState state : Blocks.BARRIER.getStateManager().getStates()) {
+            context.setModel(state, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
+        }
+    }
+
+    private static BlockStateModel.UnbakedGrouped model(Identifier id) {
+        return new SimpleBlockStateModel.Unbaked(new ModelVariant(id)).cached();
     }
 }
