@@ -9,10 +9,14 @@ group = 'org.example'
 version = '1.0-SNAPSHOT'
 def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
 def appChannel = (project.findProperty("appChannel") ?: "dev").toString()
+def axialUtilsFile = "axialutils-1.0-SNAPSHOT.jar"
 
 repositories {
     mavenCentral()
     maven { url 'https://maven.fabricmc.net' }
+    flatDir {
+        dirs 'src/main/resources'
+    }
 }
 
 javafx {
@@ -30,7 +34,8 @@ dependencies {
     modImplementation 'net.fabricmc:fabric-loader:0.18.1'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
     include implementation('net.raphimc:MinecraftAuth:5.0.0')
-    compileOnly files('src/main/resources/axialutils-1.0-SNAPSHOT.jar')
+    modImplementation name: 'axialutils-1.0-SNAPSHOT'
+    include name: 'axialutils-1.0-SNAPSHOT'
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -38,6 +43,7 @@ dependencies {
 
 processResources {
     exclude('axial-cosmetics-*.jar')
+    exclude(axialUtilsFile)
     exclude('staticbgmod-1.0.0.jar')
     exclude('staticbgmod-1.0.1.jar')
     exclude('staticbgmod-1.0.2.jar')
@@ -49,31 +55,15 @@ processResources {
 }
 
 def bundledModsDir = layout.buildDirectory.dir("generated/bundled-mods")
-
-def buildCosmeticsJarTask = tasks.register('buildCosmeticsJar', Jar) {
-    group = 'build'
-    description = 'Build the cosmetics mod jar used by the launcher package'
-    archiveBaseName.set('axial-cosmetics')
-    archiveVersion.set(version.toString())
-    from(sourceSets.main.output.classesDirs) {
-        include 'com/axial/cosmetics/**'
-    }
-    from('src/main/resources') {
-        include 'assets/**'
-        include 'fabric.mod.json'
-        include 'axial-cosmetics.mixins.json'
-    }
-}
+def remapJarTask = tasks.named('remapJar')
 
 tasks.register('bundleCosmeticsJar', Sync) {
-    dependsOn buildCosmeticsJarTask
-    from(buildCosmeticsJarTask.flatMap { it.archiveFile })
-    rename { 'axial-cosmetics.jar' }
+    dependsOn remapJarTask
+    from(remapJarTask.flatMap { it.archiveFile }) {
+        rename { 'axial-cosmetics.jar' }
+    }
     into(bundledModsDir)
 }
-
-processResources.dependsOn tasks.bundleCosmeticsJar
-processResources.from(bundledModsDir)
 
 application {
     mainClass = 'org.example.Main'
@@ -86,6 +76,8 @@ tasks.register('fatJar', Jar) {
     zip64 = true
     archiveClassifier.set('all')
     from(sourceSets.main.output)
+    from(bundledModsDir)
+    dependsOn tasks.bundleCosmeticsJar
     dependsOn(configurations.runtimeClasspath)
     from({
         configurations.runtimeClasspath.files
