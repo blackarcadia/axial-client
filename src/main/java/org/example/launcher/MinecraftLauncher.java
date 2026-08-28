@@ -82,11 +82,11 @@ public class MinecraftLauncher {
             installSodium(layout);
             installLithium(layout);
             installGeckoLib(layout);
-            removeAxialUtils(layout);
             removeXaeroMinimap(layout);
             removeStaticBgMod(layout);
             removeCollective(layout);
         }
+        installAxialUtils(layout);
         installAxialCosmetics(layout);
         installAxialPack(layout);
         writeSimpleMenuConfig(layout, AXIAL_PACK_NAME);
@@ -617,6 +617,27 @@ public class MinecraftLauncher {
                     });
         }
         logger.info("Removed incompatible AxialUtils jars.");
+    }
+
+    private void installAxialUtils(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(p -> p.getFileName().toString().startsWith("axialutils-") && p.getFileName().toString().endsWith(".jar"))
+                    .forEach(p -> {
+                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                    });
+        }
+
+        Path target = mods.resolve(AXIAL_UTILS_FILE);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + AXIAL_UTILS_FILE)) {
+            if (in == null) {
+                logger.info("AxialUtils jar not packaged; skipping install.");
+                return;
+            }
+            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Installed AxialUtils mod: " + AXIAL_UTILS_FILE);
+        }
     }
 
     private void removeStaticBgMod(FileLayout layout) throws IOException {

@@ -38,7 +38,6 @@ dependencies {
 
 processResources {
     exclude('axial-cosmetics-*.jar')
-    exclude('axialutils-1.0-SNAPSHOT.jar')
     exclude('staticbgmod-1.0.0.jar')
     exclude('staticbgmod-1.0.1.jar')
     exclude('staticbgmod-1.0.2.jar')
