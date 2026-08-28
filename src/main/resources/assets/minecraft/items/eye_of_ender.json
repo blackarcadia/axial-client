@@ -9,6 +9,13 @@
           "type": "minecraft:model",
           "model": "minecraft:item/kryosword"
         }
+      },
+      {
+        "threshold": 273,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/custom_model_data_273"
+        }
       }
     ],
     "fallback": {
