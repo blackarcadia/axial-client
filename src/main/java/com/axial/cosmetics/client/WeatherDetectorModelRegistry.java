@@ -20,7 +20,7 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 9)
             .with(NoteBlock.POWERED, false);
-    private static final net.minecraft.block.BlockState BARRIER_STATE = Blocks.BARRIER.getDefaultState();
+    private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_273_BARRIER_STATE = Blocks.BARRIER.getDefaultState();
 
     private WeatherDetectorModelRegistry() {
     }
@@ -44,6 +44,6 @@ public final class WeatherDetectorModelRegistry {
         if (context.block() != Blocks.BARRIER) {
             return;
         }
-        context.setModel(BARRIER_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(WEATHER_DETECTOR_MODEL_ID)).cached());
+        context.setModel(CUSTOM_MODEL_DATA_273_BARRIER_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(CUSTOM_MODEL_DATA_273_MODEL_ID)).cached());
     }
 }
