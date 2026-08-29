@@ -4,6 +4,20 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 100,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryopickaxe"
+        }
+      },
+      {
+        "threshold": 207,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/moon_boots_token"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",

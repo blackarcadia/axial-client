@@ -4,6 +4,27 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 210,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryohelmet"
+        }
+      },
+      {
+        "threshold": 220,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/tikimaskinventory"
+        }
+      },
+      {
+        "threshold": 222,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/surfboard"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",

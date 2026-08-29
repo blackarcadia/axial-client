@@ -4,6 +4,118 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 100,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryopickaxe_token"
+        }
+      },
+      {
+        "threshold": 101,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/ember_core_token"
+        }
+      },
+      {
+        "threshold": 102,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/miner_motif_token"
+        }
+      },
+      {
+        "threshold": 115,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/nebulafang_token"
+        }
+      },
+      {
+        "threshold": 203,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/corrupt_wings_token"
+        }
+      },
+      {
+        "threshold": 207,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/moon_boots_token"
+        }
+      },
+      {
+        "threshold": 208,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/utilitybelt_token"
+        }
+      },
+      {
+        "threshold": 209,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryochestplate_token"
+        }
+      },
+      {
+        "threshold": 210,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryohelmet_token"
+        }
+      },
+      {
+        "threshold": 211,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/rocketlolly"
+        }
+      },
+      {
+        "threshold": 212,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/flamingofloaty_token"
+        }
+      },
+      {
+        "threshold": 220,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/tikimaskinventory"
+        }
+      },
+      {
+        "threshold": 222,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/surfboard"
+        }
+      },
+      {
+        "threshold": 223,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/palmtreepickaxe"
+        }
+      },
+      {
+        "threshold": 224,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/224_inventory"
+        }
+      },
+      {
+        "threshold": 225,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/luau_lieinv"
+        }
+      },
+      {
         "threshold": 245,
         "model": {
           "type": "minecraft:model",

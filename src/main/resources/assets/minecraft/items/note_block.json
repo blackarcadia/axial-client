@@ -4,6 +4,69 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 100,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryopickaxe"
+        }
+      },
+      {
+        "threshold": 102,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/minipalmtree"
+        }
+      },
+      {
+        "threshold": 103,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/beachball"
+        }
+      },
+      {
+        "threshold": 105,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/lockbox"
+        }
+      },
+      {
+        "threshold": 200,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/pot_of_gold"
+        }
+      },
+      {
+        "threshold": 201,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/house_of_cards"
+        }
+      },
+      {
+        "threshold": 205,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/card"
+        }
+      },
+      {
+        "threshold": 207,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/power_cell"
+        }
+      },
+      {
+        "threshold": 219,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/coin_converter"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",
@@ -29,6 +92,20 @@
         "model": {
           "type": "minecraft:model",
           "model": "axial_cosmetics:item/custom_model_data_273"
+        }
+      },
+      {
+        "threshold": 305,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:block/custom/lockbox"
+        }
+      },
+      {
+        "threshold": 501,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/powerbox"
         }
       }
     ],

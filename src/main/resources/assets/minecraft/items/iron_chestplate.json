@@ -4,6 +4,41 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 209,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryochestplate"
+        }
+      },
+      {
+        "threshold": 212,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/flamingofloaty"
+        }
+      },
+      {
+        "threshold": 221,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/luaulieworn"
+        }
+      },
+      {
+        "threshold": 222,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/surfboard"
+        }
+      },
+      {
+        "threshold": 225,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/luau_lieinv"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",

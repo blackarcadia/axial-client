@@ -4,6 +4,20 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 100,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/kryopickaxe"
+        }
+      },
+      {
+        "threshold": 223,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/palmtreepickaxe"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",

@@ -34,7 +34,6 @@ public class MinecraftLauncher {
     private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
     private static final String AXIAL_UTILS_FILE = "axialutils-1.0-SNAPSHOT.jar";
     private static final String LITHIUM_FILE = "lithium-fabric-0.21.4+mc1.21.11.jar";
-    private static final String AXIAL_PACK_NAME = "axial_pack";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -88,9 +87,9 @@ public class MinecraftLauncher {
         }
         removeAxialUtils(layout);
         installAxialCosmetics(layout);
-        installAxialPack(layout);
-        writeSimpleMenuConfig(layout, AXIAL_PACK_NAME);
-        ensureResourcePacksEnabled(layout.optionsFile(), List.of(AXIAL_PACK_NAME));
+        removeLegacyLauncherPacks(layout);
+        writeSimpleMenuConfig(layout);
+        removeLegacyResourcePackEntries(layout.optionsFile());
         logger.info("Installation check complete.");
     }
 
@@ -631,44 +630,10 @@ public class MinecraftLauncher {
         }
     }
 
-    private void installAxialPack(FileLayout layout) throws IOException {
-        Path packDir = layout.resourcePackDir(AXIAL_PACK_NAME);
-        deleteRecursive(packDir);
+    private void removeLegacyLauncherPacks(FileLayout layout) throws IOException {
+        deleteRecursive(layout.resourcePackDir("axial_pack"));
         deleteRecursive(layout.resourcePackDir("axial_panorama"));
-
-        Files.createDirectories(packDir);
-        Path assetsDir = packDir.resolve("assets").resolve(AXIAL_PACK_NAME).resolve("textures").resolve("gui").resolve("title");
-        Files.createDirectories(assetsDir);
-
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/main_menu_background.png", assetsDir.resolve("background.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/main_menu_background.png", assetsDir.resolve("main_menu_background.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/sub_menu_background.png", assetsDir.resolve("sub_menu_background.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/button1.png", assetsDir.resolve("button1.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/button2.png", assetsDir.resolve("button2.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/official_gamemodes_button.png", assetsDir.resolve("official_gamemodes_button.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/quit-button-icon.png", assetsDir.resolve("quit-button-icon.png"));
-        copyPackTexture("/assets/axial_cosmetics/textures/gui/title/quit-button-icon-hover.png", assetsDir.resolve("quit-button-icon-hover.png"));
-
-        Path packMeta = packDir.resolve("pack.mcmeta");
-        Files.writeString(packMeta, """
-                {
-                  "pack": {
-                    "pack_format": 75,
-                    "description": "Axial launcher resource pack"
-                  }
-                }
-                """.trim() + System.lineSeparator());
-        logger.info("Installed axial_pack resource pack.");
-    }
-
-    private void copyPackTexture(String resourcePath, Path target) throws IOException {
-        try (InputStream in = MinecraftLauncher.class.getResourceAsStream(resourcePath)) {
-            if (in == null) {
-                throw new IOException("Missing bundled resource: " + resourcePath);
-            }
-            Files.createDirectories(target.getParent());
-            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        }
+        logger.info("Removed legacy launcher resource packs.");
     }
 
     private void deleteRecursive(Path p) throws IOException {
@@ -683,22 +648,23 @@ public class MinecraftLauncher {
         Files.deleteIfExists(p);
     }
 
-    private void ensureResourcePacksEnabled(Path optionsFile, List<String> packIds) throws IOException {
+    private void removeLegacyResourcePackEntries(Path optionsFile) throws IOException {
         List<String> lines = Files.exists(optionsFile) ? Files.readAllLines(optionsFile) : new ArrayList<>();
-        int idx = -1;
+        removePackOptionEntries(lines, "resourcePacks:");
+        removePackOptionEntries(lines, "incompatibleResourcePacks:");
+        Files.write(optionsFile, lines);
+    }
+
+    private void removePackOptionEntries(List<String> lines, String prefix) {
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).startsWith("resourcePacks:")) {
-                idx = i;
-                break;
+            if (lines.get(i).startsWith(prefix)) {
+                lines.set(i, prefix + packListWithoutLegacyEntries(lines.get(i), prefix, prefix.equals("resourcePacks:")));
             }
         }
-        if (idx == -1) {
-            lines.add("resourcePacks:[\"vanilla\"]");
-            idx = lines.size() - 1;
-        }
-        String line = lines.get(idx);
-        int colon = line.indexOf(':');
-        String rest = colon >= 0 ? line.substring(colon + 1).trim() : "[]";
+    }
+
+    private String packListWithoutLegacyEntries(String line, String prefix, boolean keepVanilla) {
+        String rest = line.substring(prefix.length()).trim();
         if (!rest.startsWith("[")) rest = "[]";
         String content = rest.substring(1, rest.endsWith("]") ? rest.length() - 1 : rest.length());
         List<String> current = new ArrayList<>();
@@ -708,16 +674,15 @@ public class MinecraftLauncher {
                 if (!t.isBlank()) current.add(t);
             }
         }
-        // drop any custom packs we previously generated
-        current.removeIf(s -> s.contains("axial_panorama") || s.contains("axial_pack"));
-        // prepend our fresh pack
-        String packId = "file/" + packIds.get(0);
-        current.add(0, packId);
-        if (!current.contains("vanilla")) current.add("vanilla");
+        current.removeIf(this::isLegacyResourcePackEntry);
+        if (keepVanilla && !current.contains("vanilla")) current.add("vanilla");
+        return "[\"" + String.join("\",\"", current) + "\"]";
+    }
 
-        String newLine = "resourcePacks:[\"" + String.join("\",\"", current) + "\"]";
-        lines.set(idx, newLine);
-        Files.write(optionsFile, lines);
+    private boolean isLegacyResourcePackEntry(String packId) {
+        return packId.contains("axial_panorama")
+                || packId.contains("axial_pack")
+                || packId.contains("axialutils:nexo_required");
     }
 
     private void setPanoramaSpeed(Path optionsFile) throws IOException {
@@ -734,10 +699,10 @@ public class MinecraftLauncher {
         Files.write(optionsFile, lines);
     }
 
-    private void writeSimpleMenuConfig(FileLayout layout, String packName) throws IOException {
+    private void writeSimpleMenuConfig(FileLayout layout) throws IOException {
         Path cfg = layout.configDir().resolve("simplemenu.json5");
         Files.createDirectories(cfg.getParent());
-        String background = packName + ":textures/gui/title/background.png";
+        String background = "axial_cosmetics:textures/gui/title/main_menu_background.png";
         List<String> lines = new ArrayList<>();
         lines.add("{");
         lines.add("  \"useCustomMenuBackground\": true,");

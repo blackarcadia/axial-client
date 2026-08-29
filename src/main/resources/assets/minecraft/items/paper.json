@@ -26,8 +26,17 @@
       }
     ],
     "fallback": {
-      "type": "minecraft:model",
-      "model": "minecraft:item/paper"
+      "type": "minecraft:condition",
+      "property": "minecraft:has_component",
+      "component": "minecraft:custom_data",
+      "on_true": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/money_note_packed"
+      },
+      "on_false": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/paper"
+      }
     }
   }
 }

@@ -27,7 +27,17 @@
     ],
     "fallback": {
       "type": "minecraft:model",
-      "model": "minecraft:item/snow_golem_spawn_egg"
+      "model": "minecraft:item/template_spawn_egg",
+      "tints": [
+        {
+          "type": "minecraft:constant",
+          "value": -2493710
+        },
+        {
+          "type": "minecraft:constant",
+          "value": -8280924
+        }
+      ]
     }
   }
 }

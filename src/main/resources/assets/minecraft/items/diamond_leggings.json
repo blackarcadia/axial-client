@@ -4,6 +4,20 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 208,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/utilitybelt"
+        }
+      },
+      {
+        "threshold": 212,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/flamingofloaty_token"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",
