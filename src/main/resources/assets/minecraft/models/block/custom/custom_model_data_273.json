@@ -1,7 +1,7 @@
 {
   "textures": {
-    "0": "axial_cosmetics:block/custom_model_data_273",
-    "particle": "axial_cosmetics:block/custom_model_data_273"
+    "0": "axial_cosmetics:block/weatherdetector",
+    "particle": "axial_cosmetics:block/weatherdetector"
   },
   "elements": [
     {
