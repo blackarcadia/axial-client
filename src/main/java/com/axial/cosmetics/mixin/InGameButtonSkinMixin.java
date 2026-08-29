@@ -8,6 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
@@ -31,7 +32,7 @@ public abstract class InGameButtonSkinMixin {
     private void axial_cosmetics$renderInGameButton(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         Screen currentScreen = client.currentScreen;
-        if (currentScreen == null || currentScreen instanceof TitleScreen) {
+        if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof InventoryScreen) {
             return;
         }
 
