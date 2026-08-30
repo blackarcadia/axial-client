@@ -15,6 +15,7 @@ public final class WeatherDetectorModelRegistry {
     private static final Identifier NOTE_BLOCK_MODEL_ID = Identifier.of("minecraft", "block/note_block");
     private static final Identifier WEATHER_DETECTOR_MODEL_ID = Identifier.of("minecraft", "block/custom/weatherdetector");
     private static final Identifier CUSTOM_MODEL_DATA_220_MODEL_ID = Identifier.of("minecraft", "block/custom/custom_model_data_220");
+    private static final Identifier CUSTOM_MODEL_DATA_250_MODEL_ID = Identifier.of("minecraft", "block/custom/custom_model_data_250");
     private static final Identifier CUSTOM_MODEL_DATA_273_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_273");
     private static final net.minecraft.block.BlockState WEATHER_DETECTOR_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
@@ -56,7 +57,7 @@ public final class WeatherDetectorModelRegistry {
             return;
         }
         for (BlockState state : Blocks.BARRIER.getStateManager().getStates()) {
-            context.setModel(state, model(CUSTOM_MODEL_DATA_220_MODEL_ID));
+            context.setModel(state, model(CUSTOM_MODEL_DATA_250_MODEL_ID));
         }
     }
 
