@@ -67,6 +67,13 @@
         }
       },
       {
+        "threshold": 220,
+        "model": {
+          "type": "minecraft:model",
+          "model": "axial_cosmetics:item/custom_model_data_220"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",
