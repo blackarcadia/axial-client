@@ -22,11 +22,11 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.POWERED, false);
     private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_273_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
-            .with(NoteBlock.NOTE, 9)
+            .with(NoteBlock.NOTE, 10)
             .with(NoteBlock.POWERED, false);
     private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_220_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
-            .with(NoteBlock.NOTE, 10)
+            .with(NoteBlock.NOTE, 9)
             .with(NoteBlock.POWERED, false);
 
     private WeatherDetectorModelRegistry() {
@@ -56,7 +56,7 @@ public final class WeatherDetectorModelRegistry {
             return;
         }
         for (BlockState state : Blocks.BARRIER.getStateManager().getStates()) {
-            context.setModel(state, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
+            context.setModel(state, model(CUSTOM_MODEL_DATA_220_MODEL_ID));
         }
     }
 
