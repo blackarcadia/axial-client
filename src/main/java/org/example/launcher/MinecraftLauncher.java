@@ -633,6 +633,7 @@ public class MinecraftLauncher {
     private void removeLegacyLauncherPacks(FileLayout layout) throws IOException {
         deleteRecursive(layout.resourcePackDir("axial_pack"));
         deleteRecursive(layout.resourcePackDir("axial_panorama"));
+        deleteRecursive(layout.resourcePackDir("nexo_required"));
         logger.info("Removed legacy launcher resource packs.");
     }
 
@@ -682,7 +683,8 @@ public class MinecraftLauncher {
     private boolean isLegacyResourcePackEntry(String packId) {
         return packId.contains("axial_panorama")
                 || packId.contains("axial_pack")
-                || packId.contains("axialutils:nexo_required");
+                || packId.contains("axialutils:nexo_required")
+                || packId.contains("nexo_required");
     }
 
     private void setPanoramaSpeed(Path optionsFile) throws IOException {
