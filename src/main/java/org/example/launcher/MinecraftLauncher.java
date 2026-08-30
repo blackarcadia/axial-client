@@ -497,9 +497,9 @@ public class MinecraftLauncher {
     private void installAxialCosmetics(FileLayout layout) throws IOException {
         Path mods = layout.modsDir();
         Files.createDirectories(mods);
-        // Remove older axial-cosmetics jars to avoid version conflicts
+        // Remove older Axial jars to avoid stale assets and duplicate mod loading.
         try (var stream = Files.list(mods)) {
-            stream.filter(p -> p.getFileName().toString().startsWith("axial-cosmetics-") && p.toString().endsWith(".jar"))
+            stream.filter(p -> isLegacyAxialMod(p.getFileName().toString()))
                     .forEach(p -> {
                         try { Files.deleteIfExists(p); } catch (IOException ignored) {}
                     });
@@ -616,6 +616,15 @@ public class MinecraftLauncher {
                     });
         }
         logger.info("Removed incompatible AxialUtils jars.");
+    }
+
+    private boolean isLegacyAxialMod(String name) {
+        String lower = name.toLowerCase(Locale.ROOT);
+        return lower.endsWith(".jar")
+                && (lower.equals(AXIAL_COSMETICS_FILE)
+                || lower.startsWith("axial-cosmetics-")
+                || lower.startsWith("axialclient")
+                || lower.startsWith("axialutils-"));
     }
 
     private void removeStaticBgMod(FileLayout layout) throws IOException {
