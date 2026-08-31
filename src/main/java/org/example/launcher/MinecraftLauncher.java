@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -494,23 +495,20 @@ public class MinecraftLauncher {
     private void installAxialCosmetics(FileLayout layout) throws IOException {
         Path mods = layout.modsDir();
         Files.createDirectories(mods);
-        // Remove older Axial jars to avoid stale assets and duplicate mod loading.
-        try (var stream = Files.list(mods)) {
-            stream.filter(p -> isLegacyAxialMod(p.getFileName().toString()))
-                    .forEach(p -> {
-                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
-                    });
-        }
-
         Path target = mods.resolve(AXIAL_COSMETICS_FILE);
-
         try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + AXIAL_COSMETICS_FILE)) {
             if (in == null) {
-                logger.info("Axial cosmetics jar not packaged; skipping install.");
-                return;
+                throw new IOException("Axial cosmetics jar is missing from the launcher package.");
             }
-            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            logger.info("Installed Axial cosmetics mod: " + AXIAL_COSMETICS_FILE);
+            copyBundledMod(in, target);
+        }
+        logger.info("Installed Axial cosmetics mod: " + AXIAL_COSMETICS_FILE);
+
+        // Remove older Axial jars after the replacement has been staged successfully.
+        try (var stream = Files.list(mods)) {
+            stream.filter(p -> isLegacyAxialMod(p.getFileName().toString()))
+                    .filter(p -> !p.getFileName().toString().equals(AXIAL_COSMETICS_FILE))
+                    .forEach(this::deleteIfPossible);
         }
     }
 
@@ -608,11 +606,32 @@ public class MinecraftLauncher {
         Files.createDirectories(mods);
         try (var stream = Files.list(mods)) {
             stream.filter(p -> p.getFileName().toString().startsWith("axialutils-") && p.getFileName().toString().endsWith(".jar"))
-                    .forEach(p -> {
-                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
-                    });
+                    .forEach(this::deleteIfPossible);
         }
         logger.info("Removed incompatible AxialUtils jars.");
+    }
+
+    private void deleteIfPossible(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            logger.info("Could not remove " + path.getFileName() + ": " + e.getMessage());
+        }
+    }
+
+    private void copyBundledMod(InputStream in, Path target) throws IOException {
+        Path temp = target.resolveSibling(target.getFileName() + ".tmp");
+        Files.copy(in, temp, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException atomicMoveFailure) {
+            try {
+                Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException replaceFailure) {
+                Files.deleteIfExists(temp);
+                throw replaceFailure;
+            }
+        }
     }
 
     private boolean isLegacyAxialMod(String name) {
