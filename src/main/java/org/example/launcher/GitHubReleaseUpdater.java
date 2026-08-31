@@ -29,20 +29,8 @@ import java.util.jar.JarFile;
 public final class GitHubReleaseUpdater {
     private static final String API_BASE = "https://api.github.com/repos/";
     private static final Pattern VERSION_SPLIT = Pattern.compile("[^0-9]+");
-    private static final Path CLIENT_RELEASE_MARKER = Path.of(
-            System.getProperty("user.home"),
-            "Library",
-            "Application Support",
-            "AxialLauncher",
-            "client-release.tag"
-    );
-    private static final Path CLIENT_RELEASE_MANIFEST = Path.of(
-            System.getProperty("user.home"),
-            "Library",
-            "Application Support",
-            "AxialLauncher",
-            "client-release.files"
-    );
+    private static final Path CLIENT_RELEASE_MARKER = ClientPaths.appRoot().resolve("client-release.tag");
+    private static final Path CLIENT_RELEASE_MANIFEST = ClientPaths.appRoot().resolve("client-release.files");
     private final OkHttpClient client = new OkHttpClient();
     private final AppBuildInfo buildInfo;
 
@@ -81,7 +69,7 @@ public final class GitHubReleaseUpdater {
     }
 
     public Path downloadAndStage(URI downloadUri, String releaseTag, ProgressReporter reporter) throws IOException {
-        Path stagingRoot = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "updates", releaseTag);
+        Path stagingRoot = ClientPaths.appRoot().resolve("updates").resolve(releaseTag);
         Files.createDirectories(stagingRoot);
         Path assetFile = stagingRoot.resolve(buildInfo.githubAsset());
 
@@ -115,20 +103,20 @@ public final class GitHubReleaseUpdater {
         deleteRecursive(unpackDir);
         Files.createDirectories(unpackDir);
         unzip(assetFile, unpackDir);
-        return locateAppBundle(unpackDir);
+        return locatePackagedApp(unpackDir);
     }
 
-    public void installClientUpdate(Path stagedAppBundle, String releaseTag, Path gameDir) throws IOException {
-        if (stagedAppBundle == null || releaseTag == null || releaseTag.isBlank()) {
-            throw new IOException("Missing app bundle path for updater");
+    public void installClientUpdate(Path stagedApp, String releaseTag, Path gameDir) throws IOException {
+        if (stagedApp == null || releaseTag == null || releaseTag.isBlank()) {
+            throw new IOException("Missing packaged app path for updater");
         }
 
         Path modsDir = gameDir.resolve("mods");
         Files.createDirectories(modsDir);
 
-        Path appJar = locateAppJar(stagedAppBundle);
+        Path appJar = locateAppJar(stagedApp);
         if (appJar == null) {
-            throw new IOException("No packaged client jar found in release bundle");
+            throw new IOException("No packaged client jar found in release app");
         }
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
@@ -140,17 +128,28 @@ public final class GitHubReleaseUpdater {
     }
 
     private static Path locateAppJar(Path appBundle) throws IOException {
-        Path appDir = appBundle.resolve("Contents").resolve("app");
-        if (!Files.isDirectory(appDir)) {
-            return null;
+        List<Path> appDirs = List.of(
+                appBundle.resolve("Contents").resolve("app"),
+                appBundle.resolve("app")
+        );
+
+        for (Path appDir : appDirs) {
+            if (!Files.isDirectory(appDir)) {
+                continue;
+            }
+
+            try (var stream = Files.list(appDir)) {
+                Path jar = stream
+                        .filter(p -> p.getFileName() != null && p.getFileName().toString().endsWith(".jar"))
+                        .min(Comparator.comparingInt(Path::getNameCount))
+                        .orElse(null);
+                if (jar != null) {
+                    return jar;
+                }
+            }
         }
 
-        try (var stream = Files.list(appDir)) {
-            return stream
-                    .filter(p -> p.getFileName() != null && p.getFileName().toString().endsWith(".jar"))
-                    .min(Comparator.comparingInt(Path::getNameCount))
-                    .orElse(null);
-        }
+        return null;
     }
 
     private static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
@@ -290,12 +289,31 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static Path locateAppBundle(Path unpackDir) throws IOException {
+    private static Path locatePackagedApp(Path unpackDir) throws IOException {
         try (var stream = Files.walk(unpackDir)) {
-            return stream
+            Path macApp = stream
+                    .filter(Files::isDirectory)
                     .filter(p -> p.getFileName() != null && p.getFileName().toString().endsWith(".app"))
                     .min(Comparator.comparingInt(Path::getNameCount))
-                    .orElseThrow(() -> new IOException("No .app bundle found in update asset"));
+                    .orElse(null);
+            if (macApp != null) {
+                return macApp;
+            }
+        }
+
+        try (var stream = Files.walk(unpackDir)) {
+            return stream
+                    .filter(Files::isDirectory)
+                    .filter(p -> Files.isDirectory(p.resolve("app")))
+                    .filter(p -> {
+                        try {
+                            return locateAppJar(p) != null;
+                        } catch (IOException ignored) {
+                            return false;
+                        }
+                    })
+                    .min(Comparator.comparingInt(Path::getNameCount))
+                    .orElseThrow(() -> new IOException("No packaged app found in update asset"));
         }
     }
 
@@ -319,13 +337,6 @@ public final class GitHubReleaseUpdater {
             JsonObject asset = element.getAsJsonObject();
             String name = asset.get("name").getAsString();
             if (name.equalsIgnoreCase(preferredName)) {
-                return asset.get("browser_download_url").getAsString();
-            }
-        }
-        for (JsonElement element : assets) {
-            JsonObject asset = element.getAsJsonObject();
-            String name = asset.get("name").getAsString().toLowerCase(Locale.ROOT);
-            if (name.endsWith(".zip") && name.contains("axial")) {
                 return asset.get("browser_download_url").getAsString();
             }
         }

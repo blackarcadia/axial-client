@@ -13,25 +13,17 @@ import java.util.regex.Pattern;
 public final class LauncherInstallationManager {
     private static final Pattern VERSION_SPLIT = Pattern.compile("[^0-9]+");
     private static final String ACTIVE_INSTALL_MARKER = ".axial-active-install";
-    private static final Path LAUNCHER_HOME = Path.of(
-            System.getProperty("user.home"),
-            "Library",
-            "Application Support",
-            "AxialLauncher",
-            "launchers"
-    );
-    private static final Path ACTIVE_INSTALL_POINTER = Path.of(
-            System.getProperty("user.home"),
-            "Library",
-            "Application Support",
-            "AxialLauncher",
-            "active-launcher.path"
-    );
+    private static final Path LAUNCHER_HOME = ClientPaths.appRoot().resolve("launchers");
+    private static final Path ACTIVE_INSTALL_POINTER = ClientPaths.appRoot().resolve("active-launcher.path");
 
     private LauncherInstallationManager() {
     }
 
     public static boolean bootstrapStableInstall() throws IOException {
+        if (!ClientPaths.isMac()) {
+            return false;
+        }
+
         Path currentBundle = detectCurrentAppBundle();
         if (currentBundle == null) {
             return false;

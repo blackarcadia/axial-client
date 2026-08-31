@@ -33,7 +33,7 @@ public final class AppBuildInfo {
                 properties.getProperty("app.channel", "dev"),
                 properties.getProperty("github.owner", "blackarcadia"),
                 properties.getProperty("github.repo", "axial-client"),
-                properties.getProperty("github.asset", "AxialLauncher.app.zip")
+                githubAsset(properties)
         );
     }
 
@@ -45,8 +45,18 @@ public final class AppBuildInfo {
                 properties.getProperty("app.channel", "dev"),
                 properties.getProperty("github.owner", "blackarcadia"),
                 properties.getProperty("github.repo", "axial-client"),
-                properties.getProperty("github.asset", "AxialLauncher.app.zip")
+                githubAsset(properties)
         );
+    }
+
+    private static String githubAsset(Properties properties) {
+        if (ClientPaths.isWindows()) {
+            return properties.getProperty("github.asset.windows", "AxialLauncher-windows.zip");
+        }
+        if (ClientPaths.isMac()) {
+            return properties.getProperty("github.asset.mac", "AxialLauncher.app.zip");
+        }
+        return properties.getProperty("github.asset", "AxialLauncher.app.zip");
     }
 
     public String appVersion() {
