@@ -20,4 +20,20 @@ public final class LoggerUtil {
         ps.println("==== AxialLauncher start " + ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " ====");
         return ps;
     }
+
+    public static void installLauncherLog() throws IOException {
+        PrintStream log = teeToFile(System.out, ClientPaths.appRoot().resolve("launcher.log"));
+        System.setOut(log);
+        System.setErr(log);
+    }
+
+    public static PrintStream teeToFile(PrintStream console, Path logFile) throws IOException {
+        Files.createDirectories(logFile.getParent());
+        OutputStream fos = Files.newOutputStream(logFile);
+        PrintStream filePs = new PrintStream(fos, true);
+        TeeOutputStream tee = new TeeOutputStream(console, filePs);
+        PrintStream ps = new PrintStream(tee, true);
+        ps.println("==== AxialLauncher start " + ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) + " ====");
+        return ps;
+    }
 }

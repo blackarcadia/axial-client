@@ -170,7 +170,7 @@ public final class GitHubReleaseUpdater {
             if (!name.endsWith(".jar")) {
                 continue;
             }
-            if (name.contains("/") && !name.startsWith("META-INF/jars/")) {
+            if (name.contains("/")) {
                 continue;
             }
             if (isRuntimeDependencyJar(name)) {

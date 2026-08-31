@@ -68,6 +68,7 @@ public final class StartupController {
             }
             loadingScreen.update("Up to date", 100);
         } catch (Exception ex) {
+            ex.printStackTrace(System.err);
             loadingScreen.showError("Launch failed");
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                     null,
