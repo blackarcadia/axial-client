@@ -45,18 +45,7 @@ public final class StartupController {
             Path gameDir = ClientPaths.clientRoot();
             Files.createDirectories(gameDir);
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
-                loadingScreen.update("Checking for updates", 5);
-                GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
-                if (update.available()) {
-                    loadingScreen.update(update.message(), 20);
-                    loadingScreen.update("Downloading client update", 35);
-                    Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
-                    loadingScreen.update("Installing client update", 95);
-                    updater.installClientUpdate(stagedBundle, update.version(), gameDir);
-                    loadingScreen.update("Client updated", 15);
-                } else {
-                    loadingScreen.update("Up to date", 15);
-                }
+                checkForUpdates(gameDir);
             } else {
                 loadingScreen.update("Up to date", 10);
             }
@@ -86,6 +75,26 @@ public final class StartupController {
                     "Launch failed",
                     JOptionPane.ERROR_MESSAGE));
             closeScreen();
+        }
+    }
+
+    private void checkForUpdates(Path gameDir) {
+        try {
+            loadingScreen.update("Checking for updates", 5);
+            GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
+            if (update.available()) {
+                loadingScreen.update(update.message(), 20);
+                loadingScreen.update("Downloading client update", 35);
+                Path stagedBundle = updater.downloadAndStage(update.downloadUri(), update.version(), loadingScreen::update);
+                loadingScreen.update("Installing client update", 95);
+                updater.installClientUpdate(stagedBundle, update.version(), gameDir);
+                loadingScreen.update("Client updated", 15);
+            } else {
+                loadingScreen.update("Up to date", 15);
+            }
+        } catch (Exception ex) {
+            System.err.println("Update check failed; continuing with installed client: " + ex.getMessage());
+            loadingScreen.update("Update unavailable", 15);
         }
     }
 
