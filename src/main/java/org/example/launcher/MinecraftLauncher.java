@@ -311,6 +311,9 @@ public class MinecraftLauncher {
             if ("-cp".equals(replaced) || "${classpath}".equals(replaced)) {
                 continue; // we build classpath ourselves
             }
+            if (ClientPaths.isWindows() && "-XstartOnFirstThread".equals(replaced)) {
+                continue;
+            }
             args.add(replaced);
         }
 

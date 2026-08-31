@@ -108,7 +108,7 @@ tasks.register('runtimeImage', Exec) {
         delete "${buildDir}/runtime"
     }
     commandLine 'jlink',
-            '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.naming.dns,jdk.unsupported,jdk.zipfs',
+            '--add-modules', 'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.naming.dns,jdk.unsupported,jdk.unsupported.desktop,jdk.zipfs',
             '--strip-debug',
             '--no-header-files',
             '--no-man-pages',
