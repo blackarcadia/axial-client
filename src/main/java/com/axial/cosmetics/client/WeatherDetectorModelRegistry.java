@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.model.loading.v1.BlockStateResolver;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.DaylightDetectorBlock;
 import net.minecraft.block.NoteBlock;
 import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.client.render.model.SimpleBlockStateModel;
@@ -13,6 +14,7 @@ import net.minecraft.util.Identifier;
 
 public final class WeatherDetectorModelRegistry {
     private static final Identifier NOTE_BLOCK_MODEL_ID = Identifier.of("minecraft", "block/note_block");
+    private static final Identifier DAYLIGHT_DETECTOR_MODEL_ID = Identifier.of("minecraft", "block/daylight_detector");
     private static final Identifier WEATHER_DETECTOR_MODEL_ID = Identifier.of("minecraft", "block/custom/weatherdetector");
     private static final Identifier CUSTOM_MODEL_DATA_219_MODEL_ID = Identifier.of("minecraft", "block/custom/coin_converter");
     private static final Identifier CUSTOM_MODEL_DATA_220_MODEL_ID = Identifier.of("minecraft", "block/custom/custom_model_data_220");
@@ -33,6 +35,10 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 10)
             .with(NoteBlock.POWERED, false);
+    private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_273_DAYLIGHT_DETECTOR_STATE =
+            Blocks.DAYLIGHT_DETECTOR.getDefaultState()
+                    .with(DaylightDetectorBlock.INVERTED, false)
+                    .with(DaylightDetectorBlock.POWER, 0);
     private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_274_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 13)
@@ -57,6 +63,8 @@ public final class WeatherDetectorModelRegistry {
         ModelLoadingPlugin.register(context ->
                 context.registerBlockStateResolver(Blocks.NOTE_BLOCK, WeatherDetectorModelRegistry::resolveNoteBlock));
         ModelLoadingPlugin.register(context ->
+                context.registerBlockStateResolver(Blocks.DAYLIGHT_DETECTOR, WeatherDetectorModelRegistry::resolveDaylightDetector));
+        ModelLoadingPlugin.register(context ->
                 context.registerBlockStateResolver(Blocks.BARRIER, WeatherDetectorModelRegistry::resolveBarrier));
     }
 
@@ -74,6 +82,16 @@ public final class WeatherDetectorModelRegistry {
         context.setModel(CUSTOM_MODEL_DATA_274_STATE, model(CUSTOM_MODEL_DATA_274_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_275_STATE, model(CUSTOM_MODEL_DATA_275_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_276_STATE, model(CUSTOM_MODEL_DATA_276_MODEL_ID));
+    }
+
+    private static void resolveDaylightDetector(BlockStateResolver.Context context) {
+        if (context.block() != Blocks.DAYLIGHT_DETECTOR) {
+            return;
+        }
+        for (BlockState state : Blocks.DAYLIGHT_DETECTOR.getStateManager().getStates()) {
+            context.setModel(state, model(DAYLIGHT_DETECTOR_MODEL_ID));
+        }
+        context.setModel(CUSTOM_MODEL_DATA_273_DAYLIGHT_DETECTOR_STATE, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
     }
 
     private static void resolveBarrier(BlockStateResolver.Context context) {
