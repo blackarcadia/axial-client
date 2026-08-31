@@ -141,7 +141,10 @@ public final class GitHubReleaseUpdater {
             try (var stream = Files.list(appDir)) {
                 Path jar = stream
                         .filter(p -> p.getFileName() != null && p.getFileName().toString().endsWith(".jar"))
-                        .min(Comparator.comparingInt(Path::getNameCount))
+                        .sorted(Comparator
+                                .comparing((Path p) -> !p.getFileName().toString().endsWith("-all.jar"))
+                                .thenComparing(p -> p.getFileName().toString()))
+                        .findFirst()
                         .orElse(null);
                 if (jar != null) {
                     return jar;
@@ -167,20 +170,25 @@ public final class GitHubReleaseUpdater {
             if (!name.endsWith(".jar")) {
                 continue;
             }
-            if (name.contains("/")) {
+            if (name.contains("/") && !name.startsWith("META-INF/jars/")) {
                 continue;
             }
             if (isRuntimeDependencyJar(name)) {
                 continue;
             }
 
-            Path target = modsDir.resolve(name);
+            String fileName = Path.of(name).getFileName().toString();
+            if (isRuntimeDependencyJar(fileName)) {
+                continue;
+            }
+
+            Path target = modsDir.resolve(fileName);
             try (InputStream in = jarFile.getInputStream(entry);
                  OutputStream out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
                 in.transferTo(out);
             }
             installed++;
-            installedFiles.add(name);
+            installedFiles.add(fileName);
         }
 
         if (installed == 0) {

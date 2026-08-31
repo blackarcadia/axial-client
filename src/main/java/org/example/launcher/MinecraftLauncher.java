@@ -73,18 +73,15 @@ public class MinecraftLauncher {
         downloadClient(layout, request.getVersionId(), versionJson);
         downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
-        boolean firstInstall = GitHubReleaseUpdater.installedClientTag().isBlank();
-        if (firstInstall) {
-            downloadToggleSprintMod(layout);
-            downloadFabricApi(layout);
-            downloadModMenu(layout);
-            installSodium(layout);
-            installLithium(layout);
-            installGeckoLib(layout);
-            removeXaeroMinimap(layout);
-            removeStaticBgMod(layout);
-            removeCollective(layout);
-        }
+        downloadToggleSprintMod(layout);
+        downloadFabricApi(layout);
+        downloadModMenu(layout);
+        installSodium(layout);
+        installLithium(layout);
+        installGeckoLib(layout);
+        removeXaeroMinimap(layout);
+        removeStaticBgMod(layout);
+        removeCollective(layout);
         removeAxialUtils(layout);
         installAxialCosmetics(layout);
         removeLegacyLauncherPacks(layout);
