@@ -19,6 +19,17 @@ public abstract class AxialConfigScreenFissureRemovalMixin {
     @Unique
     private static Field axial_cosmetics$fissureRemovalTileLabelField;
 
+    @Inject(method = "rebuildLayout", at = @At("HEAD"), remap = false, order = 980)
+    private void axial_cosmetics$redirectFissureScreen(CallbackInfo ci) {
+        try {
+            if ("FISSURE".equals(axial_cosmetics$fissureRemovalGetMode().toString())) {
+                axial_cosmetics$fissureRemovalSetMode("MAIN");
+            }
+        } catch (ReflectiveOperationException | ClassCastException ignored) {
+            // Leave the upstream screen alone if its internals change.
+        }
+    }
+
     @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 980)
     private void axial_cosmetics$removeFissureHighlightsTile(CallbackInfo ci) {
         FissureHighlightRemoval.disable();
@@ -63,6 +74,23 @@ public abstract class AxialConfigScreenFissureRemovalMixin {
             axial_cosmetics$fissureRemovalTilesField.setAccessible(true);
         }
         return axial_cosmetics$fissureRemovalTilesField.get(this);
+    }
+
+    @Unique
+    private void axial_cosmetics$fissureRemovalSetMode(String modeName) throws ReflectiveOperationException {
+        Object currentMode = axial_cosmetics$fissureRemovalGetMode();
+        if (currentMode == null) {
+            return;
+        }
+
+        Class<?> modeClass = currentMode.getClass();
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        Object mainMode = Enum.valueOf((Class<? extends Enum>) modeClass, modeName);
+        if (axial_cosmetics$fissureRemovalModeField == null) {
+            axial_cosmetics$fissureRemovalModeField = this.getClass().getDeclaredField("mode");
+            axial_cosmetics$fissureRemovalModeField.setAccessible(true);
+        }
+        axial_cosmetics$fissureRemovalModeField.set(this, mainMode);
     }
 
     @Unique
