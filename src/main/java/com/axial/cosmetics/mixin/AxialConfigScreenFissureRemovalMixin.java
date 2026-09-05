@@ -48,7 +48,8 @@ public abstract class AxialConfigScreenFissureRemovalMixin {
             List<Object> mutableTiles = (List<Object>) tiles;
             mutableTiles.removeIf(tile -> {
                 try {
-                    return "FISSURE HIGHLIGHTS".equals(axial_cosmetics$fissureRemovalGetTileLabel(tile));
+                    String label = axial_cosmetics$fissureRemovalGetTileLabel(tile);
+                    return "FISSURE HIGHLIGHTS".equals(label) || "RUPTURE HIGHLIGHTS".equals(label);
                 } catch (ReflectiveOperationException ignored) {
                     return false;
                 }
