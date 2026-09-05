@@ -211,6 +211,51 @@ tasks.register('jpackageWindows') {
     }
 }
 
+tasks.register('jpackageWindowsInstaller') {
+    group = 'distribution'
+    description = 'Package Windows installer with Desktop and Start Menu shortcuts (requires Windows + jpackage + WiX)'
+    dependsOn tasks.runtimeImage
+    onlyIf { isWindows }
+    doLast {
+        def libsDir = layout.buildDirectory.dir("libs").get().asFile
+        def runtimeDir = layout.buildDirectory.dir("runtime").get().asFile
+        def packageDir = layout.buildDirectory.dir("jpackage").get().asFile
+        def installerFile = new File(packageDir, "AxialLauncher-${appVersion}.exe")
+
+        delete installerFile
+        packageDir.mkdirs()
+
+        def command = [
+                'jpackage',
+                '--type', 'exe',
+                '--name', 'AxialLauncher',
+                '--app-version', appVersion,
+                '--vendor', 'Axial',
+                '--input', libsDir.absolutePath,
+                '--main-jar', mainJarName,
+                '--main-class', application.mainClass.get(),
+                '--runtime-image', runtimeDir.absolutePath,
+                '--dest', packageDir.absolutePath,
+                '--win-shortcut',
+                '--win-menu',
+                '--win-menu-group', 'Axial'
+        ]
+
+        def process = new ProcessBuilder(command.collect { it.toString() })
+                .directory(projectDir)
+                .inheritIO()
+                .start()
+        def exitCode = process.waitFor()
+        if (exitCode != 0) {
+            throw new GradleException("Command failed (${exitCode}): ${command.join(' ')}")
+        }
+
+        if (!installerFile.exists()) {
+            throw new GradleException("Expected installer was not created: ${installerFile.absolutePath}")
+        }
+    }
+}
+
 tasks.register('macUninstaller') {
     group = 'distribution'
     description = 'Generate a macOS uninstaller script'

@@ -19,12 +19,13 @@ The launcher installs to `~/.minecraft` and starts the game immediately. Overrid
 - Generate macOS uninstaller script: `./gradlew macUninstaller` (creates `build/jpackage/uninstall-axiallauncher.command`; run it to remove `/Applications/AxialLauncher.app` and its logs)
 
 ### Windows packages
-- Build Windows app with bundled runtime on Windows: `gradlew.bat clean jpackageWindows -PappVersion=1.0.0`
-- Release builds publish `AxialLauncher-windows.zip`; extract it, then open `AxialLauncher/AxialLauncher.exe`
+- Build Windows installer with bundled runtime on Windows: `gradlew.bat clean jpackageWindowsInstaller -PappVersion=1.0.0`
+- Release builds publish `AxialLauncher-windows-installer.exe`; run it to install AxialLauncher with Desktop and Start Menu shortcuts.
+- Portable app image builds are still available with `gradlew.bat clean jpackageWindows -PappVersion=1.0.0`. If you use the portable folder, keep `AxialLauncher.exe` inside the extracted `AxialLauncher` folder and create a shortcut to it instead of moving the executable.
 
 ### Release downloads
 - macOS: download `AxialLauncher.app.zip`
-- Windows: download `AxialLauncher-windows.zip`
+- Windows: download `AxialLauncher-windows-installer.exe`
 
 ### Notes
 - Authentication is offline by default (access token `0`, UUID derived from player name). Use a legitimate account if required by replacing the auth tokens in `LaunchRequest`.
