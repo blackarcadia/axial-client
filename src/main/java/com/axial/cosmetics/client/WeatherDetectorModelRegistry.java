@@ -11,7 +11,6 @@ import net.minecraft.client.render.model.SimpleBlockStateModel;
 import net.minecraft.client.render.model.BlockStateModel;
 import net.minecraft.client.render.model.json.ModelVariant;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.AxisRotation;
 
 public final class WeatherDetectorModelRegistry {
     private static final Identifier NOTE_BLOCK_MODEL_ID = Identifier.of("minecraft", "block/note_block");
@@ -75,7 +74,7 @@ public final class WeatherDetectorModelRegistry {
         context.setModel(WEATHER_DETECTOR_STATE, new SimpleBlockStateModel.Unbaked(new ModelVariant(WEATHER_DETECTOR_MODEL_ID)).cached());
         context.setModel(CUSTOM_MODEL_DATA_219_STATE, model(CUSTOM_MODEL_DATA_219_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_220_STATE, model(CUSTOM_MODEL_DATA_220_MODEL_ID));
-        context.setModel(CUSTOM_MODEL_DATA_273_STATE, rotatedY(CUSTOM_MODEL_DATA_273_MODEL_ID, AxisRotation.R180));
+        context.setModel(CUSTOM_MODEL_DATA_273_STATE, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_274_STATE, model(CUSTOM_MODEL_DATA_274_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_275_STATE, model(CUSTOM_MODEL_DATA_275_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_276_STATE, model(CUSTOM_MODEL_DATA_276_MODEL_ID));
@@ -88,7 +87,7 @@ public final class WeatherDetectorModelRegistry {
         for (BlockState state : Blocks.DAYLIGHT_DETECTOR.getStateManager().getStates()) {
             context.setModel(state, model(DAYLIGHT_DETECTOR_MODEL_ID));
             if (!state.get(DaylightDetectorBlock.INVERTED)) {
-                context.setModel(state, rotatedY(CUSTOM_MODEL_DATA_273_MODEL_ID, AxisRotation.R180));
+                context.setModel(state, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
             }
         }
     }
@@ -104,9 +103,5 @@ public final class WeatherDetectorModelRegistry {
 
     private static BlockStateModel.UnbakedGrouped model(Identifier id) {
         return new SimpleBlockStateModel.Unbaked(new ModelVariant(id)).cached();
-    }
-
-    private static BlockStateModel.UnbakedGrouped rotatedY(Identifier id, AxisRotation rotation) {
-        return new SimpleBlockStateModel.Unbaked(new ModelVariant(id).withRotationY(rotation)).cached();
     }
 }
