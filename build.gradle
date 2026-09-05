@@ -211,6 +211,74 @@ tasks.register('jpackageWindows') {
     }
 }
 
+tasks.register('prepareWindowsPortableZipLayout', Sync) {
+    group = 'distribution'
+    description = 'Create the Windows portable zip layout with launch and shortcut helpers'
+    dependsOn tasks.jpackageWindows
+    onlyIf { isWindows }
+
+    def packageDirProvider = layout.buildDirectory.dir("jpackage")
+    def appImageDirProvider = packageDirProvider.map { it.dir("AxialLauncher") }
+    def portableDirProvider = packageDirProvider.map { it.dir("AxialLauncher-windows-portable") }
+
+    from(appImageDirProvider) {
+        into('AxialLauncher')
+    }
+    into(portableDirProvider)
+
+    doFirst {
+        delete portableDirProvider.get().asFile
+    }
+
+    doLast {
+        def portableDir = portableDirProvider.get().asFile
+
+        new File(portableDir, "Launch AxialLauncher.bat").text = '''@echo off
+set "APP_DIR=%~dp0AxialLauncher"
+pushd "%APP_DIR%"
+start "" "AxialLauncher.exe"
+popd
+'''
+
+        new File(portableDir, "Create Desktop Shortcut.cmd").text = '''@echo off
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Create Desktop Shortcut.ps1"
+pause
+'''
+
+        new File(portableDir, "Create Desktop Shortcut.ps1").text = '''$ErrorActionPreference = "Stop"
+$appDir = Join-Path $PSScriptRoot "AxialLauncher"
+$exe = Join-Path $appDir "AxialLauncher.exe"
+
+if (-not (Test-Path $exe)) {
+    throw "AxialLauncher.exe was not found. Extract the full zip first, then run this shortcut helper from the extracted folder."
+}
+
+$desktop = [Environment]::GetFolderPath("Desktop")
+$shortcutPath = Join-Path $desktop "AxialLauncher.lnk"
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = $exe
+$shortcut.WorkingDirectory = $appDir
+$shortcut.IconLocation = $exe
+$shortcut.Save()
+
+Write-Host "Created desktop shortcut: $shortcutPath"
+Write-Host "Keep the extracted AxialLauncher folder in this location. Do not move AxialLauncher.exe out of it."
+'''
+
+        new File(portableDir, "README-WINDOWS.txt").text = '''AxialLauncher for Windows
+
+Recommended install:
+Run AxialLauncher-windows-installer.exe. It creates working Desktop and Start Menu shortcuts automatically.
+
+Portable zip:
+Extract the full zip before launching.
+Use "Launch AxialLauncher.bat" or run "Create Desktop Shortcut.cmd".
+Do not drag or move AxialLauncher.exe by itself to the Desktop. The executable must stay inside the AxialLauncher folder because it needs files in AxialLauncher\\app.
+'''
+    }
+}
+
 tasks.register('jpackageWindowsInstaller') {
     group = 'distribution'
     description = 'Package Windows installer with Desktop and Start Menu shortcuts (requires Windows + jpackage + WiX)'
