@@ -5,8 +5,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.multiplayer.AddServerScreen;
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
+import net.minecraft.client.gui.screen.multiplayer.DirectConnectScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen;
 import net.minecraft.client.gui.screen.option.AccessibilityOptionsScreen;
 import net.minecraft.client.gui.screen.option.ChatOptionsScreen;
 import net.minecraft.client.gui.screen.option.ControlsOptionsScreen;
@@ -97,6 +101,10 @@ public abstract class MenuSubscreenBackgroundMixin {
                 || screen instanceof LevelLoadingScreen
                 || screen instanceof ProgressScreen
                 || screen instanceof AddServerScreen
+                || screen instanceof ConnectScreen
+                || screen instanceof DirectConnectScreen
+                || screen instanceof DisconnectedScreen
+                || screen instanceof MultiplayerWarningScreen
                 || screen instanceof PackScreen
                 || screen instanceof GameOptionsScreen
                 || screen instanceof VideoOptionsScreen
