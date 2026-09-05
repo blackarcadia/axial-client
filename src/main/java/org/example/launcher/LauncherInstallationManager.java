@@ -44,16 +44,16 @@ public final class LauncherInstallationManager {
         if (isBundleValid(activeBundle)) {
             AppBuildInfo activeInfo = loadFromBundle(activeBundle);
             if (activeInfo != null) {
-                if (!"release".equalsIgnoreCase(currentInfo.appChannel())) {
+                if (isNewer(activeInfo.appVersion(), currentInfo.appVersion())) {
                     launchBundle(activeBundle);
                     return true;
                 }
 
-                if (!isNewer(currentInfo.appVersion(), activeInfo.appVersion())) {
+                if (!isNewer(currentInfo.appVersion(), activeInfo.appVersion()) && hasSameAppJar(currentBundle, activeBundle)) {
                     launchBundle(activeBundle);
                     return true;
                 }
-            } else {
+            } else if (hasSameAppJar(currentBundle, activeBundle)) {
                 launchBundle(activeBundle);
                 return true;
             }
@@ -199,6 +199,19 @@ public final class LauncherInstallationManager {
         }
         try {
             return findAppJar(bundle) != null;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    private static boolean hasSameAppJar(Path leftBundle, Path rightBundle) {
+        try {
+            Path leftJar = findAppJar(leftBundle);
+            Path rightJar = findAppJar(rightBundle);
+            if (leftJar == null || rightJar == null) {
+                return false;
+            }
+            return Files.mismatch(leftJar, rightJar) == -1L;
         } catch (IOException ignored) {
             return false;
         }
