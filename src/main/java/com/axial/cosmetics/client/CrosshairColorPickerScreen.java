@@ -30,6 +30,7 @@ public final class CrosshairColorPickerScreen extends Screen {
     private final Screen parent;
     private final String label;
     private final IntConsumer onChange;
+    private final ColorPickerSaveAction saveAction;
     private final int initialColor;
     private NativeImage colorSquareImage;
     private NativeImageBackedTexture colorSquareTexture;
@@ -48,10 +49,15 @@ public final class CrosshairColorPickerScreen extends Screen {
     private boolean draggingHue;
 
     public CrosshairColorPickerScreen(Screen parent, String label, int initialColor, IntConsumer onChange) {
+        this(parent, label, initialColor, onChange, CrosshairConfigManager::save);
+    }
+
+    public CrosshairColorPickerScreen(Screen parent, String label, int initialColor, IntConsumer onChange, ColorPickerSaveAction saveAction) {
         super(uiText((label + " COLOR").toUpperCase(Locale.ROOT)));
         this.parent = parent;
         this.label = label;
         this.onChange = onChange;
+        this.saveAction = saveAction;
         this.initialColor = initialColor;
         float[] hsv = rgbToHsv(initialColor);
         this.hue = hsv[0];
@@ -69,7 +75,7 @@ public final class CrosshairColorPickerScreen extends Screen {
     @Override
     public void close() {
         destroyTextures();
-        CrosshairConfigManager.save();
+        saveAction.save();
         MinecraftClient.getInstance().setScreen(parent);
     }
 
@@ -210,10 +216,12 @@ public final class CrosshairColorPickerScreen extends Screen {
     private void drawPreview(DrawContext context, int x, int y) {
         int previewY = y + COLOR_SQUARE_SIZE + 42;
         int previewWidth = PANEL_WIDTH - PANEL_PADDING * 2;
+        int previewColor = currentColor();
         context.fill(panelX + PANEL_PADDING, previewY, panelX + PANEL_PADDING + previewWidth, previewY + 22, 0xAA141822);
         context.drawStrokedRectangle(panelX + PANEL_PADDING, previewY, previewWidth, 22, 0xD08F5DFF);
-        CrosshairRenderer.render(context, panelX + PANEL_WIDTH / 2, previewY + 11, CrosshairConfigManager.get(), 0.9f);
-        context.drawTextWithShadow(textRenderer, uiText(label.toUpperCase(Locale.ROOT)), panelX + PANEL_PADDING + 28, previewY + 6, 0xFFFFFFFF);
+        context.fill(panelX + PANEL_PADDING + 5, previewY + 5, panelX + PANEL_PADDING + 21, previewY + 17, previewColor);
+        context.drawStrokedRectangle(panelX + PANEL_PADDING + 5, previewY + 5, 16, 12, 0xCCFFFFFF);
+        context.drawTextWithShadow(textRenderer, uiText(label.toUpperCase(Locale.ROOT)), panelX + PANEL_PADDING + 28, previewY + 6, previewColor);
     }
 
     private void drawColorSquare(DrawContext context, int x, int y) {
@@ -262,7 +270,7 @@ public final class CrosshairColorPickerScreen extends Screen {
 
     private void pushColor() {
         onChange.accept(currentColor());
-        CrosshairConfigManager.save();
+        saveAction.save();
     }
 
     private int currentColor() {

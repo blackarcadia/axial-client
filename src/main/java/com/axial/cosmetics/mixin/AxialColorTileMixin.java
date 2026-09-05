@@ -2,6 +2,7 @@ package com.axial.cosmetics.mixin;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import org.axial.axialutils.client.AxialConfigManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,7 +36,7 @@ public abstract class AxialColorTileMixin {
             String label = (String) axial_cosmetics$getField("label", axial_cosmetics$labelField);
             int color = axial_cosmetics$getColor(colorGetter);
             IntConsumer onChange = value -> axial_cosmetics$setColor(colorSetter, value);
-            MinecraftClient.getInstance().setScreen(new com.axial.cosmetics.client.CrosshairColorPickerScreen(parent, label, color, onChange));
+            MinecraftClient.getInstance().setScreen(new com.axial.cosmetics.client.CrosshairColorPickerScreen(parent, label, color, onChange, AxialConfigManager::save));
             ci.cancel();
         } catch (ReflectiveOperationException ignored) {
             // Keep the base inline editor behavior if axialutils internals change.
