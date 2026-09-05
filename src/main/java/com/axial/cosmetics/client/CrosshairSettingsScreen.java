@@ -25,15 +25,16 @@ public final class CrosshairSettingsScreen extends Screen {
     private static final int CONTROLS_TOP_OFFSET = 108;
     private static final int ROW_GAP = 10;
     private static final int ROW_HEIGHT = 20;
-    private static final int STYLE_ROW_OFFSET = 0;
-    private static final int SIZE_ROW_OFFSET = 36;
-    private static final int LENGTH_ROW_OFFSET = 74;
-    private static final int WIDTH_ROW_OFFSET = 112;
-    private static final int GAP_ROW_OFFSET = 150;
-    private static final int COLOR_ROW_OFFSET = 188;
-    private static final int OUTLINE_ROW_OFFSET = 264;
-    private static final int DYNAMIC_ROW_OFFSET = 302;
-    private static final int CONTENT_HEIGHT = 344;
+    private static final int ENABLED_ROW_OFFSET = 0;
+    private static final int STYLE_ROW_OFFSET = 38;
+    private static final int SIZE_ROW_OFFSET = 76;
+    private static final int LENGTH_ROW_OFFSET = 114;
+    private static final int WIDTH_ROW_OFFSET = 152;
+    private static final int GAP_ROW_OFFSET = 190;
+    private static final int COLOR_ROW_OFFSET = 228;
+    private static final int OUTLINE_ROW_OFFSET = 304;
+    private static final int DYNAMIC_ROW_OFFSET = 342;
+    private static final int CONTENT_HEIGHT = 382;
     private static final float SIZE_MIN = 0.1f;
     private static final float SIZE_MAX = 4.0f;
     private static final float LENGTH_MIN = 0.0f;
@@ -116,6 +117,22 @@ public final class CrosshairSettingsScreen extends Screen {
         }
 
         CrosshairConfig config = CrosshairConfigManager.get();
+        int enabledX = enabledToggleX();
+        int enabledY = enabledToggleY();
+        int enabledButtonWidth = enabledToggleWidth();
+        int enabledButtonGap = enabledToggleGap();
+        if (inside(click.x(), click.y(), enabledX, enabledY, enabledButtonWidth, 20)) {
+            config.enabled = true;
+            CrosshairConfigManager.save();
+            return true;
+        }
+
+        if (inside(click.x(), click.y(), enabledX + enabledButtonWidth + enabledButtonGap, enabledY, enabledButtonWidth, 20)) {
+            config.enabled = false;
+            CrosshairConfigManager.save();
+            return true;
+        }
+
         if (inside(click.x(), click.y(), styleButtonX(), styleButtonY(), CONTROL_WIDTH, 20)) {
             cycleStyle();
             return true;
@@ -248,6 +265,7 @@ public final class CrosshairSettingsScreen extends Screen {
     }
 
     private void drawScrollableControls(DrawContext context, int mouseX, int mouseY) {
+        drawEnabledControls(context, mouseX, mouseY);
         drawStyleCycleButton(context, mouseX, mouseY);
         drawSliderLabels(context);
         drawSliderChrome(context, sizeSlider, mouseX, mouseY);
@@ -302,6 +320,22 @@ public final class CrosshairSettingsScreen extends Screen {
         context.drawStrokedRectangle(x + width - 20, y + 4, 16, height - 8, 0xFFFFFFFF);
     }
 
+    private void drawEnabledControls(DrawContext context, int mouseX, int mouseY) {
+        CrosshairConfig config = CrosshairConfigManager.get();
+        int x = enabledToggleX();
+        int y = enabledToggleY();
+        int buttonWidth = enabledToggleWidth();
+        int gap = enabledToggleGap();
+        boolean onHovered = inside(mouseX, mouseY, x, y, buttonWidth, 20);
+        boolean offHovered = inside(mouseX, mouseY, x + buttonWidth + gap, y, buttonWidth, 20);
+
+        context.drawTextWithShadow(textRenderer, uiText("CUSTOM CROSSHAIR"), x + 2, y - 12, 0xFFC6D0F3);
+        drawButton(context, x, y, buttonWidth, 20, onHovered, config.enabled);
+        drawButton(context, x + buttonWidth + gap, y, buttonWidth, 20, offHovered, !config.enabled);
+        context.drawCenteredTextWithShadow(textRenderer, uiText("ON"), x + buttonWidth / 2, y + 5, config.enabled ? 0xFFF7F7FF : 0xFFC6D0F3);
+        context.drawCenteredTextWithShadow(textRenderer, uiText("OFF"), x + buttonWidth + gap + buttonWidth / 2, y + 5, !config.enabled ? 0xFFF7F7FF : 0xFFC6D0F3);
+    }
+
     private void drawOutlineControls(DrawContext context, int mouseX, int mouseY) {
         CrosshairConfig config = CrosshairConfigManager.get();
         int x = outlineToggleX();
@@ -348,6 +382,22 @@ public final class CrosshairSettingsScreen extends Screen {
 
     private int colorButtonY() {
         return controlsViewportTop + COLOR_ROW_OFFSET - scrollOffset;
+    }
+
+    private int enabledToggleX() {
+        return panelX + PANEL_PADDING;
+    }
+
+    private int enabledToggleY() {
+        return controlsViewportTop + ENABLED_ROW_OFFSET - scrollOffset;
+    }
+
+    private int enabledToggleWidth() {
+        return (CONTROL_WIDTH - 8) / 2;
+    }
+
+    private int enabledToggleGap() {
+        return 8;
     }
 
     private int outlineToggleX() {

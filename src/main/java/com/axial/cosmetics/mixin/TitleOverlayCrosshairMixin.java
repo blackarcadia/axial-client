@@ -20,13 +20,19 @@ public abstract class TitleOverlayCrosshairMixin {
         Screen currentScreen = MinecraftClient.getInstance().currentScreen;
         if (currentScreen != null && "org.axial.axialutils.client.TitleOverlaySettingsScreen".equals(currentScreen.getClass().getName())) {
             ci.cancel();
-            return;
         }
+    }
 
-        if (MinecraftClient.getInstance().player == null) {
-            return;
-        }
-
+    @Inject(
+            method = "renderCrosshair",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V",
+                    ordinal = 0
+            ),
+            cancellable = true
+    )
+    private void axial_cosmetics$renderCustomCrosshair(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (CrosshairConfigManager.get().enabled) {
             int centerX = MinecraftClient.getInstance().getWindow().getScaledWidth() / 2;
             int centerY = MinecraftClient.getInstance().getWindow().getScaledHeight() / 2;
