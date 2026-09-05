@@ -6,7 +6,9 @@
   "client": [
     "AxialColorTileMixin",
     "AxialConfigCompassMixin",
+    "AxialConfigManagerFissureRemovalMixin",
     "AxialConfigManagerCompassMixin",
+    "AxialConfigScreenFissureRemovalMixin",
     "AxialConfigScreenCompassMixin",
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
