@@ -218,6 +218,12 @@ public final class LauncherInstallationManager {
     }
 
     public static boolean isNewer(String latest, String current) {
+        int latestBuild = lastVersionNumber(latest);
+        int currentBuild = lastVersionNumber(current);
+        if (latestBuild > 0 || currentBuild > 0) {
+            return latestBuild > currentBuild;
+        }
+
         int[] left = parseVersion(latest);
         int[] right = parseVersion(current);
         int len = Math.max(left.length, right.length);
@@ -229,6 +235,25 @@ public final class LauncherInstallationManager {
             }
         }
         return false;
+    }
+
+    private static int lastVersionNumber(String version) {
+        if (version == null || version.isBlank()) {
+            return 0;
+        }
+
+        int current = -1;
+        int last = 0;
+        for (int i = 0; i < version.length(); i++) {
+            char c = version.charAt(i);
+            if (c >= '0' && c <= '9') {
+                current = Math.max(0, current) * 10 + (c - '0');
+            } else if (current >= 0) {
+                last = current;
+                current = -1;
+            }
+        }
+        return current >= 0 ? current : last;
     }
 
     private static int[] parseVersion(String version) {
