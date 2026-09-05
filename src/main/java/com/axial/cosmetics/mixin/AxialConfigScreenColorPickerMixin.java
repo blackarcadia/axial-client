@@ -11,20 +11,54 @@ import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.IntConsumer;
 
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false)
 public abstract class AxialConfigScreenColorPickerMixin {
     @Unique
+    private static Field axial_cosmetics$tilesField;
+    @Unique
     private static Field axial_cosmetics$activeColorEditorField;
 
     @Inject(method = "addColorRows", at = @At("HEAD"), cancellable = true, remap = false)
     private void axial_cosmetics$hideSatchelColorRows(int startX, int startY, @Coerce Object group, CallbackInfoReturnable<Integer> cir) {
-        if (group != null && "SATCHEL".equals(group.toString())) {
+        if (axial_cosmetics$removesColorSection(group)) {
             cir.setReturnValue(startY);
+        }
+    }
+
+    @Inject(method = "rebuildLayout", at = @At("TAIL"), remap = false)
+    private void axial_cosmetics$pruneRemovedColorTiles(CallbackInfo ci) {
+        try {
+            List<?> tiles = axial_cosmetics$getTiles();
+            if (tiles == null) {
+                return;
+            }
+
+            Iterator<?> iterator = tiles.iterator();
+            while (iterator.hasNext()) {
+                Object tile = iterator.next();
+                String label = (String) axial_cosmetics$getLabel(tile);
+                if (label != null && axial_cosmetics$isRemovedColorLabel(label)) {
+                    iterator.remove();
+                }
+            }
+
+            Object activeColorEditor = axial_cosmetics$getActiveColorEditor();
+            if (activeColorEditor != null) {
+                Object group = axial_cosmetics$getOptionalField(activeColorEditor, "group");
+                if (axial_cosmetics$removesColorSection(group)) {
+                    axial_cosmetics$clearActiveColorEditor();
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // Leave the base layout alone if AxialUtils internals shift.
         }
     }
 
@@ -128,6 +162,47 @@ public abstract class AxialConfigScreenColorPickerMixin {
             return null;
         }
         return axial_cosmetics$getField(instance, name);
+    }
+
+    @Unique
+    private List<?> axial_cosmetics$getTiles() throws ReflectiveOperationException {
+        if (axial_cosmetics$tilesField == null) {
+            axial_cosmetics$tilesField = this.getClass().getDeclaredField("tiles");
+            axial_cosmetics$tilesField.setAccessible(true);
+        }
+        return (List<?>) axial_cosmetics$tilesField.get(this);
+    }
+
+    @Unique
+    private Object axial_cosmetics$getActiveColorEditor() throws ReflectiveOperationException {
+        if (axial_cosmetics$activeColorEditorField == null) {
+            axial_cosmetics$activeColorEditorField = this.getClass().getDeclaredField("activeColorEditor");
+            axial_cosmetics$activeColorEditorField.setAccessible(true);
+        }
+        return axial_cosmetics$activeColorEditorField.get(this);
+    }
+
+    @Unique
+    private void axial_cosmetics$clearActiveColorEditor() throws ReflectiveOperationException {
+        if (axial_cosmetics$activeColorEditorField == null) {
+            axial_cosmetics$activeColorEditorField = this.getClass().getDeclaredField("activeColorEditor");
+            axial_cosmetics$activeColorEditorField.setAccessible(true);
+        }
+        axial_cosmetics$activeColorEditorField.set(this, null);
+    }
+
+    @Unique
+    private static boolean axial_cosmetics$removesColorSection(Object group) {
+        if (group == null) {
+            return false;
+        }
+        String name = group.toString();
+        return "SATCHEL".equals(name) || "CPS".equals(name) || "ARMOR".equals(name);
+    }
+
+    @Unique
+    private static boolean axial_cosmetics$isRemovedColorLabel(String label) {
+        return label.startsWith("SATCHEL COLORS") || label.startsWith("CPS COLORS") || label.startsWith("ARMOR COLORS");
     }
 
     @Unique
