@@ -44,8 +44,9 @@ public final class StartupController {
             Instant startupShownAt = Instant.now();
             Path gameDir = ClientPaths.clientRoot();
             Files.createDirectories(gameDir);
+            boolean clientUpdated = false;
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
-                checkForUpdates(gameDir);
+                clientUpdated = checkForUpdates(gameDir);
             } else {
                 loadingScreen.update("Up to date", 10);
             }
@@ -56,6 +57,9 @@ public final class StartupController {
             loadingScreen.update("Authenticating", 25);
 
             MinecraftLauncher launcher = new MinecraftLauncher(msg -> loadingScreen.update(msg, 50));
+            if (clientUpdated) {
+                launcher.skipBundledAxialCosmeticsInstallOnce();
+            }
             loadingScreen.update("Installing client", 55);
             launcher.ensureInstalled(request);
 
@@ -79,7 +83,7 @@ public final class StartupController {
         }
     }
 
-    private void checkForUpdates(Path gameDir) {
+    private boolean checkForUpdates(Path gameDir) {
         try {
             loadingScreen.update("Checking for updates", 5);
             GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
@@ -90,6 +94,7 @@ public final class StartupController {
                 loadingScreen.update("Installing client update", 95);
                 updater.installClientUpdate(stagedBundle, update.version(), gameDir);
                 loadingScreen.update("Client updated", 15);
+                return true;
             } else {
                 loadingScreen.update("Up to date", 15);
             }
@@ -97,6 +102,7 @@ public final class StartupController {
             System.err.println("Update check failed; continuing with installed client: " + ex.getMessage());
             loadingScreen.update("Update unavailable", 15);
         }
+        return false;
     }
 
     private LaunchRequest buildLaunchRequest() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {

@@ -42,6 +42,7 @@ public class MinecraftLauncher {
 
     private final OkHttpClient http = new OkHttpClient();
     private final Gson gson = new GsonBuilder().create();
+    private boolean skipBundledAxialCosmeticsInstall;
 
     public MinecraftLauncher() {
         this(msg -> System.out.println(msg));
@@ -49,6 +50,10 @@ public class MinecraftLauncher {
 
     public MinecraftLauncher(Logger logger) {
         this.logger = logger;
+    }
+
+    public void skipBundledAxialCosmeticsInstallOnce() {
+        this.skipBundledAxialCosmeticsInstall = true;
     }
 
     public void ensureInstalled(LaunchRequest request) throws IOException {
@@ -84,7 +89,12 @@ public class MinecraftLauncher {
         removeStaticBgMod(layout);
         removeCollective(layout);
         removeAxialUtils(layout);
-        installAxialCosmetics(layout);
+        if (skipBundledAxialCosmeticsInstall) {
+            logger.info("Keeping Axial cosmetics mod installed by updater.");
+            skipBundledAxialCosmeticsInstall = false;
+        } else {
+            installAxialCosmetics(layout);
+        }
         removeLegacyLauncherPacks(layout);
         writeSimpleMenuConfig(layout);
         removeLegacyResourcePackEntries(layout.optionsFile());
