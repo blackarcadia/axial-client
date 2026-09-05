@@ -3,6 +3,7 @@ package com.axial.cosmetics.mixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import org.axial.axialutils.client.AxialConfigManager;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -49,17 +50,19 @@ public abstract class AxialColorTileMixin {
             IntConsumer onChange = value -> axial_cosmetics$setColor(resolvedColorSetter, value);
             MinecraftClient.getInstance().setScreen(new com.axial.cosmetics.client.CrosshairColorPickerScreen(parent, label, color, onChange, AxialConfigManager::save));
             ci.cancel();
-        } catch (ReflectiveOperationException | ClassCastException ignored) {
+        } catch (ReflectiveOperationException | ClassCastException | IllegalArgumentException ignored) {
             // Keep the base behavior if axialutils internals change.
         }
     }
 
+    @Unique
     private Object axial_cosmetics$getField(String name) throws ReflectiveOperationException {
         Field field = this.getClass().getDeclaredField(name);
         field.setAccessible(true);
         return field.get(this);
     }
 
+    @Unique
     private Object axial_cosmetics$getOptionalField(String name) throws ReflectiveOperationException {
         if (!axial_cosmetics$hasField(name)) {
             return null;
@@ -67,6 +70,7 @@ public abstract class AxialColorTileMixin {
         return axial_cosmetics$getField(name);
     }
 
+    @Unique
     private boolean axial_cosmetics$hasField(String name) {
         try {
             this.getClass().getDeclaredField(name);
@@ -76,17 +80,20 @@ public abstract class AxialColorTileMixin {
         }
     }
 
+    @Unique
     private int axial_cosmetics$getColor(Object colorGetter) throws ReflectiveOperationException {
         Method method = colorGetter.getClass().getDeclaredMethod("get");
         method.setAccessible(true);
         return (Integer) method.invoke(colorGetter);
     }
 
+    @Unique
     private static void axial_cosmetics$setColor(Object colorSetter, int value) {
         try {
             Method method = colorSetter.getClass().getDeclaredMethod("set", int.class);
             method.setAccessible(true);
             method.invoke(colorSetter, value);
+            AxialConfigManager.save();
         } catch (ReflectiveOperationException ignored) {
             // Ignore failed live updates rather than crashing the screen.
         }

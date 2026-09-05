@@ -17,16 +17,6 @@ import java.util.function.IntConsumer;
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false)
 public abstract class AxialConfigScreenColorPickerMixin {
     @Unique
-    private static Field axial_cosmetics$colorPickerLabelField;
-    @Unique
-    private static Field axial_cosmetics$colorPickerGetterField;
-    @Unique
-    private static Field axial_cosmetics$colorPickerSetterField;
-    @Unique
-    private static Field axial_cosmetics$colorPickerGroupField;
-    @Unique
-    private static Field axial_cosmetics$colorPickerTargetField;
-    @Unique
     private static Field axial_cosmetics$activeColorEditorField;
 
     @Redirect(
@@ -38,7 +28,23 @@ public abstract class AxialConfigScreenColorPickerMixin {
             ),
             remap = false
     )
-    private void axial_cosmetics$openTextureBackedColorPicker(@Coerce Object tile) {
+    private void axial_cosmetics$openMenuTileColorPicker(@Coerce Object tile) {
+        if (axial_cosmetics$tryOpenColorPicker(tile)) {
+            return;
+        }
+        axial_cosmetics$activateTile(tile);
+    }
+
+    @Redirect(
+            method = "method_25402",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/axial/axialutils/client/AxialConfigScreen$OptionRow;activate()V",
+                    remap = false
+            ),
+            remap = false
+    )
+    private void axial_cosmetics$openOptionRowColorPicker(@Coerce Object tile) {
         if (axial_cosmetics$tryOpenColorPicker(tile)) {
             return;
         }
@@ -48,12 +54,6 @@ public abstract class AxialConfigScreenColorPickerMixin {
     @Unique
     private boolean axial_cosmetics$tryOpenColorPicker(Object tile) {
         try {
-            Object group = axial_cosmetics$getColorGroup(tile);
-            Object target = axial_cosmetics$getColorTarget(tile);
-            if (group == null || target == null) {
-                return false;
-            }
-
             String label = (String) axial_cosmetics$getLabel(tile);
             Object colorGetter = axial_cosmetics$getColorGetter(tile);
             Object colorSetter = axial_cosmetics$getColorSetter(tile);
@@ -69,7 +69,7 @@ public abstract class AxialConfigScreenColorPickerMixin {
                     new CrosshairColorPickerScreen((Screen) (Object) this, label, color, onChange, AxialConfigManager::save)
             );
             return true;
-        } catch (ReflectiveOperationException | ClassCastException ignored) {
+        } catch (ReflectiveOperationException | ClassCastException | IllegalArgumentException ignored) {
             return false;
         }
     }
@@ -87,47 +87,48 @@ public abstract class AxialConfigScreenColorPickerMixin {
 
     @Unique
     private static Object axial_cosmetics$getLabel(Object tile) throws ReflectiveOperationException {
-        if (axial_cosmetics$colorPickerLabelField == null) {
-            axial_cosmetics$colorPickerLabelField = tile.getClass().getDeclaredField("label");
-            axial_cosmetics$colorPickerLabelField.setAccessible(true);
-        }
-        return axial_cosmetics$colorPickerLabelField.get(tile);
+        return axial_cosmetics$getField(tile, "label");
     }
 
     @Unique
     private static Object axial_cosmetics$getColorGetter(Object tile) throws ReflectiveOperationException {
-        if (axial_cosmetics$colorPickerGetterField == null) {
-            axial_cosmetics$colorPickerGetterField = tile.getClass().getDeclaredField("colorGetter");
-            axial_cosmetics$colorPickerGetterField.setAccessible(true);
-        }
-        return axial_cosmetics$colorPickerGetterField.get(tile);
+        Object colorGetter = axial_cosmetics$getOptionalField(tile, "colorGetter");
+        return colorGetter != null || axial_cosmetics$hasField(tile, "colorGetter")
+                ? colorGetter
+                : axial_cosmetics$getOptionalField(tile, "getter");
     }
 
     @Unique
     private static Object axial_cosmetics$getColorSetter(Object tile) throws ReflectiveOperationException {
-        if (axial_cosmetics$colorPickerSetterField == null) {
-            axial_cosmetics$colorPickerSetterField = tile.getClass().getDeclaredField("colorSetter");
-            axial_cosmetics$colorPickerSetterField.setAccessible(true);
-        }
-        return axial_cosmetics$colorPickerSetterField.get(tile);
+        Object colorSetter = axial_cosmetics$getOptionalField(tile, "colorSetter");
+        return colorSetter != null || axial_cosmetics$hasField(tile, "colorSetter")
+                ? colorSetter
+                : axial_cosmetics$getOptionalField(tile, "setter");
     }
 
     @Unique
-    private static Object axial_cosmetics$getColorGroup(Object tile) throws ReflectiveOperationException {
-        if (axial_cosmetics$colorPickerGroupField == null) {
-            axial_cosmetics$colorPickerGroupField = tile.getClass().getDeclaredField("colorGroup");
-            axial_cosmetics$colorPickerGroupField.setAccessible(true);
-        }
-        return axial_cosmetics$colorPickerGroupField.get(tile);
+    private static Object axial_cosmetics$getField(Object instance, String name) throws ReflectiveOperationException {
+        Field field = instance.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(instance);
     }
 
     @Unique
-    private static Object axial_cosmetics$getColorTarget(Object tile) throws ReflectiveOperationException {
-        if (axial_cosmetics$colorPickerTargetField == null) {
-            axial_cosmetics$colorPickerTargetField = tile.getClass().getDeclaredField("colorTarget");
-            axial_cosmetics$colorPickerTargetField.setAccessible(true);
+    private static Object axial_cosmetics$getOptionalField(Object instance, String name) throws ReflectiveOperationException {
+        if (!axial_cosmetics$hasField(instance, name)) {
+            return null;
         }
-        return axial_cosmetics$colorPickerTargetField.get(tile);
+        return axial_cosmetics$getField(instance, name);
+    }
+
+    @Unique
+    private static boolean axial_cosmetics$hasField(Object instance, String name) {
+        try {
+            instance.getClass().getDeclaredField(name);
+            return true;
+        } catch (NoSuchFieldException ignored) {
+            return false;
+        }
     }
 
     @Unique
