@@ -5,6 +5,7 @@
   "mixins": [],
   "client": [
     "AxialColorTileMixin",
+    "AxialConfigScreenColorPickerMixin",
     "AxialConfigCompassMixin",
     "AxialConfigManagerFissureRemovalMixin",
     "AxialConfigManagerCompassMixin",

@@ -114,6 +114,7 @@ public abstract class AxialConfigScreenMixin {
                 return;
             }
 
+            axial_cosmetics$clearActiveColorEditor();
             axial_cosmetics$setPanelWidth(UNIFIED_PANEL_WIDTH);
             axial_cosmetics$setPanelHeight(UNIFIED_PANEL_HEIGHT);
             axial_cosmetics$setPanelHeightAnimated(UNIFIED_PANEL_HEIGHT);
@@ -331,6 +332,14 @@ public abstract class AxialConfigScreenMixin {
             axial_cosmetics$activeColorEditorField.setAccessible(true);
         }
         return axial_cosmetics$activeColorEditorField.get(this);
+    }
+
+    private void axial_cosmetics$clearActiveColorEditor() throws ReflectiveOperationException {
+        if (axial_cosmetics$activeColorEditorField == null) {
+            axial_cosmetics$activeColorEditorField = this.getClass().getDeclaredField("activeColorEditor");
+            axial_cosmetics$activeColorEditorField.setAccessible(true);
+        }
+        axial_cosmetics$activeColorEditorField.set(this, null);
     }
 
     private static String axial_cosmetics$getTileLabel(Object tile) throws ReflectiveOperationException {
