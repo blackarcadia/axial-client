@@ -48,8 +48,9 @@
     ],
     "fallback": {
       "type": "minecraft:condition",
-      "property": "minecraft:has_component",
-      "component": "minecraft:custom_data",
+      "property": "minecraft:component",
+      "predicate": "minecraft:custom_data",
+      "value": "{MONEY_NOTE_PACK:1b}",
       "on_true": {
         "type": "minecraft:model",
         "model": "minecraft:item/money_note_packed"
