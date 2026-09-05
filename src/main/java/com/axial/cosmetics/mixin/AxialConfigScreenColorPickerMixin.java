@@ -8,7 +8,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -18,6 +20,13 @@ import java.util.function.IntConsumer;
 public abstract class AxialConfigScreenColorPickerMixin {
     @Unique
     private static Field axial_cosmetics$activeColorEditorField;
+
+    @Inject(method = "addColorRows", at = @At("HEAD"), cancellable = true, remap = false)
+    private void axial_cosmetics$hideSatchelColorRows(int startX, int startY, @Coerce Object group, CallbackInfoReturnable<Integer> cir) {
+        if (group != null && "SATCHEL".equals(group.toString())) {
+            cir.setReturnValue(startY);
+        }
+    }
 
     @Redirect(
             method = "method_25402",
