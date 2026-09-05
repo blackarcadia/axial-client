@@ -499,6 +499,12 @@ public class MinecraftLauncher {
         Path mods = layout.modsDir();
         Files.createDirectories(mods);
         Path target = mods.resolve(AXIAL_COSMETICS_FILE);
+        String installedRelease = GitHubReleaseUpdater.installedClientTag();
+        if (Files.exists(target) && isInstalledReleaseNewerThanBundled(installedRelease)) {
+            logger.info("Keeping Axial cosmetics mod from installed release " + installedRelease + ".");
+            return;
+        }
+
         try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + AXIAL_COSMETICS_FILE)) {
             if (in == null) {
                 throw new IOException("Axial cosmetics jar is missing from the launcher package.");
@@ -513,6 +519,31 @@ public class MinecraftLauncher {
                     .filter(p -> !p.getFileName().toString().equals(AXIAL_COSMETICS_FILE))
                     .forEach(this::deleteIfPossible);
         }
+    }
+
+    private boolean isInstalledReleaseNewerThanBundled(String installedRelease) {
+        int installedBuild = lastVersionNumber(installedRelease);
+        int bundledBuild = lastVersionNumber(AppBuildInfo.load().appVersion());
+        return installedBuild > 0 && bundledBuild > 0 && installedBuild > bundledBuild;
+    }
+
+    private int lastVersionNumber(String version) {
+        if (version == null || version.isBlank()) {
+            return 0;
+        }
+
+        int current = -1;
+        int last = 0;
+        for (int i = 0; i < version.length(); i++) {
+            char c = version.charAt(i);
+            if (c >= '0' && c <= '9') {
+                current = Math.max(0, current) * 10 + (c - '0');
+            } else if (current >= 0) {
+                last = current;
+                current = -1;
+            }
+        }
+        return current >= 0 ? current : last;
     }
 
     private void installGeckoLib(FileLayout layout) throws IOException {
