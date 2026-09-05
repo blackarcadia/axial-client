@@ -1,0 +1,15 @@
+package com.axial.cosmetics.mixin;
+
+import com.axial.cosmetics.client.CompassConfig;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(targets = "org.axial.axialutils.client.AxialConfigManager", remap = false)
+public abstract class AxialConfigManagerCompassMixin {
+    @Inject(method = "load", at = @At("RETURN"), remap = false)
+    private static void axial_cosmetics$normalizeCompassDefault(CallbackInfoReturnable<Object> cir) {
+        CompassConfig.normalizeDefault();
+    }
+}

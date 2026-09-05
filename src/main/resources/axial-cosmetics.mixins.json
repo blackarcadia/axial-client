@@ -5,6 +5,9 @@
   "mixins": [],
   "client": [
     "AxialColorTileMixin",
+    "AxialConfigCompassMixin",
+    "AxialConfigManagerCompassMixin",
+    "AxialConfigScreenCompassMixin",
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
     "AxialConfigScreenMixin",
@@ -26,6 +29,7 @@
     "ProgressScreenBackgroundMixin",
     "TitleScreenButtonPressSoundMixin",
     "InGameButtonSkinMixin",
+    "InGameHudCompassMixin",
     "TitleScreenButtonSkinMixin",
     "TitleScreenMenuLayoutMixin"
   ],
