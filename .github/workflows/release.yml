@@ -56,18 +56,24 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Build Windows installer
-        run: ./gradlew.bat clean jpackageWindowsInstaller -PappVersion="${env:APP_VERSION}" -PappChannel="${env:APP_CHANNEL}"
+      - name: Build Windows packages
+        run: ./gradlew.bat clean jpackageWindows jpackageWindowsInstaller -PappVersion="${env:APP_VERSION}" -PappChannel="${env:APP_CHANNEL}"
 
       - name: Rename Windows installer
         shell: pwsh
         run: Move-Item -Path "build/jpackage/AxialLauncher-${env:APP_VERSION}.exe" -Destination "build/jpackage/AxialLauncher-windows-installer.exe" -Force
 
+      - name: Create Windows app zip
+        shell: pwsh
+        run: Compress-Archive -Path build/jpackage/AxialLauncher -DestinationPath build/jpackage/AxialLauncher-windows.zip -Force
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: axiallauncher-windows
-          path: build/jpackage/AxialLauncher-windows-installer.exe
+          path: |
+            build/jpackage/AxialLauncher-windows-installer.exe
+            build/jpackage/AxialLauncher-windows.zip
 
   publish-release:
     runs-on: ubuntu-latest

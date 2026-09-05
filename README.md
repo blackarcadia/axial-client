@@ -20,7 +20,8 @@ The launcher installs to `~/.minecraft` and starts the game immediately. Overrid
 
 ### Windows packages
 - Build Windows installer with bundled runtime on Windows: `gradlew.bat clean jpackageWindowsInstaller -PappVersion=1.0.0`
-- Release builds publish `AxialLauncher-windows-installer.exe`; run it to install AxialLauncher with Desktop and Start Menu shortcuts.
+- Release builds publish `AxialLauncher-windows-installer.exe` for players and `AxialLauncher-windows.zip` for launcher updates.
+- Run `AxialLauncher-windows-installer.exe` to install AxialLauncher with Desktop and Start Menu shortcuts.
 - Portable app image builds are still available with `gradlew.bat clean jpackageWindows -PappVersion=1.0.0`. If you use the portable folder, keep `AxialLauncher.exe` inside the extracted `AxialLauncher` folder and create a shortcut to it instead of moving the executable.
 
 ### Release downloads

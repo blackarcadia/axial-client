@@ -35,10 +35,6 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 10)
             .with(NoteBlock.POWERED, false);
-    private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_273_DAYLIGHT_DETECTOR_STATE =
-            Blocks.DAYLIGHT_DETECTOR.getDefaultState()
-                    .with(DaylightDetectorBlock.INVERTED, false)
-                    .with(DaylightDetectorBlock.POWER, 0);
     private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_274_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 13)
@@ -90,8 +86,10 @@ public final class WeatherDetectorModelRegistry {
         }
         for (BlockState state : Blocks.DAYLIGHT_DETECTOR.getStateManager().getStates()) {
             context.setModel(state, model(DAYLIGHT_DETECTOR_MODEL_ID));
+            if (!state.get(DaylightDetectorBlock.INVERTED)) {
+                context.setModel(state, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
+            }
         }
-        context.setModel(CUSTOM_MODEL_DATA_273_DAYLIGHT_DETECTOR_STATE, model(CUSTOM_MODEL_DATA_273_MODEL_ID));
     }
 
     private static void resolveBarrier(BlockStateResolver.Context context) {
