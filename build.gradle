@@ -195,6 +195,10 @@ tasks.register('jpackageWindows') {
                 '--runtime-image', runtimeDir.absolutePath,
                 '--dest', packageDir.absolutePath
         ]
+        def iconPath = layout.projectDirectory.file("src/main/resources/app-icon.ico").asFile
+        if (iconPath.exists()) {
+            command += ['--icon', iconPath.absolutePath]
+        }
 
         def process = new ProcessBuilder(command.collect { it.toString() })
                 .directory(projectDir)
@@ -308,6 +312,10 @@ tasks.register('jpackageWindowsInstaller') {
                 '--win-menu',
                 '--win-menu-group', 'Axial'
         ]
+        def iconPath = layout.projectDirectory.file("src/main/resources/app-icon.ico").asFile
+        if (iconPath.exists()) {
+            command += ['--icon', iconPath.absolutePath]
+        }
 
         def process = new ProcessBuilder(command.collect { it.toString() })
                 .directory(projectDir)
