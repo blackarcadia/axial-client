@@ -9,12 +9,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.*;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class MinecraftLauncher {
@@ -181,20 +185,32 @@ public class MinecraftLauncher {
     private JsonObject fetchVersionJson(FileLayout layout, VersionRef ref) throws IOException {
         Path target = layout.versionJson(ref.id());
         if (Files.exists(target)) {
-            return readJson(target);
+            try {
+                return readJson(target);
+            } catch (JsonParseException | IOException e) {
+                logger.info("Cached version JSON is invalid; redownloading " + target.getFileName());
+                Files.deleteIfExists(target);
+            }
         }
 
         Files.createDirectories(target.getParent());
-        downloadTo(ref.url(), target);
+        downloadTo(ref.url(), target, null, null, false);
         return readJson(target);
     }
 
     private JsonObject fetchFabricProfile(FileLayout layout, String versionId, String mcVersion, String loaderVersion) throws IOException {
         Path target = layout.versionJson(versionId);
-        if (Files.exists(target)) return readJson(target);
+        if (Files.exists(target)) {
+            try {
+                return readJson(target);
+            } catch (JsonParseException | IOException e) {
+                logger.info("Cached Fabric profile is invalid; redownloading " + target.getFileName());
+                Files.deleteIfExists(target);
+            }
+        }
         Files.createDirectories(target.getParent());
         String url = "https://meta.fabricmc.net/v2/versions/loader/" + mcVersion + "/" + loaderVersion + "/profile/json";
-        downloadTo(url, target);
+        downloadTo(url, target, null, null, false);
         return readJson(target);
     }
 
@@ -209,33 +225,34 @@ public class MinecraftLauncher {
 
     private void downloadClient(FileLayout layout, String versionId, JsonObject versionJson) throws IOException {
         Path target = layout.clientJar(versionId);
-        if (Files.exists(target)) return;
 
         JsonObject downloads = versionJson.getAsJsonObject("downloads");
         if (downloads == null) {
+            if (isUsableDownload(target, null, null, true)) return;
             if (versionJson.has("inheritsFrom")) {
                 Path inherited = layout.clientJar(versionJson.get("inheritsFrom").getAsString());
-                if (!Files.exists(inherited)) {
+                if (!isUsableDownload(inherited, null, null, true)) {
                     throw new IOException("Inherited client jar missing: " + inherited);
                 }
                 Files.createDirectories(target.getParent());
-                Files.copy(inherited, target);
+                Files.copy(inherited, target, StandardCopyOption.REPLACE_EXISTING);
                 return;
             }
             throw new IOException("No downloads section for version " + versionId);
         }
         JsonObject client = downloads.getAsJsonObject("client");
         if (client == null && versionJson.has("inheritsFrom")) {
+            if (isUsableDownload(target, null, null, true)) return;
             // use inherited client jar
             Path inherited = layout.clientJar(versionJson.get("inheritsFrom").getAsString());
-            if (!Files.exists(inherited)) {
+            if (!isUsableDownload(inherited, null, null, true)) {
                 throw new IOException("Inherited client jar missing: " + inherited);
             }
             Files.createDirectories(target.getParent());
-            Files.copy(inherited, target);
+            Files.copy(inherited, target, StandardCopyOption.REPLACE_EXISTING);
             return;
         }
-        downloadTo(client.get("url").getAsString(), target);
+        downloadTo(client.get("url").getAsString(), target, optionalString(client, "sha1"), optionalLong(client, "size"), true);
     }
 
     private void downloadLibraries(FileLayout layout, JsonObject versionJson) throws IOException {
@@ -294,9 +311,9 @@ public class MinecraftLauncher {
         }
         String indexId = assetIndex.get("id").getAsString();
         Path indexPath = layout.assetIndex(indexId);
-        if (!Files.exists(indexPath)) {
+        if (!isUsableDownload(indexPath, optionalString(assetIndex, "sha1"), optionalLong(assetIndex, "size"), false)) {
             Files.createDirectories(indexPath.getParent());
-            downloadTo(assetIndex.get("url").getAsString(), indexPath);
+            downloadTo(assetIndex.get("url").getAsString(), indexPath, optionalString(assetIndex, "sha1"), optionalLong(assetIndex, "size"), false);
         }
 
         JsonObject indexJson = readJson(indexPath);
@@ -305,11 +322,11 @@ public class MinecraftLauncher {
             JsonObject obj = entry.getValue().getAsJsonObject();
             String hash = obj.get("hash").getAsString();
             Path objPath = layout.assetObject(hash);
-            if (Files.exists(objPath)) continue;
+            if (isUsableDownload(objPath, hash, optionalLong(obj, "size"), false)) continue;
 
             Files.createDirectories(objPath.getParent());
             String url = "https://resources.download.minecraft.net/" + hash.substring(0, 2) + "/" + hash;
-            downloadTo(url, objPath);
+            downloadTo(url, objPath, hash, optionalLong(obj, "size"), false);
         }
     }
 
@@ -464,27 +481,27 @@ public class MinecraftLauncher {
             }
         }
         Path target = layout.modsDir().resolve(TOGGLE_MOD_FILE);
-        if (Files.exists(target)) {
+        if (isUsableDownload(target, null, null, true)) {
             return;
         }
         logger.info("Fetching Toggle Sprint mod...");
-        downloadTo(TOGGLE_MOD_URL, target);
+        downloadTo(TOGGLE_MOD_URL, target, null, null, true);
     }
 
     private void downloadFabricApi(FileLayout layout) throws IOException {
         Files.createDirectories(layout.modsDir());
         Path target = layout.modsDir().resolve(FABRIC_API_FILE);
-        if (Files.exists(target)) return;
+        if (isUsableDownload(target, null, null, true)) return;
         logger.info("Fetching Fabric API...");
-        downloadTo(FABRIC_API_URL, target);
+        downloadTo(FABRIC_API_URL, target, null, null, true);
     }
 
     private void downloadModMenu(FileLayout layout) throws IOException {
         Files.createDirectories(layout.modsDir());
         Path target = layout.modsDir().resolve(MOD_MENU_FILE);
-        if (Files.exists(target)) return;
+        if (isUsableDownload(target, null, null, true)) return;
         logger.info("Fetching Mod Menu...");
-        downloadTo(MOD_MENU_URL, target);
+        downloadTo(MOD_MENU_URL, target, null, null, true);
     }
 
     private void downloadSimpleMenu(FileLayout layout) throws IOException {
@@ -774,30 +791,114 @@ public class MinecraftLauncher {
     private Path downloadArtifact(Path baseDir, JsonObject artifact) throws IOException {
         String path = artifact.get("path").getAsString();
         Path target = baseDir.resolve(path);
-        if (Files.exists(target)) return target;
+        String expectedSha1 = optionalString(artifact, "sha1");
+        Long expectedSize = optionalLong(artifact, "size");
+        boolean requireZip = path.endsWith(".jar");
+        if (isUsableDownload(target, expectedSha1, expectedSize, requireZip)) return target;
 
         Files.createDirectories(target.getParent());
-        downloadTo(artifact.get("url").getAsString(), target);
+        downloadTo(artifact.get("url").getAsString(), target, expectedSha1, expectedSize, requireZip);
         return target;
     }
 
     private void downloadTo(String url, Path target) throws IOException {
+        downloadTo(url, target, null, null, target.getFileName().toString().endsWith(".jar"));
+    }
+
+    private void downloadTo(String url, Path target, String expectedSha1, Long expectedSize, boolean requireZip) throws IOException {
+        Files.createDirectories(target.getParent());
+        Path temp = target.resolveSibling(target.getFileName() + ".part");
+        Files.deleteIfExists(temp);
         Request req = new Request.Builder().url(url).build();
         try (Response resp = http.newCall(req).execute()) {
             if (!resp.isSuccessful()) {
                 throw new IOException("Download failed: " + url + " -> " + resp.code());
             }
+            if (resp.body() == null) {
+                throw new IOException("Download failed: empty response body for " + url);
+            }
             try (InputStream in = resp.body().byteStream();
-                 OutputStream out = Files.newOutputStream(target)) {
+                 OutputStream out = Files.newOutputStream(temp)) {
                 in.transferTo(out);
             }
+        }
+        if (!isUsableDownload(temp, expectedSha1, expectedSize, requireZip)) {
+            Files.deleteIfExists(temp);
+            throw new IOException("Downloaded file failed integrity checks: " + url);
+        }
+        try {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
         }
         logger.info("Fetched " + url);
     }
 
+    private boolean isUsableDownload(Path path, String expectedSha1, Long expectedSize, boolean requireZip) throws IOException {
+        if (!Files.isRegularFile(path)) {
+            return false;
+        }
+        if (expectedSize != null && Files.size(path) != expectedSize) {
+            logger.info("Cached file has wrong size; redownloading " + path.getFileName());
+            return false;
+        }
+        if (expectedSha1 != null && !expectedSha1.equalsIgnoreCase(sha1(path))) {
+            logger.info("Cached file has wrong SHA-1; redownloading " + path.getFileName());
+            return false;
+        }
+        if (requireZip && !isReadableZip(path)) {
+            logger.info("Cached jar is not readable; redownloading " + path.getFileName());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isReadableZip(Path path) {
+        try (ZipFile ignored = new ZipFile(path.toFile())) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private String sha1(Path path) throws IOException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-1 is not available", e);
+        }
+        byte[] buffer = new byte[8192];
+        try (InputStream in = Files.newInputStream(path)) {
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte b : digest.digest()) {
+            hex.append(String.format("%02x", b));
+        }
+        return hex.toString();
+    }
+
+    private String optionalString(JsonObject obj, String name) {
+        JsonElement el = obj.get(name);
+        return el == null || el.isJsonNull() ? null : el.getAsString();
+    }
+
+    private Long optionalLong(JsonObject obj, String name) {
+        JsonElement el = obj.get(name);
+        return el == null || el.isJsonNull() ? null : el.getAsLong();
+    }
+
     private JsonObject readJson(Path path) throws IOException {
         try (InputStream in = Files.newInputStream(path)) {
-            return gson.fromJson(new java.io.InputStreamReader(in), JsonObject.class);
+            JsonObject json = gson.fromJson(new java.io.InputStreamReader(in), JsonObject.class);
+            if (json == null) {
+                throw new JsonParseException("Empty JSON file: " + path);
+            }
+            return json;
         }
     }
 
