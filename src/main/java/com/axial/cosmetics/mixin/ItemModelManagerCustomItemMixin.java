@@ -3,6 +3,7 @@ package com.axial.cosmetics.mixin;
 import net.minecraft.client.item.ItemModelManager;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -13,7 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ItemModelManager.class)
-public abstract class ItemModelManagerMoneyNotePackMixin {
+public abstract class ItemModelManagerCustomItemMixin {
+    @Unique
+    private static final Identifier KROKS_MODEL = Identifier.of("axial_cosmetics", "kroks");
     @Unique
     private static final String MONEY_NOTE_PACK_KEY = "PrisonsCore:money-note-pack";
     @Unique
@@ -36,6 +39,12 @@ public abstract class ItemModelManagerMoneyNotePackMixin {
     private Object axial_cosmetics$redirectItemModelLookup(ItemStack stack, ComponentType<?> type) {
         if (type == DataComponentTypes.ITEM_MODEL && axial_cosmetics$isMoneyNotePack(stack)) {
             return MONEY_NOTE_PACK_MODEL;
+        }
+        if (type == DataComponentTypes.ITEM_MODEL) {
+            CustomModelDataComponent modelData = stack.get(DataComponentTypes.CUSTOM_MODEL_DATA);
+            if (modelData != null && Float.valueOf(247.0F).equals(modelData.getFloat(0))) {
+                return KROKS_MODEL;
+            }
         }
 
         return stack.get((ComponentType<Object>) type);

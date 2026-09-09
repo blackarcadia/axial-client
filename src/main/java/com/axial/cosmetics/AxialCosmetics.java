@@ -17,7 +17,9 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.KeyBinding.Category;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.util.Identifier;
+import org.axial.axialutils.client.cosmetics.ArmorCosmeticRegistry;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.InvocationTargetException;
@@ -33,6 +35,8 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
+                id("geckolib/models/kroks.geo.json"), id("textures/item/kroks.png"));
         WeatherDetectorModelRegistry.register();
         ItemScalerConfig.load();
         CrosshairConfigManager.load();

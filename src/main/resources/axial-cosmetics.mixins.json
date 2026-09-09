@@ -19,7 +19,7 @@
     "AxialUiThemeFontMixin",
     "CloseModMenuMixin",
     "ItemInHandRendererItemScalerMixin",
-    "ItemModelManagerMoneyNotePackMixin",
+    "ItemModelManagerCustomItemMixin",
     "TitleOverlaySettingsScreenMixin",
     "TitleOverlayCrosshairMixin",
     "MinecraftIconsMixin",
