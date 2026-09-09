@@ -105,7 +105,7 @@
         "threshold": 246,
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:item/custom_model_data_246"
+          "model": "minecraft:item/calculus"
         }
       },
       {
