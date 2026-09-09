@@ -18,6 +18,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier KROKS_MODEL = Identifier.of("axial_cosmetics", "kroks");
     @Unique
+    private static final Identifier LAMPSHADE_MODEL = Identifier.of("axial_cosmetics", "lampshade");
+    @Unique
     private static final String MONEY_NOTE_PACK_KEY = "PrisonsCore:money-note-pack";
     @Unique
     private static final String MONEY_NOTE_PACK_VALUE = "MONEY_NOTE_PACK";
@@ -44,6 +46,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             CustomModelDataComponent modelData = stack.get(DataComponentTypes.CUSTOM_MODEL_DATA);
             if (modelData != null && Float.valueOf(247.0F).equals(modelData.getFloat(0))) {
                 return KROKS_MODEL;
+            }
+            if (modelData != null && Float.valueOf(248.0F).equals(modelData.getFloat(0))) {
+                return LAMPSHADE_MODEL;
             }
         }
 

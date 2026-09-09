@@ -37,6 +37,8 @@ public class AxialCosmetics implements ClientModInitializer {
     public void onInitializeClient() {
         ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
                 id("geckolib/models/kroks.geo.json"), id("textures/item/kroks.png"));
+        ArmorCosmeticRegistry.register(248, EquipmentSlot.HEAD,
+                id("geckolib/models/lampshade.geo.json"), id("textures/item/lampshade.png"));
         WeatherDetectorModelRegistry.register();
         ItemScalerConfig.load();
         CrosshairConfigManager.load();
