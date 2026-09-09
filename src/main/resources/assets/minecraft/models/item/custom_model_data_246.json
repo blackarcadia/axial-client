@@ -2,8 +2,8 @@
 	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "axial_cosmetics:block/calculus",
-		"particle": "axial_cosmetics:block/calculus"
+		"0": "item/calculus",
+		"particle": "item/calculus"
 	},
 	"elements": [
 		{
