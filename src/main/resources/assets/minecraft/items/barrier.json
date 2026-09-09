@@ -32,17 +32,17 @@
         }
       },
       {
-        "threshold": 250,
-        "model": {
-          "type": "minecraft:model",
-          "model": "axial_cosmetics:item/custom_model_data_250"
-        }
-      },
-      {
         "threshold": 246,
         "model": {
           "type": "minecraft:model",
           "model": "minecraft:item/calculus"
+        }
+      },
+      {
+        "threshold": 250,
+        "model": {
+          "type": "minecraft:model",
+          "model": "axial_cosmetics:item/custom_model_data_250"
         }
       },
       {
@@ -57,13 +57,6 @@
         "model": {
           "type": "minecraft:model",
           "model": "minecraft:block/custom/weatherdetector"
-        }
-      },
-      {
-        "threshold": 246,
-        "model": {
-          "type": "minecraft:model",
-          "model": "minecraft:item/calculus"
         }
       },
       {

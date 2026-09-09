@@ -46,13 +46,6 @@
         }
       },
       {
-        "threshold": 246,
-        "model": {
-          "type": "minecraft:model",
-          "model": "minecraft:item/calculus"
-        }
-      },
-      {
         "threshold": 273,
         "model": {
           "type": "minecraft:model",
