@@ -119,7 +119,7 @@
         "threshold": 245,
         "model": {
           "type": "minecraft:model",
-          "model": "axial_cosmetics:item/custom_model_data_246"
+          "model": "minecraft:item/kryosword"
         }
       },
       {
