@@ -20,6 +20,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier LAMPSHADE_MODEL = Identifier.of("axial_cosmetics", "lampshade");
     @Unique
+    private static final Identifier POWERBOX_MODEL = Identifier.of("axial_cosmetics", "powerbox");
+    @Unique
     private static final String MONEY_NOTE_PACK_KEY = "PrisonsCore:money-note-pack";
     @Unique
     private static final String MONEY_NOTE_PACK_VALUE = "MONEY_NOTE_PACK";
@@ -49,6 +51,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(248.0F).equals(modelData.getFloat(0))) {
                 return LAMPSHADE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(249.0F).equals(modelData.getFloat(0))) {
+                return POWERBOX_MODEL;
             }
         }
 
