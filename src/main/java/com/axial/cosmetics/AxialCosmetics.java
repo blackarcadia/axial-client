@@ -1,5 +1,6 @@
 package com.axial.cosmetics;
 
+import com.axial.cosmetics.client.AlienHuskEntityRenderer;
 import com.axial.cosmetics.client.CosmeticFeatureRenderer;
 import com.axial.cosmetics.client.CrosshairConfigManager;
 import com.axial.cosmetics.client.CrosshairDynamicState;
@@ -13,11 +14,13 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.KeyBinding.Category;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 import org.axial.axialutils.client.cosmetics.ArmorCosmeticRegistry;
 import org.lwjgl.glfw.GLFW;
@@ -35,6 +38,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
         ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
                 id("geckolib/models/kroks.geo.json"), id("textures/item/kroks.png"));
         ArmorCosmeticRegistry.register(248, EquipmentSlot.HEAD,

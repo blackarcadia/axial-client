@@ -32,3 +32,19 @@ The launcher installs to `~/.minecraft` and starts the game immediately. Overrid
 - Authentication is offline by default (access token `0`, UUID derived from player name). Use a legitimate account if required by replacing the auth tokens in `LaunchRequest`.
 - Natives and libraries are resolved for your current OS/architecture at runtime.
 - Asset and library downloads are cached; re-runs skip existing files.
+
+### Alien husk texture
+
+Husks marked `prisonscore_alien` use the bundled alien texture. Other husks keep their vanilla texture.
+The renderer accepts client-visible entity tags or membership in the scoreboard team `prisonscore_alien`.
+Vanilla does not send `/tag` entity tags to clients (including the client in singleplayer), so a server using
+those tags must also expose the marker through a team or a mod that synchronizes tags. For example, run on the server:
+
+```mcfunction
+team add prisonscore_alien
+team join prisonscore_alien @e[type=minecraft:husk,tag=prisonscore_alien]
+```
+
+Create the team once and join newly spawned alien husks as they are tagged. Remove husks from the team when
+they lose the tag. Entities can belong to only one scoreboard team, so servers already using teams for these
+husks should synchronize tags instead.
