@@ -11,6 +11,7 @@
     "AxialConfigManagerCompassMixin",
     "AxialConfigScreenFissureRemovalMixin",
     "AxialConfigScreenCompassMixin",
+    "AxialConfigScreenCompassMoveMixin",
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
     "AxialConfigScreenMixin",

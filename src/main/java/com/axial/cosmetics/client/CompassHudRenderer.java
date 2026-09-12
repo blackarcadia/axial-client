@@ -9,8 +9,7 @@ import net.minecraft.util.math.MathHelper;
 
 public final class CompassHudRenderer {
     private static final int WIDTH = 300;
-    private static final int HEIGHT = 34;
-    private static final int TOP = 6;
+    public static final int HEIGHT = 34;
     private static final float PIXELS_PER_DEGREE = 2.1f;
     private static final int BACKGROUND = 0x7A101217;
     private static final int CENTER_COLOR = 0xFFFFFFFF;
@@ -36,24 +35,38 @@ public final class CompassHudRenderer {
             return;
         }
 
-        int screenWidth = client.getWindow().getScaledWidth();
-        int compassWidth = Math.min(WIDTH, Math.max(120, screenWidth - 8));
-        int left = (screenWidth - compassWidth) / 2;
-        int centerX = screenWidth / 2;
-        float yaw = normalize(client.player.getYaw(tickCounter.getTickProgress(true)));
-
-        context.fill(left, TOP, left + compassWidth, TOP + HEIGHT, BACKGROUND);
-        context.fill(left + 1, TOP + 1, left + compassWidth - 1, TOP + 2, 0x30FFFFFF);
-        context.fill(left, TOP + HEIGHT - 1, left + compassWidth, TOP + HEIGHT, 0x33000000);
-
-        drawDegreeMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth);
-        drawCardinalMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth);
-
-        context.fill(centerX - 1, TOP + 3, centerX + 1, TOP + 20, CENTER_COLOR);
-        context.fill(centerX - 3, TOP + 3, centerX + 4, TOP + 5, CENTER_COLOR);
+        renderCompass(context, client, normalize(client.player.getYaw(tickCounter.getTickProgress(true))));
     }
 
-    private static void drawDegreeMarks(DrawContext context, TextRenderer textRenderer, float yaw, int centerX, int minX, int maxX, int compassWidth) {
+    public static int getWidth(int screenWidth) {
+        return Math.min(screenWidth, Math.min(WIDTH, Math.max(120, screenWidth - 8)));
+    }
+
+    public static void renderPreview(DrawContext context, MinecraftClient client) {
+        if (CompassConfig.isEnabled()) {
+            renderCompass(context, client, client.player == null ? 180.0f : normalize(client.player.getYaw()));
+        }
+    }
+
+    private static void renderCompass(DrawContext context, MinecraftClient client, float yaw) {
+        int screenWidth = client.getWindow().getScaledWidth();
+        int compassWidth = getWidth(screenWidth);
+        int left = CompassConfig.getX(screenWidth, compassWidth);
+        int top = CompassConfig.getY(client.getWindow().getScaledHeight(), HEIGHT);
+        int centerX = left + compassWidth / 2;
+
+        context.fill(left, top, left + compassWidth, top + HEIGHT, BACKGROUND);
+        context.fill(left + 1, top + 1, left + compassWidth - 1, top + 2, 0x30FFFFFF);
+        context.fill(left, top + HEIGHT - 1, left + compassWidth, top + HEIGHT, 0x33000000);
+
+        drawDegreeMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth, top);
+        drawCardinalMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth, top);
+
+        context.fill(centerX - 1, top + 3, centerX + 1, top + 20, CENTER_COLOR);
+        context.fill(centerX - 3, top + 3, centerX + 4, top + 5, CENTER_COLOR);
+    }
+
+    private static void drawDegreeMarks(DrawContext context, TextRenderer textRenderer, float yaw, int centerX, int minX, int maxX, int compassWidth, int top) {
         int start = ((int) Math.floor((yaw - 75.0f) / 15.0f)) * 15;
         int end = ((int) Math.ceil((yaw + 75.0f) / 15.0f)) * 15;
         for (int degrees = start; degrees <= end; degrees += 15) {
@@ -65,19 +78,19 @@ public final class CompassHudRenderer {
 
             boolean major = Math.floorMod(degrees, 45) == 0;
             int color = alphaForDistance(x, centerX, compassWidth, major ? MAJOR_COLOR : MINOR_COLOR);
-            context.fill(x, TOP + 4, x + 1, major ? TOP + 19 : TOP + 13, color);
+            context.fill(x, top + 4, x + 1, major ? top + 19 : top + 13, color);
             if (!major) {
                 String label = Integer.toString(Math.floorMod(degrees, 360));
                 int width = textRenderer.getWidth(label);
                 int labelX = x - width / 2;
                 if (labelX >= minX + 2 && labelX + width <= maxX - 2) {
-                    context.drawTextWithShadow(textRenderer, Text.literal(label), labelX, TOP + 20, color);
+                    context.drawTextWithShadow(textRenderer, Text.literal(label), labelX, top + 20, color);
                 }
             }
         }
     }
 
-    private static void drawCardinalMarks(DrawContext context, TextRenderer textRenderer, float yaw, int centerX, int minX, int maxX, int compassWidth) {
+    private static void drawCardinalMarks(DrawContext context, TextRenderer textRenderer, float yaw, int centerX, int minX, int maxX, int compassWidth, int top) {
         for (Mark mark : MARKS) {
             float offset = wrappedDelta(mark.degrees, yaw) * PIXELS_PER_DEGREE;
             int x = Math.round(centerX + offset);
@@ -87,7 +100,7 @@ public final class CompassHudRenderer {
 
             int color = alphaForDistance(x, centerX, compassWidth, MAJOR_COLOR);
             int width = textRenderer.getWidth(mark.label);
-            context.drawTextWithShadow(textRenderer, Text.literal(mark.label), x - width / 2, TOP + 17, color);
+            context.drawTextWithShadow(textRenderer, Text.literal(mark.label), x - width / 2, top + 17, color);
         }
     }
 

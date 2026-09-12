@@ -18,6 +18,25 @@ public final class CompassConfig {
         }
     }
 
+    public static int getX(int screenWidth, int compassWidth) {
+        Object config = AxialConfigManager.get();
+        Integer x = config instanceof CompassConfigAccess access ? access.axial_cosmetics$getCompassX() : null;
+        return Math.max(0, Math.min(x == null ? (screenWidth - compassWidth) / 2 : x, screenWidth - compassWidth));
+    }
+
+    public static int getY(int screenHeight, int compassHeight) {
+        Object config = AxialConfigManager.get();
+        Integer y = config instanceof CompassConfigAccess access ? access.axial_cosmetics$getCompassY() : null;
+        return Math.max(0, Math.min(y == null ? 6 : y, screenHeight - compassHeight));
+    }
+
+    public static void setPosition(int x, int y) {
+        Object config = AxialConfigManager.get();
+        if (config instanceof CompassConfigAccess access) {
+            access.axial_cosmetics$setCompassPosition(x, y);
+        }
+    }
+
     public static void toggle() {
         setEnabled(!isEnabled());
         AxialConfigManager.save();
