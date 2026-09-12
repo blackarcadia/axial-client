@@ -43,6 +43,22 @@ public abstract class AxialConfigScreenColorPickerMixin {
             method = "method_25402",
             at = @At(
                     value = "INVOKE",
+                    target = "Lorg/axial/axialutils/client/AxialConfigScreen$MenuTile;activate()V",
+                    remap = false
+            ),
+            remap = false
+    )
+    private void axial_cosmetics$openMenuTileColorPicker(@Coerce Object tile) {
+        if (axial_cosmetics$tryOpenColorPicker(tile)) {
+            return;
+        }
+        axial_cosmetics$activateTile(tile);
+    }
+
+    @Redirect(
+            method = "method_25402",
+            at = @At(
+                    value = "INVOKE",
                     target = "Lorg/axial/axialutils/client/AxialConfigScreen$OptionRow;activate()V",
                     remap = false
             ),
