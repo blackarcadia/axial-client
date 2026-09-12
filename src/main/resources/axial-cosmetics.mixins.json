@@ -16,6 +16,7 @@
     "AxialConfigScreenMixin",
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
+    "ModMenuBackButtonMixin",
     "CloseModMenuMixin",
     "ItemInHandRendererItemScalerMixin",
     "ItemModelManagerCustomItemMixin",

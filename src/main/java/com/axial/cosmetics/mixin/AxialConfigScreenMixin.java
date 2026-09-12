@@ -30,7 +30,6 @@ public abstract class AxialConfigScreenMixin {
     private static final int COLOR_EDITOR_GAP = 10;
     private static final Identifier MOVE_ARROW_ICON = AxialCosmetics.id("textures/gui/move-arrow.png");
     private static final Identifier OPTIONS_ICON = AxialCosmetics.id("textures/gui/options-icon.png");
-    private static final Identifier BACK_ARROW_ICON = AxialCosmetics.id("textures/gui/back-arrow.png");
     private static Field axial_cosmetics$tilesField;
     private static Field axial_cosmetics$optionRowsField;
     private static Field axial_cosmetics$tileLabelField;
@@ -742,19 +741,22 @@ public abstract class AxialConfigScreenMixin {
 
     @Inject(
             method = "drawBackButton",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/class_332;method_25294(IIIII)V", ordinal = 0),
+            at = @At("HEAD"),
             cancellable = true,
             remap = false
     )
     private void axial_cosmetics$drawBackArrowIcon(DrawContext context, int mouseX, int mouseY, int panelX, int panelY, CallbackInfo ci) {
-        int buttonX = panelX + 18;
-        int buttonY = panelY + 6;
-
-        int iconWidth = 16;
-        int iconHeight = 13;
-        int iconX = buttonX + (24 - iconWidth) / 2 - 4;
-        int iconY = buttonY + (18 - iconHeight) / 2 - 1;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, BACK_ARROW_ICON, iconX, iconY, 0.0f, 0.0f, iconWidth, iconHeight, 64, 64, 64, 64);
+        com.axial.cosmetics.client.ModMenuBackButton.draw(context, panelX + 14, panelY + 4, mouseX, mouseY);
         ci.cancel();
     }
+    @org.spongepowered.asm.mixin.injection.ModifyArg(
+            method = "backButtonContains",
+            at = @At(value = "INVOKE", target = "Lorg/axial/axialutils/client/AxialConfigScreen;navButtonContains(DDIIII)Z"),
+            index = 5,
+            remap = false
+    )
+    private int axial_cosmetics$matchBackButtonHeight(int height) {
+        return 18;
+    }
+
 }

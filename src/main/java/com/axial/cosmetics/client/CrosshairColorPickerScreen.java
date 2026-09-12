@@ -182,11 +182,7 @@ public final class CrosshairColorPickerScreen extends Screen {
     }
 
     private void drawBackButton(DrawContext context, int mouseX, int mouseY) {
-        int buttonX = panelX + PANEL_PADDING;
-        int buttonY = panelY + 7;
-        boolean hovered = inside(mouseX, mouseY, buttonX, buttonY, 24, 18);
-        drawButton(context, buttonX, buttonY, 24, 18, hovered);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("<"), buttonX + 12, buttonY + 5, hovered ? 0xFFF7F7FF : 0xFFC6D0F3);
+        ModMenuBackButton.draw(context, panelX + PANEL_PADDING, panelY + 7, mouseX, mouseY);
     }
 
     private void drawResetButton(DrawContext context, int mouseX, int mouseY) {

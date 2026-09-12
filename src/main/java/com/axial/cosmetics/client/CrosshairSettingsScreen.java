@@ -1,8 +1,6 @@
 package com.axial.cosmetics.client;
 
-import com.axial.cosmetics.AxialCosmetics;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -43,7 +41,6 @@ public final class CrosshairSettingsScreen extends Screen {
     private static final float WIDTH_MAX = 12.0f;
     private static final float GAP_MIN = 0.0f;
     private static final float GAP_MAX = 20.0f;
-    private static final Identifier BACK_ARROW_ICON = AxialCosmetics.id("textures/gui/back-arrow.png");
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     private final Screen parent;
@@ -230,15 +227,7 @@ public final class CrosshairSettingsScreen extends Screen {
     }
 
     private void drawBackButton(DrawContext context, int mouseX, int mouseY) {
-        int buttonX = panelX + PANEL_PADDING;
-        int buttonY = panelY + 6;
-        boolean hovered = inside(mouseX, mouseY, buttonX, buttonY, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
-        drawButton(context, buttonX, buttonY, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, hovered, true);
-        int iconWidth = 16;
-        int iconHeight = 13;
-        int iconX = buttonX + (BACK_BUTTON_WIDTH - iconWidth) / 2 - 4;
-        int iconY = buttonY + (BACK_BUTTON_HEIGHT - iconHeight) / 2 - 1;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, BACK_ARROW_ICON, iconX, iconY, 0.0f, 0.0f, iconWidth, iconHeight, 64, 64, 64, 64);
+        ModMenuBackButton.draw(context, panelX + PANEL_PADDING, panelY + 6, mouseX, mouseY);
     }
 
     private void drawPreview(DrawContext context) {

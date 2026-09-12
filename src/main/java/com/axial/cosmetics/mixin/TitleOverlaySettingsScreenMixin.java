@@ -1,7 +1,5 @@
 package com.axial.cosmetics.mixin;
 
-import com.axial.cosmetics.AxialCosmetics;
-import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -34,7 +32,6 @@ public abstract class TitleOverlaySettingsScreenMixin {
     private static final int CONTROL_COLUMN_GAP = 10;
     private static final int BACK_BUTTON_WIDTH = 24;
     private static final int BACK_BUTTON_HEIGHT = 18;
-    private static final Identifier BACK_ARROW_ICON = AxialCosmetics.id("textures/gui/back-arrow.png");
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     @Shadow
@@ -103,17 +100,7 @@ public abstract class TitleOverlaySettingsScreenMixin {
 
     @Inject(method = "method_25394", at = @At("RETURN"))
     private void axial_cosmetics$drawBackButton(DrawContext context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
-        int buttonX = panelX + 18;
-        int buttonY = panelY + 6;
-        boolean hovered = axial_cosmetics$inside(mouseX, mouseY, buttonX, buttonY, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
-
-        axial_cosmetics$drawIconButton(context, buttonX, buttonY, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, hovered);
-
-        int iconWidth = 16;
-        int iconHeight = 13;
-        int iconX = buttonX + (BACK_BUTTON_WIDTH - iconWidth) / 2 - 4;
-        int iconY = buttonY + (BACK_BUTTON_HEIGHT - iconHeight) / 2 - 1;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, BACK_ARROW_ICON, iconX, iconY, 0.0f, 0.0f, iconWidth, iconHeight, 64, 64, 64, 64);
+        com.axial.cosmetics.client.ModMenuBackButton.draw(context, panelX + 18, panelY + 6, mouseX, mouseY);
     }
 
     @ModifyArg(
