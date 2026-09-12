@@ -15,7 +15,6 @@ import java.util.function.IntConsumer;
 
 @Mixin(
         targets = {
-                "org.axial.axialutils.client.AxialConfigScreen$MenuTile",
                 "org.axial.axialutils.client.AxialConfigScreen$OptionRow",
                 "org.axial.axialutils.client.HudColorSettingsScreen$ColorTile",
                 "org.axial.axialutils.client.SatchelHelperColorSettingsScreen$ColorTile"

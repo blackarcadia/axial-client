@@ -19,20 +19,24 @@ public abstract class AxialConfigScreenColorPickerMixin {
     @Unique
     private static Field axial_cosmetics$activeColorEditorField;
 
+    /**
+     * The bundled screen still references RUPTURE, but its ColorGroup enum only
+     * contains FISSURE. Every non-HUD group evaluates this obsolete comparison
+     * before reaching its own rows. The removed feature must never match.
+     */
     @Redirect(
-            method = "method_25402",
+            method = "addColorRows",
             at = @At(
-                    value = "INVOKE",
-                    target = "Lorg/axial/axialutils/client/AxialConfigScreen$MenuTile;activate()V",
+                    value = "FIELD",
+                    target = "Lorg/axial/axialutils/client/AxialConfigScreen$ColorGroup;RUPTURE:Lorg/axial/axialutils/client/AxialConfigScreen$ColorGroup;",
+                    opcode = org.objectweb.asm.Opcodes.GETSTATIC,
                     remap = false
             ),
             remap = false
     )
-    private void axial_cosmetics$openMenuTileColorPicker(@Coerce Object tile) {
-        if (axial_cosmetics$tryOpenColorPicker(tile)) {
-            return;
-        }
-        axial_cosmetics$activateTile(tile);
+    @Coerce
+    private static Object axial_cosmetics$skipRemovedRuptureColorGroup() {
+        return null;
     }
 
     @Redirect(
