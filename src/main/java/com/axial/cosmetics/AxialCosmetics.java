@@ -6,6 +6,7 @@ import com.axial.cosmetics.client.CrosshairConfigManager;
 import com.axial.cosmetics.client.CrosshairDynamicState;
 import com.axial.cosmetics.client.ChunkBordersConfig;
 import com.axial.cosmetics.client.ItemScalerConfig;
+import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
@@ -44,6 +45,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ArmorCosmeticRegistry.register(248, EquipmentSlot.HEAD,
                 id("geckolib/models/lampshade.geo.json"), id("textures/item/lampshade.png"));
         WeatherDetectorModelRegistry.register();
+        EnchantGlintConfig.load();
         ItemScalerConfig.load();
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
