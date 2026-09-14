@@ -3,11 +3,11 @@ package org.example.launcher;
 import java.nio.file.Path;
 import java.util.Locale;
 
-final class ClientPaths {
+public final class ClientPaths {
     private ClientPaths() {
     }
 
-    static Path appRoot() {
+    public static Path appRoot() {
         if (isWindows()) {
             String appData = System.getenv("APPDATA");
             if (appData != null && !appData.isBlank()) {
@@ -31,7 +31,7 @@ final class ClientPaths {
         return appRoot().resolve("client");
     }
 
-    static Path accountsDir() {
+    public static Path accountsDir() {
         return appRoot().resolve("accounts");
     }
 

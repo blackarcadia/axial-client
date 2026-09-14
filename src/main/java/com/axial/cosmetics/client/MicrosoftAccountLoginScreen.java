@@ -1,6 +1,5 @@
 package com.axial.cosmetics.client;
 
-import com.google.gson.JsonObject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -14,22 +13,15 @@ import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
 import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
 import net.raphimc.minecraftauth.msa.service.util.ParamMsaAuthServiceSupplier;
 
-import javax.swing.SwingUtilities;
 import java.awt.Desktop;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 public final class MicrosoftAccountLoginScreen extends Screen {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean_large"));
-    private static final Path BASE_DIR = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher");
-    private static final Path ACCOUNTS_DIR = BASE_DIR.resolve("accounts");
-    private static final Path ACTIVE_ACCOUNT_POINTER = BASE_DIR.resolve("active-account.path");
 
     private final Screen parent;
-    private final CompletableFuture<Void> authFuture = new CompletableFuture<>();
+    private boolean started;
+    private volatile boolean cancelled;
     private volatile String statusLine = "Starting Microsoft sign-in...";
     private volatile String verificationUri = "";
     private volatile String userCode = "";
@@ -58,12 +50,14 @@ public final class MicrosoftAccountLoginScreen extends Screen {
 
     @Override
     public void close() {
+        cancelled = true;
         MinecraftClient.getInstance().setScreen(parent);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         rebuildLayout();
+        MenuBackgroundRenderer.draw(context, this);
         drawPanel(context);
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + 200, panelY + 10, 0xFFF7F7FF);
         context.drawCenteredTextWithShadow(textRenderer, uiText("SIGN IN WITH YOUR MICROSOFT ACCOUNT."), panelX + 200, panelY + 24, 0xFFC6D0F3);
@@ -77,7 +71,7 @@ public final class MicrosoftAccountLoginScreen extends Screen {
             context.drawCenteredTextWithShadow(textRenderer, uiText("CODE: " + userCode), panelX + 200, panelY + 122, 0xFFFFFFFF);
         }
         if (success) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED. RETURNING TO TITLE..."), panelX + 200, panelY + 148, 0xFF8AF0C2);
+            context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNT SAVED."), panelX + 200, panelY + 148, 0xFF8AF0C2);
         }
 
         layoutButtons();
@@ -85,10 +79,13 @@ public final class MicrosoftAccountLoginScreen extends Screen {
     }
 
     private void startLogin() {
+        if (started) return;
+        started = true;
         CompletableFuture.runAsync(() -> {
             try {
                 ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
                         (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, code -> {
+                            if (cancelled) throw new java.util.concurrent.CancellationException();
                             verificationUri = code.getVerificationUri();
                             userCode = code.getUserCode();
                             statusLine = "Use the code shown below to sign in.";
@@ -102,36 +99,24 @@ public final class MicrosoftAccountLoginScreen extends Screen {
                 JavaAuthManager authManager = JavaAuthManager.create(MinecraftAuth.createHttpClient("AxialLauncher/1.0"))
                         .login(supplier, code -> {});
 
-                persist(authManager);
-                AuthData data = new AuthData(
-                        authManager.getMinecraftProfile().getUpToDate().getName(),
-                        authManager.getMinecraftProfile().getUpToDate().getId().toString(),
-                        authManager.getMinecraftToken().getUpToDate().getToken(),
-                        authManager.getJavaXstsToken().getUpToDate().getUserHash()
-                );
-                authFuture.complete(null);
-                statusLine = "Signed in as " + data.playerName + ".";
-                success = true;
-                writeActivePointer(data.fileName());
-                SwingUtilities.invokeLater(() -> {
-                    if (MinecraftClient.getInstance().currentScreen == this) {
+                var prepared = AccountSessions.prepare(authManager);
+                MinecraftClient.getInstance().execute(() -> {
+                    if (cancelled || MinecraftClient.getInstance().currentScreen != this) return;
+                    try {
+                        String file = AccountStore.shared().save(authManager);
+                        prepared.apply();
+                        AccountStore.shared().select(file);
+                        success = true;
                         close();
+                    } catch (Exception ex) {
+                        statusLine = "Could not finish sign-in. Please try again.";
+                        cancelButton.setMessage(uiText("BACK"));
                     }
                 });
             } catch (Exception ex) {
-                statusLine = "Login failed: " + ex.getMessage();
-                authFuture.completeExceptionally(ex);
+                statusLine = "Sign-in failed or expired. Go back and try again.";
             }
         });
-    }
-
-    private void persist(JavaAuthManager authManager) throws IOException {
-        Files.createDirectories(ACCOUNTS_DIR);
-        JsonObject json = JavaAuthManager.toJson(authManager);
-        String name = authManager.getMinecraftProfile().getUpToDate().getName();
-        Path target = ACCOUNTS_DIR.resolve(name + ".json");
-        Files.writeString(target, json.toString(), StandardCharsets.UTF_8);
-        writeActivePointer(target.getFileName().toString());
     }
 
     private void openBrowser() {
@@ -175,21 +160,8 @@ public final class MicrosoftAccountLoginScreen extends Screen {
         context.drawStrokedRectangle(panelX, panelY, 400, 200, 0xD08F5DFF);
     }
 
-    private static void writeActivePointer(String fileName) {
-        try {
-            Files.createDirectories(ACTIVE_ACCOUNT_POINTER.getParent());
-            Files.writeString(ACTIVE_ACCOUNT_POINTER, fileName, StandardCharsets.UTF_8);
-        } catch (IOException ignored) {
-        }
-    }
-
     private static Text uiText(String value) {
         return Text.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
-    private record AuthData(String playerName, String uuid, String accessToken, String xuid) {
-        String fileName() {
-            return playerName + ".json";
-        }
-    }
 }

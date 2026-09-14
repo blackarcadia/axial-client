@@ -1,256 +1,115 @@
 package com.axial.cosmetics.client;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
+import net.raphimc.minecraftauth.MinecraftAuth;
+import net.raphimc.minecraftauth.java.JavaAuthManager;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public final class AccountsScreen extends Screen {
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(net.minecraft.util.Identifier.of("axialutils", "ui_clean_large"));
-    private static final Path ACCOUNTS_DIR = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "accounts");
-    private static final Path ACTIVE_ACCOUNT_POINTER = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "active-account.path");
-    private static final Path ACTIVE_LAUNCHER_POINTER = Path.of(System.getProperty("user.home"), "Library", "Application Support", "AxialLauncher", "active-launcher.path");
-
     private final Screen parent;
-    private final List<AccountEntry> entries = new ArrayList<>();
-    private String selectedFileName;
-    private int panelX;
-    private int panelY;
-    private int panelWidth;
-    private int panelHeight;
+    private final AccountStore store = AccountStore.shared();
+    private List<AccountStore.Entry> entries = List.of();
+    private String status = "Add Microsoft accounts, then select one to play.";
+    private boolean busy;
+    private int page;
+    private int pageSize;
+    private int panelX, panelY, panelWidth, panelHeight;
 
     public AccountsScreen(Screen parent) {
-        super(Text.literal("Accounts"));
+        super(Text.literal("ACCOUNTS"));
         this.parent = parent;
     }
 
-    @Override
-    protected void init() {
-        reloadEntries();
-        rebuildLayout();
+    @Override protected void init() {
+        try { entries = store.list(); }
+        catch (Exception ex) { status = "Could not read saved accounts."; }
+        panelWidth = Math.min(420, width - 24);
+        pageSize = Math.max(1, (height - 160) / 30);
+        panelHeight = Math.min(height - 16, 144 + pageSize * 30);
+        panelX = (width - panelWidth) / 2;
+        panelY = (height - panelHeight) / 2;
+        page = Math.min(page, Math.max(0, (entries.size() - 1) / pageSize));
         rebuildButtons();
-    }
-
-    @Override
-    public void close() {
-        MinecraftClient.getInstance().setScreen(parent);
-    }
-
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        rebuildLayout();
-        MenuBackgroundRenderer.draw(context, this);
-        drawPanel(context);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("ACCOUNTS"), panelX + panelWidth / 2, panelY + 10, 0xFFF7F7FF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("SELECT THE ACCOUNT TO USE NEXT LAUNCH."), panelX + panelWidth / 2, panelY + 22, 0xFFC6D0F3);
-
-        if (entries.isEmpty()) {
-            context.drawCenteredTextWithShadow(textRenderer, uiText("NO SAVED ACCOUNTS."), panelX + panelWidth / 2, panelY + 72, 0xFFD8D8E2);
-        } else {
-            int y = panelY + 44;
-            for (AccountEntry entry : entries) {
-                boolean active = entry.fileName.equals(selectedFileName);
-                drawAccountRow(context, entry, active, y);
-                y += 26;
-            }
-        }
-
-        super.render(context, mouseX, mouseY, delta);
-    }
-
-    private void rebuildLayout() {
-        panelWidth = 360;
-        panelHeight = Math.max(176, 90 + entries.size() * 26);
-        panelX = Math.max(24, (width - panelWidth) / 2);
-        panelY = Math.max(24, (height - panelHeight) / 2);
     }
 
     private void rebuildButtons() {
         clearChildren();
-
-        int rowY = panelY + 44;
-        for (AccountEntry entry : entries) {
-            boolean active = entry.fileName.equals(selectedFileName);
-            ButtonWidget row = ButtonWidget.builder(uiText(entry.displayName + (active ? "  [active]" : "")), btn -> selectAccount(entry))
-                    .build();
-            row.setPosition(panelX + 18, rowY);
-            row.setWidth(panelWidth - 36);
-            row.setHeight(22);
-            addDrawableChild(row);
-            rowY += 26;
+        int y = panelY + 58;
+        for (var entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
+            boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
+            button(entry.name() + (active ? "  [ACTIVE]" : "  • Switch"), panelX + 12, y, panelWidth - 100,
+                    () -> switchAccount(entry), !busy && !active);
+            button("Remove", panelX + panelWidth - 82, y, 70, () -> {
+                try { store.remove(entry); status = "Removed " + entry.name() + " from saved accounts."; init(); }
+                catch (Exception ex) { status = "Could not remove account."; }
+            }, !busy && !active);
+            y += 30;
         }
-
-        ButtonWidget add = ButtonWidget.builder(uiText("ADD ACCOUNT"), btn -> openLauncherAccountManager()).build();
-        add.setPosition(panelX + 18, panelY + panelHeight - 30);
-        add.setWidth(110);
-        add.setHeight(20);
-        addDrawableChild(add);
-
-        ButtonWidget logout = ButtonWidget.builder(uiText("LOG OUT"), btn -> logoutSelected()).build();
-        logout.setPosition(panelX + 134, panelY + panelHeight - 30);
-        logout.setWidth(100);
-        logout.setHeight(20);
-        addDrawableChild(logout);
-
-        ButtonWidget close = ButtonWidget.builder(uiText("CLOSE"), btn -> close()).build();
-        close.setPosition(panelX + panelWidth - 118, panelY + panelHeight - 30);
-        close.setWidth(100);
-        close.setHeight(20);
-        addDrawableChild(close);
+        int footer = panelY + panelHeight - 64;
+        button("<", panelX + 12, footer, 28, () -> { page--; rebuildButtons(); }, !busy && page > 0);
+        button(">", panelX + panelWidth - 40, footer, 28, () -> { page++; rebuildButtons(); }, !busy && (page + 1) * pageSize < entries.size());
+        button("Add Microsoft account", panelX + 12, footer + 30, panelWidth - 112,
+                () -> client.setScreen(new MicrosoftAccountLoginScreen(this)), !busy);
+        button("Done", panelX + panelWidth - 88, footer + 30, 76, this::close, !busy);
     }
 
-    private void drawPanel(DrawContext context) {
-        context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE8101018);
-        context.fill(panelX + 1, panelY + 1, panelX + panelWidth - 1, panelY + 2, 0x44FFFFFF);
-        context.drawStrokedRectangle(panelX, panelY, panelWidth, panelHeight, 0xD08F5DFF);
+    private void button(String label, int x, int y, int w, Runnable action, boolean enabled) {
+        var button = ButtonWidget.builder(Text.literal(label), ignored -> action.run()).dimensions(x, y, w, 20).build();
+        button.active = enabled;
+        addDrawableChild(button);
     }
 
-    private void drawAccountRow(DrawContext context, AccountEntry entry, boolean active, int y) {
-        int x = panelX + 18;
-        int rowWidth = panelWidth - 36;
-        boolean hovered = false;
-        context.fill(x, y, x + rowWidth, y + 22, active ? 0xBC20283A : 0xA0181D2C);
-        context.drawStrokedRectangle(x, y, rowWidth, 22, active ? 0xFFE7D9FF : 0xD08F5DFF);
-        context.drawTextWithShadow(textRenderer, uiText(entry.displayName), x + 10, y + 7, 0xFFFFFFFF);
-        if (hovered) {
-            context.fill(x, y, x + rowWidth, y + 22, 0x12000000);
-        }
-    }
-
-    private void selectAccount(AccountEntry entry) {
-        selectedFileName = entry.fileName;
-        writeActivePointer(entry.fileName);
+    private void switchAccount(AccountStore.Entry entry) {
+        if (busy) return;
+        busy = true;
+        status = "Signing in as " + entry.name() + "...";
         rebuildButtons();
-    }
-
-    private void logoutSelected() {
-        if (selectedFileName == null) {
-            return;
-        }
-
-        try {
-            Files.deleteIfExists(ACCOUNTS_DIR.resolve(selectedFileName));
-            if (selectedFileName.equals(readActivePointer())) {
-                Files.deleteIfExists(ACTIVE_ACCOUNT_POINTER);
-            }
-            reloadEntries();
-            if (!entries.isEmpty()) {
-                selectedFileName = entries.get(0).fileName;
-                writeActivePointer(selectedFileName);
-            } else {
-                selectedFileName = null;
-            }
-            rebuildButtons();
-        } catch (IOException ignored) {
-        }
-    }
-
-    private void openLauncherAccountManager() {
-        try {
-            Path bundle = locateLauncherBundle();
-            if (bundle != null) {
-                new ProcessBuilder("open", bundle.toAbsolutePath().toString()).start();
-            }
-        } catch (IOException ignored) {
-        }
-    }
-
-    private void reloadEntries() {
-        entries.clear();
-        selectedFileName = readActivePointer();
-        if (Files.isDirectory(ACCOUNTS_DIR)) {
-            try (var stream = Files.list(ACCOUNTS_DIR)) {
-                stream.filter(path -> path.getFileName().toString().endsWith(".json"))
-                        .sorted(Comparator.comparing(path -> path.getFileName().toString()))
-                        .forEach(path -> {
-                            AccountEntry entry = parseAccount(path);
-                            if (entry != null) {
-                                entries.add(entry);
-                            }
-                        });
-            } catch (IOException ignored) {
-            }
-        }
-        if (selectedFileName == null && !entries.isEmpty()) {
-            selectedFileName = entries.get(0).fileName;
-        }
-    }
-
-    private static AccountEntry parseAccount(Path path) {
-        try {
-            JsonObject root = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
-            JsonObject profile = root.getAsJsonObject("minecraftProfile");
-            if (profile == null) {
-                return null;
-            }
-            String name = profile.has("name") ? profile.get("name").getAsString() : path.getFileName().toString();
-            String uuid = profile.has("id") ? profile.get("id").getAsString() : "";
-            return new AccountEntry(name, uuid, path.getFileName().toString());
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private static void writeActivePointer(String fileName) {
-        try {
-            Files.createDirectories(ACTIVE_ACCOUNT_POINTER.getParent());
-            Files.writeString(ACTIVE_ACCOUNT_POINTER, fileName);
-        } catch (IOException ignored) {
-        }
-    }
-
-    private static String readActivePointer() {
-        try {
-            if (Files.exists(ACTIVE_ACCOUNT_POINTER)) {
-                String value = Files.readString(ACTIVE_ACCOUNT_POINTER).trim();
-                if (!value.isBlank()) {
-                    return value;
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                var auth = JavaAuthManager.fromJson(MinecraftAuth.createHttpClient("AxialLauncher/1.0"),
+                        JsonParser.parseString(Files.readString(store.file(entry.fileName()))).getAsJsonObject());
+                auth.getChangeListeners().add(() -> {
+                    try { AccountStore.write(store.file(entry.fileName()), JavaAuthManager.toJson(auth).toString()); }
+                    catch (java.io.IOException ex) { throw new java.io.UncheckedIOException(ex); }
+                });
+                var prepared = AccountSessions.prepare(auth);
+                store.save(auth);
+                return prepared;
+            } catch (Exception ex) { throw new java.util.concurrent.CompletionException(ex); }
+        }).whenComplete((prepared, error) -> MinecraftClient.getInstance().execute(() -> {
+            try {
+                if (error != null) {
+                    status = "Sign-in failed. Add this Microsoft account again to reconnect.";
+                } else {
+                    prepared.apply();
+                    status = "Playing as " + entry.name() + ".";
+                    try { store.select(entry.fileName()); }
+                    catch (Exception ex) { status = "Switched, but could not save the startup account."; }
                 }
-            }
-        } catch (IOException ignored) {
-        }
-        return null;
+            } catch (Exception ex) { status = "Could not switch. Return to the main menu and retry."; }
+            finally { busy = false; init(); }
+        }));
     }
 
-    private static Path locateLauncherBundle() throws IOException {
-        if (Files.exists(ACTIVE_LAUNCHER_POINTER)) {
-            String stored = Files.readString(ACTIVE_LAUNCHER_POINTER).trim();
-            if (!stored.isBlank()) {
-                Path bundle = Path.of(stored);
-                if (Files.exists(bundle)) {
-                    return bundle;
-                }
-            }
-        }
+    @Override public void close() { if (!busy) MinecraftClient.getInstance().setScreen(parent); }
 
-        Path launchersDir = ACTIVE_LAUNCHER_POINTER.getParent().resolve("launchers");
-        if (!Files.isDirectory(launchersDir)) {
-            return null;
-        }
-
-        try (var stream = Files.list(launchersDir)) {
-            return stream
-                    .filter(path -> path.getFileName().toString().endsWith(".app"))
-                    .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
-                    .orElse(null);
-        }
-    }
-
-    private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
-    }
-
-    private record AccountEntry(String displayName, String uuid, String fileName) {
+    @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        MenuBackgroundRenderer.draw(context, this);
+        context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xED101018);
+        context.drawStrokedRectangle(panelX, panelY, panelWidth, panelHeight, 0xD08F5DFF);
+        context.drawCenteredTextWithShadow(textRenderer, title, width / 2, panelY + 12, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Playing as " + MinecraftClient.getInstance().getSession().getUsername()), width / 2, panelY + 28, 0xFFBFA0FF);
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal(textRenderer.trimToWidth(status, panelWidth - 20)), width / 2, panelY + 42, 0xFFCCD0DD);
+        if (entries.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, Text.literal("No saved accounts. Add one below."), width / 2, panelY + 70, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal((page + 1) + " / " + Math.max(1, (entries.size() + pageSize - 1) / pageSize)), width / 2, panelY + panelHeight - 58, 0xFFCCD0DD);
+        super.render(context, mouseX, mouseY, delta);
     }
 }

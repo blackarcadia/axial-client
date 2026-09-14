@@ -27,6 +27,8 @@
     "TitleOverlayCrosshairMixin",
     "MinecraftIconsMixin",
     "MinecraftClientTitleMixin",
+    "MinecraftClientAccountMixin",
+    "RealmsClientAccountAccessor",
     "MinecraftClientDebugHudEntryListAccessor",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
