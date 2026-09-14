@@ -22,7 +22,8 @@ public final class MicrosoftLoginProcess implements AutoCloseable {
     private boolean closed;
 
     public JsonObject authenticate() throws IOException, InterruptedException, TimeoutException {
-        Path result = Files.createTempFile("axial-microsoft-login-", ".json");
+        Path workDirectory = Files.createTempDirectory("axial-microsoft-login-");
+        Path result = Files.createFile(workDirectory.resolve("result.json"));
         try {
             Process running;
             synchronized (this) {
@@ -43,14 +44,27 @@ public final class MicrosoftLoginProcess implements AutoCloseable {
             catch (RuntimeException ex) { throw new IOException("Invalid sign-in response"); }
         } finally {
             close();
-            Files.deleteIfExists(result);
+            try (var files = Files.walk(workDirectory)) {
+                for (Path file : files.sorted(java.util.Comparator.reverseOrder()).toList()) Files.deleteIfExists(file);
+            }
         }
     }
 
     static List<String> command(Path result) {
-        return List.of(System.getProperty(JAVA_PROPERTY, javaExecutable()), "-cp",
+        var command = new java.util.ArrayList<String>();
+        command.add(System.getProperty(JAVA_PROPERTY, javaExecutable()));
+        // JCEF loads Chromium through JNI. Current bundled runtimes permit this flag and
+        // future Java releases will require it for native access from classpath libraries.
+        command.add("--enable-native-access=ALL-UNNAMED");
+        if (ClientPaths.isMac()) {
+            command.add("--add-opens=java.desktop/sun.awt=ALL-UNNAMED");
+            command.add("--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED");
+            command.add("--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED");
+        }
+        command.addAll(List.of("-cp",
                 System.getProperty(CLASSPATH_PROPERTY, launcherClasspath()),
-                EmbeddedMicrosoftLogin.class.getName(), result.toAbsolutePath().toString());
+                EmbeddedMicrosoftLogin.class.getName(), result.toAbsolutePath().toString()));
+        return List.copyOf(command);
     }
 
     public static String javaExecutable() {
@@ -67,12 +81,21 @@ public final class MicrosoftLoginProcess implements AutoCloseable {
     @Override public synchronized void close() {
         closed = true;
         if (process != null && process.isAlive()) {
+            var descendants = process.descendants().toList();
+            descendants.forEach(ProcessHandle::destroy);
             process.destroyForcibly();
+            descendants.stream().filter(ProcessHandle::isAlive).forEach(ProcessHandle::destroyForcibly);
             boolean interrupted = false;
             while (process.isAlive()) {
                 try { process.waitFor(); }
                 catch (InterruptedException ex) { interrupted = true; }
             }
+            try {
+                java.util.concurrent.CompletableFuture.allOf(descendants.stream()
+                        .map(ProcessHandle::onExit).toArray(java.util.concurrent.CompletableFuture[]::new))
+                        .get(5, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) { interrupted = true; }
+            catch (java.util.concurrent.ExecutionException | TimeoutException ignored) {}
             if (interrupted) Thread.currentThread().interrupt();
         }
     }

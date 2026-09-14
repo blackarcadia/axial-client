@@ -19,11 +19,14 @@ class MicrosoftLoginProcessTest {
             System.setProperty(MicrosoftLoginProcess.CLASSPATH_PROPERTY, "/Applications/Axial Client/app/launcher.jar");
             Path result = directory.resolve("login result.json");
             var command = MicrosoftLoginProcess.command(result);
-            assertEquals(5, command.size());
+            int classpathIndex = command.indexOf("-cp");
+            assertTrue(classpathIndex > 0);
+            assertEquals(classpathIndex + 4, command.size());
             assertEquals("/Applications/Axial Client/runtime/bin/java", command.get(0));
-            assertEquals("/Applications/Axial Client/app/launcher.jar", command.get(2));
-            assertEquals("org.example.launcher.EmbeddedMicrosoftLogin", command.get(3));
-            assertEquals(result.toString(), command.get(4));
+            assertTrue(command.contains("--enable-native-access=ALL-UNNAMED"));
+            assertEquals("/Applications/Axial Client/app/launcher.jar", command.get(classpathIndex + 1));
+            assertEquals("org.example.launcher.EmbeddedMicrosoftLogin", command.get(classpathIndex + 2));
+            assertEquals(result.toString(), command.get(classpathIndex + 3));
         } finally {
             restore(MicrosoftLoginProcess.JAVA_PROPERTY, previousJava);
             restore(MicrosoftLoginProcess.CLASSPATH_PROPERTY, previousClasspath);

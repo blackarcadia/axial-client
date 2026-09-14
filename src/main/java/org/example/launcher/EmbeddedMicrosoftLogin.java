@@ -1,18 +1,16 @@
 package org.example.launcher;
 
-import javafx.application.Platform;
-import javafx.scene.web.WebEngine;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
+import net.raphimc.minecraftauth.msa.data.MsaConstants;
+import net.raphimc.minecraftauth.msa.data.MsaEnvironment;
+import net.raphimc.minecraftauth.msa.model.MsaApplicationConfig;
 
-import javax.swing.SwingUtilities;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CancellationException;
 
-/** Runs the embedded web view in its own UI process, separate from Minecraft's GLFW thread. */
+/** Keeps Chromium's UI and native libraries separate from Minecraft's GLFW process. */
 public final class EmbeddedMicrosoftLogin {
     private EmbeddedMicrosoftLogin() {}
 
@@ -20,36 +18,20 @@ public final class EmbeddedMicrosoftLogin {
         int exitCode = 1;
         try {
             if (args.length != 1) throw new IllegalArgumentException("Missing result file");
-            // Each process gets a fresh WebView/cookie session, allowing a different account every time.
-            SwingUtilities.invokeAndWait(() -> new javafx.embed.swing.JFXPanel());
-            Platform.setImplicitExit(false);
-            // MinecraftAuth copies its HTTP User-Agent into the login WebView. Preserve
-            // JavaFX's real browser identity instead of presenting "MinecraftAuth/5.0.0"
-            // to Microsoft's interactive sign-in pages. Read it on the JavaFX thread.
-            var browserUserAgent = new CompletableFuture<String>();
-            Platform.runLater(() -> {
-                try { browserUserAgent.complete(new WebEngine().getUserAgent()); }
-                catch (Throwable ex) { browserUserAgent.completeExceptionally(ex); }
-            });
-            var httpClient = MinecraftAuth.createHttpClient(browserUserAgent.get(10, TimeUnit.SECONDS));
-            var auth = JavaAuthManager.create(httpClient).login((http, config) ->
-                    new JfxWebViewMsaAuthService(http, config,
-                            window -> SwingUtilities.invokeLater(() -> {
-                                window.setTitle("Axial • Sign in with Microsoft");
-                                window.setResizable(true);
-                                window.setVisible(true);
-                                window.toFront();
-                            }),
-                            window -> SwingUtilities.invokeLater(window::dispose)));
+            var config = new MsaApplicationConfig(MsaConstants.JAVA_TITLE_ID, MsaConstants.SCOPE_TITLE_AUTH)
+                    .withRedirectUri(MsaEnvironment.LIVE.getNativeClientUrl());
+            var auth = JavaAuthManager.create(MinecraftAuth.createHttpClient("AxialLauncher/1.0"))
+                    .msaApplicationConfig(config).login((http, appConfig) ->
+                            new ChromiumMicrosoftAuthService(http, appConfig, Path.of(args[0] + ".browser")));
             auth.getMinecraftToken().getUpToDate();
             auth.getMinecraftProfile().getUpToDate();
             Files.writeString(Path.of(args[0]), JavaAuthManager.toJson(auth).toString());
             exitCode = 0;
-        } catch (JfxWebViewMsaAuthService.UserClosedWindowException ex) {
+        } catch (CancellationException ex) {
             exitCode = 2;
         } catch (Throwable ex) {
-            // Do not print authentication responses, tokens or redirect URLs to launcher logs.
-            System.err.println("Embedded Microsoft sign-in could not complete.");
+            // OAuth responses can contain credentials; log the failure type only.
+            System.err.println("Microsoft sign-in failed (" + ex.getClass().getSimpleName() + ").");
         } finally {
             System.exit(exitCode);
         }
