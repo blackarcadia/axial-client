@@ -45,6 +45,26 @@ class AccountStoreTest {
         assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), AccountStore.parseUuid("00000000000000000000000000000001"));
     }
 
+    @Test void logoutRemovesActiveCredentialsAndAliasesButKeepsOtherAccounts() throws Exception {
+        var store = new AccountStore(root);
+        account("active.json", "Active", "00000000000000000000000000000001");
+        account("old-name.json", "OldName", "00000000000000000000000000000001");
+        account("other.json", "Other", "00000000000000000000000000000002");
+        store.select("active.json");
+        store.logout(AccountStore.parseUuid("00000000000000000000000000000001"));
+        assertFalse(Files.exists(root.resolve("accounts/active.json")));
+        assertFalse(Files.exists(root.resolve("accounts/old-name.json")));
+        assertFalse(Files.exists(root.resolve("active-account.path")));
+        assertEquals("Other", store.list().getFirst().name());
+        assertEquals(1, store.list().size());
+    }
+
+    @Test void logoutWorksForAnAccountNotSavedByTheLauncher() throws Exception {
+        var store = new AccountStore(root);
+        assertDoesNotThrow(() -> store.logout(UUID.randomUUID()));
+        assertTrue(store.list().isEmpty());
+    }
+
     private void account(String file, String name, String uuid) throws Exception {
         Files.createDirectories(root.resolve("accounts"));
         Files.writeString(root.resolve("accounts").resolve(file), "{\"minecraftProfile\":{\"name\":\"" + name + "\",\"id\":\"" + uuid + "\"}}");

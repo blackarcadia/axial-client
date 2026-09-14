@@ -43,7 +43,8 @@ public abstract class MinecraftClientAccountMixin implements AccountSessionAcces
         userApiService = service;
         userPropertiesFuture = CompletableFuture.completedFuture(properties);
         gameProfileFuture = CompletableFuture.completedFuture(profile);
-        profileKeys = ProfileKeys.create(service, next, client.runDirectory.toPath());
+        profileKeys = next.getAccessToken().isBlank() ? ProfileKeys.MISSING
+                : ProfileKeys.create(service, next, client.runDirectory.toPath());
         socialInteractionsManager = new SocialInteractionsManager(client, service);
         telemetryManager = new TelemetryManager(client, service, next);
         abuseReportContext = AbuseReportContext.create(ReporterEnvironment.ofIntegratedServer(), service);

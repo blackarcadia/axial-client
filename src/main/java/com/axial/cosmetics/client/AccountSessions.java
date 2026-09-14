@@ -11,6 +11,16 @@ import java.net.Proxy;
 import java.util.Optional;
 
 final class AccountSessions {
+    static boolean isSignedIn() {
+        return !MinecraftClient.getInstance().getSession().getAccessToken().isBlank();
+    }
+
+    static Prepared signedOut() {
+        Session session = new Session("SignedOut", new java.util.UUID(0, 0), "", Optional.empty(), Optional.empty());
+        var properties = new UserApiService.UserProperties(java.util.Set.of(), java.util.Map.of());
+        return new Prepared(session, UserApiService.OFFLINE, properties, null);
+    }
+
     record Prepared(Session session, UserApiService service, UserApiService.UserProperties properties, ProfileResult profile) {
         void apply() {
             ((AccountSessionAccess) MinecraftClient.getInstance()).axial$setAccount(session, service, properties, profile);

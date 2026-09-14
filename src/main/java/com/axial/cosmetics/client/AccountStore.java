@@ -55,6 +55,13 @@ public final class AccountStore {
 
     public void select(String name) throws IOException { file(name); write(pointer, name); }
 
+    public void logout(UUID uuid) throws IOException {
+        for (Entry entry : list()) {
+            if (entry.uuid().equals(uuid)) remove(entry);
+        }
+        Files.deleteIfExists(pointer);
+    }
+
     public void remove(Entry entry) throws IOException {
         // Remove legacy aliases too, so a renamed account cannot reappear.
         try (var files = Files.list(directory)) {

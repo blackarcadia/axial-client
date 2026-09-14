@@ -42,15 +42,18 @@ public final class AccountsScreen extends Screen {
 
     private void rebuildButtons() {
         clearChildren();
+        button("Log out", panelX + panelWidth - 82, panelY + 23, 70,
+                this::logoutActive, !busy && AccountSessions.isSignedIn());
         int y = panelY + 58;
         for (var entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
             boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
             button(entry.name() + (active ? "  [ACTIVE]" : "  • Switch"), panelX + 12, y, panelWidth - 100,
                     () -> switchAccount(entry), !busy && !active);
-            button("Remove", panelX + panelWidth - 82, y, 70, () -> {
+            button(active ? "Log out" : "Remove", panelX + panelWidth - 82, y, 70, () -> {
+                if (active) { logoutActive(); return; }
                 try { store.remove(entry); status = "Removed " + entry.name() + " from saved accounts."; init(); }
                 catch (Exception ex) { status = "Could not remove account."; }
-            }, !busy && !active);
+            }, !busy);
             y += 30;
         }
         int footer = panelY + panelHeight - 64;
@@ -99,6 +102,21 @@ public final class AccountsScreen extends Screen {
         }));
     }
 
+    private void logoutActive() {
+        if (busy) return;
+        var minecraft = MinecraftClient.getInstance();
+        if (minecraft.world != null || minecraft.getNetworkHandler() != null) {
+            status = "Return to the main menu before logging out.";
+            return;
+        }
+        try {
+            store.logout(minecraft.getSession().getUuidOrNull());
+            AccountSessions.signedOut().apply();
+            status = "Logged out. Select a saved account or add another.";
+        } catch (Exception ex) { status = "Could not finish logging out. Please try again."; }
+        init();
+    }
+
     @Override public void close() { if (!busy) MinecraftClient.getInstance().setScreen(parent); }
 
     @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -106,7 +124,9 @@ public final class AccountsScreen extends Screen {
         context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xED101018);
         context.drawStrokedRectangle(panelX, panelY, panelWidth, panelHeight, 0xD08F5DFF);
         context.drawCenteredTextWithShadow(textRenderer, title, width / 2, panelY + 12, 0xFFFFFFFF);
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Playing as " + MinecraftClient.getInstance().getSession().getUsername()), width / 2, panelY + 28, 0xFFBFA0FF);
+        String accountLabel = AccountSessions.isSignedIn()
+                ? "Playing as " + MinecraftClient.getInstance().getSession().getUsername() : "Not signed in";
+        context.drawTextWithShadow(textRenderer, Text.literal(textRenderer.trimToWidth(accountLabel, panelWidth - 108)), panelX + 12, panelY + 28, 0xFFBFA0FF);
         context.drawCenteredTextWithShadow(textRenderer, Text.literal(textRenderer.trimToWidth(status, panelWidth - 20)), width / 2, panelY + 42, 0xFFCCD0DD);
         if (entries.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, Text.literal("No saved accounts. Add one below."), width / 2, panelY + 70, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(textRenderer, Text.literal((page + 1) + " / " + Math.max(1, (entries.size() + pageSize - 1) / pageSize)), width / 2, panelY + panelHeight - 58, 0xFFCCD0DD);
