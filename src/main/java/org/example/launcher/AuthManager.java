@@ -5,9 +5,6 @@ import com.google.gson.JsonParser;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
-import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
-import net.raphimc.minecraftauth.msa.service.util.ParamMsaAuthServiceSupplier;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,11 +26,9 @@ public class AuthManager {
             JsonObject json = JsonParser.parseString(Files.readString(storeFile)).getAsJsonObject();
             authManager = JavaAuthManager.fromJson(httpClient, json);
         } else {
-            ParamMsaAuthServiceSupplier<java.util.function.Consumer<MsaDeviceCode>> supplier =
-                    (client, appConfig, consumer) -> new DeviceCodeMsaAuthService(client, appConfig, consumer);
-            authManager = JavaAuthManager.create(httpClient).login(supplier, (MsaDeviceCode code) -> {
-                showDeviceCodeUi(code);
-            });
+            try (var login = new MicrosoftLoginProcess()) {
+                authManager = JavaAuthManager.fromJson(httpClient, login.authenticate());
+            }
             persist(authManager);
         }
 
@@ -71,19 +66,4 @@ public class AuthManager {
         return new AuthResult(name, uuid, "", "0");
     }
 
-    private void showDeviceCodeUi(MsaDeviceCode code) {
-        String msg = "To sign in, go to:\n" + code.getVerificationUri() +
-                "\nCode: " + code.getUserCode() +
-                "\n\n(You can close this window after signing in.)";
-        try {
-            java.awt.Desktop.getDesktop().browse(java.net.URI.create(code.getDirectVerificationUri()));
-        } catch (Exception ignored) {
-        }
-        javax.swing.SwingUtilities.invokeLater(() ->
-                javax.swing.JOptionPane.showMessageDialog(
-                        null,
-                        msg,
-                        "Microsoft Sign-In",
-                        javax.swing.JOptionPane.INFORMATION_MESSAGE));
-    }
 }

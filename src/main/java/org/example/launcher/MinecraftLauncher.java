@@ -137,6 +137,8 @@ public class MinecraftLauncher {
         List<String> command = new ArrayList<>();
         command.add(javaCmd);
         command.addAll(jvmArgs);
+        command.add("-D" + MicrosoftLoginProcess.JAVA_PROPERTY + "=" + MicrosoftLoginProcess.javaExecutable());
+        command.add("-D" + MicrosoftLoginProcess.CLASSPATH_PROPERTY + "=" + MicrosoftLoginProcess.launcherClasspath());
         command.add(versionJson.get("mainClass").getAsString());
         command.addAll(gameArgs);
 
