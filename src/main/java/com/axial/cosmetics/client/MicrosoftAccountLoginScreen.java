@@ -55,8 +55,12 @@ public final class MicrosoftAccountLoginScreen extends Screen {
             retryButton.active = true;
             if (error != null) {
                 Throwable cause = error.getCause();
+                // Exception messages/stack traces can contain OAuth responses; log only the type.
+                org.slf4j.LoggerFactory.getLogger(MicrosoftAccountLoginScreen.class)
+                        .warn("Microsoft sign-in failed ({})", cause == null ? error.getClass().getName() : cause.getClass().getName());
                 status = cause instanceof CancellationException ? "Sign-in cancelled. You can try again."
-                        : "Sign-in failed. Check your launcher is updated and retry.";
+                        : cause instanceof LinkageError ? "Sign-in unavailable. Reinstall the latest client."
+                        : "Sign-in could not complete. Please try again.";
                 return;
             }
             if (MinecraftClient.getInstance().currentScreen != this) return;

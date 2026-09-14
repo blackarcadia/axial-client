@@ -34,6 +34,9 @@ dependencies {
     modImplementation 'net.fabricmc:fabric-loader:0.18.1'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
     include implementation('net.raphimc:MinecraftAuth:5.0.0')
+    // Loom's include is not transitive; MinecraftAuth needs these inside the game too.
+    include implementation('net.lenni0451.commons:httpclient:1.9.0')
+    include implementation('net.lenni0451.commons:gson:1.9.0')
     modImplementation name: 'axialutils-1.0-SNAPSHOT'
     include name: 'axialutils-1.0-SNAPSHOT'
     testImplementation platform('org.junit:junit-bom:5.10.0')
@@ -356,4 +359,6 @@ echo "Done."
 
 test {
     useJUnitPlatform()
+    dependsOn tasks.remapJar
+    systemProperty 'axial.test.modJar', tasks.remapJar.archiveFile.get().asFile.absolutePath
 }
