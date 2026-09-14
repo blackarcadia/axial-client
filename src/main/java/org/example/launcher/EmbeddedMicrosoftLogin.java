@@ -1,6 +1,7 @@
 package org.example.launcher;
 
 import javafx.application.Platform;
+import javafx.scene.web.WebEngine;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
 import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
@@ -8,6 +9,8 @@ import net.raphimc.minecraftauth.msa.service.impl.JfxWebViewMsaAuthService;
 import javax.swing.SwingUtilities;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /** Runs the embedded web view in its own UI process, separate from Minecraft's GLFW thread. */
 public final class EmbeddedMicrosoftLogin {
@@ -20,7 +23,16 @@ public final class EmbeddedMicrosoftLogin {
             // Each process gets a fresh WebView/cookie session, allowing a different account every time.
             SwingUtilities.invokeAndWait(() -> new javafx.embed.swing.JFXPanel());
             Platform.setImplicitExit(false);
-            var auth = JavaAuthManager.create(MinecraftAuth.createHttpClient()).login((http, config) ->
+            // MinecraftAuth copies its HTTP User-Agent into the login WebView. Preserve
+            // JavaFX's real browser identity instead of presenting "MinecraftAuth/5.0.0"
+            // to Microsoft's interactive sign-in pages. Read it on the JavaFX thread.
+            var browserUserAgent = new CompletableFuture<String>();
+            Platform.runLater(() -> {
+                try { browserUserAgent.complete(new WebEngine().getUserAgent()); }
+                catch (Throwable ex) { browserUserAgent.completeExceptionally(ex); }
+            });
+            var httpClient = MinecraftAuth.createHttpClient(browserUserAgent.get(10, TimeUnit.SECONDS));
+            var auth = JavaAuthManager.create(httpClient).login((http, config) ->
                     new JfxWebViewMsaAuthService(http, config,
                             window -> SwingUtilities.invokeLater(() -> {
                                 window.setTitle("Axial • Sign in with Microsoft");
