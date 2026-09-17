@@ -14,6 +14,11 @@ env:
   APP_CHANNEL: release
 
 jobs:
+
+  # ==========================================================
+  # macOS
+  # ==========================================================
+
   build-macos:
     runs-on: macos-14
 
@@ -28,19 +33,108 @@ jobs:
           java-version: '21'
           cache: gradle
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: Build macOS package
-        run: ./gradlew clean jpackageMac -PappVersion="${APP_VERSION}" -PappChannel="${APP_CHANNEL}"
+        run: |
+          ./gradlew clean jpackageMac \
+            -PappVersion="${APP_VERSION}" \
+            -PappChannel="${APP_CHANNEL}"
+
+      # ------------------------------------------------------
+      # Safety checks
+      # ------------------------------------------------------
+
+      - name: Verify protected launcher
+        shell: bash
+        run: |
+          set -e
+
+          RELEASE_JAR=$(find build/release-input -name '*-all.jar' | head -1)
+
+          if [ -z "$RELEASE_JAR" ]; then
+            echo "ERROR: Release JAR was not created."
+            exit 1
+          fi
+
+          echo "Checking release JAR:"
+          echo "$RELEASE_JAR"
+
+          echo ""
+          echo "Checking JavaFX QuantumToolkit..."
+
+          if ! jar tf "$RELEASE_JAR" | grep -q '^com/sun/javafx/tk/quantum/QuantumToolkit.class$'; then
+            echo "ERROR: JavaFX QuantumToolkit is missing."
+            exit 1
+          fi
+
+          echo "JavaFX check passed."
+
+          echo ""
+          echo "Checking for obfuscated launcher classes..."
+
+          if ! jar tf "$RELEASE_JAR" | grep -q '^org/example/a/.*\.class$'; then
+            echo "ERROR: Expected obfuscated launcher classes were not found."
+            exit 1
+          fi
+
+          echo "Launcher obfuscation check passed."
+
+      - name: Verify bundled cosmetics JAR
+        shell: bash
+        run: |
+          set -e
+
+          RELEASE_JAR=$(find build/release-input -name '*-all.jar' | head -1)
+
+          unzip -p "$RELEASE_JAR" axial-cosmetics.jar > /tmp/axial-cosmetics.jar
+
+          if [ ! -s /tmp/axial-cosmetics.jar ]; then
+            echo "ERROR: axial-cosmetics.jar was not found."
+            exit 1
+          fi
+
+          echo "Checking that launcher classes are not exposed..."
+
+          if jar tf /tmp/axial-cosmetics.jar | grep -q '^org/example/'; then
+            echo "ERROR: Unobfuscated org/example classes exist inside axial-cosmetics.jar."
+            exit 1
+          fi
+
+          echo "No launcher classes exposed."
+
+          echo ""
+          echo "Checking Axial cosmetics classes..."
+
+          if ! jar tf /tmp/axial-cosmetics.jar | grep -q '^com/axial/cosmetics/'; then
+            echo "ERROR: Axial cosmetics classes are missing."
+            exit 1
+          fi
+
+          echo "Cosmetics check passed."
+
+      # ------------------------------------------------------
+      # Package artifact
+      # ------------------------------------------------------
 
       - name: Create macOS app zip
         run: |
           cd build/jpackage
-          ditto -c -k --sequesterRsrc --keepParent AxialLauncher.app AxialLauncher.app.zip
+          ditto -c -k --sequesterRsrc --keepParent \
+            AxialLauncher.app \
+            AxialLauncher.app.zip
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: axiallauncher-macos
           path: build/jpackage/AxialLauncher.app.zip
+
+
+  # ==========================================================
+  # Windows
+  # ==========================================================
 
   build-windows:
     runs-on: windows-2022
@@ -57,15 +151,117 @@ jobs:
           cache: gradle
 
       - name: Build Windows packages
-        run: ./gradlew.bat clean prepareWindowsPortableZipLayout jpackageWindowsInstaller -PappVersion="${env:APP_VERSION}" -PappChannel="${env:APP_CHANNEL}"
+        shell: pwsh
+        run: |
+          ./gradlew.bat clean prepareWindowsPortableZipLayout jpackageWindowsInstaller `
+            -PappVersion="${env:APP_VERSION}" `
+            -PappChannel="${env:APP_CHANNEL}"
+
+      # ------------------------------------------------------
+      # Safety checks
+      # ------------------------------------------------------
+
+      - name: Verify protected launcher
+        shell: pwsh
+        run: |
+          $releaseJar = Get-ChildItem "build/release-input/*-all.jar" |
+              Select-Object -First 1
+
+          if (-not $releaseJar) {
+              throw "Release JAR was not created."
+          }
+
+          Write-Host "Checking release JAR:"
+          Write-Host $releaseJar.FullName
+
+          $contents = & jar tf $releaseJar.FullName
+
+          if (-not ($contents -contains "com/sun/javafx/tk/quantum/QuantumToolkit.class")) {
+              throw "JavaFX QuantumToolkit is missing."
+          }
+
+          Write-Host "JavaFX check passed."
+
+          $obfuscatedClasses = $contents |
+              Where-Object { $_ -match '^org/example/a/.+\.class$' }
+
+          if (-not $obfuscatedClasses) {
+              throw "Expected obfuscated launcher classes were not found."
+          }
+
+          Write-Host "Launcher obfuscation check passed."
+
+      - name: Verify bundled cosmetics JAR
+        shell: pwsh
+        run: |
+          $releaseJar = Get-ChildItem "build/release-input/*-all.jar" |
+              Select-Object -First 1
+
+          if (-not $releaseJar) {
+              throw "Release JAR was not created."
+          }
+
+          $tempDir = Join-Path $env:RUNNER_TEMP "axial-cosmetics-check"
+
+          if (Test-Path $tempDir) {
+              Remove-Item $tempDir -Recurse -Force
+          }
+
+          New-Item -ItemType Directory -Path $tempDir | Out-Null
+
+          Push-Location $tempDir
+
+          & jar xf $releaseJar.FullName axial-cosmetics.jar
+
+          Pop-Location
+
+          $cosmeticsJar = Join-Path $tempDir "axial-cosmetics.jar"
+
+          if (-not (Test-Path $cosmeticsJar)) {
+              throw "axial-cosmetics.jar was not found."
+          }
+
+          $contents = & jar tf $cosmeticsJar
+
+          $exposedLauncherClasses = $contents |
+              Where-Object { $_ -match '^org/example/' }
+
+          if ($exposedLauncherClasses) {
+              Write-Host "Exposed classes:"
+              $exposedLauncherClasses
+              throw "Unobfuscated org/example classes exist inside axial-cosmetics.jar."
+          }
+
+          Write-Host "No launcher classes exposed."
+
+          $cosmeticsClasses = $contents |
+              Where-Object { $_ -match '^com/axial/cosmetics/' }
+
+          if (-not $cosmeticsClasses) {
+              throw "Axial cosmetics classes are missing."
+          }
+
+          Write-Host "Cosmetics check passed."
+
+      # ------------------------------------------------------
+      # Package artifacts
+      # ------------------------------------------------------
 
       - name: Rename Windows installer
         shell: pwsh
-        run: Move-Item -Path "build/jpackage/AxialLauncher-${env:APP_VERSION}.exe" -Destination "build/jpackage/AxialLauncher-windows-installer.exe" -Force
+        run: |
+          Move-Item `
+            -Path "build/jpackage/AxialLauncher-${env:APP_VERSION}.exe" `
+            -Destination "build/jpackage/AxialLauncher-windows-installer.exe" `
+            -Force
 
       - name: Create Windows app zip
         shell: pwsh
-        run: Compress-Archive -Path build/jpackage/AxialLauncher-windows-portable/* -DestinationPath build/jpackage/AxialLauncher-windows.zip -Force
+        run: |
+          Compress-Archive `
+            -Path build/jpackage/AxialLauncher-windows-portable/* `
+            -DestinationPath build/jpackage/AxialLauncher-windows.zip `
+            -Force
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -75,8 +271,14 @@ jobs:
             build/jpackage/AxialLauncher-windows-installer.exe
             build/jpackage/AxialLauncher-windows.zip
 
+
+  # ==========================================================
+  # GitHub Release
+  # ==========================================================
+
   publish-release:
     runs-on: ubuntu-latest
+
     needs:
       - build-macos
       - build-windows
@@ -87,6 +289,11 @@ jobs:
         with:
           path: release-artifacts
           merge-multiple: true
+
+      - name: Show release files
+        run: |
+          echo "Files being published:"
+          find release-artifacts -maxdepth 2 -type f -print
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
