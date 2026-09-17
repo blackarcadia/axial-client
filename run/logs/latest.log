@@ -1,9 +1,9 @@
-[22:26:19] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.18.1
-[22:26:19] [main/WARN] (FabricLoader/Resolution) Mod resolution failed
-[22:26:19] [main/INFO] (FabricLoader/Resolution) Immediate reason: [HARD_DEP_NO_CANDIDATE axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, ROOT_FORCELOAD_SINGLE axialutils 1.0-SNAPSHOT]
-[22:26:19] [main/INFO] (FabricLoader/Resolution) Reason: [HARD_DEP axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, HARD_DEP axialutils 1.0-SNAPSHOT {depends geckolib @ [>=5.4.5]}]
-[22:26:19] [main/INFO] (FabricLoader/Resolution) Fix: add [add:geckolib 5.4.5 ([[5.4.5,∞)])], remove [], replace [[fabricloader 0.18.1] -> add:fabricloader 0.18.4 ([[0.18.4,∞)])]
-[22:26:19] [main/ERROR] (FabricLoader) Incompatible mods found!
+[23:56:18] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.18.1
+[23:56:18] [main/WARN] (FabricLoader/Resolution) Mod resolution failed
+[23:56:18] [main/INFO] (FabricLoader/Resolution) Immediate reason: [HARD_DEP_NO_CANDIDATE axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, ROOT_FORCELOAD_SINGLE axialutils 1.0-SNAPSHOT]
+[23:56:18] [main/INFO] (FabricLoader/Resolution) Reason: [HARD_DEP axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, HARD_DEP axialutils 1.0-SNAPSHOT {depends geckolib @ [>=5.4.5]}]
+[23:56:18] [main/INFO] (FabricLoader/Resolution) Fix: add [add:geckolib 5.4.5 ([[5.4.5,∞)])], remove [], replace [[fabricloader 0.18.1] -> add:fabricloader 0.18.4 ([[0.18.4,∞)])]
+[23:56:18] [main/ERROR] (FabricLoader) Incompatible mods found!
 net.fabricmc.loader.impl.FormattedException: Some of your mods are incompatible with the game or each other!
 A potential solution has been determined, this may resolve your problem:
 	 - Install geckolib, version 5.4.5 or later.
