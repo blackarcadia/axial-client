@@ -40,10 +40,20 @@ public class AxialCosmetics implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
+
         ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
                 id("geckolib/models/kroks.geo.json"), id("textures/item/kroks.png"));
+
         ArmorCosmeticRegistry.register(248, EquipmentSlot.HEAD,
                 id("geckolib/models/lampshade.geo.json"), id("textures/item/lampshade.png"));
+
+        ArmorCosmeticRegistry.registerFullModel(
+                277,
+                EquipmentSlot.LEGS,
+                id("geckolib/models/shocktherapy.geo.json"),
+                id("textures/item/shocktherapy.png")
+        );
+
         WeatherDetectorModelRegistry.register();
         EnchantGlintConfig.load();
         ItemScalerConfig.load();

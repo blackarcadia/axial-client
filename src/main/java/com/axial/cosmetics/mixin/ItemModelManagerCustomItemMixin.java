@@ -22,6 +22,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier POWERBOX_MODEL = Identifier.of("axial_cosmetics", "powerbox");
     @Unique
+    private static final Identifier SHOCK_THERAPY_MODEL = Identifier.of("axial_cosmetics", "shock_therapy");
+    @Unique
     private static final String MONEY_NOTE_PACK_KEY = "PrisonsCore:money-note-pack";
     @Unique
     private static final String MONEY_NOTE_PACK_VALUE = "MONEY_NOTE_PACK";
@@ -54,6 +56,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(249.0F).equals(modelData.getFloat(0))) {
                 return POWERBOX_MODEL;
+            }
+            if (modelData != null && Float.valueOf(277.0F).equals(modelData.getFloat(0))) {
+                return SHOCK_THERAPY_MODEL;
             }
         }
 
