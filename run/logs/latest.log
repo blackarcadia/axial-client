@@ -1,15 +1,13 @@
-[23:56:18] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.18.1
-[23:56:18] [main/WARN] (FabricLoader/Resolution) Mod resolution failed
-[23:56:18] [main/INFO] (FabricLoader/Resolution) Immediate reason: [HARD_DEP_NO_CANDIDATE axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, ROOT_FORCELOAD_SINGLE axialutils 1.0-SNAPSHOT]
-[23:56:18] [main/INFO] (FabricLoader/Resolution) Reason: [HARD_DEP axialutils 1.0-SNAPSHOT {depends fabricloader @ [>=0.18.4]}, HARD_DEP axialutils 1.0-SNAPSHOT {depends geckolib @ [>=5.4.5]}]
-[23:56:18] [main/INFO] (FabricLoader/Resolution) Fix: add [add:geckolib 5.4.5 ([[5.4.5,∞)])], remove [], replace [[fabricloader 0.18.1] -> add:fabricloader 0.18.4 ([[0.18.4,∞)])]
-[23:56:18] [main/ERROR] (FabricLoader) Incompatible mods found!
+[21:34:46] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.18.4
+[21:34:46] [main/WARN] (FabricLoader/Resolution) Mod resolution failed
+[21:34:46] [main/INFO] (FabricLoader/Resolution) Immediate reason: [HARD_DEP_NO_CANDIDATE axialutils 1.0-SNAPSHOT {depends geckolib @ [>=5.4.5]}, ROOT_FORCELOAD_SINGLE axialutils 1.0-SNAPSHOT]
+[21:34:46] [main/INFO] (FabricLoader/Resolution) Reason: [HARD_DEP axialutils 1.0-SNAPSHOT {depends geckolib @ [>=5.4.5]}]
+[21:34:46] [main/INFO] (FabricLoader/Resolution) Fix: add [add:geckolib 5.4.5 ([[5.4.5,∞)])], remove [], replace []
+[21:34:46] [main/ERROR] (FabricLoader) Incompatible mods found!
 net.fabricmc.loader.impl.FormattedException: Some of your mods are incompatible with the game or each other!
 A potential solution has been determined, this may resolve your problem:
 	 - Install geckolib, version 5.4.5 or later.
-	 - Replace mod 'Fabric Loader' (fabricloader) 0.18.1 with version 0.18.4 or later.
 More details:
-	 - Mod 'AxialUtils' (axialutils) 1.0-SNAPSHOT requires version 0.18.4 or later of mod 'Fabric Loader' (fabricloader), but only the wrong version is present: 0.18.1!
 	 - Mod 'AxialUtils' (axialutils) 1.0-SNAPSHOT requires version 5.4.5 or later of geckolib, which is missing!
 	at net.fabricmc.loader.impl.FormattedException.ofLocalized(FormattedException.java:51)
 	at net.fabricmc.loader.impl.FabricLoaderImpl.load(FabricLoaderImpl.java:202)
