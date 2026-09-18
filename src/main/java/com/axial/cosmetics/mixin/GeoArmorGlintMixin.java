@@ -16,10 +16,10 @@ import software.bernie.geckolib.renderer.base.RenderPassInfo;
 import java.util.List;
 
 @Mixin(
-        targets = "software.bernie.geckolib.renderer.GeoArmorRenderer",
+        targets = "software.bernie.geckolib.renderer.base.GeoRenderer",
         remap = false
 )
-public abstract class GeoArmorGlintMixin {
+public interface GeoArmorGlintMixin {
 
     @Redirect(
             method = "submitRenderTasks",
@@ -30,7 +30,7 @@ public abstract class GeoArmorGlintMixin {
             ),
             remap = false
     )
-    private void axial$submitWithGlint(
+    private static void axial$submitWithGlint(
             RenderCommandQueue queue,
             MatrixStack matrices,
             RenderLayer baseLayer,
