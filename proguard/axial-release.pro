@@ -38,6 +38,20 @@
     public static void main(java.lang.String[]);
 }
 
+# ------------------------------------------------------------
+# LAUNCHER API USED BY FABRIC CLIENT
+# ------------------------------------------------------------
+
+# These classes are referenced directly by the non-obfuscated
+# Fabric account system, so their class/member names must remain stable.
+-keep class org.example.launcher.ClientPaths {
+    *;
+}
+
+-keep class org.example.launcher.MicrosoftLoginProcess {
+    *;
+}
+
 
 # ------------------------------------------------------------
 # FABRIC ENTRYPOINT
