@@ -55,7 +55,7 @@ dependencies {
     mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
     modImplementation 'net.fabricmc:fabric-loader:0.18.4'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
-    compileOnly files('/Users/blackarcadia/.gradle/caches/modules-2/files-2.1/software.bernie.geckolib/geckolib-fabric-1.21.11/5.4.5/41cd2e142e48a8b6604d85764a6466fe5edb70c3/geckolib-fabric-1.21.11-5.4.5.jar')
+    compileOnly files('src/main/resources/geckolib-fabric-1.21.11-5.4.5.jar')
     include implementation('net.raphimc:MinecraftAuth:5.0.0')
 
     // Loom's include is not transitive; MinecraftAuth needs these inside the game too.
