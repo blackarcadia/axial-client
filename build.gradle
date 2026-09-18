@@ -12,7 +12,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
-    id 'fabric-loom' version '1.14-SNAPSHOT'
+    id 'fabric-loom' version '1.15-SNAPSHOT'
 }
 
 group = 'org.example'
@@ -55,7 +55,8 @@ dependencies {
     mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
     modImplementation 'net.fabricmc:fabric-loader:0.18.4'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
-    compileOnly files('src/main/resources/geckolib-fabric-1.21.11-5.4.5.jar')
+    modImplementation name: 'geckolib-fabric-1.21.11-5.4.5'
+    include name: 'geckolib-fabric-1.21.11-5.4.5'
     include implementation('net.raphimc:MinecraftAuth:5.0.0')
 
     // Loom's include is not transitive; MinecraftAuth needs these inside the game too.
