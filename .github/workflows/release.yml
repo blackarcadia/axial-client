@@ -74,7 +74,7 @@ jobs:
           echo ""
           echo "Checking for obfuscated launcher classes..."
 
-          if ! jar tf "$RELEASE_JAR" | grep -q '^org/example/a/.*\.class$'; then
+          if ! jar tf "$RELEASE_JAR" | grep -Eq '^org/example/launcher/[a-z]\.class$'; then
             echo "ERROR: Expected obfuscated launcher classes were not found."
             exit 1
           fi
@@ -183,7 +183,7 @@ jobs:
           Write-Host "JavaFX check passed."
 
           $obfuscatedClasses = $contents |
-              Where-Object { $_ -match '^org/example/a/.+\.class$' }
+              Where-Object { $_ -match '^org/example/launcher/[a-z]\.class$' }
 
           if (-not $obfuscatedClasses) {
               throw "Expected obfuscated launcher classes were not found."
