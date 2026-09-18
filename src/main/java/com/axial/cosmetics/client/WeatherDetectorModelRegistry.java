@@ -24,7 +24,7 @@ public final class WeatherDetectorModelRegistry {
     private static final Identifier CUSTOM_MODEL_DATA_275_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_275");
     private static final Identifier CUSTOM_MODEL_DATA_276_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_276");
     private static final Identifier CUSTOM_MODEL_DATA_288_MODEL_ID =
-            Identifier.of("axial_cosmetics", "block/custom/PumpkinBomb");
+            Identifier.of("axial_cosmetics", "block/custom/pumpkinbomb");
     private static final net.minecraft.block.BlockState WEATHER_DETECTOR_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 8)
