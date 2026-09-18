@@ -85,6 +85,18 @@ processResources {
     }
 }
 
+// IntelliJ's direct Fabric launch configuration reads mods from run/mods.
+// Keep GeckoLib there so AxialUtils can resolve its required dependency even
+// before the nested production JAR has been built.
+tasks.register('installDevelopmentMods', Copy) {
+    from 'src/main/resources/geckolib-fabric-1.21.11-5.4.5.jar'
+    into layout.projectDirectory.dir('run/mods')
+}
+
+tasks.named('classes') {
+    finalizedBy tasks.named('installDevelopmentMods')
+}
+
 def bundledModsDir = layout.buildDirectory.dir("generated/bundled-mods")
 def remapJarTask = tasks.named('remapJar')
 
