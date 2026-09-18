@@ -2,7 +2,6 @@ package com.axial.cosmetics.mixin;
 
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.command.RenderCommandQueue;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 
@@ -25,13 +24,13 @@ public interface GeoArmorGlintMixin {
             method = "submitRenderTasks",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/command/RenderCommandQueue;submitCustom(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue$Custom;)V",
+                    target = "Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;submitCustom(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue$Custom;)V",
                     remap = false
             ),
             remap = false
     )
     private static void axial$submitWithGlint(
-            RenderCommandQueue queue,
+            OrderedRenderCommandQueue queue,
             MatrixStack matrices,
             RenderLayer baseLayer,
             OrderedRenderCommandQueue.Custom renderer,
