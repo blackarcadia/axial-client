@@ -7,7 +7,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import org.example.launcher.MicrosoftLoginProcess;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;

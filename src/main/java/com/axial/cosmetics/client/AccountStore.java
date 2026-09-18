@@ -2,11 +2,11 @@ package com.axial.cosmetics.client;
 
 import com.google.gson.JsonParser;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
-import org.example.launcher.ClientPaths;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.Locale;
 
 public final class AccountStore {
     private final Path directory;
@@ -17,7 +17,47 @@ public final class AccountStore {
         pointer = root.resolve("active-account.path");
     }
 
-    public static AccountStore shared() { return new AccountStore(ClientPaths.appRoot()); }
+    public static AccountStore shared() {
+        return new AccountStore(appRoot());
+    }
+
+    private static Path appRoot() {
+        String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+
+        if (os.contains("win")) {
+            String appData = System.getenv("APPDATA");
+            if (appData != null && !appData.isBlank()) {
+                return Path.of(appData, "AxialLauncher");
+            }
+            return Path.of(
+                    System.getProperty("user.home"),
+                    "AppData",
+                    "Roaming",
+                    "AxialLauncher"
+            );
+        }
+
+        if (os.contains("mac")) {
+            return Path.of(
+                    System.getProperty("user.home"),
+                    "Library",
+                    "Application Support",
+                    "AxialLauncher"
+            );
+        }
+
+        String xdgDataHome = System.getenv("XDG_DATA_HOME");
+        if (xdgDataHome != null && !xdgDataHome.isBlank()) {
+            return Path.of(xdgDataHome, "AxialLauncher");
+        }
+
+        return Path.of(
+                System.getProperty("user.home"),
+                ".local",
+                "share",
+                "AxialLauncher"
+        );
+    }
 
     public record Entry(String name, UUID uuid, String fileName) {}
 
