@@ -8,6 +8,7 @@
     "AxialConfigScreenEnchantGlintMixin",
     "RenderLayerEnchantGlintMixin",
     "GeoArmorGlintMixin",
+    "ArmorCosmeticGeoRendererMixin",
     "AxialConfigScreenColorPickerMixin",
     "AxialConfigCompassMixin",
     "AxialConfigManagerFissureRemovalMixin",
