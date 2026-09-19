@@ -118,6 +118,16 @@ public class MinecraftLauncher {
     }
 
     public Process start(LaunchRequest request, java.io.PrintStream log) throws IOException {
+        return start(request, log, null);
+    }
+
+    public Process startDetached(LaunchRequest request) throws IOException {
+        Path consoleLog = request.getGameDir().resolve("logs").resolve("launcher-game.log");
+        Files.createDirectories(consoleLog.getParent());
+        return start(request, System.out, consoleLog);
+    }
+
+    private Process start(LaunchRequest request, java.io.PrintStream log, Path consoleLog) throws IOException {
         FileLayout layout = new FileLayout(request.getGameDir());
         JsonObject versionJson = readJson(layout.versionJson(request.getVersionId()));
         if (versionJson.has("inheritsFrom")) {
@@ -153,6 +163,10 @@ public class MinecraftLauncher {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(layout.versionDir(request.getVersionId()).toFile());
         pb.redirectErrorStream(true);
+        if (consoleLog != null) {
+            // File redirection lets the game keep logging after the launcher exits.
+            pb.redirectOutput(consoleLog.toFile());
+        }
 
         log.println("Launching Minecraft " + request.getVersionId());
         Process p;
@@ -160,6 +174,10 @@ public class MinecraftLauncher {
             p = pb.start();
         } catch (IOException e) {
             throw e;
+        }
+        if (consoleLog != null) {
+            p.getOutputStream().close();
+            return p;
         }
         Thread pipe = new Thread(() -> {
             try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()))) {

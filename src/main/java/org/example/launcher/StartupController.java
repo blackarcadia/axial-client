@@ -64,13 +64,10 @@ public final class StartupController {
             launcher.ensureInstalled(request);
 
             loadingScreen.update("Launching client", 90);
-            Process minecraft = launcher.start(request, System.out);
+            launcher.startDetached(request);
             closeScreen();
-            int exitCode = minecraft.waitFor();
-            if (exitCode != 0) {
-                throw new IllegalStateException("Minecraft exited with code " + exitCode);
-            }
-            loadingScreen.update("Up to date", 100);
+            executor.shutdown();
+            System.exit(0);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             loadingScreen.showError("Launch failed");
