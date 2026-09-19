@@ -1,9 +1,9 @@
 package com.axial.cosmetics.mixin;
 
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.command.RenderCommandQueue;
-import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.renderer.base.RenderPassInfo;
 
-import java.util.List;
 
 @Mixin(
         targets = "software.bernie.geckolib.renderer.GeoArmorRenderer",
@@ -52,15 +51,8 @@ public abstract class GeoArmorGlintMixin {
             return;
         }
 
-        List<RenderLayer> layers =
-                ItemRenderer.getGlintRenderLayers(baseLayer, false, true);
-
-        for (RenderLayer layer : layers) {
-            if (layer == baseLayer) {
-                continue;
-            }
-
-            queue.submitCustom(matrices, layer, renderer);
-        }
+        // Match the armor base layer's view offset. The held-item entity glint
+        // lacks this offset and fails the equal-depth test on worn armor.
+        queue.submitCustom(matrices, RenderLayers.armorEntityGlint(), renderer);
     }
 }
