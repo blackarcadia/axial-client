@@ -27,7 +27,7 @@ public abstract class ArmorCosmeticGeoRendererMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/render/command/RenderCommandQueue;submitCustom(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue$Custom;)V",
-                    remap = false
+                    remap = true
             ),
             remap = false
     )
@@ -36,7 +36,9 @@ public abstract class ArmorCosmeticGeoRendererMixin {
             MatrixStack matrices,
             RenderLayer baseLayer,
             OrderedRenderCommandQueue.Custom renderer,
-            RenderPassInfo<?> renderPassInfo
+            RenderPassInfo<?> renderPassInfo,
+            RenderCommandQueue renderTasks,
+            RenderLayer renderType
     ) {
         queue.submitCustom(matrices, baseLayer, renderer);
 

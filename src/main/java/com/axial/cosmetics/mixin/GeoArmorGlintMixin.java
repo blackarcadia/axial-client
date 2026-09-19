@@ -16,26 +16,28 @@ import software.bernie.geckolib.renderer.base.RenderPassInfo;
 import java.util.List;
 
 @Mixin(
-        targets = "software.bernie.geckolib.renderer.base.GeoRenderer",
+        targets = "software.bernie.geckolib.renderer.GeoArmorRenderer",
         remap = false
 )
-public interface GeoArmorGlintMixin {
+public abstract class GeoArmorGlintMixin {
 
     @Redirect(
             method = "submitRenderTasks",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/render/command/RenderCommandQueue;submitCustom(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue$Custom;)V",
-                    remap = false
+                    remap = true
             ),
             remap = false
     )
-    private static void axial$submitWithGlint(
+    private void axial$submitWithGlint(
             RenderCommandQueue queue,
             MatrixStack matrices,
             RenderLayer baseLayer,
             OrderedRenderCommandQueue.Custom renderer,
-            RenderPassInfo<?> renderPassInfo
+            RenderPassInfo<?> renderPassInfo,
+            RenderCommandQueue renderTasks,
+            RenderLayer renderType
     ) {
         // Normal GEO render
         queue.submitCustom(matrices, baseLayer, renderer);
