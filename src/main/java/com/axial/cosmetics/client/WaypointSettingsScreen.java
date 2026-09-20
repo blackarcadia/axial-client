@@ -13,6 +13,7 @@ import java.util.ArrayList;
 /** The editable list of player-created waypoints. */
 public final class WaypointSettingsScreen extends Screen {
     private static final int WIDTH = 460;
+    private static final int HEIGHT = 260;
     private final Screen parent;
     private List<WaypointConfig.Entry> waypoints;
     private final List<TextFieldWidget> nameFields = new ArrayList<>();
@@ -28,7 +29,7 @@ public final class WaypointSettingsScreen extends Screen {
         layout();
         for (int i = 0; i < waypoints.size(); i++) {
             int index = i;
-            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 296, 20, Text.literal("NAME"));
+            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 160, 20, Text.literal("NAME"));
             field.setText(waypoints.get(i).name());
             field.setMaxLength(48);
             field.setChangedListener(value -> WaypointConfig.rename(index, value));
@@ -39,10 +40,8 @@ public final class WaypointSettingsScreen extends Screen {
 
     @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         layout();
-        MenuBackgroundRenderer.draw(context, this);
-        int height = panelHeight();
-        context.fill(x, y, x + WIDTH, y + height, 0xE8101018);
-        context.drawStrokedRectangle(x, y, WIDTH, height, 0xD08F5DFF);
+        context.fill(x, y, x + WIDTH, y + HEIGHT, 0xE8101018);
+        context.drawStrokedRectangle(x, y, WIDTH, HEIGHT, 0xD08F5DFF);
         context.drawCenteredTextWithShadow(textRenderer, title, x + WIDTH / 2, y + 10, 0xFFF7F7FF);
         context.drawCenteredTextWithShadow(textRenderer, "CLICK A NAME TO EDIT", x + WIDTH / 2, y + 25, 0xFFC6D0F3);
         ModMenuBackButton.draw(context, x + 18, y + 6, mouseX, mouseY);
@@ -75,14 +74,14 @@ public final class WaypointSettingsScreen extends Screen {
         c.fill(x + 18, rowY, x + WIDTH - 18, rowY + 24, 0xA0181D2C);
         c.drawStrokedRectangle(x + 18, rowY, WIDTH - 36, 24, waypoint.color());
         c.fill(x + 24, rowY + 6, x + 36, rowY + 18, waypoint.color());
+        c.drawTextWithShadow(textRenderer, "X: " + waypoint.x() + "  Y: " + waypoint.y() + "  Z: " + waypoint.z(), x + 214, rowY + 8, 0xFFC6D0F3);
         int deleteX = deleteX(); boolean hover = mx >= deleteX && mx <= deleteX + 90 && my >= rowY + 2 && my <= rowY + 22;
         c.fill(deleteX, rowY + 2, deleteX + 90, rowY + 22, hover ? 0xC06E2635 : 0xA04A1E28);
         c.drawStrokedRectangle(deleteX, rowY + 2, 90, 20, 0xFFE85D75);
         c.drawCenteredTextWithShadow(textRenderer, "DELETE", deleteX + 45, rowY + 8, 0xFFF7F7FF);
     }
 
-    private void layout() { x = (width - WIDTH) / 2; y = Math.max(16, (height - panelHeight()) / 2); }
-    private int panelHeight() { return Math.max(104, Math.min(height - 32, 78 + waypoints.size() * 30)); }
+    private void layout() { x = (width - WIDTH) / 2; y = Math.max(16, (height - HEIGHT) / 2); }
     private int rowY(int index) { return y + 52 + index * 30; }
     private int deleteX() { return x + WIDTH - 108; }
     private static boolean inside(Click click, int x, int y, int width, int height) { return click.x() >= x && click.x() <= x + width && click.y() >= y && click.y() <= y + height; }
