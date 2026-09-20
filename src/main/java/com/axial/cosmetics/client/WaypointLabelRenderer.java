@@ -13,7 +13,7 @@ public final class WaypointLabelRenderer {
 
     public static void render(DrawContext context) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.world == null || client.gameRenderer.getCamera() == null) return;
+        if (client.player == null || client.world == null || client.gameRenderer.getCamera() == null || !WaypointConfig.enabled()) return;
 
         Camera camera = client.gameRenderer.getCamera();
         Vec3d cameraPos = camera.getCameraPos();

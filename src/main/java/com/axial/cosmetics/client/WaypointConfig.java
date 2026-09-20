@@ -40,6 +40,14 @@ public final class WaypointConfig {
         return List.copyOf(load().waypoints);
     }
 
+    public static boolean enabled() { return load().enabled; }
+
+    public static void setEnabled(boolean enabled) {
+        Config config = load();
+        config.enabled = enabled;
+        save(config);
+    }
+
     public static void rename(int index, String name) {
         Config config = load();
         if (index < 0 || index >= config.waypoints.size()) return;

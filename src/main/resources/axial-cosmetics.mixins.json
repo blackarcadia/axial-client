@@ -43,6 +43,7 @@
     "InGameButtonSkinMixin",
     "InGameHudCompassMixin",
     "InGameHudWaypointLabelsMixin",
+    "WarpWaypointManagerMixin",
     "TitleScreenButtonSkinMixin",
     "TitleScreenMenuLayoutMixin"
   ],

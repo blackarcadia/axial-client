@@ -19,7 +19,7 @@ public final class WaypointWorldRenderer {
 
     private static void render() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.world == null || client.player == null) return;
+        if (client.world == null || client.player == null || !WaypointConfig.enabled()) return;
         String dimension = client.world.getRegistryKey().getValue().toString();
         for (WaypointConfig.Entry waypoint : WaypointConfig.waypoints()) {
             if (!dimension.equals(waypoint.dimension())) continue;
