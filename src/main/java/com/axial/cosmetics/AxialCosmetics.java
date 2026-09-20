@@ -24,7 +24,6 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 import org.axial.axialutils.client.cosmetics.ArmorCosmeticRegistry;
-import org.axial.axialutils.client.WaypointSettingsScreen;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.InvocationTargetException;
@@ -37,7 +36,6 @@ public class AxialCosmetics implements ClientModInitializer {
     private KeyBinding reloadKey;
     private KeyBinding menuKey;
     private KeyBinding modMenuKey;
-    private static KeyBinding waypointMenuKey;
 
     @Override
     public void onInitializeClient() {
@@ -69,8 +67,6 @@ public class AxialCosmetics implements ClientModInitializer {
                 new KeyBinding("key.axial_cosmetics.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F8, Category.MISC));
         modMenuKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.modmenu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, Category.MISC));
-        waypointMenuKey = KeyBindingHelper.registerKeyBinding(
-                new KeyBinding("key.axial_cosmetics.waypoints", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F7, Category.MISC));
 
         try {
             LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
@@ -104,11 +100,6 @@ public class AxialCosmetics implements ClientModInitializer {
                     openAxialModMenu(client);
                 }
             }
-            while (waypointMenuKey.wasPressed()) {
-                if (client.player != null && client.currentScreen == null) {
-                    client.setScreen(new WaypointSettingsScreen(null));
-                }
-            }
         });
 
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -120,10 +111,6 @@ public class AxialCosmetics implements ClientModInitializer {
 
     public static Identifier id(String path) {
         return Identifier.of(MOD_ID, path);
-    }
-
-    public static KeyBinding getWaypointMenuKey() {
-        return waypointMenuKey;
     }
 
     private void openCosmeticMenu(net.minecraft.client.MinecraftClient client) {
