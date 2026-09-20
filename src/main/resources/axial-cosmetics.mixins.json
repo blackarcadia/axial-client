@@ -19,6 +19,8 @@
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
     "AxialConfigScreenWaypointsMixin",
+    "WaypointSettingsScreenMixin",
+    "WarpWaypointManagerMixin",
     "AxialConfigScreenMixin",
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
