@@ -66,6 +66,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
         WaypointConfig.load();
+        WaypointKeys.register();
         WaypointRenderer.register();
 
         reloadKey = KeyBindingHelper.registerKeyBinding(

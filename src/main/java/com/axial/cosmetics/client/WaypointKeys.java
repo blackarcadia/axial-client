@@ -13,4 +13,7 @@ public final class WaypointKeys {
             new KeyBinding("key.axial_cosmetics.waypoint.editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, Category.MISC));
 
     private WaypointKeys() { }
+
+    /** Forces registration while Fabric is still collecting client key bindings. */
+    public static void register() { }
 }

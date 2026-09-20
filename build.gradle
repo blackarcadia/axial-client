@@ -20,6 +20,7 @@ version = '1.0-SNAPSHOT'
 def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
 def appChannel = (project.findProperty("appChannel") ?: "dev").toString()
 def axialUtilsFile = "axialutils-1.0-SNAPSHOT.jar"
+def patchedAxialUtilsFile = "axialutils-1.0-SNAPSHOT-patched.jar"
 
 repositories {
     mavenCentral()
@@ -63,8 +64,8 @@ dependencies {
     include implementation('net.lenni0451.commons:httpclient:1.9.0')
     include implementation('net.lenni0451.commons:gson:1.9.0')
 
-    modImplementation name: 'axialutils-1.0-SNAPSHOT'
-    include name: 'axialutils-1.0-SNAPSHOT'
+    modImplementation name: 'axialutils-1.0-SNAPSHOT-patched'
+    include name: 'axialutils-1.0-SNAPSHOT-patched'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
