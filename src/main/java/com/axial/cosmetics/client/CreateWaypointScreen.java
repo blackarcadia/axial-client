@@ -76,7 +76,7 @@ public final class CreateWaypointScreen extends Screen {
     private void createWaypoint() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) return;
-        WaypointConfig.create(nameField.getText().trim(), client.world.getRegistryKey().getValue().toString(), client.player.getBlockPos(), color);
+        WaypointConfig.create(nameField.getText().trim(), WaypointConfig.worldId(client), client.world.getRegistryKey().getValue().toString(), client.player.getBlockPos(), color);
         close();
     }
 

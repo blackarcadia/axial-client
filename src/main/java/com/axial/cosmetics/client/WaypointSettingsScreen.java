@@ -6,6 +6,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.text.StyleSpriteSource;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 public final class WaypointSettingsScreen extends Screen {
     private static final int WIDTH = 460;
     private static final int HEIGHT = 260;
+    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     private final Screen parent;
     private List<WaypointConfig.Entry> waypoints;
     private final List<TextFieldWidget> nameFields = new ArrayList<>();
@@ -21,19 +24,19 @@ public final class WaypointSettingsScreen extends Screen {
     private int scrollOffset;
 
     public WaypointSettingsScreen(Screen parent) {
-        super(Text.literal("WAYPOINTS"));
+        super(uiText("WAYPOINTS"));
         this.parent = parent;
     }
 
     @Override protected void init() {
-        waypoints = WaypointConfig.waypoints();
+        waypoints = WaypointConfig.waypointsFor(MinecraftClient.getInstance());
         layout();
         for (int i = 0; i < waypoints.size(); i++) {
             int index = i;
-            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 160, 20, Text.literal("NAME"));
+            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 160, 20, uiText("NAME"));
             field.setText(waypoints.get(i).name());
             field.setMaxLength(48);
-            field.setChangedListener(value -> WaypointConfig.rename(index, value));
+            field.setChangedListener(value -> WaypointConfig.rename(waypoints.get(index), value));
             addDrawableChild(field);
             nameFields.add(field);
         }
@@ -44,10 +47,10 @@ public final class WaypointSettingsScreen extends Screen {
         context.fill(x, y, x + WIDTH, y + HEIGHT, 0xE8101018);
         context.drawStrokedRectangle(x, y, WIDTH, HEIGHT, 0xD08F5DFF);
         context.drawCenteredTextWithShadow(textRenderer, title, x + WIDTH / 2, y + 10, 0xFFF7F7FF);
-        context.drawCenteredTextWithShadow(textRenderer, "VIEW YOUR AVAILABLE WAYPOINTS, EDIT, CREATE OR DELETE WAYPOINTS", x + WIDTH / 2, y + 25, 0xFFC6D0F3);
+        context.drawCenteredTextWithShadow(textRenderer, uiText("VIEW YOUR AVAILABLE WAYPOINTS, EDIT, CREATE OR DELETE WAYPOINTS"), x + WIDTH / 2, y + 25, 0xFFC6D0F3);
         ModMenuBackButton.draw(context, x + 18, y + 6, mouseX, mouseY);
         drawFeatureToggle(context, mouseX, mouseY);
-        if (waypoints.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, "NO WAYPOINTS CREATED", x + WIDTH / 2, y + 94, 0xFFC6D0F3);
+        if (waypoints.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, uiText("NO WAYPOINTS CREATED"), x + WIDTH / 2, y + 94, 0xFFC6D0F3);
         context.enableScissor(x + 18, contentTop(), x + WIDTH - 18, contentBottom());
         for (int i = 0; i < waypoints.size(); i++) drawRow(context, mouseX, mouseY, i);
         for (int i = 0; i < nameFields.size(); i++) {
@@ -66,7 +69,7 @@ public final class WaypointSettingsScreen extends Screen {
         }
         if (click.button() == 0) for (int i = 0; i < waypoints.size(); i++) {
             if (inside(click, deleteX(), rowY(i) + 2, 90, 20)) {
-                WaypointConfig.delete(i);
+                WaypointConfig.delete(waypoints.get(i));
                 MinecraftClient.getInstance().setScreen(new WaypointSettingsScreen(parent));
                 return true;
             }
@@ -91,11 +94,11 @@ public final class WaypointSettingsScreen extends Screen {
         c.fill(x + 18, rowY, x + WIDTH - 18, rowY + 24, 0xA0181D2C);
         c.drawStrokedRectangle(x + 18, rowY, WIDTH - 36, 24, waypoint.color());
         c.fill(x + 24, rowY + 6, x + 36, rowY + 18, waypoint.color());
-        c.drawTextWithShadow(textRenderer, "X: " + waypoint.x() + "  Y: " + waypoint.y() + "  Z: " + waypoint.z(), x + 214, rowY + 8, 0xFFC6D0F3);
+        c.drawTextWithShadow(textRenderer, uiText("X: " + waypoint.x() + "  Y: " + waypoint.y() + "  Z: " + waypoint.z()), x + 214, rowY + 8, 0xFFC6D0F3);
         int deleteX = deleteX(); boolean hover = mx >= deleteX && mx <= deleteX + 90 && my >= rowY + 2 && my <= rowY + 22;
         c.fill(deleteX, rowY + 2, deleteX + 90, rowY + 22, hover ? 0xC06E2635 : 0xA04A1E28);
         c.drawStrokedRectangle(deleteX, rowY + 2, 90, 20, 0xFFE85D75);
-        c.drawCenteredTextWithShadow(textRenderer, "DELETE", deleteX + 45, rowY + 8, 0xFFF7F7FF);
+        c.drawCenteredTextWithShadow(textRenderer, uiText("DELETE"), deleteX + 45, rowY + 8, 0xFFF7F7FF);
     }
 
     private void drawFeatureToggle(DrawContext c, int mouseX, int mouseY) {
@@ -105,7 +108,7 @@ public final class WaypointSettingsScreen extends Screen {
         boolean hovered = mouseX >= toggleX && mouseX <= toggleX + WIDTH - 36 && mouseY >= toggleY && mouseY <= toggleY + 20;
         c.fill(toggleX, toggleY, toggleX + WIDTH - 36, toggleY + 20, hovered ? 0xBC20283A : 0xA0181D2C);
         c.drawStrokedRectangle(toggleX, toggleY, WIDTH - 36, 20, enabled ? 0xFF8AF0C2 : 0xFFE85D75);
-        c.drawCenteredTextWithShadow(textRenderer, enabled ? "WAYPOINTS: ENABLED" : "WAYPOINTS: DISABLED", toggleX + (WIDTH - 36) / 2, toggleY + 6, 0xFFF7F7FF);
+        c.drawCenteredTextWithShadow(textRenderer, uiText(enabled ? "WAYPOINTS: ENABLED" : "WAYPOINTS: DISABLED"), toggleX + (WIDTH - 36) / 2, toggleY + 6, 0xFFF7F7FF);
     }
 
     private void layout() { x = (width - WIDTH) / 2; y = Math.max(16, (height - HEIGHT) / 2); }
@@ -115,4 +118,5 @@ public final class WaypointSettingsScreen extends Screen {
     private int maxScroll() { return Math.max(0, waypoints.size() * 30 - (contentBottom() - contentTop())); }
     private int deleteX() { return x + WIDTH - 108; }
     private static boolean inside(Click click, int x, int y, int width, int height) { return click.x() >= x && click.x() <= x + width && click.y() >= y && click.y() <= y + height; }
+    private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
 }

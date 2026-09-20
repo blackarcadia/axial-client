@@ -25,7 +25,7 @@ public final class WaypointLabelRenderer {
         float xScale = context.getScaledWindowWidth() / (float) framebufferWidth;
         float yScale = context.getScaledWindowHeight() / (float) framebufferHeight;
 
-        for (WaypointConfig.Entry waypoint : WaypointConfig.waypoints()) {
+        for (WaypointConfig.Entry waypoint : WaypointConfig.waypointsFor(client)) {
             if (!dimension.equals(waypoint.dimension())) continue;
             Vector4f projected = new Vector4f(
                     (float) (waypoint.x() + 0.5 - cameraPos.x),
