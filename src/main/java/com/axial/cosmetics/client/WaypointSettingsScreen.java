@@ -29,11 +29,11 @@ public final class WaypointSettingsScreen extends Screen {
     }
 
     @Override protected void init() {
-        waypoints = WaypointConfig.waypointsFor(MinecraftClient.getInstance());
+        waypoints = new ArrayList<>(WaypointConfig.waypointsFor(MinecraftClient.getInstance()));
         layout();
         for (int i = 0; i < waypoints.size(); i++) {
             int index = i;
-            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 160, 20, uiText("NAME"));
+            TextFieldWidget field = new TextFieldWidget(textRenderer, x + 46, rowY(i) + 2, 140, 20, uiText("NAME"));
             field.setText(waypoints.get(i).name());
             field.setMaxLength(48);
             field.setChangedListener(value -> WaypointConfig.rename(waypoints.get(index), value));
@@ -68,6 +68,18 @@ public final class WaypointSettingsScreen extends Screen {
             return true;
         }
         if (click.button() == 0) for (int i = 0; i < waypoints.size(); i++) {
+            if (inside(click, x + 46, rowY(i) + 2, 140, 20)) {
+                TextFieldWidget field = nameFields.get(i);
+                field.setFocused(true);
+                setFocused(field);
+                return true;
+            }
+            if (inside(click, colorX(), rowY(i) + 2, 54, 20)) {
+                int index = i;
+                WaypointConfig.Entry waypoint = waypoints.get(i);
+                MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, "WAYPOINT", waypoint.color(), color -> waypoints.set(index, WaypointConfig.setColor(waypoint, color)), () -> { }));
+                return true;
+            }
             if (inside(click, deleteX(), rowY(i) + 2, 90, 20)) {
                 WaypointConfig.delete(waypoints.get(i));
                 MinecraftClient.getInstance().setScreen(new WaypointSettingsScreen(parent));
@@ -93,8 +105,12 @@ public final class WaypointSettingsScreen extends Screen {
         int rowY = rowY(i);
         c.fill(x + 18, rowY, x + WIDTH - 18, rowY + 24, 0xA0181D2C);
         c.drawStrokedRectangle(x + 18, rowY, WIDTH - 36, 24, waypoint.color());
-        c.fill(x + 24, rowY + 6, x + 36, rowY + 18, waypoint.color());
-        c.drawTextWithShadow(textRenderer, uiText("X: " + waypoint.x() + "  Y: " + waypoint.y() + "  Z: " + waypoint.z()), x + 214, rowY + 8, 0xFFC6D0F3);
+        int colorX = colorX();
+        c.fill(colorX, rowY + 2, colorX + 54, rowY + 22, 0xA0181D2C);
+        c.drawStrokedRectangle(colorX, rowY + 2, 54, 20, waypoint.color());
+        c.fill(colorX + 5, rowY + 6, colorX + 15, rowY + 16, waypoint.color());
+        c.drawTextWithShadow(textRenderer, uiText("COLOR"), colorX + 19, rowY + 8, 0xFFF7F7FF);
+        c.drawTextWithShadow(textRenderer, uiText("X " + waypoint.x() + "  Y " + waypoint.y() + "  Z " + waypoint.z()), x + 256, rowY + 8, 0xFFC6D0F3);
         int deleteX = deleteX(); boolean hover = mx >= deleteX && mx <= deleteX + 90 && my >= rowY + 2 && my <= rowY + 22;
         c.fill(deleteX, rowY + 2, deleteX + 90, rowY + 22, hover ? 0xC06E2635 : 0xA04A1E28);
         c.drawStrokedRectangle(deleteX, rowY + 2, 90, 20, 0xFFE85D75);
@@ -117,6 +133,7 @@ public final class WaypointSettingsScreen extends Screen {
     private int contentBottom() { return y + HEIGHT - 12; }
     private int maxScroll() { return Math.max(0, waypoints.size() * 30 - (contentBottom() - contentTop())); }
     private int deleteX() { return x + WIDTH - 108; }
+    private int colorX() { return x + 194; }
     private static boolean inside(Click click, int x, int y, int width, int height) { return click.x() >= x && click.x() <= x + width && click.y() >= y && click.y() <= y + height; }
     private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
 }

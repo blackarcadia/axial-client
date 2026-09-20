@@ -68,6 +68,16 @@ public final class WaypointConfig {
         save(config);
     }
 
+    public static Entry setColor(Entry old, int color) {
+        Config config = load();
+        int index = indexOf(config, old);
+        if (index < 0) return old;
+        Entry updated = new Entry(old.name(), old.world(), old.dimension(), old.x(), old.y(), old.z(), color);
+        config.waypoints.set(index, updated);
+        save(config);
+        return updated;
+    }
+
     private static Config load() {
         if (cached != null) return cached;
         if (!Files.exists(PATH)) return cached = new Config();
