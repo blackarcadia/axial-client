@@ -37,9 +37,12 @@ public final class WaypointLabelRenderer {
             int screenX = Math.round((projected.x / projected.w * 0.5f + 0.5f) * framebufferWidth * xScale);
             int screenY = Math.round((-projected.y / projected.w * 0.5f + 0.5f) * framebufferHeight * yScale);
             String label = waypoint.name();
-            int labelWidth = client.textRenderer.getWidth(label);
-            context.fill(screenX - labelWidth / 2 - 4, screenY - 3, screenX + labelWidth / 2 + 4, screenY + 11, 0xA0000000);
-            context.drawTextWithShadow(client.textRenderer, label, screenX - labelWidth / 2, screenY, waypoint.color() | 0xFF000000);
+            double distance = Math.hypot(waypoint.x() + 0.5 - client.player.getX(), waypoint.z() + 0.5 - client.player.getZ());
+            String distanceLabel = String.format(java.util.Locale.ROOT, "%.0f m", distance);
+            int labelWidth = Math.max(client.textRenderer.getWidth(label), client.textRenderer.getWidth(distanceLabel));
+            context.fill(screenX - labelWidth / 2 - 4, screenY - 10, screenX + labelWidth / 2 + 4, screenY + 16, 0x68000000);
+            context.drawTextWithShadow(client.textRenderer, label, screenX - client.textRenderer.getWidth(label) / 2, screenY - 7, waypoint.color() | 0xFF000000);
+            context.drawTextWithShadow(client.textRenderer, distanceLabel, screenX - client.textRenderer.getWidth(distanceLabel) / 2, screenY + 3, 0xFFC6D0F3);
         }
     }
 }
