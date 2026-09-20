@@ -13,12 +13,11 @@ public final class CreateWaypointScreen extends Screen {
     private static final int PANEL_WIDTH = 380;
     private static final int PANEL_HEIGHT = 188;
     private static final int PADDING = 18;
-    private static final int[] COLORS = {0xFFE85D75, 0xFFF5A524, 0xFF8AF0C2, 0xFF62B6FF, 0xFFC58AFF, 0xFFF7F7FF};
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     private int panelX;
     private int panelY;
-    private int colorIndex = 3;
+    private int color = 0xFF62B6FF;
     private TextFieldWidget nameField;
 
     public CreateWaypointScreen() {
@@ -55,7 +54,7 @@ public final class CreateWaypointScreen extends Screen {
     @Override
     public boolean mouseClicked(Click click, boolean doubled) {
         if (click.button() == 0 && inside(click.x(), click.y(), colorX(), panelY + 94, PANEL_WIDTH - PADDING * 2, 26)) {
-            colorIndex = (colorIndex + 1) % COLORS.length;
+            MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, "WAYPOINT", color, value -> color = value, () -> { }));
             return true;
         }
         if (click.button() == 0 && inside(click.x(), click.y(), createX(), panelY + 146, 160, 20) && !nameField.getText().isBlank()) {
@@ -77,7 +76,7 @@ public final class CreateWaypointScreen extends Screen {
     private void createWaypoint() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player == null || client.world == null) return;
-        WaypointConfig.create(nameField.getText().trim(), client.world.getRegistryKey().getValue().toString(), client.player.getBlockPos(), COLORS[colorIndex]);
+        WaypointConfig.create(nameField.getText().trim(), client.world.getRegistryKey().getValue().toString(), client.player.getBlockPos(), color);
         close();
     }
 
@@ -86,9 +85,9 @@ public final class CreateWaypointScreen extends Screen {
         int y = panelY + 94;
         boolean hovered = inside(mouseX, mouseY, x, y, PANEL_WIDTH - PADDING * 2, 26);
         context.fill(x, y, x + PANEL_WIDTH - PADDING * 2, y + 26, hovered ? 0xBC20283A : 0xA0181D2C);
-        context.drawStrokedRectangle(x, y, PANEL_WIDTH - PADDING * 2, 26, COLORS[colorIndex]);
-        context.fill(x + 6, y + 6, x + 20, y + 20, COLORS[colorIndex]);
-        context.drawTextWithShadow(textRenderer, uiText("COLOR — CLICK TO CHANGE"), x + 29, y + 9, 0xFFF7F7FF);
+        context.drawStrokedRectangle(x, y, PANEL_WIDTH - PADDING * 2, 26, color);
+        context.fill(x + 6, y + 6, x + 20, y + 20, color);
+        context.drawTextWithShadow(textRenderer, uiText("COLOR — OPEN PICKER"), x + 29, y + 9, 0xFFF7F7FF);
     }
 
     private void drawActionButton(DrawContext context, int mouseX, int mouseY, int x, int y, int width, String label, boolean enabled) {
