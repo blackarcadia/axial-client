@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.BlockPos;
+import org.axial.axialutils.client.AxialConfig;
+import org.axial.axialutils.client.AxialConfigManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +27,20 @@ public final class WaypointConfig {
             Files.writeString(PATH, GSON.toJson(config));
         } catch (IOException ignored) {
         }
+
+        AxialConfig.WarpWaypointEntry entry = new AxialConfig.WarpWaypointEntry();
+        entry.warpName = name;
+        entry.dimensionId = dimension;
+        entry.x = position.getX();
+        entry.y = position.getY();
+        entry.z = position.getZ();
+        entry.enabled = true;
+        AxialConfigManager.get().warpWaypoints.add(entry);
+        AxialConfigManager.save();
+    }
+
+    public static List<Entry> waypoints() {
+        return List.copyOf(load().waypoints);
     }
 
     private static Config load() {
@@ -42,5 +58,5 @@ public final class WaypointConfig {
         private List<Entry> waypoints = new ArrayList<>();
     }
 
-    private record Entry(String name, String dimension, int x, int y, int z, int color) { }
+    public record Entry(String name, String dimension, int x, int y, int z, int color) { }
 }

@@ -11,6 +11,7 @@ import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.CreateWaypointScreen;
+import com.axial.cosmetics.client.WaypointWorldRenderer;
 import com.axial.cosmetics.data.CosmeticManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -62,6 +63,7 @@ public class AxialCosmetics implements ClientModInitializer {
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
+        WaypointWorldRenderer.register();
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, Category.MISC));
