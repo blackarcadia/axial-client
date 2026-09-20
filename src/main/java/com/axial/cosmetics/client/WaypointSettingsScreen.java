@@ -18,6 +18,7 @@ public final class WaypointSettingsScreen extends Screen {
     private List<WaypointConfig.Entry> waypoints;
     private final List<TextFieldWidget> nameFields = new ArrayList<>();
     private int x, y;
+    private int scrollOffset;
 
     public WaypointSettingsScreen(Screen parent) {
         super(Text.literal("WAYPOINTS"));
@@ -46,13 +47,15 @@ public final class WaypointSettingsScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, "VIEW YOUR AVAILABLE WAYPOINTS, EDIT, CREATE OR DELETE WAYPOINTS", x + WIDTH / 2, y + 25, 0xFFC6D0F3);
         ModMenuBackButton.draw(context, x + 18, y + 6, mouseX, mouseY);
         drawFeatureToggle(context, mouseX, mouseY);
-        if (waypoints.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, "NO WAYPOINTS CREATED", x + WIDTH / 2, y + 64, 0xFFC6D0F3);
+        if (waypoints.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, "NO WAYPOINTS CREATED", x + WIDTH / 2, y + 94, 0xFFC6D0F3);
+        context.enableScissor(x + 18, contentTop(), x + WIDTH - 18, contentBottom());
         for (int i = 0; i < waypoints.size(); i++) drawRow(context, mouseX, mouseY, i);
         for (int i = 0; i < nameFields.size(); i++) {
             TextFieldWidget field = nameFields.get(i);
             field.setPosition(x + 46, rowY(i) + 2);
             field.render(context, mouseX, mouseY, delta);
         }
+        context.disableScissor();
     }
 
     @Override public boolean mouseClicked(Click click, boolean doubled) {
@@ -72,6 +75,15 @@ public final class WaypointSettingsScreen extends Screen {
     }
 
     @Override public void close() { MinecraftClient.getInstance().setScreen(parent); }
+
+    @Override public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (mouseX < x + 18 || mouseX > x + WIDTH - 18 || mouseY < contentTop() || mouseY > contentBottom() || verticalAmount == 0) {
+            return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        }
+        int next = scrollOffset + (verticalAmount < 0 ? 18 : -18);
+        scrollOffset = Math.max(0, Math.min(next, maxScroll()));
+        return true;
+    }
 
     private void drawRow(DrawContext c, int mx, int my, int i) {
         WaypointConfig.Entry waypoint = waypoints.get(i);
@@ -97,7 +109,10 @@ public final class WaypointSettingsScreen extends Screen {
     }
 
     private void layout() { x = (width - WIDTH) / 2; y = Math.max(16, (height - HEIGHT) / 2); }
-    private int rowY(int index) { return y + 76 + index * 30; }
+    private int rowY(int index) { return contentTop() + index * 30 - scrollOffset; }
+    private int contentTop() { return y + 76; }
+    private int contentBottom() { return y + HEIGHT - 12; }
+    private int maxScroll() { return Math.max(0, waypoints.size() * 30 - (contentBottom() - contentTop())); }
     private int deleteX() { return x + WIDTH - 108; }
     private static boolean inside(Click click, int x, int y, int width, int height) { return click.x() >= x && click.x() <= x + width && click.y() >= y && click.y() <= y + height; }
 }
