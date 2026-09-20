@@ -18,6 +18,7 @@
     "AxialConfigScreenCompassMoveMixin",
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
+    "AxialConfigScreenWaypointsMixin",
     "AxialConfigScreenMixin",
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
