@@ -10,6 +10,7 @@ import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
+import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.data.CosmeticManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -36,6 +37,7 @@ public class AxialCosmetics implements ClientModInitializer {
     private KeyBinding reloadKey;
     private KeyBinding menuKey;
     private KeyBinding modMenuKey;
+    private KeyBinding createWaypointKey;
 
     @Override
     public void onInitializeClient() {
@@ -67,6 +69,8 @@ public class AxialCosmetics implements ClientModInitializer {
                 new KeyBinding("key.axial_cosmetics.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F8, Category.MISC));
         modMenuKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.modmenu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, Category.MISC));
+        createWaypointKey = KeyBindingHelper.registerKeyBinding(
+                new KeyBinding("key.axial_cosmetics.create_waypoint", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, Category.MISC));
 
         try {
             LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
@@ -98,6 +102,11 @@ public class AxialCosmetics implements ClientModInitializer {
             while (modMenuKey.wasPressed()) {
                 if (client.player != null) {
                     openAxialModMenu(client);
+                }
+            }
+            while (createWaypointKey.wasPressed()) {
+                if (client.player != null && client.currentScreen == null) {
+                    client.setScreen(new CreateWaypointScreen());
                 }
             }
         });
