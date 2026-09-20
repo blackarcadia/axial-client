@@ -10,8 +10,6 @@
     "AxialConfigScreenWaypointsMixin",
     "ItemInHandRendererItemScalerMixin",
     "ItemModelManagerCustomItemMixin",
-    "TitleOverlaySettingsScreenMixin",
-    "TitleOverlayCrosshairMixin",
     "MinecraftIconsMixin",
     "MinecraftClientTitleMixin",
     "MinecraftClientAccountMixin",
