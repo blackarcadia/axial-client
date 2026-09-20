@@ -10,6 +10,11 @@ import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
+import com.axial.cosmetics.client.WaypointConfig;
+import com.axial.cosmetics.client.WaypointKeys;
+import com.axial.cosmetics.client.WaypointRenderer;
+import com.axial.cosmetics.client.WaypointEditorScreen;
+import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.data.CosmeticManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -60,6 +65,8 @@ public class AxialCosmetics implements ClientModInitializer {
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
+        WaypointConfig.load();
+        WaypointRenderer.register();
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, Category.MISC));
@@ -98,6 +105,16 @@ public class AxialCosmetics implements ClientModInitializer {
             while (modMenuKey.wasPressed()) {
                 if (client.player != null) {
                     openAxialModMenu(client);
+                }
+            }
+            while (WaypointKeys.EDITOR.wasPressed()) {
+                if (client.player != null && client.currentScreen == null) {
+                    client.setScreen(new WaypointEditorScreen(null));
+                }
+            }
+            while (WaypointKeys.CREATE.wasPressed()) {
+                if (client.player != null && client.currentScreen == null) {
+                    client.setScreen(new CreateWaypointScreen(null));
                 }
             }
         });
