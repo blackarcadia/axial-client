@@ -99,7 +99,7 @@ public final class WaypointConfig {
     private static int indexOf(Config config, Entry waypoint) {
         for (int index = 0; index < config.waypoints.size(); index++) {
             Entry entry = config.waypoints.get(index);
-            if (entry.world().equals(waypoint.world()) && entry.dimension().equals(waypoint.dimension())
+            if (java.util.Objects.equals(entry.world(), waypoint.world()) && java.util.Objects.equals(entry.dimension(), waypoint.dimension())
                     && entry.x() == waypoint.x() && entry.y() == waypoint.y() && entry.z() == waypoint.z()) return index;
         }
         return -1;

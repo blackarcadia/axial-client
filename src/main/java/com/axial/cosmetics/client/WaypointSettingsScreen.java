@@ -29,6 +29,7 @@ public final class WaypointSettingsScreen extends Screen {
     }
 
     @Override protected void init() {
+        nameFields.clear();
         waypoints = new ArrayList<>(WaypointConfig.waypointsFor(MinecraftClient.getInstance()));
         layout();
         for (int i = 0; i < waypoints.size(); i++) {
@@ -72,7 +73,7 @@ public final class WaypointSettingsScreen extends Screen {
                 TextFieldWidget field = nameFields.get(i);
                 field.setFocused(true);
                 setFocused(field);
-                return true;
+                return super.mouseClicked(click, doubled);
             }
             if (inside(click, colorX(), rowY(i) + 2, 54, 20)) {
                 int index = i;
