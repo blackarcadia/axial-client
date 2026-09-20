@@ -16,6 +16,7 @@ import java.util.List;
 public final class WaypointConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-waypoints.json");
+    private static Config cached;
 
     private WaypointConfig() { }
 
@@ -44,13 +45,14 @@ public final class WaypointConfig {
     }
 
     private static Config load() {
-        if (!Files.exists(PATH)) return new Config();
+        if (cached != null) return cached;
+        if (!Files.exists(PATH)) return cached = new Config();
         try {
             Config config = GSON.fromJson(Files.readString(PATH), Config.class);
-            if (config != null && config.waypoints != null) return config;
+            if (config != null && config.waypoints != null) return cached = config;
         } catch (IOException ignored) {
         }
-        return new Config();
+        return cached = new Config();
     }
 
     private static final class Config {

@@ -42,6 +42,7 @@
     "TitleScreenButtonPressSoundMixin",
     "InGameButtonSkinMixin",
     "InGameHudCompassMixin",
+    "InGameHudWaypointLabelsMixin",
     "TitleScreenButtonSkinMixin",
     "TitleScreenMenuLayoutMixin"
   ],
