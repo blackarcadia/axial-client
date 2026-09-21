@@ -103,39 +103,83 @@ public final class AccountsScreen extends Screen {
             this.tone = tone;
         }
 
+        private float hoverProgress;
+        private long lastFrameNanos;
+
         @Override
         protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
-            boolean highlighted = active && (isHovered() || isFocused());
-            int border = highlighted ? 0xFFC5AAFF : 0xFF414053;
-            int fill = highlighted ? 0xFF353044 : 0xFF23232F;
-            int foreground = active ? 0xFFEDEAF5 : 0xFF777485;
-            if (tone == ButtonTone.PRIMARY) {
-                border = highlighted ? 0xFFE0CFFF : 0xFFA780ED;
-                fill = highlighted ? 0xFF9562E2 : 0xFF7946C7;
-            } else if (tone == ButtonTone.DANGER && active) {
-                border = highlighted ? 0xFFEE9AAA : 0xFF59404F;
-                fill = highlighted ? 0xFF51303F : 0xFF2D232D;
-                foreground = 0xFFF0B1BD;
-            } else if (tone == ButtonTone.SELECTED) {
-                border = 0xFF79609F;
-                fill = 0xFF30253F;
-                foreground = 0xFFD9C3FF;
+            long now = System.nanoTime();
+            float elapsed = lastFrameNanos == 0 ? 0 : Math.min(0.05f, (now - lastFrameNanos) / 1_000_000_000f);
+            lastFrameNanos = now;
+            float target = active && (isHovered() || isFocused()) ? 1 : 0;
+            hoverProgress += (target - hoverProgress) * (1 - (float) Math.exp(-elapsed * 18));
+
+            int accent = switch (tone) {
+                case PRIMARY -> 0xFFB99AFF;
+                case DANGER -> 0xFFF393AD;
+                case SELECTED -> 0xFF8FE0C6;
+                default -> 0xFFB6ABEC;
+            };
+            int top = tone == ButtonTone.PRIMARY ? 0xFF7252B8 : 0xFF292836;
+            int bottom = tone == ButtonTone.PRIMARY ? 0xFF493078 : 0xFF171720;
+            int foreground = tone == ButtonTone.SELECTED ? 0xFFBCF3DF : 0xFFF3EFFA;
+            int border = tone == ButtonTone.PRIMARY ? 0xFF9774D6 : 0xFF464252;
+            if (tone == ButtonTone.SELECTED) {
+                top = 0xFF243C38;
+                bottom = 0xFF182825;
+                border = 0xFF42695D;
             }
             if (!active && tone != ButtonTone.SELECTED) {
-                border = 0xFF34323F;
-                fill = 0xFF1C1C26;
+                top = 0xFF20202A;
+                bottom = 0xFF181820;
+                border = 0xFF302E3B;
+                foreground = 0xFF767180;
+                accent = foreground;
             }
+            top = blend(top, accent, hoverProgress * 0.22f);
+            bottom = blend(bottom, accent, hoverProgress * 0.12f);
+            border = blend(border, accent, hoverProgress * 0.85f);
+
             int x = getX(), y = getY();
-            roundedRect(context, x, y + 2, width, height, 0x50000000);
-            roundedRect(context, x, y, width, height, border);
-            roundedRect(context, x + 1, y + 1, width - 2, height - 2, fill);
+            // Draw the entire capsule here: no shared button textures or vanilla skin.
+            capsule(context, x, y + 2, width, height, 0x50000000, 0x50000000);
+            capsule(context, x, y, width, height, border, blend(border, bottom, 0.45f));
+            capsule(context, x + 1, y + 1, width - 2, height - 2, top, bottom);
+            context.fill(x + 10, y + 1, x + width - 10, y + 2,
+                    blend(top, accent, active ? 0.45f : 0.12f));
+
+            // A small illuminated rail makes each action's color visible at rest.
+            if (width > 40) {
+                capsule(context, x + 7, y + 8, 3, 8, accent, blend(accent, bottom, 0.3f));
+            }
             if (active && isFocused()) {
-                context.fill(x + 6, y + height - 3, x + width - 6, y + height - 2, foreground);
+                context.fill(x + 12, y + height - 3, x + width - 12, y + height - 2, accent);
             }
             var renderer = MinecraftClient.getInstance().textRenderer;
-            var label = uiText(renderer.trimToWidth(getMessage(), Math.max(0, width - 12)).getString());
+            int padding = width > 40 ? 28 : 12;
+            var label = uiText(renderer.trimToWidth(getMessage(), Math.max(0, width - padding)).getString());
             context.drawText(renderer, label, x + (width - renderer.getWidth(label)) / 2,
                     y + (height - renderer.fontHeight) / 2, foreground, false);
+        }
+
+        private static void capsule(DrawContext context, int x, int y, int w, int h, int top, int bottom) {
+            double radius = Math.min(w, h) / 2.0;
+            for (int row = 0; row < h; row++) {
+                double distance = Math.max(0, Math.abs(row + 0.5 - h / 2.0) - (h / 2.0 - radius));
+                int inset = (int) Math.ceil(radius - Math.sqrt(Math.max(0, radius * radius - distance * distance)));
+                context.fill(x + inset, y + row, x + w - inset, y + row + 1,
+                        blend(top, bottom, row / (float) Math.max(1, h - 1)));
+            }
+        }
+
+        private static int blend(int from, int to, float amount) {
+            int result = 0;
+            for (int shift = 0; shift <= 24; shift += 8) {
+                int a = (from >>> shift) & 255;
+                int b = (to >>> shift) & 255;
+                result |= Math.round(a + (b - a) * amount) << shift;
+            }
+            return result;
         }
     }
 
