@@ -30,8 +30,10 @@ public class MinecraftLauncher {
     private static final String VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
     private static final String TOGGLE_MOD_URL = "https://cdn.modrinth.com/data/gejCNKwT/versions/731Py1cq/togglesneakhotkey-1.0.2.jar";
     private static final String TOGGLE_MOD_FILE = "togglesneakhotkey-1.0.2.jar";
-    private static final String FABRIC_API_URL = "https://edge.forgecdn.net/files/7422/501/fabric-api-0.141.1+1.21.11.jar";
-    private static final String FABRIC_API_FILE = "fabric-api-0.141.1+1.21.11.jar";
+    private static final String FABRIC_API_FILE = "fabric-api-0.141.6+1.21.11.jar";
+    private static final String FABRIC_LANGUAGE_KOTLIN_FILE = "fabric-language-kotlin-1.14.1+kotlin.2.4.20.jar";
+    private static final String YACL_FILE = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar";
+    private static final String ZOOMIFY_FILE = "zoomify-2.15.2+1.21.11.jar";
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
     private static final String MOD_MENU_FILE = "modmenu-17.0.0-alpha.1.jar";
     private static final String SODIUM_FILE = "sodium-fabric-0.8.13+mc1.21.11.jar";
@@ -85,6 +87,9 @@ public class MinecraftLauncher {
         downloadAssets(layout, versionJson);
         downloadToggleSprintMod(layout);
         downloadFabricApi(layout);
+        installFabricLanguageKotlin(layout);
+        installYacl(layout);
+        installZoomify(layout);
         downloadModMenu(layout);
         installSodium(layout);
         installLithium(layout);
@@ -509,11 +514,39 @@ public class MinecraftLauncher {
     }
 
     private void downloadFabricApi(FileLayout layout) throws IOException {
-        Files.createDirectories(layout.modsDir());
-        Path target = layout.modsDir().resolve(FABRIC_API_FILE);
-        if (isUsableDownload(target, null, null, true)) return;
-        logger.info("Fetching Fabric API...");
-        downloadTo(FABRIC_API_URL, target, null, null, true);
+        installBundledMod(layout, FABRIC_API_FILE, "fabric-api-");
+    }
+
+    private void installFabricLanguageKotlin(FileLayout layout) throws IOException {
+        installBundledMod(layout, FABRIC_LANGUAGE_KOTLIN_FILE, "fabric-language-kotlin-");
+    }
+
+    private void installYacl(FileLayout layout) throws IOException {
+        installBundledMod(layout, YACL_FILE, "yet_another_config_lib_v3-");
+    }
+
+    private void installZoomify(FileLayout layout) throws IOException {
+        installBundledMod(layout, ZOOMIFY_FILE, "zoomify-");
+    }
+
+    private void installBundledMod(FileLayout layout, String fileName, String versionPrefix) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(p -> p.getFileName().toString().startsWith(versionPrefix))
+                    .forEach(p -> {
+                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+                    });
+        }
+
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/" + fileName)) {
+            if (in == null) {
+                logger.info(fileName + " not packaged; skipping install.");
+                return;
+            }
+            Files.copy(in, mods.resolve(fileName), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Installed bundled mod: " + fileName);
+        }
     }
 
     private void downloadModMenu(FileLayout layout) throws IOException {

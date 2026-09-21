@@ -213,7 +213,10 @@ public final class GitHubReleaseUpdater {
             for (Path path : stream.toList()) {
                 String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
                 if (name.endsWith(".jar") && (name.startsWith("axial-") || name.startsWith("axialutils-")
-                        || name.startsWith("geckolib-fabric-") || name.startsWith("sodium-fabric-")
+                        || name.startsWith("geckolib-fabric-") || name.startsWith("fabric-api-")
+                        || name.startsWith("fabric-language-kotlin-")
+                        || name.startsWith("yet_another_config_lib_v3-") || name.startsWith("zoomify-")
+                        || name.startsWith("sodium-fabric-")
                         || name.startsWith("sodium-extra-") || name.startsWith("reeses-sodium-options-")
                         || name.startsWith("lithium-fabric-") || name.startsWith("staticbgmod-")
                         || isRuntimeDependencyJar(name))) {

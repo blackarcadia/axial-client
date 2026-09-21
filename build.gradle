@@ -54,7 +54,7 @@ dependencies {
     minecraft 'com.mojang:minecraft:1.21.11'
     mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
     modImplementation 'net.fabricmc:fabric-loader:0.18.4'
-    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11'
+    modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
     modImplementation name: 'geckolib-fabric-1.21.11-5.4.5'
     include name: 'geckolib-fabric-1.21.11-5.4.5'
     include implementation('net.raphimc:MinecraftAuth:5.0.0')
@@ -86,10 +86,16 @@ processResources {
 }
 
 // IntelliJ's direct Fabric launch configuration reads mods from run/mods.
-// Keep GeckoLib there so AxialUtils can resolve its required dependency even
-// before the nested production JAR has been built.
+// Keep bundled mods there so their dependencies resolve before the nested
+// production JAR has been built.
 tasks.register('installDevelopmentMods', Copy) {
-    from 'src/main/resources/geckolib-fabric-1.21.11-5.4.5.jar'
+    from('src/main/resources') {
+        include 'geckolib-fabric-1.21.11-5.4.5.jar'
+        include 'fabric-api-0.141.6+1.21.11.jar'
+        include 'fabric-language-kotlin-1.14.1+kotlin.2.4.20.jar'
+        include 'yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar'
+        include 'zoomify-2.15.2+1.21.11.jar'
+    }
     into layout.projectDirectory.dir('run/mods')
 }
 
