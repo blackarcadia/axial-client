@@ -3,6 +3,7 @@ package org.example.launcher;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -54,7 +55,7 @@ public final class StartupController {
             holdStartupScreen(startupShownAt);
 
             LaunchRequest request = buildLaunchRequest();
-            loadingScreen.update("Authenticating", 25);
+            loadingScreen.update("Preparing account", 25);
 
             MinecraftLauncher launcher = new MinecraftLauncher(msg -> loadingScreen.update(msg, 50));
             if (clientUpdated) {
@@ -145,13 +146,13 @@ public final class StartupController {
             }
         }
 
-        Path temp = accountsDir.resolve("temp.json");
-        AuthManager auth = new AuthManager(temp);
-        AuthResult result = auth.authenticate();
-        Path target = accountsDir.resolve(result.playerName + ".json");
-        Files.deleteIfExists(target);
-        Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        return result;
+        return offlineAccount();
+    }
+
+    private static AuthResult offlineAccount() {
+        String playerName = "Player";
+        String uuid = UUID.nameUUIDFromBytes(playerName.getBytes(StandardCharsets.UTF_8)).toString();
+        return new AuthResult(playerName, uuid, "0", "0");
     }
 
     private Path readActiveAccount(Path accountsDir) {
