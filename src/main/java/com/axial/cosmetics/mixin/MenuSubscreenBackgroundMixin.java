@@ -5,6 +5,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.MessageScreen;
+import net.minecraft.client.gui.screen.ReconfiguringScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.multiplayer.AddServerScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
@@ -43,12 +45,13 @@ import net.minecraft.client.realms.gui.screen.RealmsCreateWorldScreen;
 import net.minecraft.client.realms.gui.screen.RealmsLongRunningMcoTaskScreen;
 import net.minecraft.client.realms.gui.screen.RealmsScreen;
 import net.minecraft.util.Identifier;
+import net.minecraft.text.TranslatableTextContent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.client.gui.screen.Screen")
+@Mixin({Screen.class, MessageScreen.class})
 public abstract class MenuSubscreenBackgroundMixin {
     private static final Identifier AXIAL_MENU_BACKGROUND = AxialCosmetics.id("textures/gui/title/sub_menu_background.png");
     private static final int AXIAL_MENU_BACKGROUND_WIDTH = 1717;
@@ -79,6 +82,18 @@ public abstract class MenuSubscreenBackgroundMixin {
     }
 
     private static boolean axial_cosmetics$shouldUseCustomBackground(Screen screen) {
+        // These screens also appear after the client world has been assigned.
+        if (screen instanceof ReconfiguringScreen
+                || screen.getClass().getName().equals("net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen")) {
+            return true;
+        }
+
+        if (screen instanceof MessageScreen
+                && screen.getTitle().getContent() instanceof TranslatableTextContent text) {
+            return text.getKey().equals("selectWorld.data_read")
+                    || text.getKey().equals("selectWorld.resource_load");
+        }
+
         if (MinecraftClient.getInstance().world != null) {
             return false;
         }
