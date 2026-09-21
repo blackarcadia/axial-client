@@ -28,6 +28,7 @@ public class MinecraftLauncher {
 
     private final Logger logger;
     private static final String VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
+    private static final String FABRIC_LOADER_VERSION = "0.19.5";
     private static final String TOGGLE_MOD_URL = "https://cdn.modrinth.com/data/gejCNKwT/versions/731Py1cq/togglesneakhotkey-1.0.2.jar";
     private static final String TOGGLE_MOD_FILE = "togglesneakhotkey-1.0.2.jar";
     private static final String FABRIC_API_FILE = "fabric-api-0.141.6+1.21.11.jar";
@@ -74,7 +75,7 @@ public class MinecraftLauncher {
         if (ref != null) {
             versionJson = fetchVersionJson(layout, ref);
         } else {
-            versionJson = fetchFabricProfile(layout, request.getVersionId(), "1.21.11", "0.19.5");
+            versionJson = fetchFabricProfile(layout, request.getVersionId(), "1.21.11", FABRIC_LOADER_VERSION);
         }
 
         if (versionJson.has("inheritsFrom")) {
@@ -227,7 +228,12 @@ public class MinecraftLauncher {
         Path target = layout.versionJson(versionId);
         if (Files.exists(target)) {
             try {
-                return readJson(target);
+                JsonObject cachedProfile = readJson(target);
+                if (hasFabricLoaderVersion(cachedProfile, loaderVersion)) {
+                    return cachedProfile;
+                }
+                logger.info("Cached Fabric profile uses an older loader; updating to " + loaderVersion);
+                Files.deleteIfExists(target);
             } catch (JsonParseException | IOException e) {
                 logger.info("Cached Fabric profile is invalid; redownloading " + target.getFileName());
                 Files.deleteIfExists(target);
@@ -237,6 +243,22 @@ public class MinecraftLauncher {
         String url = "https://meta.fabricmc.net/v2/versions/loader/" + mcVersion + "/" + loaderVersion + "/profile/json";
         downloadTo(url, target, null, null, false);
         return readJson(target);
+    }
+
+    private static boolean hasFabricLoaderVersion(JsonObject profile, String loaderVersion) {
+        JsonArray libraries = profile.getAsJsonArray("libraries");
+        if (libraries == null) {
+            return false;
+        }
+        String expectedLibrary = "net.fabricmc:fabric-loader:" + loaderVersion;
+        for (JsonElement library : libraries) {
+            if (library.isJsonObject()
+                    && library.getAsJsonObject().has("name")
+                    && expectedLibrary.equals(library.getAsJsonObject().get("name").getAsString())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void ensureVanilla(String baseVersion, FileLayout layout, VersionManifest manifest) throws IOException {
