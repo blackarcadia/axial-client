@@ -74,7 +74,7 @@ public class MinecraftLauncher {
         if (ref != null) {
             versionJson = fetchVersionJson(layout, ref);
         } else {
-            versionJson = fetchFabricProfile(layout, request.getVersionId(), "1.21.11", "0.18.4");
+            versionJson = fetchFabricProfile(layout, request.getVersionId(), "1.21.11", "0.19.5");
         }
 
         if (versionJson.has("inheritsFrom")) {

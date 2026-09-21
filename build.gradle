@@ -53,7 +53,7 @@ dependencies {
 
     minecraft 'com.mojang:minecraft:1.21.11'
     mappings "net.fabricmc:yarn:1.21.11+build.2:v2"
-    modImplementation 'net.fabricmc:fabric-loader:0.18.4'
+    modImplementation 'net.fabricmc:fabric-loader:0.19.5'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
     modImplementation name: 'geckolib-fabric-1.21.11-5.4.5'
     include name: 'geckolib-fabric-1.21.11-5.4.5'
