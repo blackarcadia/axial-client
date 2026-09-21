@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.MessageScreen;
 import net.minecraft.client.gui.screen.ReconfiguringScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
+import net.minecraft.client.gui.screen.CreditsScreen;
 import net.minecraft.client.gui.screen.multiplayer.AddServerScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.gui.screen.multiplayer.DirectConnectScreen;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen;
 import net.minecraft.client.gui.screen.option.AccessibilityOptionsScreen;
 import net.minecraft.client.gui.screen.option.ChatOptionsScreen;
 import net.minecraft.client.gui.screen.option.ControlsOptionsScreen;
+import net.minecraft.client.gui.screen.option.CreditsAndAttributionScreen;
 import net.minecraft.client.gui.screen.option.FontOptionsScreen;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.screen.option.LanguageOptionsScreen;
@@ -84,6 +86,8 @@ public abstract class MenuSubscreenBackgroundMixin {
     private static boolean axial_cosmetics$shouldUseCustomBackground(Screen screen) {
         // These screens also appear after the client world has been assigned.
         if (screen instanceof ReconfiguringScreen
+                || screen instanceof CreditsScreen
+                || screen instanceof CreditsAndAttributionScreen
                 || screen.getClass().getName().equals("net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen")) {
             return true;
         }
@@ -91,7 +95,9 @@ public abstract class MenuSubscreenBackgroundMixin {
         if (screen instanceof MessageScreen
                 && screen.getTitle().getContent() instanceof TranslatableTextContent text) {
             return text.getKey().equals("selectWorld.data_read")
-                    || text.getKey().equals("selectWorld.resource_load");
+                    || text.getKey().equals("selectWorld.resource_load")
+                    || text.getKey().equals("createWorld.preparing")
+                    || text.getKey().equals("menu.savingLevel");
         }
 
         if (MinecraftClient.getInstance().world != null) {
