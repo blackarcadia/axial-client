@@ -52,6 +52,12 @@
     *;
 }
 
+# MicrosoftLoginProcess starts this class in a separate JVM by its fully
+# qualified name. Keep that entry point stable in release builds.
+-keep public class org.example.launcher.EmbeddedMicrosoftLogin {
+    public static void main(java.lang.String[]);
+}
+
 
 # ------------------------------------------------------------
 # FABRIC ENTRYPOINT

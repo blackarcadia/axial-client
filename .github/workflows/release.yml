@@ -81,6 +81,13 @@ jobs:
 
           echo "Launcher obfuscation check passed."
 
+          if ! jar tf "$RELEASE_JAR" | grep -q '^org/example/launcher/EmbeddedMicrosoftLogin.class$'; then
+            echo "ERROR: Microsoft login entry point is missing from the release JAR."
+            exit 1
+          fi
+
+          echo "Microsoft login entry point check passed."
+
       - name: Verify bundled cosmetics JAR
         shell: bash
         run: |
@@ -190,6 +197,12 @@ jobs:
           }
 
           Write-Host "Launcher obfuscation check passed."
+
+          if (-not ($contents -contains "org/example/launcher/EmbeddedMicrosoftLogin.class")) {
+              throw "Microsoft login entry point is missing from the release JAR."
+          }
+
+          Write-Host "Microsoft login entry point check passed."
 
       - name: Verify bundled cosmetics JAR
         shell: pwsh
