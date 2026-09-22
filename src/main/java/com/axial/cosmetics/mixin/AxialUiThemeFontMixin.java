@@ -23,6 +23,7 @@ public abstract class AxialUiThemeFontMixin {
             "com.axial.cosmetics.client.PotionsHudSettingsScreen"
     };
     private static final String[] ON_SCREEN_RENDERER_CLASSES = {
+            "com.axial.cosmetics.client.PotionsHudRenderer",
             "org.axial.axialutils.client.ArmorHudRenderer",
             "org.axial.axialutils.client.AxialHudRenderer",
             "org.axial.axialutils.client.CpsHudRenderer",

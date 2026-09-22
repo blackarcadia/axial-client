@@ -28,9 +28,9 @@ public abstract class AxialConfigScreenPotionsHudMoveMixin {
         throw new AssertionError();
     }
 
-    @Inject(method = "renderMoveMode", at = @At("RETURN"))
-    private void axial_cosmetics$renderPotionsHudPreview(DrawContext context, MinecraftClient client, CallbackInfo ci) {
-        PotionsHudRenderer.renderPreview(context, client);
+    @Inject(method = "method_25394", at = @At("HEAD"))
+    private void axial_cosmetics$renderPotionsHudPreview(DrawContext context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
+        PotionsHudRenderer.renderPreview(context, MinecraftClient.getInstance());
     }
 
     @Inject(method = "beginMoveDrag", at = @At("HEAD"), cancellable = true)

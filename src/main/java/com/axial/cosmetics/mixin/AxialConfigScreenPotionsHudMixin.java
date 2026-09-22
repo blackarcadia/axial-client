@@ -3,6 +3,9 @@ package com.axial.cosmetics.mixin;
 import com.axial.cosmetics.client.PotionsHudSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.Text;
+import org.axial.axialutils.client.AxialUiTheme;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,6 +26,11 @@ public abstract class AxialConfigScreenPotionsHudMixin {
 
     @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 970)
     private void axial_cosmetics$addPotionsHudButton(CallbackInfo ci) {
+        Screen screen = (Screen) (Object) this;
+        if (PotionsHudSettingsScreen.isPotions(screen)) {
+            PotionsHudSettingsScreen.rebuild(screen);
+            return;
+        }
         try {
             Object mode = axial_cosmetics$potionsHudGetMode();
             if (mode == null || !"MAIN".equals(mode.toString())) {
@@ -51,10 +59,17 @@ public abstract class AxialConfigScreenPotionsHudMixin {
 
             int x = axial_cosmetics$potionsHudGetTileX(titleOverlayTile);
             int y = axial_cosmetics$potionsHudGetTileY(titleOverlayTile) + 30;
-            axial_cosmetics$potionsHudAddActionTile(x, y, "POTIONS HUD", () -> MinecraftClient.getInstance().setScreen(new PotionsHudSettingsScreen((Screen) (Object) this)));
+            axial_cosmetics$potionsHudAddActionTile(x, y, "POTIONS HUD", () -> MinecraftClient.getInstance().setScreen(PotionsHudSettingsScreen.create((Screen) (Object) this)));
         } catch (ReflectiveOperationException | ClassCastException ignored) {
             // Leave the upstream menu unchanged if its private layout details change.
         }
+    }
+
+    @ModifyArg(method = "drawPanel", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/DrawContext;drawCenteredTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;III)V",
+            remap = true), index = 1, remap = false)
+    private Text axial_cosmetics$potionsTitle(Text original) {
+        return PotionsHudSettingsScreen.isPotions((Screen) (Object) this) ? AxialUiTheme.uiText("POTIONS HUD") : original;
     }
 
     private Object axial_cosmetics$potionsHudGetMode() throws ReflectiveOperationException {

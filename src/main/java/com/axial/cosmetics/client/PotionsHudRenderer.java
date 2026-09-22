@@ -8,23 +8,27 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.text.Text;
-import net.minecraft.text.StyleSpriteSource;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
+import org.axial.axialutils.client.AxialUiTheme;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public final class PotionsHudRenderer {
-    private static final StyleSpriteSource.Font HUD_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
-    private static final int HEADER = 20;
-    private static final int ROW_HEIGHT = 24;
+    private static final int PADDING = 5;
+    private static final int HEADER = 17;
+    private static final int ICON_SIZE = 16;
+    private static final int TEXT_OFFSET = PADDING + ICON_SIZE + 5;
+    // Match Information HUD's translucent background and border.
+    private static final int BACKGROUND_COLOR = 2047874077;
+    private static final int BORDER_COLOR = -855645094;
+    private static final int ROW_HEIGHT = 18;
     private PotionsHudRenderer() { }
 
     public static void render(DrawContext context) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!PotionsHudConfig.isEnabled() || client.options.hudHidden || client.player == null || client.currentScreen != null) return;
+        if (!PotionsHudConfig.isEnabled() || client.options.hudHidden || client.player == null || PotionsHudSettingsScreen.isConfigScreen(client.currentScreen)) return;
         render(context, client, false);
     }
 
@@ -55,40 +59,45 @@ public final class PotionsHudRenderer {
     }
 
     private static Bounds bounds(MinecraftClient client, List<StatusEffectInstance> effects) {
-        int width = Math.max(120, client.textRenderer.getWidth(hudText(Text.literal(PotionsHudConfig.title()))) + 12);
+        int width = client.textRenderer.getWidth(title()) + PADDING * 2;
         for (var effect : effects) {
-            width = Math.max(width, 42 + client.textRenderer.getWidth(name(effect)) + client.textRenderer.getWidth(duration(client, effect)));
+            width = Math.max(width, TEXT_OFFSET + 4 + PADDING + client.textRenderer.getWidth(name(effect)) + client.textRenderer.getWidth(duration(client, effect)));
         }
         width = Math.min(width, client.getWindow().getScaledWidth());
-        int height = HEADER + ROW_HEIGHT * effects.size() + 4;
+        int height = HEADER + ROW_HEIGHT * effects.size() + PADDING;
         return new Bounds(PotionsHudConfig.getX(client.getWindow().getScaledWidth(), width),
                 PotionsHudConfig.getY(client.getWindow().getScaledHeight(), height), width, height);
     }
 
     private static void render(DrawContext context, MinecraftClient client, boolean preview) {
         var effects = effects(client, preview);
+        if (effects.isEmpty()) return;
         var bounds = bounds(client, effects);
         int x = bounds.x();
         int y = bounds.y();
         if (PotionsHudConfig.showBox()) {
-            context.fill(x, y, x + bounds.width(), y + bounds.height(), 0x7A101217);
-            context.fill(x + 1, y + 1, x + bounds.width() - 1, y + 2, 0x30FFFFFF);
+            context.fill(x, y, x + bounds.width(), y + bounds.height(), BACKGROUND_COLOR);
+            context.drawStrokedRectangle(x, y, bounds.width(), bounds.height(), BORDER_COLOR);
         }
-        context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(hudText(Text.literal(PotionsHudConfig.title())), Math.max(0, bounds.width() - 12))), x + 6, y + 6, PotionsHudConfig.titleColor());
+        context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(title(), Math.max(0, bounds.width() - PADDING * 2))), x + PADDING, y + PADDING, PotionsHudConfig.titleColor());
         int rowY = y + HEADER;
         for (var effect : effects) {
-            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, InGameHud.getEffectTexture(effect.getEffectType()), x + 6, rowY + 2, 18, 18);
+            context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, InGameHud.getEffectTexture(effect.getEffectType()), x + PADDING, rowY - 1, ICON_SIZE, ICON_SIZE);
             Text duration = duration(client, effect);
-            int timeX = x + bounds.width() - 6 - client.textRenderer.getWidth(duration);
-            context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(name(effect), Math.max(0, timeX - x - 36))), x + 30, rowY + 7, 0xFFFFFFFF);
-            context.drawTextWithShadow(client.textRenderer, duration, timeX, rowY + 7, 0xFFC6D0F3);
+            int timeX = Math.min(x + TEXT_OFFSET + client.textRenderer.getWidth(name(effect)) + 4,
+                    x + bounds.width() - PADDING - client.textRenderer.getWidth(duration));
+            context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(name(effect), Math.max(0, timeX - x - TEXT_OFFSET - 4))), x + TEXT_OFFSET, rowY + 3, 0xFFFFFFFF);
+            context.drawTextWithShadow(client.textRenderer, duration, timeX, rowY + 3, 0xFFFFFFFF);
             rowY += ROW_HEIGHT;
         }
-        if (preview) context.drawStrokedRectangle(x, y, bounds.width(), bounds.height(), 0xD08F5DFF);
+    }
+
+    private static Text title() {
+        return AxialUiTheme.uiBoldText(PotionsHudConfig.title());
     }
 
     private static Text hudText(Text text) {
-        return text.copy().styled(style -> style.withFont(HUD_FONT));
+        return AxialUiTheme.uiText(text.getString());
     }
 
     public record Bounds(int x, int y, int width, int height) { }
