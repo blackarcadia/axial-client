@@ -60,6 +60,7 @@ public class AxialCosmetics implements ClientModInitializer {
         WeatherDetectorModelRegistry.register();
         EnchantGlintConfig.load();
         ItemScalerConfig.load();
+        com.axial.cosmetics.client.PotionsHudConfig.load();
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
