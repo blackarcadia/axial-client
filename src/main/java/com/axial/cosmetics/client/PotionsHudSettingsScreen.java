@@ -4,60 +4,70 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.StyleSpriteSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import org.axial.axialutils.client.AxialUiTheme;
+import org.axial.axialutils.client.HudTitleRenamerScreen;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public final class PotionsHudSettingsScreen extends Screen {
-    private static final int PANEL_WIDTH = 360;
-    private static final int PANEL_HEIGHT = 204;
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
+    private static final int PANEL_WIDTH = 452;
+    private static final int PANEL_HEIGHT = 168;
     private final Screen parent;
     private int panelX;
     private int panelY;
+    private boolean colorsExpanded;
+    private MenuControl titleColorButton;
+    private final List<MenuControl> controls = new ArrayList<>();
 
     public PotionsHudSettingsScreen(Screen parent) {
-        super(uiText("POTIONS HUD"));
+        super(AxialUiTheme.uiText("POTIONS HUD"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
+        controls.clear();
         panelX = (width - PANEL_WIDTH) / 2;
-        panelY = Math.max(8, (height - PANEL_HEIGHT) / 2);
+        panelY = (height - PANEL_HEIGHT) / 2;
         int x = panelX + 18;
-        addDrawableChild(ButtonWidget.builder(toggleText("ENABLED", PotionsHudConfig.isEnabled()), button -> {
-            PotionsHudConfig.toggle();
-            button.setMessage(toggleText("ENABLED", PotionsHudConfig.isEnabled()));
-        }).dimensions(x, panelY + 36, 158, 20).build());
-        addDrawableChild(ButtonWidget.builder(toggleText("BOX", PotionsHudConfig.showBox()), button -> {
-            PotionsHudConfig.toggleBox();
-            button.setMessage(toggleText("BOX", PotionsHudConfig.showBox()));
-        }).dimensions(x + 166, panelY + 36, 158, 20).build());
-        var titleField = new TextFieldWidget(textRenderer, x, panelY + 80, 324, 20, uiText("TITLE NAME"));
-        titleField.setMaxLength(48);
-        titleField.setText(PotionsHudConfig.title());
-        titleField.setChangedListener(PotionsHudConfig::setTitle);
-        addDrawableChild(titleField);
-        addDrawableChild(ButtonWidget.builder(uiText("TITLE COLOR").copy().styled(style -> style.withColor(PotionsHudConfig.titleColor())), button ->
+        int y = panelY + 30;
+        addControl(x, y, 132,
+                () -> PotionsHudConfig.isEnabled() ? "ENABLED" : "DISABLED",
+                PotionsHudConfig::toggle, () -> toggleAccent(PotionsHudConfig.isEnabled()));
+        addControl(x + 142, y, 132, () -> "BOX",
+                PotionsHudConfig::toggleBox, () -> toggleAccent(PotionsHudConfig.showBox()));
+        addControl(x + 284, y, 132, () -> "TITLE", () ->
+                MinecraftClient.getInstance().setScreen(new HudTitleRenamerScreen(this, "POTIONS HUD",
+                        PotionsHudConfig.title(), "Potions", value -> {
+                            PotionsHudConfig.setTitle(value);
+                            PotionsHudConfig.save();
+                        })), () -> AxialUiTheme.ACTION_ACCENT);
+        addControl(x, y + 30, 132,
+                () -> colorsExpanded ? "HUD COLORS -" : "HUD COLORS +", () -> {
+                    colorsExpanded = !colorsExpanded;
+                    titleColorButton.button.visible = colorsExpanded;
+                }, () -> AxialUiTheme.ACTION_ACCENT);
+        titleColorButton = addControl(x, y + 60, 203, () -> "TITLE COLOR", () ->
                 MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, "POTIONS TITLE",
-                        PotionsHudConfig.titleColor(), PotionsHudConfig::setTitleColor, PotionsHudConfig::save)))
-                .dimensions(x, panelY + 112, 324, 20).build());
-        addDrawableChild(ButtonWidget.builder(uiText("BACK"), button -> close())
-                .dimensions(x, panelY + 166, 324, 20).build());
+                        PotionsHudConfig.titleColor(), PotionsHudConfig::setTitleColor, PotionsHudConfig::save)),
+                PotionsHudConfig::titleColor);
+        titleColorButton.button.visible = colorsExpanded;
+        MenuControl back = addControl(x, panelY + 6, 24, () -> "BACK", () ->
+                MinecraftClient.getInstance().setScreen(parent), () -> AxialUiTheme.ACTION_ACCENT);
+        back.button.setHeight(18);
+        back.back = true;
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        context.fill(panelX, panelY, panelX + PANEL_WIDTH, panelY + PANEL_HEIGHT, 0xE8101018);
-        context.fill(panelX + 1, panelY + 1, panelX + PANEL_WIDTH - 1, panelY + 2, 0x44FFFFFF);
-        context.drawStrokedRectangle(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT, 0xD08F5DFF);
-        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 12, 0xFFF7F7FF);
-        context.drawTextWithShadow(textRenderer, uiText("TITLE NAME"), panelX + 18, panelY + 67, 0xFFC6D0F3);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("POSITION IN THE MOVE ELEMENTS TAB"), panelX + PANEL_WIDTH / 2, panelY + 144, 0xFFC6D0F3);
+        AxialUiTheme.drawMenuBackdrop(context, width, height);
+        AxialUiTheme.drawPanel(context, panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT);
+        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, AxialUiTheme.TITLE_COLOR);
         super.render(context, mouseX, mouseY, deltaTicks);
-        context.fill(panelX + 27, panelY + 118, panelX + 35, panelY + 126, PotionsHudConfig.titleColor());
+        for (MenuControl control : controls) control.render(context, mouseX, mouseY);
     }
 
     @Override
@@ -69,14 +79,47 @@ public final class PotionsHudSettingsScreen extends Screen {
     @Override
     public void close() {
         PotionsHudConfig.save();
-        MinecraftClient.getInstance().setScreen(parent);
+        MinecraftClient.getInstance().setScreen(null);
     }
 
-    private static Text toggleText(String label, boolean enabled) {
-        return uiText(label + ": " + (enabled ? "ON" : "OFF"));
+    private static int toggleAccent(boolean enabled) {
+        return enabled ? AxialUiTheme.TOGGLE_ON : AxialUiTheme.TOGGLE_OFF;
     }
 
-    private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+    // Keep standard keyboard/narration behavior, but draw using the exact
+    // theme used by AxialConfigScreen.MenuTile instead of the general button skin.
+    private MenuControl addControl(int x, int y, int width, Supplier<String> label, Runnable action, IntSupplier accent) {
+        MenuControl control = new MenuControl(label, accent);
+        control.button = addSelectableChild(ButtonWidget.builder(AxialUiTheme.uiText(label.get()), button -> {
+            control.pressedUntil = System.currentTimeMillis() + 140;
+            action.run();
+            button.setMessage(AxialUiTheme.uiText(label.get()));
+        }).dimensions(x, y, width, 20).build());
+        controls.add(control);
+        return control;
+    }
+
+    private class MenuControl {
+        private final Supplier<String> label;
+        private final IntSupplier accent;
+        private ButtonWidget button;
+        private long pressedUntil;
+        private boolean back;
+
+        private MenuControl(Supplier<String> label, IntSupplier accent) {
+            this.label = label;
+            this.accent = accent;
+        }
+
+        private void render(DrawContext context, int mouseX, int mouseY) {
+            if (!button.visible) return;
+            boolean hovered = button.isMouseOver(mouseX, mouseY) || button.isFocused();
+            if (back) {
+                ModMenuBackButton.draw(context, button.getX(), button.getY(), button.getWidth(), button.getHeight(), hovered);
+            } else {
+                AxialUiTheme.drawButton(context, textRenderer, button.getX(), button.getY(), button.getWidth(), button.getHeight(),
+                        label.get(), "", hovered, System.currentTimeMillis() < pressedUntil, accent.getAsInt());
+            }
+        }
     }
 }

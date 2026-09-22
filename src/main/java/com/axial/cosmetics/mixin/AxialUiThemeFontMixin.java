@@ -19,7 +19,8 @@ public abstract class AxialUiThemeFontMixin {
             "org.axial.axialutils.client.SatchelHelperColorSettingsScreen",
             "org.axial.axialutils.client.TitleOverlaySettingsScreen",
             "org.axial.axialutils.client.WaypointSettingsScreen",
-            "com.axial.cosmetics.client.CosmeticMenuScreen"
+            "com.axial.cosmetics.client.CosmeticMenuScreen",
+            "com.axial.cosmetics.client.PotionsHudSettingsScreen"
     };
     private static final String[] ON_SCREEN_RENDERER_CLASSES = {
             "org.axial.axialutils.client.ArmorHudRenderer",
