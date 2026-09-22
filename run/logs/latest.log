@@ -1,8 +1,8 @@
-[17:12:51] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.18.4
-[17:12:52] [main/INFO] (FabricLoader) Loading 53 mods:
+[18:50:51] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.19.5
+[18:50:51] [main/INFO] (FabricLoader) Loading 78 mods:
 	- axial_cosmetics 1.1.0
 	- axialutils 1.0-SNAPSHOT
-	- fabric-api 0.141.3+1.21.11
+	- fabric-api 0.141.6+1.21.11
 	- fabric-api-base 1.0.5+4ebb5c083e
 	- fabric-api-lookup-api-v1 1.6.114+20dc27073e
 	- fabric-biome-api-v1 17.1.1+4fc5413f3e
@@ -14,26 +14,40 @@
 	- fabric-convention-tags-v1 2.1.55+7f945d5b3e
 	- fabric-convention-tags-v2 2.17.3+8ef948ba3e
 	- fabric-crash-report-info-v1 0.3.23+4ebb5c083e
-	- fabric-data-attachment-api-v1 1.8.47+eed0806f3e
-	- fabric-data-generation-api-v1 23.4.0+69974c4e3e
+	- fabric-data-attachment-api-v1 1.8.48+eed0806f3e
+	- fabric-data-generation-api-v1 23.5.0+88d7da613e
 	- fabric-dimensions-v1 4.0.28+4fc5413f3e
 	- fabric-entity-events-v1 3.1.1+1d0ab4303e
-	- fabric-events-interaction-v0 4.1.0+3b89ecf63e
+	- fabric-events-interaction-v0 4.1.1+3b89ecf63e
 	- fabric-game-rule-api-v1 2.0.3+4fc5413f3e
 	- fabric-gametest-api-v1 3.1.27+4fc5413f3e
-	- fabric-item-api-v1 11.5.20+d0c46b9e3e
+	- fabric-item-api-v1 11.6.0+67f17bb43e
 	- fabric-item-group-api-v1 4.2.36+4fc5413f3e
 	- fabric-key-binding-api-v1 1.1.7+4fc5413f3e
+	- fabric-language-kotlin 1.14.1+kotlin.2.4.20
+	   |-- org_jetbrains_kotlin_kotlin-reflect 2.4.20
+	   |-- org_jetbrains_kotlin_kotlin-stdlib 2.4.20
+	   |-- org_jetbrains_kotlin_kotlin-stdlib-jdk7 2.4.20
+	   |-- org_jetbrains_kotlin_kotlin-stdlib-jdk8 2.4.20
+	   |-- org_jetbrains_kotlinx_atomicfu-jvm 0.33.0
+	   |-- org_jetbrains_kotlinx_kotlinx-coroutines-core-jvm 1.11.0
+	   |-- org_jetbrains_kotlinx_kotlinx-coroutines-jdk8 1.11.0
+	   |-- org_jetbrains_kotlinx_kotlinx-datetime-jvm 0.8.0
+	   |-- org_jetbrains_kotlinx_kotlinx-io-bytestring-jvm 0.9.1
+	   |-- org_jetbrains_kotlinx_kotlinx-io-core-jvm 0.9.1
+	   |-- org_jetbrains_kotlinx_kotlinx-serialization-cbor-jvm 1.11.0
+	   |-- org_jetbrains_kotlinx_kotlinx-serialization-core-jvm 1.11.0
+	   \-- org_jetbrains_kotlinx_kotlinx-serialization-json-jvm 1.11.0
 	- fabric-lifecycle-events-v1 2.6.15+4ebb5c083e
 	- fabric-loot-api-v2 3.0.73+3f89f5a53e
 	- fabric-loot-api-v3 2.0.20+78c8b4663e
 	- fabric-message-api-v1 6.1.12+4ebb5c083e
 	- fabric-model-loading-api-v1 6.0.15+4fc5413f3e
-	- fabric-networking-api-v1 5.1.5+ae1e07683e
-	- fabric-object-builder-api-v1 21.1.39+4fc5413f3e
-	- fabric-particles-v1 4.2.11+4fc5413f3e
-	- fabric-recipe-api-v1 8.2.3+4ebb5c083e
-	- fabric-registry-sync-v0 6.2.5+1718722b3e
+	- fabric-networking-api-v1 5.1.6+6b6d71a53e
+	- fabric-object-builder-api-v1 21.1.40+4fc5413f3e
+	- fabric-particles-v1 4.2.12+4fc5413f3e
+	- fabric-recipe-api-v1 8.2.4+4ebb5c083e
+	- fabric-registry-sync-v0 6.2.6+1718722b3e
 	- fabric-renderer-api-v1 8.0.3+f4ffd2e53e
 	- fabric-renderer-indigo 5.0.3+f4ffd2e53e
 	- fabric-rendering-fluids-v1 3.1.43+4ebb5c083e
@@ -42,29 +56,41 @@
 	- fabric-resource-loader-v0 3.3.4+4fc5413f3e
 	- fabric-resource-loader-v1 1.0.10+78c8b4663e
 	- fabric-screen-api-v1 3.1.7+4ebb5c083e
-	- fabric-screen-handler-api-v1 1.3.161+4fc5413f3e
+	- fabric-screen-handler-api-v1 1.3.162+4fc5413f3e
 	- fabric-serialization-api-v1 1.0.5+4ebb5c083e
 	- fabric-sound-api-v1 1.0.51+4fc5413f3e
-	- fabric-tag-api-v1 1.2.20+4fc5413f3e
+	- fabric-tag-api-v1 1.3.0+88d7da613e
 	- fabric-transfer-api-v1 6.0.25+4fc5413f3e
 	- fabric-transitive-access-wideners-v1 7.1.0+014c8cec3e
-	- fabricloader 0.18.4
+	- fabricloader 0.19.5
 	- geckolib 5.4.5
 	- java 25
 	- minecraft 1.21.11
-	- mixinextras 0.5.0
-[17:12:52] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/blackarcadia/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.0+mixin.0.8.7/cf31463202f72d03b0ef1e1e38e8ee71b7faaab6/sponge-mixin-0.17.0+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
-[17:12:52] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[17:12:52] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_21
-[17:12:52] [main/WARN] (FabricLoader/Mixin) Reference map 'geckolib.refmap.json' for geckolib.mixins.json could not be read. If this is a development environment you can ignore this message
-[17:12:52] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/ItemRenderState$LayerRenderState (java.lang.ClassNotFoundException: net/minecraft/ItemRenderState$LayerRenderState)
-[17:12:52] [main/WARN] (FabricLoader/Mixin) @Mixin target net/minecraft/ItemRenderState$LayerRenderState was not found axialutils.client.mixins.json:ItemRenderStateLayerRenderStateMixin from mod axialutils
-[17:12:52] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.0).
-[17:12:53] [Datafixer Bootstrap/INFO] (Minecraft) 287 Datafixer optimizations took 202 milliseconds
-[17:12:55] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod axialutils failed axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> net.minecraft.client.gui.screen.ingame.HandledScreen: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Injections -> handler$zoi000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Injections -> handler$zoi000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
+	- mixinextras 0.5.5
+	- yet_another_config_lib_v3 3.8.2+1.21.11-fabric
+	   |-- com_twelvemonkeys_common_common-image 3.12.0
+	   |-- com_twelvemonkeys_common_common-io 3.12.0
+	   |-- com_twelvemonkeys_common_common-lang 3.12.0
+	   |-- com_twelvemonkeys_imageio_imageio-core 3.12.0
+	   |-- com_twelvemonkeys_imageio_imageio-metadata 3.12.0
+	   |-- com_twelvemonkeys_imageio_imageio-webp 3.12.0
+	   |-- org_quiltmc_parsers_gson 0.2.1
+	   \-- org_quiltmc_parsers_json 0.2.1
+	- zoomify 2.15.2+1.21.11
+	   \-- com_akuleshov7_ktoml-core-jvm 0.7.1
+[18:50:55] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/blackarcadia/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/5f66cc9f59b8efaa942155a3d5a30599bf6640dd/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
+[18:50:55] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[18:50:55] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl.mixins.json could not be read. If this is a development environment you can ignore this message
+[18:50:55] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl-fabric.mixins.json could not be read. If this is a development environment you can ignore this message
+[18:50:55] [main/WARN] (FabricLoader/Mixin) Reference map 'geckolib.refmap.json' for geckolib.mixins.json could not be read. If this is a development environment you can ignore this message
+[18:50:55] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/ItemRenderState$LayerRenderState (java.lang.ClassNotFoundException: net/minecraft/ItemRenderState$LayerRenderState)
+[18:50:55] [main/WARN] (FabricLoader/Mixin) @Mixin target net/minecraft/ItemRenderState$LayerRenderState was not found axialutils.client.mixins.json:ItemRenderStateLayerRenderStateMixin from mod axialutils
+[18:50:56] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+[18:50:56] [Datafixer Bootstrap/INFO] (Minecraft) 287 Datafixer optimizations took 267 milliseconds
+[18:50:59] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod axialutils failed axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> net.minecraft.client.gui.screen.ingame.HandledScreen: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Legacy Injections -> handler$zzl000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Legacy Injections -> handler$zzl000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:326)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:364)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:331)
 	at org.spongepowered.asm.mixin.injection.struct.CallbackInjectionInfo.<init>(CallbackInjectionInfo.java:48)
@@ -72,14 +98,16 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:483)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo$InjectorEntry.create(InjectionInfo.java:196)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:664)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1396)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:731)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMixin(MixinApplicatorStandard.java:315)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:246)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:659)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1386)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:811)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$3(MixinApplicatorStandard.java:323)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:320)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:352)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
@@ -104,14 +132,14 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
 	at knot//net.minecraft.client.main.Main.main(Main.java:234)
-	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
-[17:12:55] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod axialutils failed axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> net.minecraft.client.gui.screen.ingame.HandledScreen: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Injections -> handler$zoi000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Injections -> handler$zoi000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
+[18:50:59] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod axialutils failed axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> net.minecraft.client.gui.screen.ingame.HandledScreen: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Legacy Injections -> handler$zzl000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Legacy Injections -> handler$zzl000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:326)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:364)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:331)
 	at org.spongepowered.asm.mixin.injection.struct.CallbackInjectionInfo.<init>(CallbackInjectionInfo.java:48)
@@ -119,14 +147,16 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:483)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo$InjectorEntry.create(InjectionInfo.java:196)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:664)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1396)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:731)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMixin(MixinApplicatorStandard.java:315)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:246)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:659)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1386)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:811)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$3(MixinApplicatorStandard.java:323)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:320)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:352)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
@@ -151,14 +181,14 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
 	at knot//net.minecraft.client.main.Main.main(Main.java:243)
-	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
-[17:12:55] [Render thread/ERROR] (FabricLoader) Minecraft has crashed!
+[18:50:59] [Render thread/ERROR] (FabricLoader) Minecraft has crashed!
 net.fabricmc.loader.impl.FormattedException: java.lang.RuntimeException: Mixin transformation of net.minecraft.client.gui.screen.ingame.HandledScreen failed
 	at net.fabricmc.loader.impl.FormattedException.ofLocalized(FormattedException.java:63)
-	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:516)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:519)
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
@@ -185,22 +215,22 @@ Caused by: java.lang.RuntimeException: Mixin transformation of net.minecraft.cli
 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
 	at knot//net.minecraft.client.main.Main.main(Main.java:243)
-	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517)
 	... 3 more
 Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:380)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
 	... 25 more
 Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils] from phase [DEFAULT] in config [axialutils.client.mixins.json] FAILED during APPLY
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:686)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:637)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:368)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
 	... 28 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Injections -> handler$zoi000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on axialutils$renderContrabandGlint could not find any targets matching 'method_2382' in net/minecraft/client/gui/screen/ingame/HandledScreen. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> axialutils.client.mixins.json:HandledScreenContrabandMixin from mod axialutils -> Prepare Legacy Injections -> handler$zzl000$axialutils$renderContrabandGlint(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/item/ItemStack;IILjava/lang/String;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:326)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:364)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:331)
 	at org.spongepowered.asm.mixin.injection.struct.CallbackInjectionInfo.<init>(CallbackInjectionInfo.java:48)
@@ -208,12 +238,14 @@ Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionExce
 	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
 	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:483)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo$InjectorEntry.create(InjectionInfo.java:196)
-	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:664)
-	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1396)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:731)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyMixin(MixinApplicatorStandard.java:315)
-	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:246)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.parse(InjectionInfo.java:659)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.prepareInjections(MixinTargetContext.java:1386)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.prepareInjections(MixinApplicatorStandard.java:811)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$3(MixinApplicatorStandard.java:323)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:320)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
-	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:352)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
 	... 28 more

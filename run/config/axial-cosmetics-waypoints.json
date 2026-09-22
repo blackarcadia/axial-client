@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "waypoints": [
+    {
+      "name": "dsdwd",
+      "dimension": "minecraft:overworld",
+      "x": 8,
+      "y": 69,
+      "z": 9,
+      "color": 16098776
+    },
+    {
+      "name": "dasdwadawdadad",
+      "dimension": "minecraft:overworld",
+      "x": -20,
+      "y": 74,
+      "z": -12,
+      "color": 6412543
+    }
+  ]
+}

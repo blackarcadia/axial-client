@@ -1,0 +1,17 @@
+[
+  {
+    "id": "dev_headset",
+    "texture": "dev_headset.png",
+    "slots": ["head"],
+    "uuids": [],
+    "names": ["SubXil"]
+  },
+  {
+    "id": "hasmatmask",
+    "texture": "hasmathelmet.png",
+    "model": "axial_cosmetics:item/hasmatmask",
+    "slots": ["head"],
+    "uuids": [],
+    "names": ["SubXil"]
+  }
+]
