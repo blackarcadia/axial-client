@@ -16,9 +16,16 @@ plugins {
 }
 
 group = 'org.example'
-version = '1.0-SNAPSHOT'
+def axialUpdate = "1.0.0"
+
+def gitIdentifier = providers.exec {
+    commandLine "git", "rev-parse", "--short=5", "HEAD"
+}.standardOutput.asText.get().trim().toLowerCase()
+
+version = "${axialUpdate}.b${gitIdentifier}"
 def appVersion = (project.findProperty("appVersion") ?: "1.0.0").toString()
 def appChannel = (project.findProperty("appChannel") ?: "dev").toString()
+def clientVersion = project.version.toString()
 def axialUtilsFile = "axialutils-1.0-SNAPSHOT.jar"
 
 repositories {
@@ -81,7 +88,11 @@ processResources {
     exclude('staticbgmod-1.0.4.jar')
 
     filesMatching('version.properties') {
-        expand(appVersion: appVersion, appChannel: appChannel)
+        expand(
+                appVersion: appVersion,
+                appChannel: appChannel,
+                clientVersion: clientVersion
+        )
     }
 }
 
