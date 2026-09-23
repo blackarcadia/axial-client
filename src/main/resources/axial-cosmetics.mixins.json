@@ -36,6 +36,8 @@
     "MinecraftClientDebugHudEntryListAccessor",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
+    "MinecraftClientAttackInvoker",
+    "MinecraftClientVerifiedMobAttackMixin",
     "TitleScreenBackgroundMixin",
     "MenuSubscreenBackgroundMixin",
     "LevelLoadingScreenBackgroundMixin",

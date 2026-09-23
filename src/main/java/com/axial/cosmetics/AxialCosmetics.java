@@ -11,6 +11,7 @@ import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.CreateWaypointScreen;
+import com.axial.cosmetics.client.VerifiedMobAttack;
 import com.axial.cosmetics.client.WaypointWorldRenderer;
 import com.axial.cosmetics.data.CosmeticManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -88,6 +89,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MenuMusicController.tick(client);
             ChunkBordersConfig.sync(client);
+            VerifiedMobAttack.tick(client);
             if (client.player != null && client.currentScreen == null && CrosshairConfigManager.get().enabled && CrosshairConfigManager.get().dynamicEnabled) {
                 if (client.options.attackKey.wasPressed() || client.options.useKey.wasPressed()) {
                     CrosshairDynamicState.triggerPulse();
