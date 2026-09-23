@@ -10,6 +10,7 @@ import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
+import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.client.VerifiedMobAttack;
 import com.axial.cosmetics.client.WaypointWorldRenderer;
@@ -60,6 +61,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
         WeatherDetectorModelRegistry.register();
         EnchantGlintConfig.load();
+        ThirdPersonNameTagsConfig.load();
         ItemScalerConfig.load();
         com.axial.cosmetics.client.PotionsHudConfig.load();
         CrosshairConfigManager.load();

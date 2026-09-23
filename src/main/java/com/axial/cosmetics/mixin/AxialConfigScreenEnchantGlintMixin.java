@@ -3,6 +3,7 @@ package com.axial.cosmetics.mixin;
 import com.axial.cosmetics.client.CrosshairColorPickerScreen;
 import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.EnchantGlintSliderWidget;
+import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -33,6 +34,7 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     @Shadow private int currentPanelBaseY() { throw new AssertionError(); }
 
     @Unique private EnchantGlintSliderWidget axial_cosmetics$glintSlider;
+    @Unique private ButtonWidget axial_cosmetics$thirdPersonNameTags;
     @Unique private ButtonWidget axial_cosmetics$glintColor;
     @Unique private ButtonWidget axial_cosmetics$glintReset;
     @Unique private int axial_cosmetics$glintY;
@@ -43,6 +45,11 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     @Inject(method = "method_25426", at = @At("TAIL"), remap = false)
     private void axial_cosmetics$initGlintControls(CallbackInfo ci) {
         axial_cosmetics$glintSlider = addSelectableChild(new EnchantGlintSliderWidget());
+        axial_cosmetics$thirdPersonNameTags = addSelectableChild(ButtonWidget.builder(axial_cosmetics$thirdPersonNameTagsText(), button -> {
+                    ThirdPersonNameTagsConfig.toggle();
+                    button.setMessage(axial_cosmetics$thirdPersonNameTagsText());
+                })
+                .dimensions(0, 0, 392, 20).build());
         axial_cosmetics$glintColor = addSelectableChild(ButtonWidget.builder(axial_cosmetics$glintText("ENCHANT GLINT COLOR"), button ->
                 MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, "ENCHANT GLINT",
                         EnchantGlintConfig.color(), EnchantGlintConfig::setColor, EnchantGlintConfig::save)))
@@ -64,7 +71,7 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
                 y.setAccessible(true);
                 axial_cosmetics$glintY = y.getInt(row) + 28;
                 axial_cosmetics$glintOptions = true;
-                submenuContentHeight = axial_cosmetics$glintY + AXIAL_GLINT_HEADER_HEIGHT + 28 + 20 + 14;
+                submenuContentHeight = axial_cosmetics$glintY + 158;
                 panelHeight = Math.min(height - 32, submenuContentHeight);
                 panelTargetY = (height - panelHeight) / 2;
                 break;
@@ -79,11 +86,14 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     private void axial_cosmetics$positionGlintControls() {
         if (axial_cosmetics$glintSlider == null) return;
         int x = (width - panelWidth) / 2 + 14;
-        int y = currentPanelBaseY() + axial_cosmetics$glintY + AXIAL_GLINT_HEADER_HEIGHT;
+        int y = currentPanelBaseY() + axial_cosmetics$glintY;
+        axial_cosmetics$thirdPersonNameTags.setPosition(x, y);
+        y += 28 + AXIAL_GLINT_HEADER_HEIGHT;
         axial_cosmetics$glintSlider.setPosition(x, y);
         axial_cosmetics$glintColor.setPosition(x, y + 28);
         axial_cosmetics$glintReset.setPosition(x + 316, y + 28);
         axial_cosmetics$glintSlider.visible = axial_cosmetics$glintOptions;
+        axial_cosmetics$thirdPersonNameTags.visible = axial_cosmetics$glintOptions;
         axial_cosmetics$glintColor.visible = axial_cosmetics$glintOptions;
         axial_cosmetics$glintReset.visible = axial_cosmetics$glintOptions;
     }
@@ -93,6 +103,7 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
         axial_cosmetics$positionGlintControls();
         if (!axial_cosmetics$glintOptions || axial_cosmetics$glintSlider == null) return;
         int headerX = axial_cosmetics$glintSlider.getX();
+        axial_cosmetics$thirdPersonNameTags.render(context, mouseX, mouseY, delta);
         int headerY = axial_cosmetics$glintSlider.getY() - AXIAL_GLINT_HEADER_HEIGHT;
         Text header = axial_cosmetics$glintText("ENCHANT GLINT");
         context.drawTextWithShadow(textRenderer, header, headerX + 2, headerY + 2, 0xFFC6D0F3);
@@ -109,6 +120,12 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     @Unique
     private static Text axial_cosmetics$glintText(String value) {
         return Text.literal(value).styled(style -> style.withFont(AXIAL_GLINT_FONT));
+    }
+
+    @Unique
+    private static Text axial_cosmetics$thirdPersonNameTagsText() {
+        return axial_cosmetics$glintText("THIRD PERSON NAME TAGS: "
+                + (ThirdPersonNameTagsConfig.enabled() ? "ON" : "OFF"));
     }
 
 }
