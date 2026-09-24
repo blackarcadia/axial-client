@@ -71,7 +71,9 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
                 axial_cosmetics$addThirdPersonNameTagsRow(rowX, rowY + 28);
                 axial_cosmetics$glintY = rowY + 76;
                 axial_cosmetics$glintOptions = true;
-                submenuContentHeight = axial_cosmetics$glintY + 62;
+                // Leave room below the color row; the Options pane clips content at
+                // its lower edge and the buttons otherwise land exactly on it.
+                submenuContentHeight = axial_cosmetics$glintY + 82;
                 panelHeight = Math.min(height - 32, submenuContentHeight);
                 panelTargetY = (height - panelHeight) / 2;
                 break;
