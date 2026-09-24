@@ -30,7 +30,7 @@ public abstract class ArmorCosmeticGeoRendererMixin {
             at = @At("RETURN"), remap = true)
     private void axial$captureShadow(ArmorCosmeticItem item, GeoArmorRenderer.RenderData data,
             PlayerEntityRenderState state, float partialTick, CallbackInfo ci) {
-        ((GeoRenderState) state).addGeckolibData(ShadowArmorGlint.GEO_SHADOW, ShadowArmorGlint.matches(data.itemStack()));
+        ((GeoRenderState) state).addGeckolibData(ShadowArmorGlint.GEO_TYPE, ShadowArmorGlint.type(data.itemStack()));
     }
 
     /**
@@ -57,12 +57,12 @@ public abstract class ArmorCosmeticGeoRendererMixin {
     ) {
         queue.submitCustom(matrices, baseLayer, renderer);
 
-        boolean shadow = renderPassInfo.getOrDefaultGeckolibData(ShadowArmorGlint.GEO_SHADOW, false);
-        if (!shadow && !renderPassInfo.getOrDefaultGeckolibData(DataTickets.HAS_GLINT, false)) {
+        ShadowArmorGlint.GlintType specialType = renderPassInfo.getOrDefaultGeckolibData(ShadowArmorGlint.GEO_TYPE, null);
+        if (specialType == null && !renderPassInfo.getOrDefaultGeckolibData(DataTickets.HAS_GLINT, false)) {
             return;
         }
 
         // Use the same view offset and texture transform as vanilla worn armor.
-        queue.submitCustom(matrices, shadow ? ShadowArmorGlint.armorLayer() : RenderLayers.armorEntityGlint(), renderer);
+        queue.submitCustom(matrices, specialType != null ? ShadowArmorGlint.armorLayer(specialType) : RenderLayers.armorEntityGlint(), renderer);
     }
 }

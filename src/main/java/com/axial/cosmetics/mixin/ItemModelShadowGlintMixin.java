@@ -24,14 +24,15 @@ public abstract class ItemModelShadowGlintMixin {
         ItemRenderStateAccessor access = (ItemRenderStateAccessor) state;
         int firstLayer = access.axial$getLayerCount();
         original.call(model, state, stack, manager, context, world, holder, seed);
-        if (!ShadowArmorGlint.matches(stack)) return;
+        ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type(stack);
+        if (specialType == null) return;
         // Include the override in the GUI item-atlas cache key.
-        state.addModelKey("axial:shadow_glint");
+        state.addModelKey("axial:special_set_glint_" + specialType.name().toLowerCase());
         for (int i = firstLayer; i < access.axial$getLayerCount(); i++) {
             ItemRenderState.LayerRenderState layer = access.axial$getLayers()[i];
             RenderLayer renderLayer = ((ItemLayerRenderStateAccessor) layer).axial$getRenderLayer();
             if (renderLayer != null) {
-                layer.setRenderLayer(ShadowArmorGlint.variant(renderLayer));
+                layer.setRenderLayer(ShadowArmorGlint.variant(renderLayer, specialType));
                 layer.setGlint(ItemRenderState.Glint.STANDARD);
             }
         }

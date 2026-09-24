@@ -20,6 +20,7 @@ public abstract class EquipmentShadowGlintMixin {
     @ModifyExpressionValue(method = "render(Lnet/minecraft/client/render/entity/equipment/EquipmentModel$LayerType;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;ILnet/minecraft/util/Identifier;II)V", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/render/RenderLayers;armorEntityGlint()Lnet/minecraft/client/render/RenderLayer;"))
     private RenderLayer axial$shadowLayer(RenderLayer original, @Local(argsOnly = true) ItemStack stack) {
-        return ShadowArmorGlint.matches(stack) ? ShadowArmorGlint.armorLayer() : original;
+        ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type(stack);
+        return specialType == null ? original : ShadowArmorGlint.armorLayer(specialType);
     }
 }

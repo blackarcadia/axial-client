@@ -31,7 +31,7 @@ public abstract class GeoArmorGlintMixin {
             at = @At("RETURN"), remap = true)
     private void axial$captureShadow(Item item, GeoArmorRenderer.RenderData data,
             BipedEntityRenderState state, float partialTick, CallbackInfo ci) {
-        ((GeoRenderState) state).addGeckolibData(ShadowArmorGlint.GEO_SHADOW, ShadowArmorGlint.matches(data.itemStack()));
+        ((GeoRenderState) state).addGeckolibData(ShadowArmorGlint.GEO_TYPE, ShadowArmorGlint.type(data.itemStack()));
     }
 
     @Redirect(
@@ -61,13 +61,13 @@ public abstract class GeoArmorGlintMixin {
                 false
         );
 
-        boolean shadow = renderPassInfo.getOrDefaultGeckolibData(ShadowArmorGlint.GEO_SHADOW, false);
-        if (!hasGlint && !shadow) {
+        ShadowArmorGlint.GlintType specialType = renderPassInfo.getOrDefaultGeckolibData(ShadowArmorGlint.GEO_TYPE, null);
+        if (!hasGlint && specialType == null) {
             return;
         }
 
         // Match the armor base layer's view offset. The held-item entity glint
         // lacks this offset and fails the equal-depth test on worn armor.
-        queue.submitCustom(matrices, shadow ? ShadowArmorGlint.armorLayer() : RenderLayers.armorEntityGlint(), renderer);
+        queue.submitCustom(matrices, specialType != null ? ShadowArmorGlint.armorLayer(specialType) : RenderLayers.armorEntityGlint(), renderer);
     }
 }

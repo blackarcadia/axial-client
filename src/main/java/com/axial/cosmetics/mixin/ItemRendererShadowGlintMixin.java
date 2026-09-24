@@ -22,9 +22,10 @@ public abstract class ItemRendererShadowGlintMixin {
             VertexConsumerProvider consumers, int light, int overlay, int[] tints,
             List<BakedQuad> quads, RenderLayer layer, ItemRenderState.Glint glint, Operation<Void> original) {
         VertexConsumerProvider selected = consumers;
-        if (ShadowArmorGlint.isShadow(layer)) {
+        ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type(layer);
+        if (specialType != null) {
             selected = requested -> consumers.getBuffer(requested.getRenderPipeline() == RenderPipelines.GLINT
-                    ? ShadowArmorGlint.variant(requested) : requested);
+                    ? ShadowArmorGlint.variant(requested, specialType) : requested);
             // Restore identity before vanilla's translucent-layer comparisons.
             layer = ShadowArmorGlint.original(layer);
         }

@@ -16,9 +16,12 @@ public abstract class RenderLayerEnchantGlintMixin {
             "Lnet/minecraft/client/gl/DynamicUniforms;write(Lorg/joml/Matrix4fc;Lorg/joml/Vector4fc;Lorg/joml/Vector3fc;Lorg/joml/Matrix4fc;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"), index = 1)
     private Vector4fc axial_cosmetics$glintModulator(Vector4fc original) {
         if (((RenderLayer) (Object) this).getRenderPipeline() != RenderPipelines.GLINT) return original;
-        if (ShadowArmorGlint.isShadow((RenderLayer) (Object) this)) {
+        ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type((RenderLayer) (Object) this);
+        if (specialType != null) {
             float strength = ShadowArmorGlint.STRENGTH;
-            return new Vector4f(strength, strength, strength, -1.0f);
+            return specialType == ShadowArmorGlint.GlintType.SHADOW
+                    ? new Vector4f(strength, strength, strength, -1.0f)
+                    : new Vector4f(0.5f * strength, strength, 0.0f, -1.0f);
         }
         float strength = EnchantGlintConfig.strength();
         if (!EnchantGlintConfig.customColor()) {

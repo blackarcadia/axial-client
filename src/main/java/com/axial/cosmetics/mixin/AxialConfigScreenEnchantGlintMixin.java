@@ -69,18 +69,30 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
                 int rowX = axial_cosmetics$rowX(row);
                 int rowY = axial_cosmetics$rowY(row);
                 axial_cosmetics$addThirdPersonNameTagsRow(rowX, rowY + 28);
-                axial_cosmetics$glintY = rowY + 76;
                 axial_cosmetics$glintOptions = true;
-                // Leave room below the color row; the Options pane clips content at
-                // its lower edge and the buttons otherwise land exactly on it.
-                submenuContentHeight = axial_cosmetics$glintY + 82;
-                panelHeight = Math.min(height - 32, submenuContentHeight);
-                panelTargetY = (height - panelHeight) / 2;
                 break;
             } catch (ReflectiveOperationException ex) {
                 throw new IllegalStateException("Could not place enchant glint options below Player Shadows", ex);
             }
         }
+        axial_cosmetics$positionGlintControls();
+    }
+
+    /**
+     * Runs after the shared Axial menu has normalized its rows.  The glint
+     * controls must use that final layout; otherwise the unified menu moves
+     * the name-tag row but leaves these controls below the visible panel.
+     */
+    @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 3000)
+    private void axial_cosmetics$layoutGlintControlsLast(CallbackInfo ci) {
+        if (!axial_cosmetics$glintOptions) return;
+
+        // Three native rows (Coming Soon, Player Shadows, and Name Tags)
+        // occupy y=30, 60, and 90.  The glint section starts on the next row.
+        axial_cosmetics$glintY = 30 + optionRows.size() * 30;
+        submenuContentHeight = axial_cosmetics$glintY + 68;
+        panelHeight = Math.min(height - 32, submenuContentHeight);
+        panelTargetY = (height - panelHeight) / 2;
         axial_cosmetics$positionGlintControls();
     }
 

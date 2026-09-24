@@ -15,6 +15,10 @@ class ShadowArmorGlintTest {
         NbtCompound paper = new NbtCompound();
         paper.put("PublicBukkitValues", direct);
         assertTrue(ShadowArmorGlint.matchesData(paper));
+
+        NbtCompound prospector = new NbtCompound();
+        prospector.putString("prisonscore:special-set", "prospector");
+        assertEquals(ShadowArmorGlint.GlintType.PROSPECTOR, ShadowArmorGlint.typeData(prospector));
     }
 
     @Test
