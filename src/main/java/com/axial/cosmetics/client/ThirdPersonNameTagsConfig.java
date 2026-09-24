@@ -36,7 +36,11 @@ public final class ThirdPersonNameTagsConfig {
     }
 
     public static void toggle() {
-        config.enabled = !config.enabled;
+        setEnabled(!config.enabled);
+    }
+
+    public static void setEnabled(boolean enabled) {
+        config.enabled = enabled;
         save();
     }
 

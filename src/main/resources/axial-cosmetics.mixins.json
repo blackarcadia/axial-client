@@ -6,6 +6,8 @@
   "client": [
     "AxialColorTileMixin",
     "AxialConfigScreenEnchantGlintMixin",
+    "AxialConfigScreenOptionsScrollMixin",
+    "AxialConfigScreenInformationHudPreviewMixin",
     "RenderLayerEnchantGlintMixin",
     "RenderLayerAccessor",
     "EquipmentShadowGlintMixin",
