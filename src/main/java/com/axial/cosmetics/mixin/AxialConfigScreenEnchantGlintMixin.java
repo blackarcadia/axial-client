@@ -27,6 +27,7 @@ import java.util.List;
 public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     @Unique private static final StyleSpriteSource.Font AXIAL_GLINT_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     @Unique private static final int AXIAL_GLINT_HEADER_HEIGHT = 20;
+    @Unique private static final int AXIAL_GLINT_SECTION_GAP = 24;
     @Shadow @Final private List<?> optionRows;
     @Shadow private int panelHeight;
     @Shadow private int panelWidth;
@@ -88,8 +89,9 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
         if (!axial_cosmetics$glintOptions) return;
 
         // Three native rows (Coming Soon, Player Shadows, and Name Tags)
-        // occupy y=30, 60, and 90.  The glint section starts on the next row.
-        axial_cosmetics$glintY = 30 + optionRows.size() * 30;
+        // occupy y=30, 60, and 90. Leave space below the added Name Tags
+        // control so the Enchant Glint divider does not overlap it.
+        axial_cosmetics$glintY = 30 + optionRows.size() * 30 + AXIAL_GLINT_SECTION_GAP;
         submenuContentHeight = axial_cosmetics$glintY + 68;
         panelHeight = Math.min(height - 32, submenuContentHeight);
         panelTargetY = (height - panelHeight) / 2;
