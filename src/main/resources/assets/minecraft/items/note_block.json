@@ -123,6 +123,13 @@
         }
       },
       {
+        "threshold": 288,
+        "model": {
+          "type": "minecraft:model",
+          "model": "axial_cosmetics:item/pumpkinbomb"
+        }
+      },
+      {
         "threshold": 275,
         "model": {
           "type": "minecraft:model",
