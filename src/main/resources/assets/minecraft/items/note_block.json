@@ -140,7 +140,7 @@
         "threshold": 288,
         "model": {
           "type": "minecraft:model",
-          "model": "axial_cosmetics:item/pumpkinbomb"
+          "model": "minecraft:block/custom/pumpkinbomb"
         }
       },
       {
