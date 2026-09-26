@@ -35,6 +35,7 @@ public class MinecraftLauncher {
     private static final String FABRIC_LANGUAGE_KOTLIN_FILE = "fabric-language-kotlin-1.14.1+kotlin.2.4.20.jar";
     private static final String YACL_FILE = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar";
     private static final String ZOOMIFY_FILE = "zoomify-2.15.2+1.21.11.jar";
+    private static final String SCROLLABLE_TOOLTIPS_FILE = "scrollable-tooltips-1.4.2+1.21.11-fabric.jar";
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
     private static final String MOD_MENU_FILE = "modmenu-17.0.0-alpha.1.jar";
     private static final String SODIUM_FILE = "sodium-fabric-0.8.13+mc1.21.11.jar";
@@ -91,6 +92,7 @@ public class MinecraftLauncher {
         installFabricLanguageKotlin(layout);
         installYacl(layout);
         installZoomify(layout);
+        installScrollableTooltips(layout);
         downloadModMenu(layout);
         installSodium(layout);
         installLithium(layout);
@@ -549,6 +551,10 @@ public class MinecraftLauncher {
 
     private void installZoomify(FileLayout layout) throws IOException {
         installBundledMod(layout, ZOOMIFY_FILE, "zoomify-");
+    }
+
+    private void installScrollableTooltips(FileLayout layout) throws IOException {
+        installBundledMod(layout, SCROLLABLE_TOOLTIPS_FILE, "scrollable-tooltips-");
     }
 
     private void installBundledMod(FileLayout layout, String fileName, String versionPrefix) throws IOException {

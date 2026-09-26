@@ -106,6 +106,7 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'fabric-language-kotlin-1.14.1+kotlin.2.4.20.jar'
         include 'yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar'
         include 'zoomify-2.15.2+1.21.11.jar'
+        include 'scrollable-tooltips-1.4.2+1.21.11-fabric.jar'
     }
     into layout.projectDirectory.dir('run/mods')
 }
