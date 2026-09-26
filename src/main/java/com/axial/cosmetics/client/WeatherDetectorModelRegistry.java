@@ -56,7 +56,7 @@ public final class WeatherDetectorModelRegistry {
 
     private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_288_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
-            .with(NoteBlock.NOTE, 14)
+            .with(NoteBlock.NOTE, 11)
             .with(NoteBlock.POWERED, false);
 
 
