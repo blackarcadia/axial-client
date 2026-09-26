@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"1": "soulcollector",
+		"1": "axial_cosmetics:item/soulcollector",
 		"particle": "axial_cosmetics:item/soulcollector"
 	},
 	"elements": [
