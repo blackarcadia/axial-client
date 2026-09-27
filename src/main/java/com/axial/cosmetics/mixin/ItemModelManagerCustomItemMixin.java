@@ -38,6 +38,9 @@ public abstract class ItemModelManagerCustomItemMixin {
     private static final String MONEY_NOTE_PACK_VALUE = "MONEY_NOTE_PACK";
     @Unique
     private static final Identifier MONEY_NOTE_PACK_MODEL = Identifier.of("minecraft", "money_note_pack");
+    @Unique
+    private static final Identifier BOX_OF_CHOCOLATES_MODEL =
+            Identifier.of("axial_cosmetics", "boxofchocolates");
 
     @Redirect(
             method = {
@@ -72,6 +75,10 @@ public abstract class ItemModelManagerCustomItemMixin {
             if (modelData != null && Float.valueOf(288.0F).equals(modelData.getFloat(0))) {
                 return PUMPKINBOMB_MODEL;
             }
+            if (modelData != null && Float.valueOf(289.0F).equals(modelData.getFloat(0))) {
+                return BOX_OF_CHOCOLATES_MODEL;
+            }
+
             if (modelData != null && Float.valueOf(248.0F).equals(modelData.getFloat(0))) {
                 return LAMPSHADE_MODEL;
             }
