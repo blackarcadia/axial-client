@@ -86,6 +86,20 @@
           "type": "minecraft:model",
           "model": "axial_cosmetics:item/custom_model_data_276"
         }
+      },
+      {
+        "threshold": 288,
+        "model": {
+          "type": "minecraft:model",
+          "model": "axial_cosmetics:block/custom/pumpkinbomb"
+        }
+      },
+      {
+        "threshold": 289,
+        "model": {
+          "type": "minecraft:model",
+          "model": "axial_cosmetics:item/custom_model_data_276"
+        }
       }
     ],
     "fallback": {
