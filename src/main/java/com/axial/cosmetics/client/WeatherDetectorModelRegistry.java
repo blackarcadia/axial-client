@@ -23,15 +23,13 @@ public final class WeatherDetectorModelRegistry {
     private static final Identifier CUSTOM_MODEL_DATA_274_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_274");
     private static final Identifier CUSTOM_MODEL_DATA_275_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_275");
     private static final Identifier CUSTOM_MODEL_DATA_276_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_276");
-    private static final Identifier CUSTOM_MODEL_DATA_288_MODEL_ID =
+    private static final Identifier PUMPKIN_BOMB_MODEL_ID =
             Identifier.of("axial_cosmetics", "block/custom/pumpkinbomb");
-    private static final Identifier BOX_OF_CHOCOLATES_MODEL_ID =
-            Identifier.of("axial_cosmetics", "block/custom/tester");
     private static final net.minecraft.block.BlockState WEATHER_DETECTOR_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 8)
             .with(NoteBlock.POWERED, false);
-    private static final net.minecraft.block.BlockState BOX_OF_CHOCOLATES_STATE = Blocks.NOTE_BLOCK.getDefaultState()
+    private static final net.minecraft.block.BlockState PUMPKIN_BOMB_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 15)
             .with(NoteBlock.POWERED, false);
@@ -60,12 +58,6 @@ public final class WeatherDetectorModelRegistry {
             .with(NoteBlock.NOTE, 12)
             .with(NoteBlock.POWERED, false);
 
-    private static final net.minecraft.block.BlockState CUSTOM_MODEL_DATA_288_STATE = Blocks.NOTE_BLOCK.getDefaultState()
-            .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
-            .with(NoteBlock.NOTE, 14)
-            .with(NoteBlock.POWERED, false);
-
-
     private WeatherDetectorModelRegistry() {
     }
 
@@ -92,8 +84,8 @@ public final class WeatherDetectorModelRegistry {
         context.setModel(CUSTOM_MODEL_DATA_274_STATE, model(CUSTOM_MODEL_DATA_274_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_275_STATE, model(CUSTOM_MODEL_DATA_275_MODEL_ID));
         context.setModel(CUSTOM_MODEL_DATA_276_STATE, model(CUSTOM_MODEL_DATA_276_MODEL_ID));
-        context.setModel(CUSTOM_MODEL_DATA_288_STATE, model(CUSTOM_MODEL_DATA_288_MODEL_ID));
-        context.setModel(BOX_OF_CHOCOLATES_STATE, model(BOX_OF_CHOCOLATES_MODEL_ID));
+        context.setModel(PUMPKIN_BOMB_STATE, model(PUMPKIN_BOMB_MODEL_ID));
+        context.setModel(PUMPKIN_BOMB_STATE.with(NoteBlock.POWERED, true), model(PUMPKIN_BOMB_MODEL_ID));
     }
 
     private static void resolveDaylightDetector(BlockStateResolver.Context context) {
