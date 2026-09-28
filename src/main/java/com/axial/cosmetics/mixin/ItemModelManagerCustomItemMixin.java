@@ -20,6 +20,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier PUMPKINBOMB_MODEL = Identifier.of("axial_cosmetics", "pumpkinbomb");
     @Unique
+    private static final Identifier TEDDYBEAR_MODEL = Identifier.of("axial_cosmetics", "teddybear");
+    @Unique
     private static final Identifier LABOTOMY_TABLE_MODEL = Identifier.of("axial_cosmetics", "labotomytable");
     @Unique
     private static final Identifier BROODMOTHER_MODEL = Identifier.of("axial_cosmetics", "broodmother");
@@ -79,6 +81,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(290.0F).equals(modelData.getFloat(0))) {
                 return LABOTOMY_TABLE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(291.0F).equals(modelData.getFloat(0))) {
+                return TEDDYBEAR_MODEL;
             }
             if (modelData != null && Float.valueOf(289.0F).equals(modelData.getFloat(0))) {
                 return BOX_OF_CHOCOLATES_MODEL;
