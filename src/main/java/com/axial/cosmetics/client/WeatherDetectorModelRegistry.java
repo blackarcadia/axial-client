@@ -25,6 +25,8 @@ public final class WeatherDetectorModelRegistry {
     private static final Identifier CUSTOM_MODEL_DATA_276_MODEL_ID = Identifier.of("axial_cosmetics", "block/custom/custom_model_data_276");
     private static final Identifier PUMPKIN_BOMB_MODEL_ID =
             Identifier.of("axial_cosmetics", "block/custom/pumpkinbomb");
+    private static final Identifier TEDDYBEAR_MODEL_ID =
+            Identifier.of("axial_cosmetics", "block/custom/teddybear");
     private static final Identifier LABOTOMY_TABLE_MODEL_ID =
             Identifier.of("axial_cosmetics", "block/custom/labotomytable");
     private static final Identifier BOX_OF_CHOCOLATES_MODEL_ID =
@@ -36,6 +38,10 @@ public final class WeatherDetectorModelRegistry {
     private static final net.minecraft.block.BlockState PUMPKIN_BOMB_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 15)
+            .with(NoteBlock.POWERED, false);
+    private static final net.minecraft.block.BlockState TEDDYBEAR_STATE = Blocks.NOTE_BLOCK.getDefaultState()
+            .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
+            .with(NoteBlock.NOTE, 17)
             .with(NoteBlock.POWERED, false);
     private static final net.minecraft.block.BlockState LABOTOMY_TABLE_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
@@ -98,6 +104,8 @@ public final class WeatherDetectorModelRegistry {
         context.setModel(CUSTOM_MODEL_DATA_276_STATE, model(CUSTOM_MODEL_DATA_276_MODEL_ID));
         context.setModel(PUMPKIN_BOMB_STATE, model(PUMPKIN_BOMB_MODEL_ID));
         context.setModel(PUMPKIN_BOMB_STATE.with(NoteBlock.POWERED, true), model(PUMPKIN_BOMB_MODEL_ID));
+        context.setModel(TEDDYBEAR_STATE, model(TEDDYBEAR_MODEL_ID));
+        context.setModel(TEDDYBEAR_STATE.with(NoteBlock.POWERED, true), model(TEDDYBEAR_MODEL_ID));
         context.setModel(LABOTOMY_TABLE_STATE, model(LABOTOMY_TABLE_MODEL_ID));
         context.setModel(LABOTOMY_TABLE_STATE.with(NoteBlock.POWERED, true), model(LABOTOMY_TABLE_MODEL_ID));
         context.setModel(BOX_OF_CHOCOLATES_STATE, model(BOX_OF_CHOCOLATES_MODEL_ID));
