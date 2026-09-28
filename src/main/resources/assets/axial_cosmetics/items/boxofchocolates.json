@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "axial_cosmetics:block/boxofchocolates"
+    "model": "axial_cosmetics:block/custom/boxofchocolates"
   }
 }
