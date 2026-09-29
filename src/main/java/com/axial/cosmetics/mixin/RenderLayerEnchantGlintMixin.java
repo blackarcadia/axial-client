@@ -18,10 +18,7 @@ public abstract class RenderLayerEnchantGlintMixin {
         if (((RenderLayer) (Object) this).getRenderPipeline() != RenderPipelines.GLINT) return original;
         ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type((RenderLayer) (Object) this);
         if (specialType != null) {
-            float strength = ShadowArmorGlint.STRENGTH;
-            return specialType == ShadowArmorGlint.GlintType.SHADOW
-                    ? new Vector4f(strength, strength, strength, -1.0f)
-                    : new Vector4f(0.5f * strength, strength, 0.0f, -1.0f);
+            return specialType.modulator();
         }
         float strength = EnchantGlintConfig.strength();
         if (!EnchantGlintConfig.customColor()) {
