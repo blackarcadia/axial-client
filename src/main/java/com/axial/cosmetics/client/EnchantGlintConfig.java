@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import net.fabricmc.loader.api.FabricLoader;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,21 @@ public final class EnchantGlintConfig {
     }
 
     public static float strength() { return config.strength; }
+
+    public static Vector4fc resolveModulator(Vector4fc original, ShadowArmorGlint.GlintType itemOverride,
+            float playerStrength, boolean playerCustomColor, int playerColor) {
+        // Item-specific glints own both their colour and strength, regardless of player settings.
+        if (itemOverride != null) return itemOverride.modulator();
+        if (!playerCustomColor) {
+            return playerStrength == 1.0f ? original
+                    : new Vector4f(playerStrength, playerStrength, playerStrength, 1.0f);
+        }
+        // Negative alpha selects recolouring in glint.fsh; it is never used as opacity.
+        return new Vector4f(((playerColor >> 16) & 255) / 255.0f * playerStrength,
+                ((playerColor >> 8) & 255) / 255.0f * playerStrength,
+                (playerColor & 255) / 255.0f * playerStrength, -1.0f);
+    }
+
     public static int color() { return config.color; }
     public static boolean customColor() { return config.customColor; }
     public static void setStrength(float value) { config.strength = clampStrength(value); save(); }

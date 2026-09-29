@@ -4,7 +4,6 @@ import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.ShadowArmorGlint;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.RenderLayer;
-import org.joml.Vector4f;
 import org.joml.Vector4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,17 +16,7 @@ public abstract class RenderLayerEnchantGlintMixin {
     private Vector4fc axial_cosmetics$glintModulator(Vector4fc original) {
         if (((RenderLayer) (Object) this).getRenderPipeline() != RenderPipelines.GLINT) return original;
         ShadowArmorGlint.GlintType specialType = ShadowArmorGlint.type((RenderLayer) (Object) this);
-        if (specialType != null) {
-            return specialType.modulator();
-        }
-        float strength = EnchantGlintConfig.strength();
-        if (!EnchantGlintConfig.customColor()) {
-            return strength == 1.0f ? original : new Vector4f(strength, strength, strength, 1.0f);
-        }
-        int color = EnchantGlintConfig.color();
-        // Negative alpha selects recolouring in glint.fsh; it is never used as opacity.
-        return new Vector4f(((color >> 16) & 255) / 255.0f * strength,
-                ((color >> 8) & 255) / 255.0f * strength,
-                (color & 255) / 255.0f * strength, -1.0f);
+        return EnchantGlintConfig.resolveModulator(original, specialType, EnchantGlintConfig.strength(),
+                EnchantGlintConfig.customColor(), EnchantGlintConfig.color());
     }
 }
