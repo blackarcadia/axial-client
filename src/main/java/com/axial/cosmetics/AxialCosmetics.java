@@ -58,6 +58,9 @@ public class AxialCosmetics implements ClientModInitializer {
         ArmorCosmeticRegistry.register(248, EquipmentSlot.HEAD,
                 id("geckolib/models/lampshade.geo.json"), id("textures/item/lampshade.png"));
 
+        ArmorCosmeticRegistry.register(293, EquipmentSlot.HEAD,
+                id("geckolib/models/diamondnecklace.geo.json"), id("textures/item/diamondnecklace.png"));
+
         ArmorCosmeticRegistry.registerFullModel(
                 277,
                 EquipmentSlot.LEGS,
