@@ -39,6 +39,9 @@ public abstract class ItemModelManagerCustomItemMixin {
     private static final Identifier DIAMONDNECKLACE_MODEL =
             Identifier.of("axial_cosmetics", "diamondnecklace");
     @Unique
+    private static final Identifier CHAINBELT_MODEL =
+            Identifier.of("axial_cosmetics", "chainbelt");
+    @Unique
     private static final Identifier LAMPSHADE_MODEL = Identifier.of("axial_cosmetics", "lampshade");
     @Unique
     private static final Identifier POWERBOX_MODEL = Identifier.of("axial_cosmetics", "powerbox");
@@ -77,6 +80,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(278.0F).equals(modelData.getFloat(0))) {
                 return SOULCOLLECTOR_MODEL;
+            }
+            if (modelData != null && Float.valueOf(294.0F).equals(modelData.getFloat(0))) {
+                return CHAINBELT_MODEL;
             }
             if (modelData != null && Float.valueOf(300.0F).equals(modelData.getFloat(0))) {
                 return SCAVENGERTICKET_MODEL;
