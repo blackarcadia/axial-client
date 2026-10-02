@@ -5,12 +5,10 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
-import org.axial.axialutils.client.AxialUiTheme;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -60,16 +58,6 @@ public abstract class AxialConfigScreenMixin {
     private long axial_cosmetics$openedAtMs;
     private int axial_cosmetics$unifiedScrollOffset;
 
-    @Redirect(
-            method = "drawPanel",
-            at = @At(value = "INVOKE", target = "Lorg/axial/axialutils/client/AxialUiTheme;drawPanel(Lnet/minecraft/class_332;IIII)V", remap = false),
-            remap = false
-    )
-    private static void axial_cosmetics$drawBlackTintedPanel(DrawContext context, int x, int y, int width, int height) {
-        AxialUiTheme.drawPanel(context, x, y, width, height);
-        context.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0x661C2026);
-    }
-
     @Inject(method = "method_25426", at = @At("RETURN"), remap = false)
     private void axial_cosmetics$replaceSlideWithFadeInit(CallbackInfo ci) {
         axial_cosmetics$openedAtMs = System.currentTimeMillis();
@@ -97,20 +85,6 @@ public abstract class AxialConfigScreenMixin {
             } catch (ReflectiveOperationException ignored) {
                 context.fill(0, 0, ((Screen) (Object) this).width, ((Screen) (Object) this).height, alpha << 24);
             }
-        }
-    }
-
-    /** Draw the shared menu frame in a neutral tone without altering interior accents. */
-    @Inject(method = "drawPanel", at = @At("TAIL"), remap = false, order = 4000)
-    private void axial_cosmetics$drawNeutralPanelFrame(DrawContext context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
-        try {
-            int panelWidth = axial_cosmetics$getPanelWidth();
-            int panelHeight = axial_cosmetics$getPanelHeight();
-            int panelX = (((Screen) (Object) this).width - panelWidth) / 2;
-            int panelY = (((Screen) (Object) this).height - panelHeight) / 2;
-            context.drawStrokedRectangle(panelX, panelY, panelWidth, panelHeight, 0xFFB9BEC7);
-        } catch (ReflectiveOperationException ignored) {
-            // Retain the native frame if its private dimensions change.
         }
     }
 
