@@ -10,6 +10,7 @@
     "AxialConfigScreenInformationHudOptionsMixin",
     "AxialConfigScreenSatchelMenuMixin",
     "AxialConfigScreenCpsMenuMixin",
+    "AxialConfigScreenArmorMenuMixin",
     "AxialConfigScreenEnchantGlintMixin",
     "AxialConfigScreenOptionsScrollMixin",
     "AxialConfigScreenInformationHudPreviewMixin",
