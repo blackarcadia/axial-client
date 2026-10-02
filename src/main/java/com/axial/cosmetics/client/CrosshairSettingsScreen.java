@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.axial.axialutils.client.AxialUiTheme;
 
 import java.util.Locale;
 
@@ -83,9 +84,9 @@ public final class CrosshairSettingsScreen extends Screen {
     }
 
     private void drawFullEnabled(DrawContext context, int mouseX, int mouseY, boolean enabled) {
-        int x = controlX(), y = contentY(30); drawPurpleButton(context, x, y, CONTROL_WIDTH, inside(mouseX, mouseY, x, y, CONTROL_WIDTH, ROW_HEIGHT));
-        context.drawTextWithShadow(textRenderer, uiText("ENABLED"), x + 8, y + 5, 0xFFC6D0F3); String state = enabled ? "ENABLED" : "DISABLED";
-        context.drawTextWithShadow(textRenderer, uiText(state), x + CONTROL_WIDTH - (enabled ? 58 : 66), y + 5, enabled ? 0xFFF7F7FF : 0xFFC6D0F3);
+        int x = controlX(), y = contentY(30);
+        AxialUiTheme.drawButton(context, textRenderer, x, y, CONTROL_WIDTH, ROW_HEIGHT, "ENABLED", "",
+                inside(mouseX, mouseY, x, y, CONTROL_WIDTH, ROW_HEIGHT), false, enabled ? 0xFF54DE9A : 0xFFFF7280);
     }
     private void drawStyleButton(DrawContext context, int mouseX, int mouseY, CrosshairConfig config) {
         int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));
