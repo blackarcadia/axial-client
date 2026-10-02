@@ -8,6 +8,7 @@
     "AxialConfigHudColorDefaultsMixin",
     "AxialConfigNoHudBoxesMixin",
     "AxialConfigScreenInformationHudOptionsMixin",
+    "AxialConfigScreenSatchelMenuMixin",
     "AxialConfigScreenEnchantGlintMixin",
     "AxialConfigScreenOptionsScrollMixin",
     "AxialConfigScreenInformationHudPreviewMixin",

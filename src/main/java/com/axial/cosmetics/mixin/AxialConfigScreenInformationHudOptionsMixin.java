@@ -98,6 +98,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         try {
             int panelY = (((Screen) (Object) this).height - getInt("panelHeight")) / 2;
             for (Object row : list("optionRows")) {
+                if (!insideVisibleControl(row, click.x(), click.y(), panelY)) continue;
                 Method contains = row.getClass().getDeclaredMethod("contains", double.class, double.class, int.class);
                 contains.setAccessible(true);
                 if (!(Boolean) contains.invoke(row, click.x(), click.y(), panelY)) continue;
@@ -183,6 +184,17 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
                 }
             }
         } catch (ReflectiveOperationException ignored) { }
+    }
+    @Unique private boolean insideVisibleControl(Object row, double mouseX, double mouseY, int panelY) throws ReflectiveOperationException {
+        int x = integer(row, "x"), y = integer(row, "y") + panelY;
+        if (mouseY < y || mouseY > y + 20) return false;
+        if (value(row, "colorGetter") != null) {
+            int width = integer(row, "width");
+            return mouseX >= x + width - 21 && mouseX <= x + width + 2;
+        }
+        String label = text(row, "label");
+        int right = x + 24 + MinecraftClient.getInstance().textRenderer.getWidth(label) + 8;
+        return mouseX >= x - 2 && mouseX <= right;
     }
     @Unique private void shift(int delta) throws ReflectiveOperationException { for (Object r : list("optionRows")) shiftY(r, delta); for (Object t : list("tiles")) shiftY(t, delta); }
     @Unique private void removeBox() { try { list("tiles").removeIf(t -> "BOX".equals(text(t, "label"))); } catch (ReflectiveOperationException ignored) { } }

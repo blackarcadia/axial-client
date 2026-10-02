@@ -144,7 +144,7 @@ public abstract class AxialConfigScreenMixin {
     private void axial_cosmetics$scrollUnifiedPanels(double mouseX, double mouseY, double horizontalAmount, double verticalAmount, CallbackInfoReturnable<Boolean> cir) {
         try {
             Object mode = axial_cosmetics$getMode();
-            if (mode == null || "MOVE".equals(mode.toString()) || "HUD".equals(mode.toString()) || verticalAmount == 0.0) {
+            if (mode == null || "MOVE".equals(mode.toString()) || "HUD".equals(mode.toString()) || "SATCHEL".equals(mode.toString()) || verticalAmount == 0.0) {
                 return;
             }
 
