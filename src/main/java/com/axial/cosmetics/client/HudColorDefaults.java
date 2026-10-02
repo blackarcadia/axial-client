@@ -15,9 +15,9 @@ public final class HudColorDefaults {
      */
     public static int forPickerLabel(String label, int fallback) {
         return switch (label.toUpperCase(Locale.ROOT)) {
-            case "INFO TITLE", "SATCHEL TITLE", "POTIONS TITLE", "TITLE", "ARMOR" -> TITLE;
+            case "INFO TITLE", "SATCHEL TITLE", "POTIONS TITLE", "TITLE", "TITLE COLOR", "ARMOR" -> TITLE;
             case "CHARGE / MIN", "CHARGE/MIN", "XP / MIN", "XP/MIN", "SATCHEL INFORMATION",
-                 "SATCHEL COUNT", "SATCHEL EMPTY", "CPS", "CPS COUNT", "DURABILITY", "SERVER",
+                 "SATCHEL COUNT", "SATCHEL EMPTY", "CPS", "CPS COUNT", "DURABILITY", "DURABILITY COLOR", "SERVER",
                  "FACING", "COORDINATES", "PING" -> SUBTITLE;
             default -> fallback;
         };

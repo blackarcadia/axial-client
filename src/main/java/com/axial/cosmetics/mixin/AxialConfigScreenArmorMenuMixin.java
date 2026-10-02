@@ -51,7 +51,7 @@ public abstract class AxialConfigScreenArmorMenuMixin extends Screen {
             addOption(panelX, 144, 1, "DURABILITY", () -> enabled(AxialConfigManager.get().armorHudShowDurability), v -> set("armorHudShowDurability", v));
             addColor(panelX, 198, "TITLE COLOR", () -> AxialConfigManager.get().armorHudColor, v -> { AxialConfigManager.get().armorHudColor = v; AxialConfigManager.save(); });
             addColor(panelX, 228, "DURABILITY COLOR", () -> AxialConfigManager.get().armorHudDurabilityColor, v -> { AxialConfigManager.get().armorHudDurabilityColor = v; AxialConfigManager.save(); });
-            addModeTile(tiles, panelX, 284);
+            addModeTile(panelX, 284);
             setInt("panelWidth", WIDTH); setInt("panelHeight", Math.min(height - 32, HEIGHT)); setInt("panelHeightAnimated", getInt("panelHeight"));
             setInt("submenuContentHeight", CONTENT_HEIGHT); setInt("panelTargetY", (height - getInt("panelHeight")) / 2);
             axial_cosmetics$armorScroll = clamp(axial_cosmetics$armorScroll, 0, maxScroll()); setInt("submenuScrollOffset", axial_cosmetics$armorScroll);
@@ -122,11 +122,11 @@ public abstract class AxialConfigScreenArmorMenuMixin extends Screen {
         setField(list("optionRows").getLast(), "width", 370);
     }
 
-    @Unique private void addModeTile(List<Object> tiles, int panelX, int y) throws ReflectiveOperationException {
+    @Unique private void addModeTile(int panelX, int y) throws ReflectiveOperationException {
         Class<?> type = getClass(), supplier = Class.forName(type.getName() + "$BooleanSupplier");
         Runnable toggle = () -> { AxialConfigManager.get().armorHudDurabilityPercent = !enabled(AxialConfigManager.get().armorHudDurabilityPercent); AxialConfigManager.save(); rebuild(); };
-        Method add = type.getDeclaredMethod("addCenteredActionTile", int.class, int.class, String.class, Runnable.class, supplier); add.setAccessible(true);
-        add.invoke(this, panelX, y, enabled(AxialConfigManager.get().armorHudDurabilityPercent) ? "PERCENT" : "NUMBER", toggle, null);
+        Method add = type.getDeclaredMethod("addActionTile", int.class, int.class, String.class, Runnable.class, supplier); add.setAccessible(true);
+        add.invoke(this, panelX + 28, y, enabled(AxialConfigManager.get().armorHudDurabilityPercent) ? "PERCENT" : "NUMBER", toggle, null);
     }
 
     @Unique private void renderRows(DrawContext context, int mouseX, int mouseY, int panelY) {
