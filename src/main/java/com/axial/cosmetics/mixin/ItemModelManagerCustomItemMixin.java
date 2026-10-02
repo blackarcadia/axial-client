@@ -45,6 +45,9 @@ public abstract class ItemModelManagerCustomItemMixin {
     private static final Identifier CHAINBELT_MODEL =
             Identifier.of("axial_cosmetics", "chainbelt");
     @Unique
+    private static final Identifier MACE_MODEL =
+            Identifier.of("axial_cosmetics", "mace");
+    @Unique
     private static final Identifier LAMPSHADE_MODEL = Identifier.of("axial_cosmetics", "lampshade");
     @Unique
     private static final Identifier POWERBOX_MODEL = Identifier.of("axial_cosmetics", "powerbox");
@@ -126,6 +129,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(293.0F).equals(modelData.getFloat(0))) {
                 return DIAMONDNECKLACE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(296.0F).equals(modelData.getFloat(0))) {
+                return MACE_MODEL;
             }
         }
 
