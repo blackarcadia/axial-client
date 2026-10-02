@@ -50,7 +50,7 @@ public final class CrosshairSettingsScreen extends Screen {
         if (click.button() != 0) return false;
         if (inside(click.x(), click.y(), panelX + 18, panelY + 6, 24, 18)) { close(); return true; }
         CrosshairConfig config = CrosshairConfigManager.get();
-        if (inside(click.x(), click.y(), controlX(), contentY(30), CONTROL_WIDTH, ROW_HEIGHT)) { config.enabled = !config.enabled; CrosshairConfigManager.save(); return true; }
+        if (inside(click.x(), click.y(), enabledX(), contentY(30), 416, ROW_HEIGHT)) { config.enabled = !config.enabled; CrosshairConfigManager.save(); return true; }
         if (inside(click.x(), click.y(), controlX(), contentY(STYLE_Y), COMPACT_WIDTH, ROW_HEIGHT)) { cycleStyle(); return true; }
         if (inside(click.x(), click.y(), colorSwatchX(), contentY(COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("CROSSHAIR", config.color, value -> CrosshairConfigManager.get().color = value); return true; }
         if (inside(click.x(), click.y(), colorSwatchX(), contentY(OUTLINE_COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("OUTLINE", config.outlineColor, value -> CrosshairConfigManager.get().outlineColor = value); return true; }
@@ -84,9 +84,9 @@ public final class CrosshairSettingsScreen extends Screen {
     }
 
     private void drawFullEnabled(DrawContext context, int mouseX, int mouseY, boolean enabled) {
-        int x = controlX(), y = contentY(30);
-        AxialUiTheme.drawButton(context, textRenderer, x, y, CONTROL_WIDTH, ROW_HEIGHT, "ENABLED", "",
-                inside(mouseX, mouseY, x, y, CONTROL_WIDTH, ROW_HEIGHT), false, enabled ? 0xFF54DE9A : 0xFFFF7280);
+        int x = enabledX(), y = contentY(30);
+        AxialUiTheme.drawButton(context, textRenderer, x, y, 416, ROW_HEIGHT, "ENABLED", "",
+                inside(mouseX, mouseY, x, y, 416, ROW_HEIGHT), false, enabled ? 0xFF54DE9A : 0xFFFF7280);
     }
     private void drawStyleButton(DrawContext context, int mouseX, int mouseY, CrosshairConfig config) {
         int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));
@@ -118,7 +118,7 @@ public final class CrosshairSettingsScreen extends Screen {
     private void drawScrollBar(DrawContext context) { int max = maxScroll(); if (max == 0) return; int top = viewportTop(), height = viewportBottom() - top, content = Math.max(height + 1, CONTENT_HEIGHT - 48), thumb = Math.max(18, Math.round(height * (height / (float) content))), travel = Math.max(1, height - thumb), y = top + Math.round(scrollOffset / (float) max * travel), x = panelX + PANEL_WIDTH - 12; context.fill(x, top, x + 4, top + height, 0x2AFFFFFF); context.fill(x, y, x + 4, y + thumb, 0xFFB06AF3); }
     private void openColorPicker(String label, int color, java.util.function.IntConsumer setter) { MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, label, color, value -> { setter.accept(value); CrosshairConfigManager.save(); })); }
     private void syncSliders() { CrosshairConfig c = CrosshairConfigManager.get(); sizeSlider.updateFromConfig(c.size); lengthSlider.updateFromConfig(c.length); widthSlider.updateFromConfig(c.width); gapSlider.updateFromConfig(c.gap); }
-    private int controlX() { return panelX + PANEL_PADDING; } private int colorSwatchX() { return controlX() + CONTROL_WIDTH - 20; } private int contentY(int y) { return panelY + y - scrollOffset; } private int viewportTop() { return panelY + VIEWPORT_TOP; } private int viewportBottom() { return panelY + PANEL_HEIGHT - VIEWPORT_BOTTOM; } private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - PANEL_HEIGHT); }
+    private int controlX() { return panelX + PANEL_PADDING; } private int enabledX() { return panelX + 18; } private int colorSwatchX() { return controlX() + CONTROL_WIDTH - 20; } private int contentY(int y) { return panelY + y - scrollOffset; } private int viewportTop() { return panelY + VIEWPORT_TOP; } private int viewportBottom() { return panelY + PANEL_HEIGHT - VIEWPORT_BOTTOM; } private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - PANEL_HEIGHT); }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); } private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) { return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height; } private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
 
     private void cycleStyle() {
