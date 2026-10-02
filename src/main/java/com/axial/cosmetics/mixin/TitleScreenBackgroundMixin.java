@@ -40,6 +40,7 @@ public abstract class TitleScreenBackgroundMixin {
     private static final Identifier AXIAL_TITLE_BACKGROUND = AxialCosmetics.id("textures/gui/title/main_menu_background.png");
     private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1717;
     private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 916;
+    private static final int TITLE_FLAME_PARTICLE_COUNT = 56;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean_large"));
     private static final String OFFICIAL_GAMEMODES = "OFFICIAL GAMEMODES";
     private static final int OFFICIAL_GAMEMODES_RIGHT_MARGIN = 24;
@@ -82,6 +83,50 @@ public abstract class TitleScreenBackgroundMixin {
                 AXIAL_TITLE_BACKGROUND_WIDTH,
                 AXIAL_TITLE_BACKGROUND_HEIGHT
         );
+
+        // This redirect runs before TitleScreen renders its children, placing the
+        // flames over the artwork but beneath the Singleplayer/menu buttons.
+        axial_cosmetics$drawTitleFlames(context, screen.width, screen.height);
+    }
+
+    private static void axial_cosmetics$drawTitleFlames(DrawContext context, int screenWidth, int screenHeight) {
+        double seconds = System.currentTimeMillis() / 1000.0;
+        double scale = Math.max(0.75, Math.min(1.5, screenHeight / 916.0));
+
+        for (int index = 0; index < TITLE_FLAME_PARTICLE_COUNT; index++) {
+            double lifetime = 2.4 + axial_cosmetics$noise(index, 1) * 2.2;
+            double age = (seconds + axial_cosmetics$noise(index, 2) * lifetime) % lifetime / lifetime;
+            double xFraction = axial_cosmetics$noise(index, 3);
+            double drift = Math.sin((seconds * (1.7 + axial_cosmetics$noise(index, 4)) + index * 1.91))
+                    * (14.0 + axial_cosmetics$noise(index, 5) * 26.0) * scale;
+            int x = (int) Math.round(xFraction * screenWidth + drift);
+            int y = (int) Math.round(screenHeight + 12 * scale - age * (screenHeight * 0.54 + 96 * scale));
+            int size = Math.max(2, (int) Math.round((2.0 + axial_cosmetics$noise(index, 6) * 3.5) * scale * (1.0 - age * 0.45)));
+            int height = Math.max(size + 1, (int) Math.round(size * (1.6 + age * 1.4)));
+            int alpha = Math.max(0, (int) Math.round(176 * Math.sin(age * Math.PI)));
+
+            // A wide orange glow and a smaller yellow core make each blocky
+            // particle read as a rising flame rather than a plain square.
+            context.fill(x - size, y, x + size + 1, y + height, axial_cosmetics$withAlpha(0xFF7A1600, alpha / 3));
+            context.fill(x - Math.max(1, size / 2), y + Math.max(1, height / 3),
+                    x + Math.max(1, size / 2) + 1, y + height, axial_cosmetics$withAlpha(0xFFFF5A00, alpha));
+            if (age < 0.72) {
+                context.fill(x, y + Math.max(2, height / 2), x + 2, y + height,
+                        axial_cosmetics$withAlpha(0xFFFFD36B, alpha));
+            }
+        }
+    }
+
+    private static double axial_cosmetics$noise(int index, int salt) {
+        long value = (long) index * 0x9E3779B97F4A7C15L + (long) salt * 0xC2B2AE3D27D4EB4FL;
+        value ^= value >>> 33;
+        value *= 0xFF51AFD7ED558CCDL;
+        value ^= value >>> 33;
+        return (value & 0x7FFFFFFFL) / (double) 0x7FFFFFFF;
+    }
+
+    private static int axial_cosmetics$withAlpha(int rgb, int alpha) {
+        return (Math.max(0, Math.min(255, alpha)) << 24) | (rgb & 0x00FFFFFF);
     }
 
     @Redirect(
