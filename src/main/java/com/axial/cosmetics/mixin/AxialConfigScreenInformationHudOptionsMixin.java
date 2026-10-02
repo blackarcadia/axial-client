@@ -2,6 +2,7 @@ package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.StyleSpriteSource;
@@ -27,7 +28,7 @@ import java.util.function.IntSupplier;
 /** Sectioned, scrollable Information HUD settings. */
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false, priority = 1500)
 public abstract class AxialConfigScreenInformationHudOptionsMixin {
-    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 174, CONTENT_HEIGHT = 294;
+    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 268, CONTENT_HEIGHT = 410;
     @Unique private static final StyleSpriteSource.Font FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     @Unique private int axial_cosmetics$scroll;
 
@@ -38,16 +39,17 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     private void buildHud(CallbackInfo ci) {
         if (!isHud()) { removeBox(); return; }
         try {
-            List<Object> tiles = list("tiles");
-            tiles.clear(); list("optionRows").clear();
+            List<Object> tiles = list("tiles"), rows = list("optionRows");
+            tiles.clear(); rows.clear();
             int panelX = (((Screen) (Object) this).width - WIDTH) / 2;
-            addToggle(panelX, 30, 0, "ENABLED", () -> AxialConfigManager.get().hudEnabled, v -> { AxialConfigManager.get().hudEnabled = v; AxialConfigManager.save(); });
-            addToggle(panelX, 84, 0, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
-            addToggle(panelX, 84, 1, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
-            addToggle(panelX, 114, 0, "CHARGE PER MIN", () -> AxialConfigManager.get().showPickaxeChargePerMinute, v -> { AxialConfigManager.get().showPickaxeChargePerMinute = v; AxialConfigManager.save(); });
-            addToggle(panelX, 114, 1, "XP PER MIN", () -> AxialConfigManager.get().showMiningXpPerMinute, v -> { AxialConfigManager.get().showMiningXpPerMinute = v; AxialConfigManager.save(); });
-            addToggle(panelX, 144, 0, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
-            addToggle(panelX, 144, 1, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
+            int rowX = panelX + 28;
+            addOption(rowX, 30, "ENABLED", () -> AxialConfigManager.get().hudEnabled, v -> { AxialConfigManager.get().hudEnabled = v; AxialConfigManager.save(); });
+            addOption(rowX, 84, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
+            addOption(rowX, 114, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
+            addOption(rowX, 144, "CHARGE PER MIN", () -> AxialConfigManager.get().showPickaxeChargePerMinute, v -> { AxialConfigManager.get().showPickaxeChargePerMinute = v; AxialConfigManager.save(); });
+            addOption(rowX, 174, "XP PER MIN", () -> AxialConfigManager.get().showMiningXpPerMinute, v -> { AxialConfigManager.get().showMiningXpPerMinute = v; AxialConfigManager.save(); });
+            addOption(rowX, 204, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
+            addOption(rowX, 234, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
             addColor(tiles, panelX, COLORS_Y, 0, "TITLE", () -> AxialConfigManager.get().informationHudTitleColor, v -> { AxialConfigManager.get().informationHudTitleColor = v; AxialConfigManager.save(); });
             addColor(tiles, panelX, COLORS_Y, 1, "PING", InformationHudExtrasConfig::pingColor, InformationHudExtrasConfig::setPingColor);
             addColor(tiles, panelX, COLORS_Y + 30, 0, "COORDINATES", InformationHudExtrasConfig::coordinatesColor, InformationHudExtrasConfig::setCoordinatesColor);
@@ -76,15 +78,36 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         if (!isHud()) return;
         int panelX = (((Screen) (Object) this).width - getInt("panelWidth")) / 2, panelY = (((Screen) (Object) this).height - getInt("panelHeight")) / 2;
         context.enableScissor(panelX, panelY + 26, panelX + getInt("panelWidth"), panelY + getInt("panelHeight") - 14);
-        try { divider(context, panelX + 18, panelY + 58 - axial_cosmetics$scroll, "HUD OPTIONS"); }
+        try {
+            renderOptionRows(context, mouseX, mouseY, panelY);
+            divider(context, panelX + 18, panelY + 58 - axial_cosmetics$scroll, "HUD OPTIONS");
+        }
         finally { context.disableScissor(); }
     }
 
-    @Unique private void addToggle(int panelX, int y, int column, String label, BooleanSupplier get, Consumer<Boolean> set) throws ReflectiveOperationException {
+    @Inject(method = "method_25402", at = @At("HEAD"), cancellable = true, remap = false)
+    private void clickOptionRow(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        if (!isHud() || click.button() != 0) return;
+        try {
+            int panelY = (((Screen) (Object) this).height - getInt("panelHeight")) / 2;
+            for (Object row : list("optionRows")) {
+                Method contains = row.getClass().getDeclaredMethod("contains", double.class, double.class, int.class);
+                contains.setAccessible(true);
+                if (!(Boolean) contains.invoke(row, click.x(), click.y(), panelY)) continue;
+                Method activate = row.getClass().getDeclaredMethod("activate");
+                activate.setAccessible(true);
+                activate.invoke(row);
+                cir.setReturnValue(true);
+                return;
+            }
+        } catch (ReflectiveOperationException ignored) { }
+    }
+
+    @Unique private void addOption(int x, int y, String label, BooleanSupplier get, Consumer<Boolean> set) throws ReflectiveOperationException {
         Class<?> s = getClass(), a = Class.forName(s.getName() + "$BooleanSupplier"), b = Class.forName(s.getName() + "$BooleanConsumer");
         Object getter = Proxy.newProxyInstance(a.getClassLoader(), new Class[]{a}, (p,m,args) -> get.getAsBoolean());
         Object setter = Proxy.newProxyInstance(b.getClassLoader(), new Class[]{b}, (p,m,args) -> { set.accept((Boolean) args[0]); return null; });
-        Method add = s.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, a, b); add.setAccessible(true); add.invoke(this, panelX + 18 + column * 154, y, label, getter, setter);
+        Method add = s.getDeclaredMethod("addOptionRow", int.class, int.class, String.class, a, b); add.setAccessible(true); add.invoke(this, x, y, label, getter, setter);
     }
 
     @Unique private void addColor(List<Object> tiles, int panelX, int y, int column, String label, IntSupplier get, IntConsumer set) throws ReflectiveOperationException {
@@ -97,6 +120,15 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     }
 
     @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = Text.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
+    @Unique private void renderOptionRows(DrawContext context, int mouseX, int mouseY, int panelY) {
+        try {
+            for (Object row : list("optionRows")) {
+                Method render = row.getClass().getDeclaredMethod("render", DrawContext.class, int.class, int.class, net.minecraft.client.font.TextRenderer.class, int.class);
+                render.setAccessible(true);
+                render.invoke(row, context, mouseX, mouseY, MinecraftClient.getInstance().textRenderer, panelY);
+            }
+        } catch (ReflectiveOperationException ignored) { }
+    }
     @Unique private void shift(int delta) throws ReflectiveOperationException { for (Object r : list("optionRows")) shiftY(r, delta); for (Object t : list("tiles")) shiftY(t, delta); }
     @Unique private void removeBox() { try { list("tiles").removeIf(t -> "BOX".equals(text(t, "label"))); } catch (ReflectiveOperationException ignored) { } }
     @Unique private boolean isHud() { try { return "HUD".equals(String.valueOf(field("mode").get(this))); } catch (ReflectiveOperationException ignored) { return false; } }
