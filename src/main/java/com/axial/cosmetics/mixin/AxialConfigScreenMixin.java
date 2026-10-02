@@ -67,7 +67,7 @@ public abstract class AxialConfigScreenMixin {
     )
     private static void axial_cosmetics$drawBlackTintedPanel(DrawContext context, int x, int y, int width, int height) {
         AxialUiTheme.drawPanel(context, x, y, width, height);
-        context.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xCF090B0F);
+        context.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0x99090B0F);
     }
 
     @Inject(method = "method_25426", at = @At("RETURN"), remap = false)
