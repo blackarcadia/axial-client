@@ -28,7 +28,7 @@ import java.util.function.IntSupplier;
 /** Sectioned, scrollable Information HUD settings. */
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false, priority = 1500)
 public abstract class AxialConfigScreenInformationHudOptionsMixin {
-    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 268, CONTENT_HEIGHT = 410;
+    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 198, CONTENT_HEIGHT = 328;
     @Unique private static final StyleSpriteSource.Font FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     @Unique private int axial_cosmetics$scroll;
 
@@ -42,14 +42,13 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             List<Object> tiles = list("tiles"), rows = list("optionRows");
             tiles.clear(); rows.clear();
             int panelX = (((Screen) (Object) this).width - WIDTH) / 2;
-            int rowX = panelX + 28;
-            addOption(rowX, 30, "ENABLED", () -> AxialConfigManager.get().hudEnabled, v -> { AxialConfigManager.get().hudEnabled = v; AxialConfigManager.save(); });
-            addOption(rowX, 84, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
-            addOption(rowX, 114, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
-            addOption(rowX, 144, "CHARGE PER MIN", () -> AxialConfigManager.get().showPickaxeChargePerMinute, v -> { AxialConfigManager.get().showPickaxeChargePerMinute = v; AxialConfigManager.save(); });
-            addOption(rowX, 174, "XP PER MIN", () -> AxialConfigManager.get().showMiningXpPerMinute, v -> { AxialConfigManager.get().showMiningXpPerMinute = v; AxialConfigManager.save(); });
-            addOption(rowX, 204, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
-            addOption(rowX, 234, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
+            addOption(panelX, 30, 0, "ENABLED", () -> AxialConfigManager.get().hudEnabled, v -> { AxialConfigManager.get().hudEnabled = v; AxialConfigManager.save(); });
+            addOption(panelX, 84, 0, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
+            addOption(panelX, 84, 1, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
+            addOption(panelX, 114, 0, "CHARGE PER MIN", () -> AxialConfigManager.get().showPickaxeChargePerMinute, v -> { AxialConfigManager.get().showPickaxeChargePerMinute = v; AxialConfigManager.save(); });
+            addOption(panelX, 114, 1, "XP PER MIN", () -> AxialConfigManager.get().showMiningXpPerMinute, v -> { AxialConfigManager.get().showMiningXpPerMinute = v; AxialConfigManager.save(); });
+            addOption(panelX, 144, 0, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
+            addOption(panelX, 144, 1, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
             addColor(tiles, panelX, COLORS_Y, 0, "TITLE", () -> AxialConfigManager.get().informationHudTitleColor, v -> { AxialConfigManager.get().informationHudTitleColor = v; AxialConfigManager.save(); });
             addColor(tiles, panelX, COLORS_Y, 1, "PING", InformationHudExtrasConfig::pingColor, InformationHudExtrasConfig::setPingColor);
             addColor(tiles, panelX, COLORS_Y + 30, 0, "COORDINATES", InformationHudExtrasConfig::coordinatesColor, InformationHudExtrasConfig::setCoordinatesColor);
@@ -81,6 +80,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         try {
             renderOptionRows(context, mouseX, mouseY, panelY);
             divider(context, panelX + 18, panelY + 58 - axial_cosmetics$scroll, "HUD OPTIONS");
+            divider(context, panelX + 18, panelY + 174 - axial_cosmetics$scroll, "COLOR");
         }
         finally { context.disableScissor(); }
     }
@@ -103,11 +103,15 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         } catch (ReflectiveOperationException ignored) { }
     }
 
-    @Unique private void addOption(int x, int y, String label, BooleanSupplier get, Consumer<Boolean> set) throws ReflectiveOperationException {
+    @Unique private void addOption(int panelX, int y, int column, String label, BooleanSupplier get, Consumer<Boolean> set) throws ReflectiveOperationException {
         Class<?> s = getClass(), a = Class.forName(s.getName() + "$BooleanSupplier"), b = Class.forName(s.getName() + "$BooleanConsumer");
         Object getter = Proxy.newProxyInstance(a.getClassLoader(), new Class[]{a}, (p,m,args) -> get.getAsBoolean());
         Object setter = Proxy.newProxyInstance(b.getClassLoader(), new Class[]{b}, (p,m,args) -> { set.accept((Boolean) args[0]); return null; });
-        Method add = s.getDeclaredMethod("addOptionRow", int.class, int.class, String.class, a, b); add.setAccessible(true); add.invoke(this, x, y, label, getter, setter);
+        Method add = s.getDeclaredMethod("addOptionRow", int.class, int.class, String.class, a, b); add.setAccessible(true);
+        add.invoke(this, panelX + 28 + column * 212, y, label, getter, setter);
+        Field width = list("optionRows").getLast().getClass().getDeclaredField("width");
+        width.setAccessible(true);
+        width.setInt(list("optionRows").getLast(), 170);
     }
 
     @Unique private void addColor(List<Object> tiles, int panelX, int y, int column, String label, IntSupplier get, IntConsumer set) throws ReflectiveOperationException {
