@@ -28,7 +28,7 @@ import java.util.function.IntSupplier;
 /** Sectioned, scrollable Information HUD settings. */
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false, priority = 1500)
 public abstract class AxialConfigScreenInformationHudOptionsMixin {
-    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 198, CONTENT_HEIGHT = 328;
+    @Unique private static final int WIDTH = 452, HEIGHT = 168, COLORS_Y = 198, CONTENT_HEIGHT = 418;
     @Unique private static final StyleSpriteSource.Font FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
     @Unique private int axial_cosmetics$scroll;
 
@@ -49,13 +49,13 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             addOption(panelX, 114, 1, "XP PER MIN", () -> AxialConfigManager.get().showMiningXpPerMinute, v -> { AxialConfigManager.get().showMiningXpPerMinute = v; AxialConfigManager.save(); });
             addOption(panelX, 144, 0, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
             addOption(panelX, 144, 1, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
-            addColor(tiles, panelX, COLORS_Y, 0, "TITLE", () -> AxialConfigManager.get().informationHudTitleColor, v -> { AxialConfigManager.get().informationHudTitleColor = v; AxialConfigManager.save(); });
-            addColor(tiles, panelX, COLORS_Y, 1, "PING", InformationHudExtrasConfig::pingColor, InformationHudExtrasConfig::setPingColor);
-            addColor(tiles, panelX, COLORS_Y + 30, 0, "COORDINATES", InformationHudExtrasConfig::coordinatesColor, InformationHudExtrasConfig::setCoordinatesColor);
-            addColor(tiles, panelX, COLORS_Y + 30, 1, "CHARGE / MIN", () -> AxialConfigManager.get().informationHudChargeColor, v -> { AxialConfigManager.get().informationHudChargeColor = v; AxialConfigManager.save(); });
-            addColor(tiles, panelX, COLORS_Y + 60, 0, "XP / MIN", () -> AxialConfigManager.get().informationHudXpColor, v -> { AxialConfigManager.get().informationHudXpColor = v; AxialConfigManager.save(); });
-            addColor(tiles, panelX, COLORS_Y + 60, 1, "SERVER", InformationHudExtrasConfig::serverColor, InformationHudExtrasConfig::setServerColor);
-            addColor(tiles, panelX, COLORS_Y + 90, 0, "FACING", InformationHudExtrasConfig::facingColor, InformationHudExtrasConfig::setFacingColor);
+            addColor(panelX, COLORS_Y, "TITLE COLOR", () -> AxialConfigManager.get().informationHudTitleColor, v -> { AxialConfigManager.get().informationHudTitleColor = v; AxialConfigManager.save(); });
+            addColor(panelX, COLORS_Y + 30, "PING COLOR", InformationHudExtrasConfig::pingColor, InformationHudExtrasConfig::setPingColor);
+            addColor(panelX, COLORS_Y + 60, "COORDINATES COLOR", InformationHudExtrasConfig::coordinatesColor, InformationHudExtrasConfig::setCoordinatesColor);
+            addColor(panelX, COLORS_Y + 90, "CHARGE / MIN COLOR", () -> AxialConfigManager.get().informationHudChargeColor, v -> { AxialConfigManager.get().informationHudChargeColor = v; AxialConfigManager.save(); });
+            addColor(panelX, COLORS_Y + 120, "XP / MIN COLOR", () -> AxialConfigManager.get().informationHudXpColor, v -> { AxialConfigManager.get().informationHudXpColor = v; AxialConfigManager.save(); });
+            addColor(panelX, COLORS_Y + 150, "SERVER COLOR", InformationHudExtrasConfig::serverColor, InformationHudExtrasConfig::setServerColor);
+            addColor(panelX, COLORS_Y + 180, "FACING COLOR", InformationHudExtrasConfig::facingColor, InformationHudExtrasConfig::setFacingColor);
             setInt("panelWidth", WIDTH); setInt("panelHeight", Math.min(((Screen) (Object) this).height - 32, HEIGHT));
             setInt("panelHeightAnimated", getInt("panelHeight")); setInt("submenuContentHeight", CONTENT_HEIGHT);
             setInt("panelTargetY", (((Screen) (Object) this).height - getInt("panelHeight")) / 2);
@@ -114,13 +114,13 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         width.setInt(list("optionRows").getLast(), 170);
     }
 
-    @Unique private void addColor(List<Object> tiles, int panelX, int y, int column, String label, IntSupplier get, IntConsumer set) throws ReflectiveOperationException {
+    @Unique private void addColor(int panelX, int y, String label, IntSupplier get, IntConsumer set) throws ReflectiveOperationException {
         Class<?> s = getClass(); String p = s.getName() + "$";
-        Class<?> group = Class.forName(p + "ColorGroup"), target = Class.forName(p + "ColorTarget"), getterType = Class.forName(p + "ColorGetter"), setterType = Class.forName(p + "ColorSetter");
+        Class<?> getterType = Class.forName(p + "ColorGetter"), setterType = Class.forName(p + "ColorSetter");
         Object getter = Proxy.newProxyInstance(getterType.getClassLoader(), new Class[]{getterType}, (q,m,args) -> get.getAsInt());
         Object setter = Proxy.newProxyInstance(setterType.getClassLoader(), new Class[]{setterType}, (q,m,args) -> { set.accept((Integer) args[0]); return null; });
-        Method add = s.getDeclaredMethod("addColorTile", int.class, int.class, int.class, String.class, group, target, getterType, setterType); add.setAccessible(true);
-        add.invoke(this, panelX + 18 + column * 213, y, 203, label, null, null, getter, setter);
+        Method add = s.getDeclaredMethod("addColorOptionRow", int.class, int.class, String.class, getterType, setterType); add.setAccessible(true);
+        add.invoke(this, panelX + 28, y, label, getter, setter);
     }
 
     @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = Text.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
@@ -130,6 +130,17 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
                 Method render = row.getClass().getDeclaredMethod("render", DrawContext.class, int.class, int.class, net.minecraft.client.font.TextRenderer.class, int.class);
                 render.setAccessible(true);
                 render.invoke(row, context, mouseX, mouseY, MinecraftClient.getInstance().textRenderer, panelY);
+                Object getter = value(row, "colorGetter");
+                if (getter != null) {
+                    Method getColor = getter.getClass().getDeclaredMethod("get");
+                    getColor.setAccessible(true);
+                    int color = (Integer) getColor.invoke(getter);
+                    int x = integer(row, "x"), y = integer(row, "y") + panelY + 6;
+                    int width = integer(row, "width");
+                    Text hex = Text.literal(String.format("#%06X", color & 0xFFFFFF)).styled(style -> style.withFont(FONT));
+                    context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, hex,
+                            x + width - 30 - MinecraftClient.getInstance().textRenderer.getWidth(hex), y, 0xFFC6D0F3);
+                }
             }
         } catch (ReflectiveOperationException ignored) { }
     }
@@ -144,4 +155,6 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     @Unique private void setInt(String n, int v) throws ReflectiveOperationException { field(n).setInt(this, v); }
     @Unique private static void shiftY(Object o, int d) throws ReflectiveOperationException { Field f = o.getClass().getDeclaredField("y"); f.setAccessible(true); f.setInt(o, f.getInt(o) + d); }
     @Unique private static String text(Object o, String n) { try { Field f = o.getClass().getDeclaredField(n); f.setAccessible(true); return (String)f.get(o); } catch (ReflectiveOperationException e) { return ""; } }
+    @Unique private static Object value(Object o, String n) throws ReflectiveOperationException { Field f = o.getClass().getDeclaredField(n); f.setAccessible(true); return f.get(o); }
+    @Unique private static int integer(Object o, String n) throws ReflectiveOperationException { Field f = o.getClass().getDeclaredField(n); f.setAccessible(true); return f.getInt(o); }
 }
