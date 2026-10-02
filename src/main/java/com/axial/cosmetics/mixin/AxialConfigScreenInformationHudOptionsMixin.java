@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
+import com.axial.cosmetics.client.PotionsHudSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -42,7 +43,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             List<Object> tiles = list("tiles"), rows = list("optionRows");
             tiles.clear(); rows.clear();
             int panelX = (((Screen) (Object) this).width - WIDTH) / 2;
-            addOption(panelX, 30, 0, "ENABLED", () -> AxialConfigManager.get().hudEnabled, v -> { AxialConfigManager.get().hudEnabled = v; AxialConfigManager.save(); });
+            addEnabledTile(tiles, panelX);
             addOption(panelX, 84, 0, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
             addOption(panelX, 84, 1, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
             addOption(panelX, 114, 0, "CHARGE PER MIN", () -> AxialConfigManager.get().showPickaxeChargePerMinute, v -> { AxialConfigManager.get().showPickaxeChargePerMinute = v; AxialConfigManager.save(); });
@@ -81,6 +82,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             renderOptionRows(context, mouseX, mouseY, panelY);
             divider(context, panelX + 18, panelY + 58 - axial_cosmetics$scroll, "HUD OPTIONS");
             divider(context, panelX + 18, panelY + 174 - axial_cosmetics$scroll, "COLOR");
+            drawScrollBar(context, panelX, panelY);
         }
         finally { context.disableScissor(); }
     }
@@ -114,6 +116,23 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         width.setInt(list("optionRows").getLast(), 170);
     }
 
+    @Unique private void addEnabledTile(List<Object> tiles, int panelX) throws ReflectiveOperationException {
+        Class<?> s = getClass(), supplierType = Class.forName(s.getName() + "$BooleanSupplier"), consumerType = Class.forName(s.getName() + "$BooleanConsumer");
+        Object getter = Proxy.newProxyInstance(supplierType.getClassLoader(), new Class[]{supplierType},
+                (p, m, args) -> AxialConfigManager.get().hudEnabled);
+        Object setter = Proxy.newProxyInstance(consumerType.getClassLoader(), new Class[]{consumerType}, (p, m, args) -> {
+            AxialConfigManager.get().hudEnabled = (Boolean) args[0];
+            AxialConfigManager.save();
+            return null;
+        });
+        Method add = s.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplierType, consumerType);
+        add.setAccessible(true);
+        add.invoke(this, panelX + 18, 30, "ENABLED", getter, setter);
+        Field width = tiles.getLast().getClass().getDeclaredField("width");
+        width.setAccessible(true);
+        width.setInt(tiles.getLast(), 416);
+    }
+
     @Unique private void addColor(int panelX, int y, String label, IntSupplier get, IntConsumer set) throws ReflectiveOperationException {
         Class<?> s = getClass(); String p = s.getName() + "$";
         Class<?> getterType = Class.forName(p + "ColorGetter"), setterType = Class.forName(p + "ColorSetter");
@@ -121,9 +140,25 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         Object setter = Proxy.newProxyInstance(setterType.getClassLoader(), new Class[]{setterType}, (q,m,args) -> { set.accept((Integer) args[0]); return null; });
         Method add = s.getDeclaredMethod("addColorOptionRow", int.class, int.class, String.class, getterType, setterType); add.setAccessible(true);
         add.invoke(this, panelX + 28, y, label, getter, setter);
+        Field width = list("optionRows").getLast().getClass().getDeclaredField("width");
+        width.setAccessible(true);
+        width.setInt(list("optionRows").getLast(), 370);
     }
 
     @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = Text.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
+    @Unique private void drawScrollBar(DrawContext context, int panelX, int panelY) {
+        int maximum = maxScroll();
+        if (maximum == 0) return;
+        int viewportTop = panelY + 30;
+        int viewportHeight = getInt("panelHeight") - 48;
+        int contentHeight = Math.max(viewportHeight + 1, CONTENT_HEIGHT - 48);
+        int thumbHeight = Math.max(18, Math.round(viewportHeight * (viewportHeight / (float) contentHeight)));
+        int thumbTravel = Math.max(1, viewportHeight - thumbHeight);
+        int thumbY = viewportTop + Math.round(axial_cosmetics$scroll / (float) maximum * thumbTravel);
+        int trackX = panelX + getInt("panelWidth") - 12;
+        context.fill(trackX, viewportTop, trackX + 4, viewportTop + viewportHeight, 0x2AFFFFFF);
+        context.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xA0B0B5CF);
+    }
     @Unique private void renderOptionRows(DrawContext context, int mouseX, int mouseY, int panelY) {
         try {
             for (Object row : list("optionRows")) {
@@ -146,7 +181,14 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     }
     @Unique private void shift(int delta) throws ReflectiveOperationException { for (Object r : list("optionRows")) shiftY(r, delta); for (Object t : list("tiles")) shiftY(t, delta); }
     @Unique private void removeBox() { try { list("tiles").removeIf(t -> "BOX".equals(text(t, "label"))); } catch (ReflectiveOperationException ignored) { } }
-    @Unique private boolean isHud() { try { return "HUD".equals(String.valueOf(field("mode").get(this))); } catch (ReflectiveOperationException ignored) { return false; } }
+    @Unique private boolean isHud() {
+        try {
+            return !PotionsHudSettingsScreen.isPotions((Screen) (Object) this)
+                    && "HUD".equals(String.valueOf(field("mode").get(this)));
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
+    }
     @Unique private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - getInt("panelHeight")); }
     @Unique private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }
     @SuppressWarnings("unchecked") @Unique private List<Object> list(String n) throws ReflectiveOperationException { return (List<Object>) field(n).get(this); }
