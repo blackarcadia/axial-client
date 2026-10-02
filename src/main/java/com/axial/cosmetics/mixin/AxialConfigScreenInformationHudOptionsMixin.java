@@ -87,6 +87,11 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         finally { context.disableScissor(); }
     }
 
+    @Inject(method = "drawScrollBar", at = @At("HEAD"), cancellable = true, remap = false)
+    private void suppressSharedHudScrollBar(DrawContext context, int mouseX, int mouseY, CallbackInfo ci) {
+        if (isHud()) ci.cancel();
+    }
+
     @Inject(method = "method_25402", at = @At("HEAD"), cancellable = true, remap = false)
     private void clickOptionRow(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
         if (!isHud() || click.button() != 0) return;
@@ -157,7 +162,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         int thumbY = viewportTop + Math.round(axial_cosmetics$scroll / (float) maximum * thumbTravel);
         int trackX = panelX + getInt("panelWidth") - 12;
         context.fill(trackX, viewportTop, trackX + 4, viewportTop + viewportHeight, 0x2AFFFFFF);
-        context.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xA0B0B5CF);
+        context.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xFFB06AF3);
     }
     @Unique private void renderOptionRows(DrawContext context, int mouseX, int mouseY, int panelY) {
         try {
