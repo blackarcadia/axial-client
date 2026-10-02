@@ -23,10 +23,10 @@ public abstract class InformationHudExtrasRendererMixin {
         int baseLines = 1 + (AxialConfigManager.get().showPickaxeChargePerMinute ? 1 : 0)
                 + (AxialConfigManager.get().showMiningXpPerMinute ? 1 : 0);
         int lineY = y + 5 + baseLines * 11 + 4;
-        if (InformationHudExtrasConfig.showServer()) lineY = draw(context, client, x, lineY, "Server: " + server(client, preview));
-        if (InformationHudExtrasConfig.showFacing()) lineY = draw(context, client, x, lineY, "Facing: " + facing(client, preview));
-        if (InformationHudExtrasConfig.showCoordinates()) lineY = draw(context, client, x, lineY, "Coordinates: " + coordinates(client, preview));
-        if (InformationHudExtrasConfig.showPing()) draw(context, client, x, lineY, "Ping: " + ping(client, preview) + " ms");
+        if (InformationHudExtrasConfig.showServer()) lineY = draw(context, client, x, lineY, "Server: " + server(client, preview), InformationHudExtrasConfig.serverColor());
+        if (InformationHudExtrasConfig.showFacing()) lineY = draw(context, client, x, lineY, "Facing: " + facing(client, preview), InformationHudExtrasConfig.facingColor());
+        if (InformationHudExtrasConfig.showCoordinates()) lineY = draw(context, client, x, lineY, "Coordinates: " + coordinates(client, preview), InformationHudExtrasConfig.coordinatesColor());
+        if (InformationHudExtrasConfig.showPing()) draw(context, client, x, lineY, "Ping: " + ping(client, preview) + " ms", InformationHudExtrasConfig.pingColor());
     }
 
     @Inject(method = "getHeight", at = @At("RETURN"), cancellable = true, remap = false)
@@ -38,8 +38,8 @@ public abstract class InformationHudExtrasRendererMixin {
         cir.setReturnValue(cir.getReturnValue() + extras * 11 + (baseLines == 1 ? 4 : 0));
     }
 
-    private static int draw(DrawContext context, MinecraftClient client, int x, int y, String line) {
-        context.drawTextWithShadow(client.textRenderer, Text.literal(line), x + 5, y, HudColorDefaults.SUBTITLE);
+    private static int draw(DrawContext context, MinecraftClient client, int x, int y, String line, int color) {
+        context.drawTextWithShadow(client.textRenderer, Text.literal(line), x + 5, y, color);
         return y + 11;
     }
 

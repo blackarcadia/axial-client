@@ -17,7 +17,8 @@ public final class HudColorDefaults {
         return switch (label.toUpperCase(Locale.ROOT)) {
             case "INFO TITLE", "SATCHEL TITLE", "POTIONS TITLE", "TITLE", "ARMOR" -> TITLE;
             case "CHARGE / MIN", "CHARGE/MIN", "XP / MIN", "XP/MIN", "SATCHEL INFORMATION",
-                 "SATCHEL COUNT", "SATCHEL EMPTY", "CPS", "CPS COUNT", "DURABILITY" -> SUBTITLE;
+                 "SATCHEL COUNT", "SATCHEL EMPTY", "CPS", "CPS COUNT", "DURABILITY", "SERVER",
+                 "FACING", "COORDINATES", "PING" -> SUBTITLE;
             default -> fallback;
         };
     }

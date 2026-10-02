@@ -35,10 +35,18 @@ public final class InformationHudExtrasConfig {
     public static boolean showFacing() { return config.facing; }
     public static boolean showCoordinates() { return config.coordinates; }
     public static boolean showPing() { return config.ping; }
+    public static int serverColor() { return config.serverColor; }
+    public static int facingColor() { return config.facingColor; }
+    public static int coordinatesColor() { return config.coordinatesColor; }
+    public static int pingColor() { return config.pingColor; }
     public static void setServer(boolean value) { config.server = value; save(); }
     public static void setFacing(boolean value) { config.facing = value; save(); }
     public static void setCoordinates(boolean value) { config.coordinates = value; save(); }
     public static void setPing(boolean value) { config.ping = value; save(); }
+    public static void setServerColor(int value) { config.serverColor = value | 0xFF000000; save(); }
+    public static void setFacingColor(int value) { config.facingColor = value | 0xFF000000; save(); }
+    public static void setCoordinatesColor(int value) { config.coordinatesColor = value | 0xFF000000; save(); }
+    public static void setPingColor(int value) { config.pingColor = value | 0xFF000000; save(); }
 
     public static int enabledCount() {
         return (config.server ? 1 : 0) + (config.facing ? 1 : 0) + (config.coordinates ? 1 : 0) + (config.ping ? 1 : 0);
@@ -64,5 +72,9 @@ public final class InformationHudExtrasConfig {
         private boolean facing;
         private boolean coordinates;
         private boolean ping;
+        private int serverColor = HudColorDefaults.SUBTITLE;
+        private int facingColor = HudColorDefaults.SUBTITLE;
+        private int coordinatesColor = HudColorDefaults.SUBTITLE;
+        private int pingColor = HudColorDefaults.SUBTITLE;
     }
 }
