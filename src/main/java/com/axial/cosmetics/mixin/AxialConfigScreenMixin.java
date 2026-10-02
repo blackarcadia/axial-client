@@ -88,6 +88,20 @@ public abstract class AxialConfigScreenMixin {
         }
     }
 
+    /** Draw the shared menu frame in a neutral tone without altering interior accents. */
+    @Inject(method = "drawPanel", at = @At("TAIL"), remap = false, order = 4000)
+    private void axial_cosmetics$drawNeutralPanelFrame(DrawContext context, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
+        try {
+            int panelWidth = axial_cosmetics$getPanelWidth();
+            int panelHeight = axial_cosmetics$getPanelHeight();
+            int panelX = (((Screen) (Object) this).width - panelWidth) / 2;
+            int panelY = (((Screen) (Object) this).height - panelHeight) / 2;
+            context.drawStrokedRectangle(panelX, panelY, panelWidth, panelHeight, 0xFFB9BEC7);
+        } catch (ReflectiveOperationException ignored) {
+            // Retain the native frame if its private dimensions change.
+        }
+    }
+
     private void axial_cosmetics$finishSlideAnimation() {
         try {
             if (axial_cosmetics$openAnimationField == null) {

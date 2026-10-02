@@ -170,7 +170,8 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             for (Object row : list("optionRows")) {
                 Method render = row.getClass().getDeclaredMethod("render", DrawContext.class, int.class, int.class, net.minecraft.client.font.TextRenderer.class, int.class);
                 render.setAccessible(true);
-                render.invoke(row, context, mouseX, mouseY, MinecraftClient.getInstance().textRenderer, panelY);
+                int rowMouseX = insideVisibleControl(row, mouseX, mouseY, panelY) ? mouseX : Integer.MIN_VALUE;
+                render.invoke(row, context, rowMouseX, mouseY, MinecraftClient.getInstance().textRenderer, panelY);
                 Object getter = value(row, "colorGetter");
                 if (getter != null) {
                     Method getColor = getter.getClass().getDeclaredMethod("get");
@@ -187,12 +188,12 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     }
     @Unique private boolean insideVisibleControl(Object row, double mouseX, double mouseY, int panelY) throws ReflectiveOperationException {
         int x = integer(row, "x"), y = integer(row, "y") + panelY;
-        if (mouseY < y || mouseY > y + 20) return false;
+        if (mouseY < y - 2 || mouseY > y + 22) return false;
         if (value(row, "colorGetter") != null) {
             int width = integer(row, "width");
-            return mouseX >= x + width - 21 && mouseX <= x + width + 2;
+            return mouseX >= x + width - 24 && mouseX <= x + width + 4;
         }
-        return mouseX >= x - 2 && mouseX <= x + 18;
+        return mouseX >= x - 4 && mouseX <= x + 20;
     }
     @Unique private void shift(int delta) throws ReflectiveOperationException { for (Object r : list("optionRows")) shiftY(r, delta); for (Object t : list("tiles")) shiftY(t, delta); }
     @Unique private void removeBox() { try { list("tiles").removeIf(t -> "BOX".equals(text(t, "label"))); } catch (ReflectiveOperationException ignored) { } }
