@@ -7,6 +7,7 @@ import com.axial.cosmetics.client.CrosshairDynamicState;
 import com.axial.cosmetics.client.ChunkBordersConfig;
 import com.axial.cosmetics.client.ItemScalerConfig;
 import com.axial.cosmetics.client.EnchantGlintConfig;
+import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
@@ -84,6 +85,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ThirdPersonNameTagsConfig.load();
         ItemScalerConfig.load();
         com.axial.cosmetics.client.PotionsHudConfig.load();
+        InformationHudExtrasConfig.load();
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
         MenuMusicConfig.load();

@@ -54,8 +54,7 @@ public final class PotionsHudConfig {
 
     public static boolean isEnabled() { return config.enabled; }
     public static void toggle() { config.enabled = !config.enabled; save(); }
-    public static boolean showBox() { return config.box; }
-    public static void toggleBox() { config.box = !config.box; save(); }
+    public static boolean showBox() { return false; }
     public static String title() { return config.title; }
     public static void setTitle(String title) { config.title = title; }
     public static int titleColor() { return config.titleColor; }

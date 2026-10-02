@@ -44,7 +44,6 @@ public final class PotionsHudSettingsScreen {
         try {
             ((List<?>) field(screen, "tiles").get(screen)).clear();
             addAction(screen, PotionsHudConfig.isEnabled() ? "ENABLED" : "DISABLED", PotionsHudConfig::toggle, PotionsHudConfig::isEnabled);
-            addAction(screen, "BOX", PotionsHudConfig::toggleBox, PotionsHudConfig::showBox);
             addAction(screen, "TITLE", () -> MinecraftClient.getInstance().setScreen(new HudTitleRenamerScreen(screen,
                     "POTIONS HUD", PotionsHudConfig.title(), "Potions", value -> {
                         PotionsHudConfig.setTitle(value);

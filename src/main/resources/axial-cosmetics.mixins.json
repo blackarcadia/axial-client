@@ -6,6 +6,8 @@
   "client": [
     "AxialColorTileMixin",
     "AxialConfigHudColorDefaultsMixin",
+    "AxialConfigNoHudBoxesMixin",
+    "AxialConfigScreenInformationHudOptionsMixin",
     "AxialConfigScreenEnchantGlintMixin",
     "AxialConfigScreenOptionsScrollMixin",
     "AxialConfigScreenInformationHudPreviewMixin",
@@ -57,6 +59,7 @@
     "InGameHudCompassMixin",
     "InGameHudPotionsHudMixin",
     "HudTitleUnderlineMixin",
+    "InformationHudExtrasRendererMixin",
     "AxialConfigScreenPotionsHudMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudWaypointLabelsMixin",
