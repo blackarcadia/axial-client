@@ -27,16 +27,16 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             tiles.removeIf(tile -> "BOX".equals(label(tile)));
             if (!"HUD".equals(String.valueOf(mode))) return;
 
-            addToggle("SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
-            addToggle("FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
-            addToggle("COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
-            addToggle("PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
+            addToggle(tiles, "SERVER", InformationHudExtrasConfig::showServer, InformationHudExtrasConfig::setServer);
+            addToggle(tiles, "FACING", InformationHudExtrasConfig::showFacing, InformationHudExtrasConfig::setFacing);
+            addToggle(tiles, "COORDINATES", InformationHudExtrasConfig::showCoordinates, InformationHudExtrasConfig::setCoordinates);
+            addToggle(tiles, "PING", InformationHudExtrasConfig::showPing, InformationHudExtrasConfig::setPing);
         } catch (ReflectiveOperationException ignored) {
             // Leave the native settings screen usable if its private API changes.
         }
     }
 
-    private void addToggle(String label, java.util.function.BooleanSupplier getter,
+    private void addToggle(List<Object> tiles, String label, java.util.function.BooleanSupplier getter,
                            java.util.function.Consumer<Boolean> setter) throws ReflectiveOperationException {
         Class<?> screenType = this.getClass();
         Class<?> supplierType = Class.forName(screenType.getName() + "$BooleanSupplier");
@@ -51,6 +51,25 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         Method add = screenType.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplierType, consumerType);
         add.setAccessible(true);
         add.invoke(this, 0, 30, label, supplier, consumer);
+        layoutNewTile(tiles.getLast(), tiles);
+    }
+
+    /**
+     * This hook runs after the shared layout normalizer. Position the newly
+     * appended tiles in the same three-column grid so they remain visible.
+     */
+    private void layoutNewTile(Object tile, List<Object> tiles) throws ReflectiveOperationException {
+        int index = tiles.indexOf(tile);
+        int panelX = (((Screen) (Object) this).width - 452) / 2;
+        setInt(tile, "x", panelX + 18 + (index % 3) * 142);
+        setInt(tile, "y", 30 + (index / 3) * 30);
+        setInt(tile, "width", 132);
+    }
+
+    private static void setInt(Object target, String name, int value) throws ReflectiveOperationException {
+        Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        field.setInt(target, value);
     }
 
     private Field field(String name) throws NoSuchFieldException {
