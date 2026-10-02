@@ -192,9 +192,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
             int width = integer(row, "width");
             return mouseX >= x + width - 21 && mouseX <= x + width + 2;
         }
-        String label = text(row, "label");
-        int right = x + 24 + MinecraftClient.getInstance().textRenderer.getWidth(label) + 8;
-        return mouseX >= x - 2 && mouseX <= right;
+        return mouseX >= x - 2 && mouseX <= x + 18;
     }
     @Unique private void shift(int delta) throws ReflectiveOperationException { for (Object r : list("optionRows")) shiftY(r, delta); for (Object t : list("tiles")) shiftY(t, delta); }
     @Unique private void removeBox() { try { list("tiles").removeIf(t -> "BOX".equals(text(t, "label"))); } catch (ReflectiveOperationException ignored) { } }
