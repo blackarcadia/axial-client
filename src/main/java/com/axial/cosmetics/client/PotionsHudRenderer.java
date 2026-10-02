@@ -93,7 +93,7 @@ public final class PotionsHudRenderer {
     }
 
     private static Text title() {
-        return AxialUiTheme.uiBoldText(PotionsHudConfig.title());
+        return AxialUiTheme.uiBoldText(PotionsHudConfig.title()).copy().styled(style -> style.withUnderline(true));
     }
 
     private static Text hudText(Text text) {

@@ -71,7 +71,7 @@ public final class PotionsHudConfig {
         private boolean enabled;
         private boolean box = true;
         private String title = "Potions";
-        private int titleColor = 0xFFFFFFFF;
+        private int titleColor = HudColorDefaults.TITLE;
         private int x = 8;
         private int y = 80;
     }

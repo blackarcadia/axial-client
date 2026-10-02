@@ -5,6 +5,7 @@
   "mixins": [],
   "client": [
     "AxialColorTileMixin",
+    "AxialConfigHudColorDefaultsMixin",
     "AxialConfigScreenEnchantGlintMixin",
     "AxialConfigScreenOptionsScrollMixin",
     "AxialConfigScreenInformationHudPreviewMixin",
@@ -55,6 +56,7 @@
     "InGameButtonSkinMixin",
     "InGameHudCompassMixin",
     "InGameHudPotionsHudMixin",
+    "HudTitleUnderlineMixin",
     "AxialConfigScreenPotionsHudMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudWaypointLabelsMixin",

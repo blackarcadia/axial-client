@@ -45,7 +45,7 @@ public final class CrosshairColorPickerScreen extends Screen {
         this.label = label;
         this.onChange = onChange;
         this.saveAction = saveAction;
-        this.initialColor = initialColor;
+        this.initialColor = HudColorDefaults.forPickerLabel(label, initialColor);
         setColor(initialColor);
     }
 
