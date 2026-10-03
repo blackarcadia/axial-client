@@ -72,6 +72,7 @@ dependencies {
 
     modImplementation name: 'axialutils-1.0-SNAPSHOT'
     include name: 'axialutils-1.0-SNAPSHOT'
+    modRuntimeOnly name: 'xaerominimap-fabric-1.21.11-26.5.0'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
