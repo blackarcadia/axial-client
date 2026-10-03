@@ -39,6 +39,7 @@
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
     "AxialUiThemeNoCornerPixelsMixin",
+    "CustomSubmenuClickSoundMixin",
     "AxialKeybindsMixin",
     "ModMenuBackButtonMixin",
     "CloseModMenuMixin",

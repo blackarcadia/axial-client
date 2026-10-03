@@ -26,7 +26,6 @@ public final class ItemScalerSettingsScreen extends Screen {
     private final ScaleSliderWidget offHandSlider;
     private int panelX;
     private int panelY;
-    private static Method playButtonClickSoundMethod;
 
     public ItemScalerSettingsScreen(Screen parent) {
         super(uiText("ITEM SCALER"));
@@ -68,7 +67,6 @@ public final class ItemScalerSettingsScreen extends Screen {
     @Override
     public boolean mouseClicked(Click click, boolean doubled) {
         if (click.button() == 0 && inside(click.x(), click.y(), panelX + PANEL_PADDING, panelY + 6, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT)) {
-            playButtonClickSound();
             ItemScalerConfig.save();
             returnToModsMenu();
             return true;
@@ -141,18 +139,6 @@ public final class ItemScalerSettingsScreen extends Screen {
         Field parentField = screen.getClass().getDeclaredField("parent");
         parentField.setAccessible(true);
         return parentField.get(screen);
-    }
-
-    private static void playButtonClickSound() {
-        try {
-            if (playButtonClickSoundMethod == null) {
-                Class<?> themeClass = Class.forName("org.axial.axialutils.client.AxialUiTheme");
-                playButtonClickSoundMethod = themeClass.getDeclaredMethod("playButtonClickSound");
-                playButtonClickSoundMethod.setAccessible(true);
-            }
-            playButtonClickSoundMethod.invoke(null);
-        } catch (ReflectiveOperationException ignored) {
-        }
     }
 
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {
