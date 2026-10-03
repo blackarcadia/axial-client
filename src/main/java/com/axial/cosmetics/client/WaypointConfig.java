@@ -72,7 +72,10 @@ public final class WaypointConfig {
         Config config = load();
         int index = indexOf(config, old);
         if (index < 0) return old;
-        Entry updated = new Entry(old.name(), old.world(), old.dimension(), old.x(), old.y(), old.z(), color);
+        // The editor can rename a waypoint before opening its colour picker. Read the
+        // current saved entry so the colour change cannot restore a stale name.
+        Entry existing = config.waypoints.get(index);
+        Entry updated = new Entry(existing.name(), existing.world(), existing.dimension(), existing.x(), existing.y(), existing.z(), color);
         config.waypoints.set(index, updated);
         save(config);
         return updated;
