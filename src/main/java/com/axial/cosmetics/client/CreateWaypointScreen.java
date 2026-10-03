@@ -18,6 +18,7 @@ public final class CreateWaypointScreen extends Screen {
     private int panelX;
     private int panelY;
     private int color = 0xFF62B6FF;
+    private String waypointName = "";
     private TextFieldWidget nameField;
 
     public CreateWaypointScreen() {
@@ -26,9 +27,16 @@ public final class CreateWaypointScreen extends Screen {
 
     @Override
     protected void init() {
+        // Returning from the colour picker re-initializes this screen. Preserve text
+        // already entered rather than replacing it with a new blank field.
+        if (nameField != null) {
+            waypointName = nameField.getText();
+        }
         rebuildLayout();
         nameField = new TextFieldWidget(textRenderer, panelX + PADDING, panelY + 57, PANEL_WIDTH - PADDING * 2, 20, uiText("WAYPOINT NAME"));
         nameField.setPlaceholder(uiText("WAYPOINT NAME"));
+        nameField.setText(waypointName);
+        nameField.setChangedListener(value -> waypointName = value);
         nameField.setMaxLength(48);
         nameField.setFocused(true);
         addDrawableChild(nameField);
