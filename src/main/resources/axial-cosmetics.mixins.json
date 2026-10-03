@@ -68,6 +68,7 @@
     "HudTitleUnderlineMixin",
     "InformationHudExtrasRendererMixin",
     "AxialConfigScreenPotionsHudMixin",
+    "AxialConfigScreenXaeroMinimapMixin",
     "AxialConfigScreenPotionsMenuMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudWaypointLabelsMixin",

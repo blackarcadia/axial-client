@@ -48,6 +48,7 @@ public class MinecraftLauncher {
     private static final String ENTITY_CULLING_FILE = "entityculling-fabric-1.11.2-mc1.21.11.jar";
     private static final String CLOTH_CONFIG_FILE = "cloth-config-21.11.153-fabric.jar";
     private static final String MORE_CULLING_FILE = "moreculling-fabric-1.21.11-1.6.2.jar";
+    private static final String XAERO_MINIMAP_FILE = "xaerominimap-fabric-1.21.11-26.5.0.jar";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -107,7 +108,7 @@ public class MinecraftLauncher {
         installClothConfig(layout);
         installMoreCulling(layout);
         installGeckoLib(layout);
-        removeXaeroMinimap(layout);
+        installXaeroMinimap(layout);
         removeStaticBgMod(layout);
         removeCollective(layout);
         removeAxialUtils(layout);
@@ -734,16 +735,8 @@ public class MinecraftLauncher {
         installBundledMod(layout, MORE_CULLING_FILE, "moreculling-");
     }
 
-    private void removeXaeroMinimap(FileLayout layout) throws IOException {
-        Files.createDirectories(layout.modsDir());
-        try (var stream = Files.list(layout.modsDir())) {
-            for (Path p : stream.toList()) {
-                String name = p.getFileName().toString().toLowerCase(Locale.ROOT);
-                if (name.startsWith("xaerominimap-") || name.startsWith("xaero-")) {
-                    Files.deleteIfExists(p);
-                }
-            }
-        }
+    private void installXaeroMinimap(FileLayout layout) throws IOException {
+        installBundledMod(layout, XAERO_MINIMAP_FILE, "xaerominimap-");
     }
 
     private void removeAxialUtils(FileLayout layout) throws IOException {

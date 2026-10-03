@@ -113,6 +113,7 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
+        include 'xaerominimap-fabric-1.21.11-26.5.0.jar'
     }
     into layout.projectDirectory.dir('run/mods')
 }
@@ -360,6 +361,7 @@ tasks.register('releaseFatJar', Jar) {
         include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
+        include 'xaerominimap-fabric-1.21.11-26.5.0.jar'
     }
 
     // Add all third-party runtime dependencies unchanged.
