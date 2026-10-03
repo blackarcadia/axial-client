@@ -1,4 +1,4 @@
-[05:08:52] [Test worker/WARN]: Could not load Potions HUD settings
+[16:19:46] [Test worker/WARN]: Could not load Potions HUD settings
 com.google.gson.JsonSyntaxException: java.io.EOFException: End of input at line 1 column 8 path $.broken
 	at com.google.gson.Gson.fromJson(Gson.java:1379)
 	at com.google.gson.Gson.fromJson(Gson.java:1259)
