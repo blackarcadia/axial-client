@@ -46,6 +46,8 @@ public final class ChunkBordersSettingsScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
         drawBackButton(context, mouseX, mouseY);
         drawToggleButton(context, mouseX, mouseY);
+        drawDivider(context, panelY + 66, "COLOR");
+        drawColorRow(context, mouseX, mouseY);
     }
 
     @Override
@@ -61,6 +63,16 @@ public final class ChunkBordersSettingsScreen extends Screen {
 
         if (inside(click.x(), click.y(), toggleX(), toggleY(), TOGGLE_WIDTH, TOGGLE_HEIGHT)) {
             ChunkBordersConfig.setEnabled(!ChunkBordersConfig.enabled(), MinecraftClient.getInstance());
+            return true;
+        }
+
+        if (inside(click.x(), click.y(), colorSwatchX(), colorRowY(), 20, 20)) {
+            MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(
+                    this,
+                    "CHUNK BORDERS",
+                    ChunkBordersConfig.color(),
+                    ChunkBordersConfig::setColor,
+                    ChunkBordersConfig::save));
             return true;
         }
 
@@ -98,6 +110,32 @@ public final class ChunkBordersSettingsScreen extends Screen {
 
     private int toggleY() {
         return panelY + 30;
+    }
+
+    private int colorRowY() {
+        return panelY + 82;
+    }
+
+    private int colorSwatchX() {
+        return panelX + PANEL_WIDTH - PANEL_PADDING - 28;
+    }
+
+    private void drawDivider(DrawContext context, int y, String label) {
+        Text text = uiText(label);
+        int x = panelX + PANEL_PADDING;
+        context.drawTextWithShadow(textRenderer, text, x + 2, y, 0xFFC6D0F3);
+        context.fill(x + textRenderer.getWidth(text) + 12, y + 5, panelX + PANEL_WIDTH - PANEL_PADDING, y + 6, 0x998F5DFF);
+    }
+
+    private void drawColorRow(DrawContext context, int mouseX, int mouseY) {
+        int y = colorRowY();
+        int swatchX = colorSwatchX();
+        context.drawTextWithShadow(textRenderer, uiText("BORDER COLOR"), panelX + PANEL_PADDING + 2, y + 6, 0xFFC6D0F3);
+        Text hex = uiText(String.format("#%06X", ChunkBordersConfig.color() & 0xFFFFFF));
+        context.drawTextWithShadow(textRenderer, hex, swatchX - textRenderer.getWidth(hex) - 10, y + 6, 0xFFC6D0F3);
+        boolean hovered = inside(mouseX, mouseY, swatchX, y, 20, 20);
+        context.fill(swatchX, y + 2, swatchX + 16, y + 18, ChunkBordersConfig.color());
+        context.drawStrokedRectangle(swatchX, y + 2, 16, 16, hovered ? 0xFFFFFFFF : 0xFFB9C5E8);
     }
 
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {

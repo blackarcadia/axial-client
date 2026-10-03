@@ -33,6 +33,7 @@
     "AxialConfigScreenCompassMoveMixin",
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
+    "ChunkBorderRendererColorMixin",
     "AxialConfigScreenWaypointsMixin",
     "AxialConfigScreenMixin",
     "AxialConfigScreenItemScalerMixin",

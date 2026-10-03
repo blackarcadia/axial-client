@@ -52,6 +52,16 @@ public final class ChunkBordersConfig {
         apply(client);
     }
 
+    /** The colour used for every line drawn by Minecraft's chunk-border renderer. */
+    public static int color() {
+        return config.color;
+    }
+
+    public static void setColor(int color) {
+        config.color = 0xFF000000 | (color & 0xFFFFFF);
+        save();
+    }
+
     public static void sync(MinecraftClient client) {
         apply(client);
     }
@@ -91,5 +101,7 @@ public final class ChunkBordersConfig {
 
     private static final class Config {
         private boolean enabled = false;
+        // Vanilla's prominent chunk-border line colour, retained as the default.
+        private int color = 0xFFFF4040;
     }
 }
