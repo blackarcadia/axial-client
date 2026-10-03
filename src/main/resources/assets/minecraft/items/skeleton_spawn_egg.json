@@ -55,7 +55,7 @@
     ],
     "fallback": {
       "type": "minecraft:model",
-      "model": "minecraft:item/template_spawn_egg",
+      "model": "minecraft:item/skeleton_spawn_egg",
       "tints": [
         {
           "type": "minecraft:constant",
