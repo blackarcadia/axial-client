@@ -20,7 +20,7 @@ public final class CrosshairSettingsScreen extends Screen {
     private static final int STYLE_DIVIDER_Y = 158, STYLE_Y = 184, SIZE_Y = 226, LENGTH_Y = 264, WIDTH_Y = 302, GAP_Y = 340;
     private static final int COLOR_DIVIDER_Y = 370, COLOR_Y = 396, OUTLINE_COLOR_Y = 426;
     private static final int ADDITIONAL_DIVIDER_Y = 456, ADDITIONAL_Y = 482;
-    private static final int COMPACT_WIDTH = 170, COMPACT_GAP = 42;
+    private static final int COMPACT_WIDTH = 170, COMPACT_GAP = 42, RESET_WIDTH = 86;
     private static final float SIZE_MIN = 0.1f, SIZE_MAX = 4.0f, LENGTH_MIN = 0.0f, LENGTH_MAX = 32.0f, WIDTH_MIN = 2.0f, WIDTH_MAX = 12.0f, GAP_MIN = 0.0f, GAP_MAX = 20.0f;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
@@ -53,6 +53,7 @@ public final class CrosshairSettingsScreen extends Screen {
         CrosshairConfig config = CrosshairConfigManager.get();
         if (inside(click.x(), click.y(), enabledX(), contentY(30), 416, ROW_HEIGHT)) { config.enabled = !config.enabled; CrosshairConfigManager.save(); return true; }
         if (inside(click.x(), click.y(), controlX(), contentY(STYLE_Y), COMPACT_WIDTH, ROW_HEIGHT)) { cycleStyle(); return true; }
+        if (inside(click.x(), click.y(), resetX(), contentY(STYLE_Y), RESET_WIDTH, ROW_HEIGHT)) { resetCrosshair(); return true; }
         if (inside(click.x(), click.y(), colorSwatchX(), contentY(COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("CROSSHAIR", config.color, value -> CrosshairConfigManager.get().color = value); return true; }
         if (inside(click.x(), click.y(), colorSwatchX(), contentY(OUTLINE_COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("OUTLINE", config.outlineColor, value -> CrosshairConfigManager.get().outlineColor = value); return true; }
         if (inside(click.x(), click.y(), controlX(), contentY(ADDITIONAL_Y), COMPACT_WIDTH, ROW_HEIGHT)) { config.outlineEnabled = !config.outlineEnabled; CrosshairConfigManager.save(); return true; }
@@ -76,7 +77,7 @@ public final class CrosshairSettingsScreen extends Screen {
         CrosshairConfig config = CrosshairConfigManager.get();
         drawFullEnabled(context, mouseX, mouseY, config.enabled);
         divider(context, PREVIEW_DIVIDER_Y, "PREVIEW"); drawPreview(context, contentY(PREVIEW_Y));
-        divider(context, STYLE_DIVIDER_Y, "STYLE"); drawStyleButton(context, mouseX, mouseY, config);
+        divider(context, STYLE_DIVIDER_Y, "STYLE"); drawStyleButton(context, mouseX, mouseY, config); drawResetButton(context, mouseX, mouseY);
         drawSlider(context, sizeSlider, "SIZE SCALE"); drawSlider(context, lengthSlider, "LENGTH SCALE"); drawSlider(context, widthSlider, "WIDTH SCALE"); drawSlider(context, gapSlider, "GAP SCALE");
         divider(context, COLOR_DIVIDER_Y, "COLOR"); drawColorRow(context, mouseX, mouseY, COLOR_Y, "CROSSHAIR COLOR", config.color); drawColorRow(context, mouseX, mouseY, OUTLINE_COLOR_Y, "OUTLINE COLOR", config.outlineColor);
         divider(context, ADDITIONAL_DIVIDER_Y, "ADDITIONAL OPTIONS");
@@ -95,6 +96,7 @@ public final class CrosshairSettingsScreen extends Screen {
         int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));
         context.drawTextWithShadow(textRenderer, uiText("STYLE"), x + 8, y + 5, 0xFFC6D0F3); context.drawTextWithShadow(textRenderer, uiText(config.style.name()), x + 58, y + 5, 0xFFF7F7FF);
     }
+    private void drawResetButton(DrawContext context, int mouseX, int mouseY) { int x = resetX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, RESET_WIDTH, inside(mouseX, mouseY, x, y, RESET_WIDTH, ROW_HEIGHT)); context.drawCenteredTextWithShadow(textRenderer, uiText("RESET"), x + RESET_WIDTH / 2, y + 5, 0xFFF7F7FF); }
     private void drawSlider(DrawContext context, SizeSliderWidget slider, String label) {
         if (!slider.visible) return; int x = slider.getX(), y = slider.getY(), width = slider.getWidth();
         context.drawTextWithShadow(textRenderer, uiText(label), x + 2, y - 12, 0xFFC6D0F3);
@@ -121,7 +123,7 @@ public final class CrosshairSettingsScreen extends Screen {
     private void drawScrollBar(DrawContext context) { int max = maxScroll(); if (max == 0) return; int top = viewportTop(), height = viewportBottom() - top, content = Math.max(height + 1, CONTENT_HEIGHT - 48), thumb = Math.max(18, Math.round(height * (height / (float) content))), travel = Math.max(1, height - thumb), y = top + Math.round(scrollOffset / (float) max * travel), x = panelX + PANEL_WIDTH - 12; context.fill(x, top, x + 4, top + height, 0x2AFFFFFF); context.fill(x, y, x + 4, y + thumb, 0xFFB06AF3); }
     private void openColorPicker(String label, int color, java.util.function.IntConsumer setter) { MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, label, color, value -> { setter.accept(value); CrosshairConfigManager.save(); })); }
     private void syncSliders() { CrosshairConfig c = CrosshairConfigManager.get(); sizeSlider.updateFromConfig(c.size); lengthSlider.updateFromConfig(c.length); widthSlider.updateFromConfig(c.width); gapSlider.updateFromConfig(c.gap); }
-    private int controlX() { return panelX + PANEL_PADDING; } private int enabledX() { return panelX + 18; } private int colorSwatchX() { return controlX() + CONTROL_WIDTH - 20; } private int contentY(int y) { return panelY + y - scrollOffset; } private int viewportTop() { return panelY + VIEWPORT_TOP; } private int viewportBottom() { return panelY + PANEL_HEIGHT - VIEWPORT_BOTTOM; } private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - PANEL_HEIGHT); }
+    private int controlX() { return panelX + PANEL_PADDING; } private int enabledX() { return panelX + 18; } private int resetX() { return controlX() + COMPACT_WIDTH + 10; } private int colorSwatchX() { return controlX() + CONTROL_WIDTH - 20; } private int contentY(int y) { return panelY + y - scrollOffset; } private int viewportTop() { return panelY + VIEWPORT_TOP; } private int viewportBottom() { return panelY + PANEL_HEIGHT - VIEWPORT_BOTTOM; } private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - PANEL_HEIGHT); }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); } private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) { return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height; } private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
 
     private void cycleStyle() {
@@ -129,6 +131,7 @@ public final class CrosshairSettingsScreen extends Screen {
         switch (next) { case CLASSIC -> applyPreset(next, 4, 2, 0, true); case LUNAR -> applyPreset(next, 4, 2, 2, true); case DOT -> applyPreset(next, 0, 2, 0, false); case SMALL_DOT -> applyPreset(next, 0, 1, 0, false); case PLUS -> applyPreset(next, 4, 2, 0, true); case T, X -> applyPreset(next, 4, 2, 2, true); case CIRCLE -> applyPreset(next, 3, 4, 0, true); case SMALL_CROSS -> applyPreset(next, 2, 2, 2, true); }
     }
     private void applyPreset(CrosshairConfig.CrosshairStyle style, float length, float width, float gap, boolean outline) { CrosshairConfig c = CrosshairConfigManager.get(); c.style = style; c.length = length; c.width = width; c.gap = gap; c.outlineEnabled = outline; CrosshairConfigManager.save(); syncSliders(); }
+    private void resetCrosshair() { CrosshairConfig c = CrosshairConfigManager.get(); c.enabled = true; c.style = CrosshairConfig.CrosshairStyle.LUNAR; c.color = 0xFFFFFFFF; c.size = 1.0f; c.length = 6.0f; c.width = 2.0f; c.gap = 2.0f; c.outlineEnabled = true; c.outlineColor = 0xFF000000; c.dynamicEnabled = false; CrosshairConfigManager.save(); syncSliders(); }
     private enum CrosshairField { SIZE, LENGTH, WIDTH, GAP }
     private final class SizeSliderWidget extends SliderWidget {
         private final CrosshairField field;
