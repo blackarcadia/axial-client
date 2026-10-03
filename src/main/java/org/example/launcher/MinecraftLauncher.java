@@ -43,6 +43,11 @@ public class MinecraftLauncher {
     private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
     private static final String AXIAL_UTILS_FILE = "axialutils-1.0-SNAPSHOT.jar";
     private static final String LITHIUM_FILE = "lithium-fabric-0.21.4+mc1.21.11.jar";
+    private static final String FERRITE_CORE_FILE = "ferritecore-8.2.0-fabric.jar";
+    private static final String IMMEDIATELY_FAST_FILE = "ImmediatelyFast-Fabric-1.14.3+1.21.11.jar";
+    private static final String ENTITY_CULLING_FILE = "entityculling-fabric-1.11.2-mc1.21.11.jar";
+    private static final String CLOTH_CONFIG_FILE = "cloth-config-21.11.153-fabric.jar";
+    private static final String MORE_CULLING_FILE = "moreculling-fabric-1.21.11-1.6.2.jar";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -96,6 +101,11 @@ public class MinecraftLauncher {
         downloadModMenu(layout);
         installSodium(layout);
         installLithium(layout);
+        installFerriteCore(layout);
+        installImmediatelyFast(layout);
+        installEntityCulling(layout);
+        installClothConfig(layout);
+        installMoreCulling(layout);
         installGeckoLib(layout);
         removeXaeroMinimap(layout);
         removeStaticBgMod(layout);
@@ -702,6 +712,26 @@ public class MinecraftLauncher {
             Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             logger.info("Installed Lithium mod: " + LITHIUM_FILE);
         }
+    }
+
+    private void installFerriteCore(FileLayout layout) throws IOException {
+        installBundledMod(layout, FERRITE_CORE_FILE, "ferritecore-");
+    }
+
+    private void installImmediatelyFast(FileLayout layout) throws IOException {
+        installBundledMod(layout, IMMEDIATELY_FAST_FILE, "ImmediatelyFast-");
+    }
+
+    private void installEntityCulling(FileLayout layout) throws IOException {
+        installBundledMod(layout, ENTITY_CULLING_FILE, "entityculling-");
+    }
+
+    private void installClothConfig(FileLayout layout) throws IOException {
+        installBundledMod(layout, CLOTH_CONFIG_FILE, "cloth-config-");
+    }
+
+    private void installMoreCulling(FileLayout layout) throws IOException {
+        installBundledMod(layout, MORE_CULLING_FILE, "moreculling-");
     }
 
     private void removeXaeroMinimap(FileLayout layout) throws IOException {

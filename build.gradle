@@ -107,6 +107,12 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar'
         include 'zoomify-2.15.2+1.21.11.jar'
         include 'scrollable-tooltips-1.4.2+1.21.11-fabric.jar'
+        include 'lithium-fabric-0.21.4+mc1.21.11.jar'
+        include 'ferritecore-8.2.0-fabric.jar'
+        include 'ImmediatelyFast-Fabric-1.14.3+1.21.11.jar'
+        include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
+        include 'cloth-config-21.11.153-fabric.jar'
+        include 'moreculling-fabric-1.21.11-1.6.2.jar'
     }
     into layout.projectDirectory.dir('run/mods')
 }
@@ -344,10 +350,16 @@ tasks.register('releaseFatJar', Jar) {
 
     // Preserve bundled Fabric mod.
     from(bundledModsDir)
-    // Bundle GeckoLib as a standalone Fabric mod.
+    // Bundle required Fabric mods as standalone JARs.
     // The launcher updater will extract this JAR into the mods folder.
     from('src/main/resources') {
         include 'geckolib-fabric-1.21.11-5.4.5.jar'
+        include 'lithium-fabric-0.21.4+mc1.21.11.jar'
+        include 'ferritecore-8.2.0-fabric.jar'
+        include 'ImmediatelyFast-Fabric-1.14.3+1.21.11.jar'
+        include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
+        include 'cloth-config-21.11.153-fabric.jar'
+        include 'moreculling-fabric-1.21.11-1.6.2.jar'
     }
 
     // Add all third-party runtime dependencies unchanged.

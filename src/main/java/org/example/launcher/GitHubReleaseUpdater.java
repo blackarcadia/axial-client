@@ -219,7 +219,11 @@ public final class GitHubReleaseUpdater {
                         || name.startsWith("scrollable-tooltips-")
                         || name.startsWith("sodium-fabric-")
                         || name.startsWith("sodium-extra-") || name.startsWith("reeses-sodium-options-")
-                        || name.startsWith("lithium-fabric-") || name.startsWith("staticbgmod-")
+                        || name.startsWith("lithium-fabric-") || name.startsWith("ferritecore-")
+                        || name.startsWith("immediatelyfast-")
+                        || name.startsWith("entityculling-")
+                        || name.startsWith("cloth-config-") || name.startsWith("moreculling-")
+                        || name.startsWith("staticbgmod-")
                         || isRuntimeDependencyJar(name))) {
                     Files.deleteIfExists(path);
                 }
