@@ -36,7 +36,7 @@ public final class MinimapRenderer {
         context.fill(left, top, left + SIZE, top + SIZE, 0xFF27303A);
 
         if (client.player != null && client.world != null) {
-            if (client.player.age - lastSampleTick >= 10) sampleTerrain(client);
+            if (lastSampleTick == Integer.MIN_VALUE || client.player.age < lastSampleTick || client.player.age - lastSampleTick >= 10) sampleTerrain(client);
             for (int sampleZ = 0; sampleZ < SAMPLES; sampleZ++) for (int sampleX = 0; sampleX < SAMPLES; sampleX++)
                 context.fill(left + sampleX * SAMPLE_SIZE, top + sampleZ * SAMPLE_SIZE,
                         left + (sampleX + 1) * SAMPLE_SIZE, top + (sampleZ + 1) * SAMPLE_SIZE,
