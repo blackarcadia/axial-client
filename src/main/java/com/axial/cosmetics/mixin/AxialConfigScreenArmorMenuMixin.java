@@ -100,8 +100,8 @@ public abstract class AxialConfigScreenArmorMenuMixin extends Screen {
     @Unique private void addEnabledTile(List<Object> tiles, int panelX) throws ReflectiveOperationException {
         Class<?> type = getClass(), supplier = Class.forName(type.getName() + "$BooleanSupplier"), consumer = Class.forName(type.getName() + "$BooleanConsumer");
         Object get = Proxy.newProxyInstance(supplier.getClassLoader(), new Class[]{supplier}, (p, m, a) -> enabled(AxialConfigManager.get().showArmorHud));
-        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p, m, a) -> { AxialConfigManager.get().showArmorHud = (Boolean) a[0]; AxialConfigManager.save(); return null; });
-        Method add = type.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, "ENABLED", get, set);
+        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p, m, a) -> { AxialConfigManager.get().showArmorHud = (Boolean) a[0]; AxialConfigManager.save(); updateEnabledTileLabel((Boolean) a[0]); rebuild(); return null; });
+        Method add = type.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, enabled(AxialConfigManager.get().showArmorHud) ? "ENABLED" : "DISABLED", get, set);
         setField(tiles.getLast(), "width", 416);
     }
 
@@ -145,6 +145,10 @@ public abstract class AxialConfigScreenArmorMenuMixin extends Screen {
         Method get = getter.getClass().getDeclaredMethod("get"); get.setAccessible(true); int color = (Integer) get.invoke(getter);
         int x = integer(row, "x"), y = integer(row, "y") + panelY + 6, rowWidth = integer(row, "width"); Text hex = text(String.format("#%06X", color & 0xFFFFFF));
         context.drawTextWithShadow(textRenderer, hex, x + rowWidth - 30 - textRenderer.getWidth(hex), y, 0xFFC6D0F3);
+    }
+    @Unique private void updateEnabledTileLabel(boolean enabled) {
+        try { for (Object tile : list("tiles")) { Field label = tile.getClass().getDeclaredField("label"); label.setAccessible(true); String value = (String) label.get(tile); if ("ENABLED".equals(value) || "DISABLED".equals(value)) { label.set(tile, enabled ? "ENABLED" : "DISABLED"); return; } } }
+        catch (ReflectiveOperationException ignored) { }
     }
 
     @Unique private boolean insideControl(Object row, double x, double y, int offset) throws ReflectiveOperationException {

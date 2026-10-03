@@ -88,7 +88,7 @@ public final class CrosshairSettingsScreen extends Screen {
         AxialUiTheme.drawButton(context, textRenderer, x, y, 416, ROW_HEIGHT, "", "",
                 inside(mouseX, mouseY, x, y, 416, ROW_HEIGHT), false,
                 enabled ? AxialUiTheme.TOGGLE_ON : AxialUiTheme.TOGGLE_OFF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("ENABLED"), x + 208, y + 5, 0xFFF7F7FF);
+        context.drawCenteredTextWithShadow(textRenderer, uiText(enabled ? "ENABLED" : "DISABLED"), x + 208, y + 5, 0xFFF7F7FF);
     }
     private void drawStyleButton(DrawContext context, int mouseX, int mouseY, CrosshairConfig config) {
         int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));

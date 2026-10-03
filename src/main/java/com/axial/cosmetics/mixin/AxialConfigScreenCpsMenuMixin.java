@@ -73,8 +73,8 @@ public abstract class AxialConfigScreenCpsMenuMixin extends Screen {
     @Unique private void addEnabledTile(List<Object> tiles, int panelX) throws ReflectiveOperationException {
         Class<?> type = getClass(), supplier = Class.forName(type.getName() + "$BooleanSupplier"), consumer = Class.forName(type.getName() + "$BooleanConsumer");
         Object get = Proxy.newProxyInstance(supplier.getClassLoader(), new Class[]{supplier}, (p,m,a) -> Boolean.TRUE.equals(AxialConfigManager.get().showCps));
-        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p,m,a) -> { AxialConfigManager.get().showCps = (Boolean) a[0]; AxialConfigManager.save(); return null; });
-        Method add = type.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, "ENABLED", get, set);
+        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p,m,a) -> { AxialConfigManager.get().showCps = (Boolean) a[0]; AxialConfigManager.save(); updateEnabledTileLabel((Boolean) a[0]); refreshLayout(); return null; });
+        Method add = type.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, Boolean.TRUE.equals(AxialConfigManager.get().showCps) ? "ENABLED" : "DISABLED", get, set);
         setField(tiles.getLast(), "width", 416);
     }
 
@@ -98,6 +98,11 @@ public abstract class AxialConfigScreenCpsMenuMixin extends Screen {
         Text hex = text(String.format("#%06X", color & 0xFFFFFF));
         context.drawTextWithShadow(textRenderer, hex, x + rowWidth - 30 - textRenderer.getWidth(hex), y, 0xFFC6D0F3);
     }
+    @Unique private void updateEnabledTileLabel(boolean enabled) {
+        try { for (Object tile : list("tiles")) { Field label = tile.getClass().getDeclaredField("label"); label.setAccessible(true); String value = (String) label.get(tile); if ("ENABLED".equals(value) || "DISABLED".equals(value)) { label.set(tile, enabled ? "ENABLED" : "DISABLED"); return; } } }
+        catch (ReflectiveOperationException ignored) { }
+    }
+    @Unique private void refreshLayout() { try { Method method = getClass().getDeclaredMethod("rebuildLayout"); method.setAccessible(true); method.invoke(this); } catch (ReflectiveOperationException ignored) { } }
     @Unique private void divider(DrawContext context, int x, int y, String label) { Text text = text(label); context.drawTextWithShadow(textRenderer, text, x + 2, y, 0xFFC6D0F3); context.fill(x + textRenderer.getWidth(text) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
     @Unique private boolean insideSwatch(Object row, double x, double y, int offset) throws ReflectiveOperationException { int rowX = integer(row, "x"), rowY = integer(row, "y") + offset, width = integer(row, "width"); return x >= rowX + width - 24 && x <= rowX + width + 4 && y >= rowY - 2 && y <= rowY + 22; }
     @Unique private boolean isCps() { try { return "CPS".equals(String.valueOf(field(this, "mode").get(this))); } catch (ReflectiveOperationException e) { return false; } }

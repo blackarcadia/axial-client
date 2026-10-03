@@ -106,8 +106,8 @@ public abstract class AxialConfigScreenSatchelMenuMixin extends Screen {
     @Unique private void addEnabledTile(List<Object> tiles, int panelX) throws ReflectiveOperationException {
         Class<?> s = getClass(), supplier = Class.forName(s.getName() + "$BooleanSupplier"), consumer = Class.forName(s.getName() + "$BooleanConsumer");
         Object get = Proxy.newProxyInstance(supplier.getClassLoader(), new Class[]{supplier}, (p,m,a) -> Boolean.TRUE.equals(AxialConfigManager.get().showSatchelsHud));
-        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p,m,a) -> { AxialConfigManager.get().showSatchelsHud = (Boolean) a[0]; AxialConfigManager.save(); return null; });
-        Method add = s.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, "ENABLED", get, set);
+        Object set = Proxy.newProxyInstance(consumer.getClassLoader(), new Class[]{consumer}, (p,m,a) -> { AxialConfigManager.get().showSatchelsHud = (Boolean) a[0]; AxialConfigManager.save(); updateEnabledTileLabel((Boolean) a[0]); refreshLayout(); return null; });
+        Method add = s.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplier, consumer); add.setAccessible(true); add.invoke(this, panelX + 18, 30, Boolean.TRUE.equals(AxialConfigManager.get().showSatchelsHud) ? "ENABLED" : "DISABLED", get, set);
         setField(tiles.getLast(), "width", 416);
     }
 
@@ -131,6 +131,11 @@ public abstract class AxialConfigScreenSatchelMenuMixin extends Screen {
         Text hex = label(String.format("#%06X", color & 0xFFFFFF));
         c.drawTextWithShadow(textRenderer, hex, x + rowWidth - 30 - textRenderer.getWidth(hex), y, 0xFFC6D0F3);
     }
+    @Unique private void updateEnabledTileLabel(boolean enabled) {
+        try { for (Object tile : list("tiles")) { Field label = tile.getClass().getDeclaredField("label"); label.setAccessible(true); String value = (String) label.get(tile); if ("ENABLED".equals(value) || "DISABLED".equals(value)) { label.set(tile, enabled ? "ENABLED" : "DISABLED"); return; } } }
+        catch (ReflectiveOperationException ignored) { }
+    }
+    @Unique private void refreshLayout() { try { Method method = getClass().getDeclaredMethod("rebuildLayout"); method.setAccessible(true); method.invoke(this); } catch (ReflectiveOperationException ignored) { } }
     @Unique private void positionTitle(DrawContext context, int panelX, int panelY, int mouseX, int mouseY, float delta) {
         if (axial_cosmetics$satchelTitle == null) return;
         int y = panelY + 198 - axial_cosmetics$satchelScroll;

@@ -129,11 +129,13 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         Object setter = Proxy.newProxyInstance(consumerType.getClassLoader(), new Class[]{consumerType}, (p, m, args) -> {
             AxialConfigManager.get().hudEnabled = (Boolean) args[0];
             AxialConfigManager.save();
+            updateEnabledTileLabel((Boolean) args[0]);
+            refreshLayout();
             return null;
         });
         Method add = s.getDeclaredMethod("addToggleTile", int.class, int.class, String.class, supplierType, consumerType);
         add.setAccessible(true);
-        add.invoke(this, panelX + 18, 30, "ENABLED", getter, setter);
+        add.invoke(this, panelX + 18, 30, AxialConfigManager.get().hudEnabled ? "ENABLED" : "DISABLED", getter, setter);
         Field width = tiles.getLast().getClass().getDeclaredField("width");
         width.setAccessible(true);
         width.setInt(tiles.getLast(), 416);
@@ -150,6 +152,11 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
         width.setAccessible(true);
         width.setInt(list("optionRows").getLast(), 370);
     }
+    @Unique private void updateEnabledTileLabel(boolean enabled) {
+        try { for (Object tile : list("tiles")) { String label = text(tile, "label"); if ("ENABLED".equals(label) || "DISABLED".equals(label)) { Field field = tile.getClass().getDeclaredField("label"); field.setAccessible(true); field.set(tile, enabled ? "ENABLED" : "DISABLED"); return; } } }
+        catch (ReflectiveOperationException ignored) { }
+    }
+    @Unique private void refreshLayout() { try { Method method = getClass().getDeclaredMethod("rebuildLayout"); method.setAccessible(true); method.invoke(this); } catch (ReflectiveOperationException ignored) { } }
 
     @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = Text.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
     @Unique private void drawScrollBar(DrawContext context, int panelX, int panelY) {
