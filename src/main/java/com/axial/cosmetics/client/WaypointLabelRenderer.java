@@ -36,13 +36,24 @@ public final class WaypointLabelRenderer {
             if (projected.w <= 0.0f) continue;
             int screenX = Math.round((projected.x / projected.w * 0.5f + 0.5f) * framebufferWidth * xScale);
             int screenY = Math.round((-projected.y / projected.w * 0.5f + 0.5f) * framebufferHeight * yScale);
-            String label = waypoint.name();
             double distance = Math.hypot(waypoint.x() + 0.5 - client.player.getX(), waypoint.z() + 0.5 - client.player.getZ());
-            String distanceLabel = String.format(java.util.Locale.ROOT, "%.0f m", distance);
-            int labelWidth = Math.max(client.textRenderer.getWidth(label), client.textRenderer.getWidth(distanceLabel));
-            context.fill(screenX - labelWidth / 2 - 4, screenY - 10, screenX + labelWidth / 2 + 4, screenY + 16, 0x68000000);
-            context.drawTextWithShadow(client.textRenderer, label, screenX - client.textRenderer.getWidth(label) / 2, screenY - 7, waypoint.color() | 0xFF000000);
-            context.drawTextWithShadow(client.textRenderer, distanceLabel, screenX - client.textRenderer.getWidth(distanceLabel) / 2, screenY + 3, 0xFFC6D0F3);
+            String label = waypoint.name() + " [" + formatDistance(distance) + "]";
+            int labelWidth = client.textRenderer.getWidth(label) + 10;
+            int labelX = screenX - labelWidth / 2;
+            int labelY = screenY - 7;
+
+            // Lunar-style markers are a single compact tag anchored to the beam,
+            // rather than a floating two-line HUD card.
+            context.fill(labelX, labelY, labelX + labelWidth, labelY + 14, 0xAA08080C);
+            context.drawStrokedRectangle(labelX, labelY, labelWidth, 14, waypoint.color() | 0xFF000000);
+            context.drawTextWithShadow(client.textRenderer, label, labelX + 5, labelY + 3, waypoint.color() | 0xFF000000);
         }
+    }
+
+    private static String formatDistance(double distance) {
+        if (distance >= 1_000.0) {
+            return String.format(java.util.Locale.ROOT, "%.1fkm", distance / 1_000.0);
+        }
+        return String.format(java.util.Locale.ROOT, "%dm", Math.round(distance));
     }
 }

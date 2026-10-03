@@ -3,18 +3,24 @@ package com.axial.cosmetics.client;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.render.DrawStyle;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.debug.gizmo.GizmoDrawing;
 
-import java.lang.reflect.Method;
-
-/** Draws custom waypoint colors through AxialUtils' existing beam renderer. */
+/** Renders the persistent vertical marker used for player-created waypoints. */
 public final class WaypointWorldRenderer {
-    private static Method renderBeam;
+    private static final double BEAM_HALF_WIDTH = 0.35;
+    private static final float BEAM_OUTLINE_WIDTH = 1.0f;
+    private static final int BEAM_ALPHA = 0x66;
 
     private WaypointWorldRenderer() { }
 
     public static void register() {
-        WorldRenderEvents.BEFORE_ENTITIES.register(context -> render());
+        // Gizmos are collected after entities. Registering earlier can leave the
+        // marker behind terrain or omit it entirely, depending on the render path.
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> render());
     }
 
     private static void render() {
@@ -28,15 +34,13 @@ public final class WaypointWorldRenderer {
     }
 
     private static void drawBeam(ClientWorld world, BlockPos position, int color) {
-        try {
-            if (renderBeam == null) {
-                Class<?> renderer = Class.forName("org.axial.axialutils.client.WaypointOverlayRenderer");
-                renderBeam = renderer.getDeclaredMethod("renderBeam", net.minecraft.world.World.class, BlockPos.class, int.class, boolean.class);
-                renderBeam.setAccessible(true);
-            }
-            renderBeam.invoke(null, world, position, color, false);
-        } catch (ReflectiveOperationException ignored) {
-            // Keep waypoint creation available if AxialUtils changes its renderer internals.
+        int rgb = color & 0x00FFFFFF;
+        DrawStyle style = DrawStyle.filledAndStroked(0x00FFFFFF, BEAM_OUTLINE_WIDTH, (BEAM_ALPHA << 24) | rgb);
+        Vec3d min = new Vec3d(position.getX() + 0.5 - BEAM_HALF_WIDTH, world.getBottomY(), position.getZ() + 0.5 - BEAM_HALF_WIDTH);
+        Vec3d max = new Vec3d(position.getX() + 0.5 + BEAM_HALF_WIDTH, world.getTopYInclusive() + 1.0, position.getZ() + 0.5 + BEAM_HALF_WIDTH);
+
+        for (Direction direction : Direction.values()) {
+            GizmoDrawing.face(min, max, direction, style);
         }
     }
 }
