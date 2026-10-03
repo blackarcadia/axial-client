@@ -41,7 +41,7 @@ public class AxialCosmetics implements ClientModInitializer {
     private KeyBinding reloadKey;
     private KeyBinding menuKey;
     private KeyBinding modMenuKey;
-    private KeyBinding createWaypointKey;
+    private static KeyBinding createWaypointKey;
     private static KeyBinding chunkBordersToggleKey;
 
     @Override
@@ -161,6 +161,10 @@ public class AxialCosmetics implements ClientModInitializer {
 
     public static KeyBinding chunkBordersToggleKey() {
         return chunkBordersToggleKey;
+    }
+
+    public static KeyBinding createWaypointKey() {
+        return createWaypointKey;
     }
 
     private void openCosmeticMenu(net.minecraft.client.MinecraftClient client) {
