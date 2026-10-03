@@ -15,10 +15,11 @@ import java.util.Locale;
 /** Compact, scrollable settings screen for the custom crosshair. */
 public final class CrosshairSettingsScreen extends Screen {
     private static final int PANEL_WIDTH = 452, PANEL_HEIGHT = 280, PANEL_PADDING = 28, CONTROL_WIDTH = 370;
-    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 518, ROW_HEIGHT = 20;
-    private static final int STYLE_DIVIDER_Y = 58, STYLE_Y = 84, SIZE_Y = 126, LENGTH_Y = 164, WIDTH_Y = 202, GAP_Y = 240;
-    private static final int COLOR_DIVIDER_Y = 270, COLOR_Y = 296, OUTLINE_COLOR_Y = 326;
-    private static final int ADDITIONAL_DIVIDER_Y = 356, ADDITIONAL_Y = 382, PREVIEW_DIVIDER_Y = 412, PREVIEW_Y = 438, PREVIEW_HEIGHT = 64;
+    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 512, ROW_HEIGHT = 20;
+    private static final int PREVIEW_DIVIDER_Y = 58, PREVIEW_Y = 84, PREVIEW_HEIGHT = 64;
+    private static final int STYLE_DIVIDER_Y = 158, STYLE_Y = 184, SIZE_Y = 226, LENGTH_Y = 264, WIDTH_Y = 302, GAP_Y = 340;
+    private static final int COLOR_DIVIDER_Y = 370, COLOR_Y = 396, OUTLINE_COLOR_Y = 426;
+    private static final int ADDITIONAL_DIVIDER_Y = 456, ADDITIONAL_Y = 482;
     private static final int COMPACT_WIDTH = 170, COMPACT_GAP = 42;
     private static final float SIZE_MIN = 0.1f, SIZE_MAX = 4.0f, LENGTH_MIN = 0.0f, LENGTH_MAX = 32.0f, WIDTH_MIN = 2.0f, WIDTH_MAX = 12.0f, GAP_MIN = 0.0f, GAP_MAX = 20.0f;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
@@ -74,13 +75,13 @@ public final class CrosshairSettingsScreen extends Screen {
     private void drawControls(DrawContext context, int mouseX, int mouseY) {
         CrosshairConfig config = CrosshairConfigManager.get();
         drawFullEnabled(context, mouseX, mouseY, config.enabled);
+        divider(context, PREVIEW_DIVIDER_Y, "PREVIEW"); drawPreview(context, contentY(PREVIEW_Y));
         divider(context, STYLE_DIVIDER_Y, "STYLE"); drawStyleButton(context, mouseX, mouseY, config);
         drawSlider(context, sizeSlider, "SIZE SCALE"); drawSlider(context, lengthSlider, "LENGTH SCALE"); drawSlider(context, widthSlider, "WIDTH SCALE"); drawSlider(context, gapSlider, "GAP SCALE");
         divider(context, COLOR_DIVIDER_Y, "COLOR"); drawColorRow(context, mouseX, mouseY, COLOR_Y, "CROSSHAIR COLOR", config.color); drawColorRow(context, mouseX, mouseY, OUTLINE_COLOR_Y, "OUTLINE COLOR", config.outlineColor);
         divider(context, ADDITIONAL_DIVIDER_Y, "ADDITIONAL OPTIONS");
         drawBooleanButton(context, mouseX, mouseY, controlX(), contentY(ADDITIONAL_Y), "OUTLINE", config.outlineEnabled);
         drawBooleanButton(context, mouseX, mouseY, controlX() + COMPACT_WIDTH + COMPACT_GAP, contentY(ADDITIONAL_Y), "DYNAMIC", config.dynamicEnabled);
-        divider(context, PREVIEW_DIVIDER_Y, "PREVIEW"); drawPreview(context, contentY(PREVIEW_Y));
     }
 
     private void drawFullEnabled(DrawContext context, int mouseX, int mouseY, boolean enabled) {
