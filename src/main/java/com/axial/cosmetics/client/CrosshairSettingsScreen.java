@@ -15,7 +15,7 @@ import java.util.Locale;
 /** Compact, scrollable settings screen for the custom crosshair. */
 public final class CrosshairSettingsScreen extends Screen {
     private static final int PANEL_WIDTH = 452, PANEL_HEIGHT = 280, PANEL_PADDING = 28, CONTROL_WIDTH = 370;
-    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 512, ROW_HEIGHT = 20;
+    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 524, ROW_HEIGHT = 20;
     private static final int PREVIEW_DIVIDER_Y = 58, PREVIEW_Y = 84, PREVIEW_HEIGHT = 64;
     private static final int STYLE_DIVIDER_Y = 158, STYLE_Y = 184, SIZE_Y = 226, LENGTH_Y = 264, WIDTH_Y = 302, GAP_Y = 340;
     private static final int COLOR_DIVIDER_Y = 370, COLOR_Y = 396, OUTLINE_COLOR_Y = 426;
