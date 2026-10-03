@@ -21,7 +21,7 @@ public abstract class AxialConfigScreenXaeroMinimapMixin {
     private static Field axial_cosmetics$tileYField;
     private static Method axial_cosmetics$addActionTileMethod;
 
-    @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 980)
+    @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 981)
     private void axial_cosmetics$addXaeroMinimapButton(CallbackInfo ci) {
         try {
             Object mode = axial_cosmetics$getMode();
@@ -33,15 +33,15 @@ public abstract class AxialConfigScreenXaeroMinimapMixin {
             Object potionsHudTile = null;
             for (Object tile : tiles) {
                 String label = axial_cosmetics$getTileLabel(tile);
-                if ("MINIMAP".equals(label)) return;
+                if ("XAERO MINIMAP".equals(label)) return;
                 if ("POTIONS HUD".equals(label)) potionsHudTile = tile;
             }
             if (potionsHudTile == null) return;
 
             axial_cosmetics$addActionTile(
-                    axial_cosmetics$getTileX(potionsHudTile) + 152,
+                    axial_cosmetics$getTileX(potionsHudTile) + 304,
                     axial_cosmetics$getTileY(potionsHudTile),
-                    "MINIMAP",
+                    "XAERO MINIMAP",
                     () -> axial_cosmetics$openXaeroSettings((Screen) (Object) this)
             );
         } catch (ReflectiveOperationException | ClassCastException ignored) {
