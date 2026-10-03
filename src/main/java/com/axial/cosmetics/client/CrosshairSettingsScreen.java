@@ -14,11 +14,11 @@ import java.util.Locale;
 
 /** Compact, scrollable settings screen for the custom crosshair. */
 public final class CrosshairSettingsScreen extends Screen {
-    private static final int PANEL_WIDTH = 452, PANEL_HEIGHT = 168, PANEL_PADDING = 28, CONTROL_WIDTH = 370;
-    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 506, ROW_HEIGHT = 20;
-    private static final int STYLE_DIVIDER_Y = 58, STYLE_Y = 84, SIZE_Y = 114, LENGTH_Y = 152, WIDTH_Y = 190, GAP_Y = 228;
-    private static final int COLOR_DIVIDER_Y = 258, COLOR_Y = 284, OUTLINE_COLOR_Y = 314;
-    private static final int ADDITIONAL_DIVIDER_Y = 344, ADDITIONAL_Y = 370, PREVIEW_DIVIDER_Y = 400, PREVIEW_Y = 426, PREVIEW_HEIGHT = 64;
+    private static final int PANEL_WIDTH = 452, PANEL_HEIGHT = 280, PANEL_PADDING = 28, CONTROL_WIDTH = 370;
+    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 518, ROW_HEIGHT = 20;
+    private static final int STYLE_DIVIDER_Y = 58, STYLE_Y = 84, SIZE_Y = 126, LENGTH_Y = 164, WIDTH_Y = 202, GAP_Y = 240;
+    private static final int COLOR_DIVIDER_Y = 270, COLOR_Y = 296, OUTLINE_COLOR_Y = 326;
+    private static final int ADDITIONAL_DIVIDER_Y = 356, ADDITIONAL_Y = 382, PREVIEW_DIVIDER_Y = 412, PREVIEW_Y = 438, PREVIEW_HEIGHT = 64;
     private static final int COMPACT_WIDTH = 170, COMPACT_GAP = 42;
     private static final float SIZE_MIN = 0.1f, SIZE_MAX = 4.0f, LENGTH_MIN = 0.0f, LENGTH_MAX = 32.0f, WIDTH_MIN = 2.0f, WIDTH_MAX = 12.0f, GAP_MIN = 0.0f, GAP_MAX = 20.0f;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
@@ -88,7 +88,7 @@ public final class CrosshairSettingsScreen extends Screen {
         AxialUiTheme.drawButton(context, textRenderer, x, y, 416, ROW_HEIGHT, "", "",
                 inside(mouseX, mouseY, x, y, 416, ROW_HEIGHT), false,
                 enabled ? AxialUiTheme.TOGGLE_ON : AxialUiTheme.TOGGLE_OFF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText(enabled ? "ENABLED" : "DISABLED"), x + 208, y + 5, 0xFFF7F7FF);
+        context.drawCenteredTextWithShadow(textRenderer, uiText("ENABLED"), x + 208, y + 5, 0xFFF7F7FF);
     }
     private void drawStyleButton(DrawContext context, int mouseX, int mouseY, CrosshairConfig config) {
         int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));
