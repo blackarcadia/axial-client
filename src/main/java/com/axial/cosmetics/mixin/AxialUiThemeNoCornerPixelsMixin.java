@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(targets = "org.axial.axialutils.client.AxialUiTheme", remap = false)
 public abstract class AxialUiThemeNoCornerPixelsMixin {
     @Redirect(
-            method = {"drawButton", "drawIconButton"},
+            method = {"drawPanel", "drawButton", "drawIconButton"},
             at = @At(value = "INVOKE", target = "Lorg/axial/axialutils/client/AxialUiTheme;drawCorner(Lnet/minecraft/client/gui/DrawContext;IIZZI)V"),
             remap = false,
             require = 0
