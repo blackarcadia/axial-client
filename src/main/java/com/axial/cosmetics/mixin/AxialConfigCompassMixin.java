@@ -8,6 +8,7 @@ public abstract class AxialConfigCompassMixin implements CompassConfigAccess {
     public Boolean showCompass = Boolean.TRUE;
     public Integer compassX;
     public Integer compassY;
+    public Float compassScale = 1.0f;
 
     @Override
     public Integer axial_cosmetics$getCompassX() {
@@ -24,6 +25,8 @@ public abstract class AxialConfigCompassMixin implements CompassConfigAccess {
         compassX = x;
         compassY = y;
     }
+    @Override public Float axial_cosmetics$getCompassScale() { return compassScale; }
+    @Override public void axial_cosmetics$setCompassScale(float scale) { compassScale = scale; }
 
 
     @Override

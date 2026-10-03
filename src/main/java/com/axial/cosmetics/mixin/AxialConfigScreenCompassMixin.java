@@ -1,6 +1,9 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.CompassConfig;
+import com.axial.cosmetics.client.CompassSettingsScreen;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -56,7 +59,7 @@ public abstract class AxialConfigScreenCompassMixin {
                     axial_cosmetics$getTileX(anchorTile),
                     axial_cosmetics$getTileY(anchorTile) + 30,
                     "COMPASS",
-                    CompassConfig::toggle,
+                    () -> MinecraftClient.getInstance().setScreen(new CompassSettingsScreen((Screen) (Object) this)),
                     axial_cosmetics$compassAccentGetter()
             );
         } catch (ReflectiveOperationException | ClassCastException ignored) {

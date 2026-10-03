@@ -39,8 +39,10 @@ public final class CompassHudRenderer {
     }
 
     public static int getWidth(int screenWidth) {
-        return Math.min(screenWidth, Math.min(WIDTH, Math.max(120, screenWidth - 8)));
+        return Math.min(screenWidth, Math.round(baseWidth(screenWidth) * CompassConfig.scale()));
     }
+    public static int getHeight() { return Math.round(HEIGHT * CompassConfig.scale()); }
+    private static int baseWidth(int screenWidth) { return Math.min(Math.max(1, Math.round(screenWidth / CompassConfig.scale())), Math.min(WIDTH, Math.max(120, screenWidth - 8))); }
 
     public static void renderPreview(DrawContext context, MinecraftClient client) {
         if (CompassConfig.isEnabled()) {
@@ -50,20 +52,21 @@ public final class CompassHudRenderer {
 
     private static void renderCompass(DrawContext context, MinecraftClient client, float yaw) {
         int screenWidth = client.getWindow().getScaledWidth();
-        int compassWidth = getWidth(screenWidth);
-        int left = CompassConfig.getX(screenWidth, compassWidth);
-        int top = CompassConfig.getY(client.getWindow().getScaledHeight(), HEIGHT);
-        int centerX = left + compassWidth / 2;
+        float scale = CompassConfig.scale(); int compassWidth = baseWidth(screenWidth);
+        int left = CompassConfig.getX(screenWidth, Math.round(compassWidth * scale));
+        int top = CompassConfig.getY(client.getWindow().getScaledHeight(), getHeight());
+        context.getMatrices().pushMatrix(); context.getMatrices().translate(left, top); context.getMatrices().scale(scale, scale);
+        int centerX = compassWidth / 2;
 
-        context.fill(left, top, left + compassWidth, top + HEIGHT, BACKGROUND);
-        context.fill(left + 1, top + 1, left + compassWidth - 1, top + 2, 0x30FFFFFF);
-        context.fill(left, top + HEIGHT - 1, left + compassWidth, top + HEIGHT, 0x33000000);
+        context.fill(0, 0, compassWidth, HEIGHT, BACKGROUND);
+        context.fill(1, 1, compassWidth - 1, 2, 0x30FFFFFF);
+        context.fill(0, HEIGHT - 1, compassWidth, HEIGHT, 0x33000000);
 
-        drawDegreeMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth, top);
-        drawCardinalMarks(context, client.textRenderer, yaw, centerX, left, left + compassWidth, compassWidth, top);
+        drawDegreeMarks(context, client.textRenderer, yaw, centerX, 0, compassWidth, compassWidth, 0);
+        drawCardinalMarks(context, client.textRenderer, yaw, centerX, 0, compassWidth, compassWidth, 0);
 
-        context.fill(centerX - 1, top + 3, centerX + 1, top + 20, CENTER_COLOR);
-        context.fill(centerX - 3, top + 3, centerX + 4, top + 5, CENTER_COLOR);
+        context.fill(centerX - 1, 3, centerX + 1, 20, CENTER_COLOR);
+        context.fill(centerX - 3, 3, centerX + 4, 5, CENTER_COLOR); context.getMatrices().popMatrix();
     }
 
     private static void drawDegreeMarks(DrawContext context, TextRenderer textRenderer, float yaw, int centerX, int minX, int maxX, int compassWidth, int top) {

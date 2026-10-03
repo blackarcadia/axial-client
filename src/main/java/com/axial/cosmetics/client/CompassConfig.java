@@ -36,6 +36,15 @@ public final class CompassConfig {
             access.axial_cosmetics$setCompassPosition(x, y);
         }
     }
+    public static float scale() {
+        Object config = AxialConfigManager.get();
+        Float scale = config instanceof CompassConfigAccess access ? access.axial_cosmetics$getCompassScale() : null;
+        return Math.max(0.5f, Math.min(3.0f, scale == null ? 1.0f : scale));
+    }
+    public static void setScale(float scale) {
+        Object config = AxialConfigManager.get();
+        if (config instanceof CompassConfigAccess access) { access.axial_cosmetics$setCompassScale(Math.max(0.5f, Math.min(3.0f, scale))); AxialConfigManager.save(); }
+    }
 
     public static void toggle() {
         setEnabled(!isEnabled());

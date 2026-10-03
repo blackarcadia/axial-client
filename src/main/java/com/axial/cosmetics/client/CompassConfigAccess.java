@@ -9,4 +9,6 @@ public interface CompassConfigAccess {
     Integer axial_cosmetics$getCompassY();
 
     void axial_cosmetics$setCompassPosition(int x, int y);
+    Float axial_cosmetics$getCompassScale();
+    void axial_cosmetics$setCompassScale(float scale);
 }

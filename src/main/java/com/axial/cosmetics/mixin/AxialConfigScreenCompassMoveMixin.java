@@ -43,9 +43,9 @@ public abstract class AxialConfigScreenCompassMoveMixin {
         Screen screen = (Screen) (Object) this;
         int compassWidth = CompassHudRenderer.getWidth(screen.width);
         int left = CompassConfig.getX(screen.width, compassWidth);
-        int top = CompassConfig.getY(screen.height, CompassHudRenderer.HEIGHT);
+        int top = CompassConfig.getY(screen.height, CompassHudRenderer.getHeight());
         if (mouseX >= left && mouseX < left + compassWidth
-                && mouseY >= top && mouseY < top + CompassHudRenderer.HEIGHT) {
+                && mouseY >= top && mouseY < top + CompassHudRenderer.getHeight()) {
             axial_cosmetics$draggingCompass = true;
             axial_cosmetics$compassDragOffsetX = (int) mouseX - left;
             axial_cosmetics$compassDragOffsetY = (int) mouseY - top;
@@ -62,7 +62,7 @@ public abstract class AxialConfigScreenCompassMoveMixin {
             int x = snapPositionX((int) click.x() - axial_cosmetics$compassDragOffsetX,
                     compassWidth, Math.max(0, screen.width - compassWidth));
             int y = snapPositionY((int) click.y() - axial_cosmetics$compassDragOffsetY,
-                    CompassHudRenderer.HEIGHT, Math.max(0, screen.height - CompassHudRenderer.HEIGHT));
+                    CompassHudRenderer.getHeight(), Math.max(0, screen.height - CompassHudRenderer.getHeight()));
             CompassConfig.setPosition(x, y);
             cir.setReturnValue(true);
         }

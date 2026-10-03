@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.ChunkBordersSettingsScreen;
+import com.axial.cosmetics.client.CompassSettingsScreen;
 import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.client.CrosshairColorPickerScreen;
 import com.axial.cosmetics.client.CrosshairSettingsScreen;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /** Applies AxialUtils' standard press sound to controls drawn by our custom screens. */
 @Mixin({
         ChunkBordersSettingsScreen.class,
+        CompassSettingsScreen.class,
         CreateWaypointScreen.class,
         CrosshairColorPickerScreen.class,
         CrosshairSettingsScreen.class,
