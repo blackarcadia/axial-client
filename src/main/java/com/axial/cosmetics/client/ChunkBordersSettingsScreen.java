@@ -7,14 +7,15 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.axial.axialutils.client.AxialUiTheme;
 
 public final class ChunkBordersSettingsScreen extends Screen {
-    private static final int PANEL_WIDTH = 404;
+    private static final int PANEL_WIDTH = 452;
     private static final int PANEL_HEIGHT = 168;
     private static final int PANEL_PADDING = 18;
     private static final int BACK_BUTTON_WIDTH = 24;
     private static final int BACK_BUTTON_HEIGHT = 18;
-    private static final int TOGGLE_WIDTH = PANEL_WIDTH - PANEL_PADDING * 2;
+    private static final int TOGGLE_WIDTH = 416;
     private static final int TOGGLE_HEIGHT = 20;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
@@ -43,7 +44,6 @@ public final class ChunkBordersSettingsScreen extends Screen {
         rebuildLayout();
         drawPanel(context);
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("TOGGLE MINECRAFT CHUNK BORDERS."), panelX + PANEL_WIDTH / 2, panelY + 22, 0xFFC6D0F3);
         drawBackButton(context, mouseX, mouseY);
         drawToggleButton(context, mouseX, mouseY);
     }
@@ -87,24 +87,17 @@ public final class ChunkBordersSettingsScreen extends Screen {
         int y = toggleY();
         boolean enabled = ChunkBordersConfig.enabled();
         boolean hovered = inside(mouseX, mouseY, x, y, TOGGLE_WIDTH, TOGGLE_HEIGHT);
-        context.fill(x, y, x + TOGGLE_WIDTH, y + TOGGLE_HEIGHT, hovered ? 0xBC20283A : 0xA0181D2C);
-        context.fill(x + 1, y + 1, x + TOGGLE_WIDTH - 1, y + 2, 0x33FFFFFF);
-        context.drawStrokedRectangle(x, y, TOGGLE_WIDTH, TOGGLE_HEIGHT, enabled ? 0xFF8AF0C2 : 0xD08F5DFF);
-        context.drawCenteredTextWithShadow(
-                textRenderer,
-                uiText(enabled ? "ON" : "OFF"),
-                x + TOGGLE_WIDTH / 2,
-                y + 6,
-                enabled ? 0xFFFFFFFF : 0xFFC6D0F3
-        );
+        AxialUiTheme.drawButton(context, textRenderer, x, y, TOGGLE_WIDTH, TOGGLE_HEIGHT, "", "", hovered, false,
+                enabled ? AxialUiTheme.TOGGLE_ON : AxialUiTheme.TOGGLE_OFF);
+        context.drawCenteredTextWithShadow(textRenderer, uiText(enabled ? "ENABLED" : "DISABLED"), x + TOGGLE_WIDTH / 2, y + 5, 0xFFF7F7FF);
     }
 
     private int toggleX() {
-        return panelX + PANEL_PADDING;
+        return panelX + 18;
     }
 
     private int toggleY() {
-        return panelY + 58;
+        return panelY + 30;
     }
 
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {
