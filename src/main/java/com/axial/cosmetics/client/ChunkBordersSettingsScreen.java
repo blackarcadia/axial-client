@@ -1,9 +1,13 @@
 package com.axial.cosmetics.client;
 
+import com.axial.cosmetics.AxialCosmetics;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -11,7 +15,7 @@ import org.axial.axialutils.client.AxialUiTheme;
 
 public final class ChunkBordersSettingsScreen extends Screen {
     private static final int PANEL_WIDTH = 452;
-    private static final int PANEL_HEIGHT = 168;
+    private static final int PANEL_HEIGHT = 220;
     private static final int PANEL_PADDING = 18;
     private static final int BACK_BUTTON_WIDTH = 24;
     private static final int BACK_BUTTON_HEIGHT = 18;
@@ -22,6 +26,7 @@ public final class ChunkBordersSettingsScreen extends Screen {
     private final Screen parent;
     private int panelX;
     private int panelY;
+    private boolean capturingToggleKey;
 
     public ChunkBordersSettingsScreen(Screen parent) {
         super(uiText("CHUNK BORDERS"));
@@ -46,7 +51,9 @@ public final class ChunkBordersSettingsScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
         drawBackButton(context, mouseX, mouseY);
         drawToggleButton(context, mouseX, mouseY);
-        drawDivider(context, panelY + 66, "COLOR");
+        drawDivider(context, panelY + 66, "KEYBIND");
+        drawKeybindRow(context, mouseX, mouseY);
+        drawDivider(context, panelY + 118, "COLOR");
         drawColorRow(context, mouseX, mouseY);
     }
 
@@ -66,6 +73,11 @@ public final class ChunkBordersSettingsScreen extends Screen {
             return true;
         }
 
+        if (inside(click.x(), click.y(), keybindButtonX(), keybindRowY(), 92, 20)) {
+            capturingToggleKey = true;
+            return true;
+        }
+
         if (inside(click.x(), click.y(), colorSwatchX(), colorRowY(), 20, 20)) {
             MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(
                     this,
@@ -77,6 +89,22 @@ public final class ChunkBordersSettingsScreen extends Screen {
         }
 
         return super.mouseClicked(click, doubled);
+    }
+
+    @Override
+    public boolean keyPressed(KeyInput input) {
+        if (!capturingToggleKey) {
+            return super.keyPressed(input);
+        }
+
+        capturingToggleKey = false;
+        if (input.key() != 256) { // Escape cancels without changing the binding.
+            KeyBinding binding = AxialCosmetics.chunkBordersToggleKey();
+            binding.setBoundKey(InputUtil.fromKeyCode(input));
+            KeyBinding.updateKeysByCode();
+            MinecraftClient.getInstance().options.write();
+        }
+        return true;
     }
 
     private void rebuildLayout() {
@@ -113,11 +141,19 @@ public final class ChunkBordersSettingsScreen extends Screen {
     }
 
     private int colorRowY() {
-        return panelY + 82;
+        return panelY + 134;
     }
 
     private int colorSwatchX() {
         return panelX + PANEL_WIDTH - PANEL_PADDING - 28;
+    }
+
+    private int keybindRowY() {
+        return panelY + 82;
+    }
+
+    private int keybindButtonX() {
+        return panelX + PANEL_WIDTH - PANEL_PADDING - 92;
     }
 
     private void drawDivider(DrawContext context, int y, String label) {
@@ -136,6 +172,18 @@ public final class ChunkBordersSettingsScreen extends Screen {
         boolean hovered = inside(mouseX, mouseY, swatchX, y, 20, 20);
         context.fill(swatchX, y + 2, swatchX + 16, y + 18, ChunkBordersConfig.color());
         context.drawStrokedRectangle(swatchX, y + 2, 16, 16, hovered ? 0xFFFFFFFF : 0xFFB9C5E8);
+    }
+
+    private void drawKeybindRow(DrawContext context, int mouseX, int mouseY) {
+        int y = keybindRowY();
+        int buttonX = keybindButtonX();
+        context.drawTextWithShadow(textRenderer, uiText("TOGGLE KEY"), panelX + PANEL_PADDING + 2, y + 6, 0xFFC6D0F3);
+        boolean hovered = inside(mouseX, mouseY, buttonX, y, 92, 20);
+        context.fill(buttonX, y, buttonX + 92, y + 20, hovered ? 0xBC20283A : 0xA0181D2C);
+        context.fill(buttonX + 1, y + 1, buttonX + 91, y + 2, hovered ? 0x33FFFFFF : 0x17FFFFFF);
+        context.drawStrokedRectangle(buttonX, y, 92, 20, 0xFFE7D9FF);
+        String label = capturingToggleKey ? "PRESS A KEY" : AxialCosmetics.chunkBordersToggleKey().getBoundKeyLocalizedText().getString().toUpperCase();
+        context.drawCenteredTextWithShadow(textRenderer, uiText(label), buttonX + 46, y + 5, 0xFFF7F7FF);
     }
 
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {

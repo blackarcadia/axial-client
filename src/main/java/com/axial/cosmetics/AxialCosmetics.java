@@ -42,6 +42,7 @@ public class AxialCosmetics implements ClientModInitializer {
     private KeyBinding menuKey;
     private KeyBinding modMenuKey;
     private KeyBinding createWaypointKey;
+    private static KeyBinding chunkBordersToggleKey;
 
     @Override
     public void onInitializeClient() {
@@ -99,6 +100,8 @@ public class AxialCosmetics implements ClientModInitializer {
                 new KeyBinding("key.axial_cosmetics.modmenu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, Category.MISC));
         createWaypointKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.create_waypoint", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, Category.MISC));
+        chunkBordersToggleKey = KeyBindingHelper.registerKeyBinding(
+                new KeyBinding("key.axial_cosmetics.chunk_borders_toggle", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, Category.MISC));
 
         try {
             LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
@@ -138,6 +141,11 @@ public class AxialCosmetics implements ClientModInitializer {
                     client.setScreen(new CreateWaypointScreen());
                 }
             }
+            while (chunkBordersToggleKey.wasPressed()) {
+                if (client.player != null && client.currentScreen == null) {
+                    ChunkBordersConfig.setEnabled(!ChunkBordersConfig.enabled(), client);
+                }
+            }
         });
 
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -149,6 +157,10 @@ public class AxialCosmetics implements ClientModInitializer {
 
     public static Identifier id(String path) {
         return Identifier.of(MOD_ID, path);
+    }
+
+    public static KeyBinding chunkBordersToggleKey() {
+        return chunkBordersToggleKey;
     }
 
     private void openCosmeticMenu(net.minecraft.client.MinecraftClient client) {
