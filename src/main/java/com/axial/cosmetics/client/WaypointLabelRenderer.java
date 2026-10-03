@@ -29,7 +29,9 @@ public final class WaypointLabelRenderer {
             if (!dimension.equals(waypoint.dimension())) continue;
             Vector4f projected = new Vector4f(
                     (float) (waypoint.x() + 0.5 - cameraPos.x),
-                    (float) (client.player.getY() - cameraPos.y),
+                    // Use the waypoint's real position, rather than the player's
+                    // current height, so the tag stays attached to the beam.
+                    (float) (waypoint.y() + 1.0 - cameraPos.y),
                     (float) (waypoint.z() + 0.5 - cameraPos.z),
                     1.0f
             ).rotate(rotation).mul(projection);
