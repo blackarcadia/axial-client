@@ -73,7 +73,6 @@
     "AxialConfigScreenPotionsMenuMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudMinimapMixin",
-    "InGameHudWaypointLabelsMixin",
     "WarpWaypointManagerMixin",
     "TitleScreenButtonSkinMixin",
     "TitleScreenMenuLayoutMixin"
