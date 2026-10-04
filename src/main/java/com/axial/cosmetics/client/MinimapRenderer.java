@@ -16,10 +16,11 @@ import net.minecraft.world.Heightmap;
 /** Draws a detailed top-down map of every loaded surface block in the viewport. */
 public final class MinimapRenderer {
     public static final int SIZE = 120;
+    private static final int MAP_SIZE = 96;
     private static final int BORDER = 2;
     private static final int REFRESH_INTERVAL_TICKS = 10;
     private static final Identifier MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/minimap");
-    private static final int[] HEIGHTS = new int[SIZE * SIZE];
+    private static final int[] HEIGHTS = new int[MAP_SIZE * MAP_SIZE];
 
     private static NativeImage image;
     private static NativeImageBackedTexture texture;
@@ -50,7 +51,7 @@ public final class MinimapRenderer {
             int centerX = client.player.getBlockX();
             int centerZ = client.player.getBlockZ();
             if (needsRefresh(client.player.age, centerX, centerZ)) sampleTerrain(client, centerX, centerZ);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, MAP_TEXTURE, left, top, 0.0f, 0.0f, SIZE, SIZE, SIZE, SIZE, SIZE, SIZE);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, MAP_TEXTURE, left, top, 0.0f, 0.0f, SIZE, SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE);
         } else {
             context.fill(left, top, left + SIZE, top + SIZE, 0xFF386B3D);
         }
@@ -65,7 +66,7 @@ public final class MinimapRenderer {
 
     private static void ensureTexture(MinecraftClient client) {
         if (texture != null) return;
-        image = new NativeImage(SIZE, SIZE, true);
+        image = new NativeImage(MAP_SIZE, MAP_SIZE, true);
         texture = new NativeImageBackedTexture(() -> "axial_cosmetics/minimap", image);
         client.getTextureManager().registerTexture(MAP_TEXTURE, texture);
     }
@@ -75,17 +76,17 @@ public final class MinimapRenderer {
         lastCenterX = centerX;
         lastCenterZ = centerZ;
         BlockPos.Mutable pos = new BlockPos.Mutable();
-        int originX = centerX - SIZE / 2;
-        int originZ = centerZ - SIZE / 2;
+        int originX = centerX - MAP_SIZE / 2;
+        int originZ = centerZ - MAP_SIZE / 2;
 
-        for (int mapZ = 0; mapZ < SIZE; mapZ++) for (int mapX = 0; mapX < SIZE; mapX++) {
+        for (int mapZ = 0; mapZ < MAP_SIZE; mapZ++) for (int mapX = 0; mapX < MAP_SIZE; mapX++) {
             int worldX = originX + mapX;
             int worldZ = originZ + mapZ;
-            HEIGHTS[mapZ * SIZE + mapX] = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, worldX, worldZ) - 1;
+            HEIGHTS[mapZ * MAP_SIZE + mapX] = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, worldX, worldZ) - 1;
         }
 
-        for (int mapZ = 0; mapZ < SIZE; mapZ++) for (int mapX = 0; mapX < SIZE; mapX++) {
-            int index = mapZ * SIZE + mapX;
+        for (int mapZ = 0; mapZ < MAP_SIZE; mapZ++) for (int mapX = 0; mapX < MAP_SIZE; mapX++) {
+            int index = mapZ * MAP_SIZE + mapX;
             pos.set(originX + mapX, HEIGHTS[index], originZ + mapZ);
             BlockState state = client.world.getBlockState(pos);
             image.setColorArgb(mapX, mapZ, colorFor(state, client, pos, index, mapX, mapZ));
@@ -99,7 +100,7 @@ public final class MinimapRenderer {
 
         int height = HEIGHTS[index];
         int west = mapX == 0 ? height : HEIGHTS[index - 1];
-        int north = mapZ == 0 ? height : HEIGHTS[index - SIZE];
+        int north = mapZ == 0 ? height : HEIGHTS[index - MAP_SIZE];
         int slope = height - (west + north) / 2;
         MapColor.Brightness brightness = slope > 1 ? MapColor.Brightness.HIGH
                 : slope < -1 ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
