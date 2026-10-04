@@ -55,6 +55,8 @@
     "MinecraftClientDebugHudEntryListAccessor",
     "ClientPlayNetworkHandlerIslandXpMixin",
     "EmoteListWidgetPermissionMixin",
+    "EmoteFastWheelMixin",
+    "EmoteFastWheelAssignmentMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
