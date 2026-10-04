@@ -70,7 +70,6 @@
     "AxialConfigScreenPotionsHudMixin",
     "AxialConfigScreenMinimapMixin",
     "AxialConfigScreenMinimapMoveMixin",
-    "AxialConfigScreenXaeroMinimapMixin",
     "AxialConfigScreenPotionsMenuMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudMinimapMixin",
