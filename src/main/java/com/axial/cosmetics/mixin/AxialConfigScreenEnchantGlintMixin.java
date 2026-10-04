@@ -50,12 +50,11 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
     @Inject(method = "method_25426", at = @At("TAIL"), remap = false)
     private void axial_cosmetics$initGlintControls(CallbackInfo ci) {
         axial_cosmetics$glintSlider = addSelectableChild(new EnchantGlintSliderWidget());
-        axial_cosmetics$glintColor = addSelectableChild(ButtonWidget.builder(axial_cosmetics$glintText("ENCHANT GLINT COLOR"), button ->
+        axial_cosmetics$glintColor = addSelectableChild(new AxialGlintButton(0, 0, 308, axial_cosmetics$glintText("ENCHANT GLINT COLOR"), () ->
                 MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, "ENCHANT GLINT",
-                        EnchantGlintConfig.color(), EnchantGlintConfig::setColor, EnchantGlintConfig::save)))
-                .dimensions(0, 0, 308, 20).build());
-        axial_cosmetics$glintReset = addSelectableChild(ButtonWidget.builder(axial_cosmetics$glintText("DEFAULT"), button ->
-                EnchantGlintConfig.resetColor()).dimensions(0, 0, 76, 20).build());
+                        EnchantGlintConfig.color(), EnchantGlintConfig::setColor, EnchantGlintConfig::save))));
+        axial_cosmetics$glintReset = addSelectableChild(new AxialGlintButton(0, 0, 76, axial_cosmetics$glintText("DEFAULT"),
+                EnchantGlintConfig::resetColor));
         axial_cosmetics$positionGlintControls();
     }
 
@@ -191,6 +190,25 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
             return scroll.getInt(this);
         } catch (ReflectiveOperationException ex) {
             return 0;
+        }
+    }
+
+    /** Matches the compact dark selector buttons used in the Minimap submenu. */
+    @Unique
+    private static final class AxialGlintButton extends ButtonWidget {
+        private AxialGlintButton(int x, int y, int width, net.minecraft.text.Text text, Runnable action) {
+            super(x, y, width, 20, text, ignored -> action.run(), DEFAULT_NARRATION_SUPPLIER);
+        }
+
+        @Override
+        protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
+            int x = getX(), y = getY(), width = getWidth();
+            boolean hovered = isHovered() || isFocused();
+            context.fill(x, y, x + width, y + 20, hovered ? 0xBC20283A : 0xA0181D2C);
+            context.fill(x + 1, y + 1, x + width - 1, y + 2, hovered ? 0x33FFFFFF : 0x17FFFFFF);
+            context.drawStrokedRectangle(x, y, width, 20, 0xFFE7D9FF);
+            context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), x + width / 2, y + 5,
+                    active ? 0xFFF7F7FF : 0xFF8B8A96);
         }
     }
 
