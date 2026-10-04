@@ -1,20 +1,30 @@
 package com.axial.cosmetics.client;
 
+import com.axial.cosmetics.AxialCosmetics;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.MapColor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
 
-/** Draws a client-side map of the terrain in chunks currently available to the player. */
+/** Draws a detailed top-down map of every loaded surface block in the viewport. */
 public final class MinimapRenderer {
     public static final int SIZE = 120;
     private static final int BORDER = 2;
-    private static final int SAMPLE_SIZE = 3;
-    private static final int SAMPLES = SIZE / SAMPLE_SIZE;
-    private static final int[] TERRAIN = new int[SAMPLES * SAMPLES];
+    private static final int REFRESH_INTERVAL_TICKS = 10;
+    private static final Identifier MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/minimap");
+    private static final int[] HEIGHTS = new int[SIZE * SIZE];
+
+    private static NativeImage image;
+    private static NativeImageBackedTexture texture;
+    private static int lastCenterX = Integer.MIN_VALUE;
+    private static int lastCenterZ = Integer.MIN_VALUE;
     private static int lastSampleTick = Integer.MIN_VALUE;
 
     private MinimapRenderer() { }
@@ -36,41 +46,69 @@ public final class MinimapRenderer {
         context.fill(left, top, left + SIZE, top + SIZE, 0xFF27303A);
 
         if (client.player != null && client.world != null) {
-            if (lastSampleTick == Integer.MIN_VALUE || client.player.age < lastSampleTick || client.player.age - lastSampleTick >= 10) sampleTerrain(client);
-            for (int sampleZ = 0; sampleZ < SAMPLES; sampleZ++) for (int sampleX = 0; sampleX < SAMPLES; sampleX++)
-                context.fill(left + sampleX * SAMPLE_SIZE, top + sampleZ * SAMPLE_SIZE,
-                        left + (sampleX + 1) * SAMPLE_SIZE, top + (sampleZ + 1) * SAMPLE_SIZE,
-                        TERRAIN[sampleZ * SAMPLES + sampleX]);
+            ensureTexture(client);
+            int centerX = client.player.getBlockX();
+            int centerZ = client.player.getBlockZ();
+            if (needsRefresh(client.player.age, centerX, centerZ)) sampleTerrain(client, centerX, centerZ);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, MAP_TEXTURE, left, top, 0.0f, 0.0f, SIZE, SIZE, SIZE, SIZE, SIZE, SIZE);
         } else {
             context.fill(left, top, left + SIZE, top + SIZE, 0xFF386B3D);
         }
 
-        int center = SIZE / 2;
-        context.fill(left + center - 2, top + center - 2, left + center + 3, top + center + 3, 0xFFFFFFFF);
-        context.fill(left + center - 1, top + center - 1, left + center + 2, top + center + 2, 0xFF191C22);
+        drawPlayerMarker(context, left, top);
         context.fill(left, top, left + SIZE, top + 1, 0x66FFFFFF);
     }
 
-    private static void sampleTerrain(MinecraftClient client) {
-        lastSampleTick = client.player.age;
-        int centerX = client.player.getBlockX();
-        int centerZ = client.player.getBlockZ();
-        for (int sampleZ = 0; sampleZ < SAMPLES; sampleZ++) for (int sampleX = 0; sampleX < SAMPLES; sampleX++) {
-            int worldX = centerX + (sampleX - SAMPLES / 2) * SAMPLE_SIZE;
-            int worldZ = centerZ + (sampleZ - SAMPLES / 2) * SAMPLE_SIZE;
-            int surfaceY = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, worldX, worldZ) - 1;
-            TERRAIN[sampleZ * SAMPLES + sampleX] = colorFor(client.world.getBlockState(new BlockPos(worldX, surfaceY, worldZ)));
-        }
+    private static boolean needsRefresh(int tick, int centerX, int centerZ) {
+        return tick < lastSampleTick || centerX != lastCenterX || centerZ != lastCenterZ || tick - lastSampleTick >= REFRESH_INTERVAL_TICKS;
     }
 
-    private static int colorFor(BlockState state) {
-        if (state.isOf(Blocks.WATER) || state.isOf(Blocks.KELP) || state.isOf(Blocks.KELP_PLANT)) return 0xFF2B6599;
-        if (state.isOf(Blocks.LAVA)) return 0xFFE05B28;
-        if (state.isOf(Blocks.SAND) || state.isOf(Blocks.RED_SAND)) return 0xFFD7C477;
-        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.ICE)) return 0xFFE3EDF4;
-        if (state.isOf(Blocks.STONE) || state.isOf(Blocks.DEEPSLATE) || state.isOf(Blocks.GRAVEL)) return 0xFF77777A;
-        if (state.isOf(Blocks.DIRT) || state.isOf(Blocks.COARSE_DIRT) || state.isOf(Blocks.PODZOL)) return 0xFF805D3E;
-        if (state.isAir()) return 0xFF27303A;
-        return 0xFF4F8A48;
+    private static void ensureTexture(MinecraftClient client) {
+        if (texture != null) return;
+        image = new NativeImage(SIZE, SIZE, true);
+        texture = new NativeImageBackedTexture(() -> "axial_cosmetics/minimap", image);
+        client.getTextureManager().registerTexture(MAP_TEXTURE, texture);
+    }
+
+    private static void sampleTerrain(MinecraftClient client, int centerX, int centerZ) {
+        lastSampleTick = client.player.age;
+        lastCenterX = centerX;
+        lastCenterZ = centerZ;
+        BlockPos.Mutable pos = new BlockPos.Mutable();
+        int originX = centerX - SIZE / 2;
+        int originZ = centerZ - SIZE / 2;
+
+        for (int mapZ = 0; mapZ < SIZE; mapZ++) for (int mapX = 0; mapX < SIZE; mapX++) {
+            int worldX = originX + mapX;
+            int worldZ = originZ + mapZ;
+            HEIGHTS[mapZ * SIZE + mapX] = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, worldX, worldZ) - 1;
+        }
+
+        for (int mapZ = 0; mapZ < SIZE; mapZ++) for (int mapX = 0; mapX < SIZE; mapX++) {
+            int index = mapZ * SIZE + mapX;
+            pos.set(originX + mapX, HEIGHTS[index], originZ + mapZ);
+            BlockState state = client.world.getBlockState(pos);
+            image.setColorArgb(mapX, mapZ, colorFor(state, client, pos, index, mapX, mapZ));
+        }
+        texture.upload();
+    }
+
+    private static int colorFor(BlockState state, MinecraftClient client, BlockPos pos, int index, int mapX, int mapZ) {
+        MapColor mapColor = state.getMapColor(client.world, pos);
+        if (mapColor == MapColor.CLEAR) return 0xFF27303A;
+
+        int height = HEIGHTS[index];
+        int west = mapX == 0 ? height : HEIGHTS[index - 1];
+        int north = mapZ == 0 ? height : HEIGHTS[index - SIZE];
+        int slope = height - (west + north) / 2;
+        MapColor.Brightness brightness = slope > 1 ? MapColor.Brightness.HIGH
+                : slope < -1 ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
+        return mapColor.getRenderColor(brightness);
+    }
+
+    private static void drawPlayerMarker(DrawContext context, int left, int top) {
+        int center = SIZE / 2;
+        context.fill(left + center - 2, top + center - 2, left + center + 3, top + center + 3, 0xFFFFFFFF);
+        context.fill(left + center - 1, top + center - 1, left + center + 2, top + center + 2, 0xFF191C22);
     }
 }
