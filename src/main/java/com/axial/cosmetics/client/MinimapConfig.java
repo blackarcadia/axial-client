@@ -20,12 +20,12 @@ public final class MinimapConfig {
     public static void toggle() { SETTINGS.enabled = !SETTINGS.enabled; save(); }
     public static int getSize() {
         float size = size();
-        return size == 2.0f ? 144 : size == 3.0f ? 180 : 108;
+        return size == 1.0f ? 84 : size == 2.0f ? 144 : size == 3.0f ? 180 : 108;
     }
     public static String sizeLabel() { return String.format("%.1fX", size()); }
     public static void cycleSize() {
         float current = size();
-        SETTINGS.size = current == 1.5f ? 2.0f : current == 2.0f ? 3.0f : 1.5f;
+        SETTINGS.size = current == 1.0f ? 1.5f : current == 1.5f ? 2.0f : current == 2.0f ? 3.0f : 1.0f;
         save();
     }
     public static boolean isCircular() { return "CIRCLE".equals(SETTINGS.style); }
@@ -47,7 +47,7 @@ public final class MinimapConfig {
         } catch (IOException ignored) { return new Settings(); }
     }
     private static float size() {
-        if (SETTINGS.size == null || (SETTINGS.size != 1.5f && SETTINGS.size != 2.0f && SETTINGS.size != 3.0f)) return 1.5f;
+        if (SETTINGS.size == null || (SETTINGS.size != 1.0f && SETTINGS.size != 1.5f && SETTINGS.size != 2.0f && SETTINGS.size != 3.0f)) return 1.5f;
         return SETTINGS.size;
     }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(value, Math.max(min, max))); }
