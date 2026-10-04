@@ -40,7 +40,7 @@ public final class GitHubReleaseUpdater {
 
     public UpdateStatus checkForUpdate() throws IOException {
         Request request = new Request.Builder()
-                .url(API_BASE + buildInfo.githubOwner() + "/" + buildInfo.githubRepo() + "/releases/latest")
+                .url(API_BASE + buildInfo.githubOwner() + "/" + buildInfo.githubRepo() + "/releases?per_page=100")
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
                 .build();
@@ -53,16 +53,25 @@ public final class GitHubReleaseUpdater {
                 return UpdateStatus.notAvailable("Unable to query latest release");
             }
 
-            JsonObject release = JsonParser.parseReader(response.body().charStream()).getAsJsonObject();
+            JsonElement payload = JsonParser.parseReader(response.body().charStream());
+            if (!payload.isJsonArray()) {
+                return UpdateStatus.notAvailable("Unable to read published releases");
+            }
+
+            JsonObject release = newestReleaseWithAsset(payload.getAsJsonArray(), buildInfo.githubAsset());
+            if (release == null) {
+                return UpdateStatus.notAvailable("No published release has an update asset");
+            }
+
             String tag = normalizeVersion(release.get("tag_name").getAsString());
             String installedTag = installedClientTag();
-            if (!installedTag.isBlank() && installedTag.equalsIgnoreCase(tag)) {
+            if (!installedTag.isBlank() && !isNewer(tag, installedTag)) {
                 return UpdateStatus.upToDate(installedTag);
             }
 
             String assetUrl = findAssetUrl(release.getAsJsonArray("assets"), buildInfo.githubAsset());
             if (assetUrl == null) {
-                return UpdateStatus.notAvailable("Latest release has no update asset");
+                return UpdateStatus.notAvailable("Newest release has no update asset");
             }
             return UpdateStatus.available(tag, URI.create(assetUrl));
         }
@@ -357,6 +366,32 @@ public final class GitHubReleaseUpdater {
             }
         }
         return null;
+    }
+
+    /**
+     * GitHub's {@code /releases/latest} is ordered by publication time. Workflows can
+     * finish out of order, so use the greatest release tag instead of allowing a
+     * late-published older build to replace the installed client.
+     */
+    private static JsonObject newestReleaseWithAsset(JsonArray releases, String preferredAssetName) {
+        JsonObject newest = null;
+        for (JsonElement element : releases) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject release = element.getAsJsonObject();
+            if (release.has("draft") && release.get("draft").getAsBoolean()) {
+                continue;
+            }
+            if (!release.has("tag_name") || !release.has("assets")
+                    || findAssetUrl(release.getAsJsonArray("assets"), preferredAssetName) == null) {
+                continue;
+            }
+            if (newest == null || isNewer(release.get("tag_name").getAsString(), newest.get("tag_name").getAsString())) {
+                newest = release;
+            }
+        }
+        return newest;
     }
 
     private static String normalizeVersion(String version) {
