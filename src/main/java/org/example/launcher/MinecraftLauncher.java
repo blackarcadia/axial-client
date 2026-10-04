@@ -52,6 +52,7 @@ public class MinecraftLauncher {
     private static final String EMOTECRAFT_FILE = "emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar";
     private static final String BENDABLE_CUBOIDS_FILE = "BendableCuboidsFabric-2.0.1+mc.1.21.11.jar";
     private static final String PLAYER_ANIMATION_LIB_FILE = "PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar";
+    private static final String GANGNAM_STYLE_EMOTE_FILE = "gangnam_style.emotecraft";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -113,6 +114,7 @@ public class MinecraftLauncher {
         installGeckoLib(layout);
         installXaeroMinimap(layout);
         installEmotecraft(layout);
+        installBundledEmotes(layout);
         removeStaticBgMod(layout);
         removeCollective(layout);
         removeAxialUtils(layout);
@@ -747,6 +749,17 @@ public class MinecraftLauncher {
         installBundledMod(layout, EMOTECRAFT_FILE, "emotecraft-");
         installBundledMod(layout, BENDABLE_CUBOIDS_FILE, "BendableCuboidsFabric-");
         installBundledMod(layout, PLAYER_ANIMATION_LIB_FILE, "PlayerAnimationLibFabric-");
+    }
+
+    private void installBundledEmotes(FileLayout layout) throws IOException {
+        Files.createDirectories(layout.emotesDir());
+        Path target = layout.emotesDir().resolve(GANGNAM_STYLE_EMOTE_FILE);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/emotes/" + GANGNAM_STYLE_EMOTE_FILE)) {
+            if (in == null) throw new IOException("Bundled Gangnam Style emote is missing from the launcher package.");
+            if (copyBundledModIfChanged(in, target)) {
+                logger.info("Installed bundled emote: Gangnam Style");
+            }
+        }
     }
 
     private void removeAxialUtils(FileLayout layout) throws IOException {

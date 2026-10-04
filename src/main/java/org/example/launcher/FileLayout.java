@@ -50,6 +50,10 @@ class FileLayout {
         return root.resolve("mods");
     }
 
+    Path emotesDir() {
+        return root.resolve("emotes");
+    }
+
     Path resourcePacksDir() {
         return root.resolve("resourcepacks");
     }
