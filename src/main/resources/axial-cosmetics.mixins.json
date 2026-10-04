@@ -54,6 +54,7 @@
     "RealmsClientAccountAccessor",
     "MinecraftClientDebugHudEntryListAccessor",
     "ClientPlayNetworkHandlerIslandXpMixin",
+    "EmoteListWidgetPermissionMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
