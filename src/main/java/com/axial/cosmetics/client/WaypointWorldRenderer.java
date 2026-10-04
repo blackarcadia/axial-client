@@ -2,8 +2,11 @@ package com.axial.cosmetics.client;
 
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.render.DrawStyle;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -20,10 +23,10 @@ public final class WaypointWorldRenderer {
     public static void register() {
         // Gizmos are collected after entities. Registering earlier can leave the
         // marker behind terrain or omit it entirely, depending on the render path.
-        WorldRenderEvents.AFTER_ENTITIES.register(context -> render());
+        WorldRenderEvents.AFTER_ENTITIES.register(WaypointWorldRenderer::render);
     }
 
-    private static void render() {
+    private static void render(net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext context) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null || !WaypointConfig.enabled()) return;
         String dimension = client.world.getRegistryKey().getValue().toString();
@@ -31,6 +34,7 @@ public final class WaypointWorldRenderer {
             if (!dimension.equals(waypoint.dimension())) continue;
             BlockPos position = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
             drawBeam(client.world, position, waypoint.color());
+            drawLabel(context, position, waypoint.name(), waypoint.color());
         }
     }
 
@@ -43,6 +47,23 @@ public final class WaypointWorldRenderer {
         for (Direction direction : Direction.values()) {
             GizmoDrawing.face(min, max, direction, style);
         }
+    }
+
+    private static void drawLabel(net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext context, BlockPos position, String name, int color) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Vec3d cameraPos = client.gameRenderer.getCamera().getCameraPos();
+        MatrixStack matrices = context.matrices();
+        matrices.push();
+        matrices.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        matrices.translate(position.getX() + 0.5, position.getY() + 1.0, position.getZ() + 0.5);
+        matrices.multiply(client.gameRenderer.getCamera().getRotation());
+        matrices.scale(-0.025f, -0.025f, 0.025f);
+
+        Text label = Text.literal(name);
+        context.commandQueue().submitText(matrices, -client.textRenderer.getWidth(label) / 2.0f, -4.0f,
+                label.asOrderedText(), false, TextRenderer.TextLayerType.SEE_THROUGH, 0xF000F0,
+                color | 0xFF000000, 0x66000000, 0xFF000000);
+        matrices.pop();
     }
 
 }
