@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.MinimapRenderer;
+import com.axial.cosmetics.client.IslandXpPopup;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
@@ -14,5 +15,6 @@ public abstract class InGameHudMinimapMixin {
     @Inject(method = "render", at = @At("TAIL"))
     private void axial_cosmetics$renderMinimap(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         MinimapRenderer.render(context, tickCounter);
+        IslandXpPopup.render(context);
     }
 }

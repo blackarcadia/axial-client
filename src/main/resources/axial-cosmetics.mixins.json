@@ -53,6 +53,7 @@
     "MinecraftClientAccountMixin",
     "RealmsClientAccountAccessor",
     "MinecraftClientDebugHudEntryListAccessor",
+    "ClientPlayNetworkHandlerIslandXpMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
