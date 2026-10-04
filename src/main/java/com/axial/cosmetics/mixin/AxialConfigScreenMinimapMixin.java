@@ -1,7 +1,9 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.MinimapConfig;
-import org.axial.axialutils.client.AxialConfigManager;
+import com.axial.cosmetics.client.MinimapSettingsScreen;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -12,14 +14,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
-/** Adds the one-click minimap visibility control beside Potions HUD. */
+/** Adds the Minimap settings entry beside Potions HUD. */
 @Mixin(targets = "org.axial.axialutils.client.AxialConfigScreen", remap = false)
 public abstract class AxialConfigScreenMinimapMixin {
     private static Field modeField, tilesField, labelField, xField, yField;
     private static Method addActionTile;
 
     @Inject(method = "rebuildLayout", at = @At("RETURN"), remap = false, order = 980)
-    private void axial_cosmetics$addMinimapToggle(CallbackInfo ci) {
+    private void axial_cosmetics$addMinimapSettings(CallbackInfo ci) {
         try {
             Object mode = field(modeField, "mode");
             if (mode == null || !"MAIN".equals(mode.toString())) return;
@@ -40,7 +42,7 @@ public abstract class AxialConfigScreenMinimapMixin {
                 addActionTile.setAccessible(true);
             }
             Object highlighted = Proxy.newProxyInstance(supplier.getClassLoader(), new Class<?>[]{supplier}, (proxy, method, args) -> "getAsBoolean".equals(method.getName()) && MinimapConfig.isEnabled());
-            addActionTile.invoke(this, x, y, "MINIMAP", (Runnable) () -> { MinimapConfig.toggle(); AxialConfigManager.save(); }, highlighted);
+            addActionTile.invoke(this, x, y, "MINIMAP", (Runnable) () -> MinecraftClient.getInstance().setScreen(new MinimapSettingsScreen((Screen) (Object) this)), highlighted);
         } catch (ReflectiveOperationException | ClassCastException ignored) {
             // The upstream menu is private; do not break it if its internals move.
         }

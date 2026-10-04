@@ -30,7 +30,8 @@ public abstract class AxialConfigScreenMinimapMoveMixin {
         if (!MinimapConfig.isEnabled()) return;
         Screen screen = (Screen) (Object) this;
         int left = MinimapConfig.getX(screen.width), top = MinimapConfig.getY(screen.height);
-        if (mouseX >= left && mouseX < left + MinimapRenderer.SIZE && mouseY >= top && mouseY < top + MinimapRenderer.SIZE) {
+        int size = MinimapConfig.getSize();
+        if (mouseX >= left && mouseX < left + size && mouseY >= top && mouseY < top + size) {
             axial_cosmetics$draggingMinimap = true;
             axial_cosmetics$minimapDragOffsetX = (int) mouseX - left;
             axial_cosmetics$minimapDragOffsetY = (int) mouseY - top;
@@ -42,7 +43,8 @@ public abstract class AxialConfigScreenMinimapMoveMixin {
     private void axial_cosmetics$dragMinimap(Click click, double deltaX, double deltaY, CallbackInfoReturnable<Boolean> cir) {
         if (!axial_cosmetics$draggingMinimap) return;
         Screen screen = (Screen) (Object) this;
-        MinimapConfig.setPosition(snapPositionX((int) click.x() - axial_cosmetics$minimapDragOffsetX, MinimapRenderer.SIZE, Math.max(0, screen.width - MinimapRenderer.SIZE)), snapPositionY((int) click.y() - axial_cosmetics$minimapDragOffsetY, MinimapRenderer.SIZE, Math.max(0, screen.height - MinimapRenderer.SIZE)));
+        int size = MinimapConfig.getSize();
+        MinimapConfig.setPosition(snapPositionX((int) click.x() - axial_cosmetics$minimapDragOffsetX, size, Math.max(0, screen.width - size)), snapPositionY((int) click.y() - axial_cosmetics$minimapDragOffsetY, size, Math.max(0, screen.height - size)));
         cir.setReturnValue(true);
     }
 

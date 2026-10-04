@@ -10,6 +10,7 @@ import com.axial.cosmetics.client.EnchantGlintConfig;
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
+import com.axial.cosmetics.client.MinimapFullScreen;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import com.axial.cosmetics.client.CreateWaypointScreen;
@@ -43,6 +44,7 @@ public class AxialCosmetics implements ClientModInitializer {
     private KeyBinding modMenuKey;
     private static KeyBinding createWaypointKey;
     private static KeyBinding chunkBordersToggleKey;
+    private static KeyBinding minimapMapKey;
 
     @Override
     public void onInitializeClient() {
@@ -102,6 +104,8 @@ public class AxialCosmetics implements ClientModInitializer {
                 new KeyBinding("key.axial_cosmetics.create_waypoint", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, Category.MISC));
         chunkBordersToggleKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.chunk_borders_toggle", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, Category.MISC));
+        minimapMapKey = KeyBindingHelper.registerKeyBinding(
+                new KeyBinding("key.axial_cosmetics.minimap_full_map", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_N, Category.MISC));
 
         try {
             LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
@@ -146,6 +150,13 @@ public class AxialCosmetics implements ClientModInitializer {
                     ChunkBordersConfig.setEnabled(!ChunkBordersConfig.enabled(), client);
                 }
             }
+            while (minimapMapKey.wasPressed()) {
+                if (client.currentScreen instanceof MinimapFullScreen) {
+                    client.setScreen(null);
+                } else if (client.player != null && client.currentScreen == null) {
+                    client.setScreen(new MinimapFullScreen());
+                }
+            }
         });
 
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
@@ -165,6 +176,10 @@ public class AxialCosmetics implements ClientModInitializer {
 
     public static KeyBinding createWaypointKey() {
         return createWaypointKey;
+    }
+
+    public static KeyBinding minimapMapKey() {
+        return minimapMapKey;
     }
 
     private void openCosmeticMenu(net.minecraft.client.MinecraftClient client) {
