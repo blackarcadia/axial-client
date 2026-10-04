@@ -17,7 +17,10 @@ public final class WaypointLabelRenderer {
 
         Camera camera = client.gameRenderer.getCamera();
         Vec3d cameraPos = camera.getCameraPos();
-        Quaternionf rotation = new Quaternionf(camera.getRotation()).conjugate();
+        // Camera#getRotation is already the world-to-view transform. Applying its
+        // inverse mirrors the projection horizontally and separates labels from
+        // their corresponding beams.
+        Quaternionf rotation = new Quaternionf(camera.getRotation());
         Matrix4f projection = client.gameRenderer.getBasicProjectionMatrix(client.options.getFov().getValue());
         String dimension = client.world.getRegistryKey().getValue().toString();
         int framebufferWidth = client.getWindow().getFramebufferWidth();
