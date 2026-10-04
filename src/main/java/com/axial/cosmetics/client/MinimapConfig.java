@@ -31,6 +31,13 @@ public final class MinimapConfig {
     public static boolean isCircular() { return "CIRCLE".equals(SETTINGS.style); }
     public static String styleLabel() { return isCircular() ? "CIRCLE" : "SQUARE"; }
     public static void cycleStyle() { SETTINGS.style = isCircular() ? "SQUARE" : "CIRCLE"; save(); }
+    public static float zoom() { return SETTINGS.zoom == null || SETTINGS.zoom < 0.5f || SETTINGS.zoom > 2.0f ? 0.75f : SETTINGS.zoom; }
+    public static String zoomLabel() { return String.format("%.2fX", zoom()); }
+    public static void cycleZoom() {
+        float value = zoom();
+        SETTINGS.zoom = value == 0.75f ? 1.0f : value == 1.0f ? 1.5f : value == 1.5f ? 2.0f : 0.75f;
+        save();
+    }
     public static int getX(int screenWidth) { int size = getSize(); return clamp(SETTINGS.x == null ? screenWidth - size - 8 : SETTINGS.x, 0, screenWidth - size); }
     public static int getY(int screenHeight) { int size = getSize(); return clamp(SETTINGS.y == null ? 8 : SETTINGS.y, 0, screenHeight - size); }
     public static void setPosition(int x, int y) { SETTINGS.x = x; SETTINGS.y = y; }
@@ -51,5 +58,5 @@ public final class MinimapConfig {
         return SETTINGS.size;
     }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(value, Math.max(min, max))); }
-    private static final class Settings { boolean enabled; Integer x; Integer y; Float size; String style = "SQUARE"; }
+    private static final class Settings { boolean enabled; Integer x; Integer y; Float size; Float zoom; String style = "SQUARE"; }
 }

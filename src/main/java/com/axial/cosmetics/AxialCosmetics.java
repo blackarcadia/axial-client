@@ -11,6 +11,7 @@ import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.MinimapFullScreen;
+import com.axial.cosmetics.client.MinimapExploration;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import com.axial.cosmetics.client.CreateWaypointScreen;
@@ -45,6 +46,7 @@ public class AxialCosmetics implements ClientModInitializer {
     private static KeyBinding createWaypointKey;
     private static KeyBinding chunkBordersToggleKey;
     private static KeyBinding minimapMapKey;
+    private static boolean minimapPlayerWasDead;
 
     @Override
     public void onInitializeClient() {
@@ -120,6 +122,15 @@ public class AxialCosmetics implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MenuMusicController.tick(client);
             ChunkBordersConfig.sync(client);
+            if (client.player != null) {
+                if (client.player.isDead() && !minimapPlayerWasDead) {
+                    MinimapExploration.markDeath(client);
+                }
+                minimapPlayerWasDead = client.player.isDead();
+            } else {
+                minimapPlayerWasDead = false;
+            }
+            MinimapExploration.saveIfDue();
             VerifiedMobAttack.tick(client);
             if (client.player != null && client.currentScreen == null && CrosshairConfigManager.get().enabled && CrosshairConfigManager.get().dynamicEnabled) {
                 if (client.options.attackKey.wasPressed() || client.options.useKey.wasPressed()) {

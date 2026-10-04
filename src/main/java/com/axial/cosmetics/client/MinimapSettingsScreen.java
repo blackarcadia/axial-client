@@ -16,7 +16,7 @@ import org.axial.axialutils.client.AxialUiTheme;
 /** Settings for the HUD minimap and its full-map shortcut. */
 public final class MinimapSettingsScreen extends Screen {
     private static final int PANEL_WIDTH = 452;
-    private static final int PANEL_HEIGHT = 254;
+    private static final int PANEL_HEIGHT = 284;
     private static final int PADDING = 18;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
@@ -47,7 +47,8 @@ public final class MinimapSettingsScreen extends Screen {
         divider(context, panelY + 66, "OPTIONS");
         drawOption(context, mouseX, mouseY, "SIZE", MinimapConfig.sizeLabel(), optionY());
         drawOption(context, mouseX, mouseY, "STYLE", MinimapConfig.styleLabel(), optionY() + 30);
-        divider(context, panelY + 154, "KEYBIND");
+        drawOption(context, mouseX, mouseY, "ZOOM", MinimapConfig.zoomLabel(), optionY() + 60);
+        divider(context, panelY + 184, "KEYBIND");
         drawKeybind(context, mouseX, mouseY);
     }
 
@@ -57,6 +58,7 @@ public final class MinimapSettingsScreen extends Screen {
         if (inside(click.x(), click.y(), panelX + PADDING, panelY + 30, 416, 20)) { MinimapConfig.toggle(); return true; }
         if (inside(click.x(), click.y(), panelX + PADDING, optionY(), 416, 20)) { MinimapConfig.cycleSize(); return true; }
         if (inside(click.x(), click.y(), panelX + PADDING, optionY() + 30, 416, 20)) { MinimapConfig.cycleStyle(); return true; }
+        if (inside(click.x(), click.y(), panelX + PADDING, optionY() + 60, 416, 20)) { MinimapConfig.cycleZoom(); return true; }
         if (inside(click.x(), click.y(), keybindX(), keybindY(), 92, 20)) { capturingMapKey = true; return true; }
         return super.mouseClicked(click, doubled);
     }
@@ -112,7 +114,7 @@ public final class MinimapSettingsScreen extends Screen {
 
     private void layout() { panelX = (width - PANEL_WIDTH) / 2; panelY = Math.max(16, (height - PANEL_HEIGHT) / 2); }
     private int optionY() { return panelY + 82; }
-    private int keybindY() { return panelY + 170; }
+    private int keybindY() { return panelY + 200; }
     private int keybindX() { return panelX + PANEL_WIDTH - PADDING - 92; }
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) { return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height; }
     private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
