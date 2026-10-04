@@ -23,10 +23,10 @@ public final class IslandXpPopup {
         if (elapsed >= DISPLAY_MILLIS) { amount = ""; return; }
         MinecraftClient client = MinecraftClient.getInstance();
         float progress = elapsed / (float) DISPLAY_MILLIS;
-        float fadeIn = Math.min(1.0f, elapsed / 160.0f);
-        float fadeOut = Math.min(1.0f, (DISPLAY_MILLIS - elapsed) / 280.0f);
+        float fadeIn = ease(Math.min(1.0f, elapsed / 160.0f));
+        float fadeOut = ease(Math.min(1.0f, (DISPLAY_MILLIS - elapsed) / 280.0f));
         int alpha = (int) (255 * Math.min(fadeIn, fadeOut)) << 24;
-        int lift = Math.round(progress * 12.0f);
+        int lift = Math.round(ease(progress) * 12.0f);
         Text text = Text.literal("+" + amount + " XP");
         context.drawCenteredTextWithShadow(client.textRenderer, text, client.getWindow().getScaledWidth() / 2,
                 client.getWindow().getScaledHeight() / 2 + 18 - lift, alpha | colorFor(amount));
@@ -50,5 +50,9 @@ public final class IslandXpPopup {
         } catch (NumberFormatException ignored) {
             return 0;
         }
+    }
+
+    private static float ease(float progress) {
+        return progress * progress * (3.0f - 2.0f * progress);
     }
 }
