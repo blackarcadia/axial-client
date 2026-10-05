@@ -72,7 +72,6 @@ dependencies {
 
     modImplementation name: 'axialutils-1.0-SNAPSHOT'
     include name: 'axialutils-1.0-SNAPSHOT'
-    modRuntimeOnly name: 'xaerominimap-fabric-1.21.11-26.5.0'
     modCompileOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
     modRuntimeOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
     modRuntimeOnly name: 'BendableCuboidsFabric-2.0.1+mc.1.21.11'
@@ -118,7 +117,6 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
-        include 'xaerominimap-fabric-1.21.11-26.5.0.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
@@ -369,7 +367,6 @@ tasks.register('releaseFatJar', Jar) {
         include 'entityculling-fabric-1.11.2-mc1.21.11.jar'
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
-        include 'xaerominimap-fabric-1.21.11-26.5.0.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'

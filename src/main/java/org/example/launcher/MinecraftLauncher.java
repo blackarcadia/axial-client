@@ -48,7 +48,6 @@ public class MinecraftLauncher {
     private static final String ENTITY_CULLING_FILE = "entityculling-fabric-1.11.2-mc1.21.11.jar";
     private static final String CLOTH_CONFIG_FILE = "cloth-config-21.11.153-fabric.jar";
     private static final String MORE_CULLING_FILE = "moreculling-fabric-1.21.11-1.6.2.jar";
-    private static final String XAERO_MINIMAP_FILE = "xaerominimap-fabric-1.21.11-26.5.0.jar";
     private static final String EMOTECRAFT_FILE = "emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar";
     private static final String BENDABLE_CUBOIDS_FILE = "BendableCuboidsFabric-2.0.1+mc.1.21.11.jar";
     private static final String PLAYER_ANIMATION_LIB_FILE = "PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar";
@@ -112,7 +111,7 @@ public class MinecraftLauncher {
         installClothConfig(layout);
         installMoreCulling(layout);
         installGeckoLib(layout);
-        installXaeroMinimap(layout);
+        removeXaeroMinimap(layout);
         installEmotecraft(layout);
         installBundledEmotes(layout);
         removeStaticBgMod(layout);
@@ -741,8 +740,15 @@ public class MinecraftLauncher {
         installBundledMod(layout, MORE_CULLING_FILE, "moreculling-");
     }
 
-    private void installXaeroMinimap(FileLayout layout) throws IOException {
-        installBundledMod(layout, XAERO_MINIMAP_FILE, "xaerominimap-");
+    private void removeXaeroMinimap(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(path -> path.getFileName().toString().startsWith("xaerominimap-")
+                            && path.getFileName().toString().endsWith(".jar"))
+                    .forEach(this::deleteIfPossible);
+        }
+        logger.info("Removed Xaero's Minimap.");
     }
 
     private void installEmotecraft(FileLayout layout) throws IOException {
