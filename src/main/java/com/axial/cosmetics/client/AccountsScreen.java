@@ -1,10 +1,13 @@
 package com.axial.cosmetics.client;
 
 import com.google.gson.JsonParser;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.text.Text;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.util.Identifier;
@@ -13,6 +16,9 @@ import net.raphimc.minecraftauth.java.JavaAuthManager;
 
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 
 public final class AccountsScreen extends Screen {
@@ -21,8 +27,10 @@ public final class AccountsScreen extends Screen {
     private final Screen parent;
     private final AccountStore store = AccountStore.shared();
     private List<AccountStore.Entry> entries = List.of();
+    private final Map<UUID, Identifier> skinTextures = new ConcurrentHashMap<>();
     private String status = "Add Microsoft accounts, then select one to play.";
     private boolean busy;
+    private UUID switchingAccount;
     private int page;
     private int pageSize;
     private int panelX, panelY, panelWidth, panelHeight;
@@ -36,11 +44,12 @@ public final class AccountsScreen extends Screen {
         try { entries = store.list(); }
         catch (Exception ex) { status = "Could not read saved accounts."; }
         panelWidth = Math.min(420, width - 24);
-        pageSize = Math.max(1, (height - 160) / 30);
-        panelHeight = Math.min(height - 16, 144 + pageSize * 30);
+        pageSize = Math.max(1, (height - 180) / 58);
+        panelHeight = Math.min(height - 16, 164 + pageSize * 58);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
         page = Math.min(page, Math.max(0, (entries.size() - 1) / pageSize));
+        entries.forEach(this::requestSkin);
         rebuildButtons();
     }
 
@@ -48,17 +57,18 @@ public final class AccountsScreen extends Screen {
         clearChildren();
         button("Log out", panelX + panelWidth - 82, panelY + 19, 70,
                 this::logoutActive, !busy && AccountSessions.isSignedIn(), ButtonTone.DANGER);
-        int y = panelY + 58;
+        int y = panelY + 62;
         for (var entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
             boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
-            button(entry.name() + (active ? "  [ACTIVE]" : "  • Switch"), panelX + 12, y, panelWidth - 100,
+            boolean switching = entry.uuid().equals(switchingAccount);
+            button(switching ? "WORKING" : active ? "ACTIVE" : "SWITCH", panelX + panelWidth - 160, y + 15, 84,
                     () -> switchAccount(entry), !busy && !active, active ? ButtonTone.SELECTED : ButtonTone.DEFAULT);
-            button(active ? "Log out" : "Remove", panelX + panelWidth - 82, y, 70, () -> {
+            button(active ? "LOG OUT" : "REMOVE", panelX + panelWidth - 70, y + 15, 58, () -> {
                 if (active) { logoutActive(); return; }
                 try { store.remove(entry); status = "Removed " + entry.name() + " from saved accounts."; init(); }
                 catch (Exception ex) { status = "Could not remove account."; }
             }, !busy, ButtonTone.DANGER);
-            y += 30;
+            y += 58;
         }
         int footer = panelY + panelHeight - 64;
         button("<", panelX + 12, footer, 28, () -> { page--; rebuildButtons(); }, !busy && page > 0);
@@ -80,6 +90,14 @@ public final class AccountsScreen extends Screen {
 
     private static Text uiText(String value) {
         return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+    }
+
+    private void requestSkin(AccountStore.Entry entry) {
+        if (skinTextures.containsKey(entry.uuid())) return;
+        skinTextures.put(entry.uuid(), DefaultSkinHelper.getSkinTextures(entry.uuid()).body().texturePath());
+        MinecraftClient.getInstance().getSkinProvider()
+                .fetchSkinTextures(new GameProfile(entry.uuid(), entry.name()))
+                .thenAccept(skin -> skin.ifPresent(value -> skinTextures.put(entry.uuid(), value.body().texturePath())));
     }
 
     private static void roundedRect(DrawContext context, int x, int y, int w, int h, int color) {
@@ -186,6 +204,7 @@ public final class AccountsScreen extends Screen {
     private void switchAccount(AccountStore.Entry entry) {
         if (busy) return;
         busy = true;
+        switchingAccount = entry.uuid();
         status = "Signing in as " + entry.name() + "...";
         rebuildButtons();
         CompletableFuture.supplyAsync(() -> {
@@ -211,7 +230,11 @@ public final class AccountsScreen extends Screen {
                     catch (Exception ex) { status = "Switched, but could not save the startup account."; }
                 }
             } catch (Exception ex) { status = "Could not switch. Return to the main menu and retry."; }
-            finally { busy = false; init(); }
+            finally {
+                busy = false;
+                switchingAccount = null;
+                init();
+            }
         }));
     }
 
@@ -243,8 +266,35 @@ public final class AccountsScreen extends Screen {
         context.drawTextWithShadow(textRenderer, uiText(textRenderer.trimToWidth(uiText(accountLabel), panelWidth - 108).getString()), panelX + 12, panelY + 28, 0xFFBFA0FF);
         var statusText = uiText(textRenderer.trimToWidth(uiText(status), panelWidth - 24).getString());
         context.drawTextWithShadow(textRenderer, statusText, (width - textRenderer.getWidth(statusText)) / 2, panelY + 46, 0xFFCCD0DD);
-        if (entries.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, uiText("No saved accounts. Add one below."), width / 2, panelY + 70, 0xFFFFFFFF);
+        if (entries.isEmpty()) context.drawCenteredTextWithShadow(textRenderer, uiText("No saved accounts. Add one below."), width / 2, panelY + 78, 0xFFFFFFFF);
+        else drawProfileCards(context);
         context.drawCenteredTextWithShadow(textRenderer, uiText((page + 1) + " / " + Math.max(1, (entries.size() + pageSize - 1) / pageSize)), width / 2, panelY + panelHeight - 58, 0xFFCCD0DD);
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    private void drawProfileCards(DrawContext context) {
+        int y = panelY + 62;
+        for (AccountStore.Entry entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
+            boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
+            boolean switching = entry.uuid().equals(switchingAccount);
+            int border = switching ? 0xFF9774D6 : active ? 0xFF42695D : 0xFF454054;
+            int background = switching ? 0xFF252038 : active ? 0xFF182825 : 0xFF191823;
+            roundedRect(context, panelX + 12, y, panelWidth - 24, 52, border);
+            roundedRect(context, panelX + 13, y + 1, panelWidth - 26, 50, background);
+            drawSkinHead(context, entry, panelX + 20, y + 7, 38);
+            context.drawTextWithShadow(textRenderer, uiText(entry.name()), panelX + 68, y + 10, active ? 0xFFBCF3DF : 0xFFF3EFFA);
+            String uuid = entry.uuid().toString();
+            String detail = switching ? "REFRESHING SESSION…" : "UUID  " + uuid.substring(0, 8) + "…" + uuid.substring(uuid.length() - 4);
+            int detailColor = switching ? 0xFFD1BEFF : 0xFFAAA7B7;
+            context.drawTextWithShadow(textRenderer, uiText(detail), panelX + 68, y + 29, detailColor);
+            y += 58;
+        }
+    }
+
+    private void drawSkinHead(DrawContext context, AccountStore.Entry entry, int x, int y, int size) {
+        Identifier texture = skinTextures.getOrDefault(entry.uuid(), DefaultSkinHelper.getSkinTextures(entry.uuid()).body().texturePath());
+        context.fill(x - 2, y - 2, x + size + 2, y + size + 2, 0xFF514065);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 8, 8, size, size, 64, 64);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 40, 8, size, size, 64, 64);
     }
 }
