@@ -47,12 +47,19 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int OFFICIAL_GAMEMODES_TOP = 126;
     private static final int OFFICIAL_GAMEMODES_LABEL_HEIGHT = 12;
     private static final Identifier OFFICIAL_GAMEMODES_BUTTON = AxialCosmetics.id("textures/gui/title/official_gamemodes_button.png");
+    private static final Identifier AXIAL_SKY_BUTTON = AxialCosmetics.id("textures/gui/title/axial_sky_button.png");
     private static final String AXIAL_SERVER_HOST = "mc.axialprisons.com";
     private static final int AXIAL_SERVER_PORT = 25565;
     private static final String AXIAL_SERVER_ADDRESS = AXIAL_SERVER_HOST + ":" + AXIAL_SERVER_PORT;
     private static final String AXIAL_SERVER_NAME = "Axial Prisons";
+    private static final String AXIAL_SKY_HOST = "37.230.138.62";
+    private static final int AXIAL_SKY_PORT = 25603;
+    private static final String AXIAL_SKY_ADDRESS = AXIAL_SKY_HOST + ":" + AXIAL_SKY_PORT;
+    private static final String AXIAL_SKY_NAME = "Axial Sky";
     private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 168;
     private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 72;
+    private static final int AXIAL_SKY_BUTTON_HEIGHT = 67;
+    private static final int AXIAL_SKY_BUTTON_GAP = 8;
     private static final int OFFICIAL_GAMEMODES_BUTTON_GAP = 18;
     private static final int OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING = 14;
     private static final long OFFICIAL_GAMEMODES_REFRESH_INTERVAL_MS = 30_000L;
@@ -202,6 +209,26 @@ public abstract class TitleScreenBackgroundMixin {
             context.fill(buttonX, buttonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT, 0x18000000);
         }
 
+        int skyButtonY = buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT + AXIAL_SKY_BUTTON_GAP;
+        boolean skyHovered = axial_cosmetics$inRect(mouseX, mouseY, buttonX, skyButtonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, AXIAL_SKY_BUTTON_HEIGHT);
+        context.drawTexture(
+                RenderPipelines.GUI_TEXTURED,
+                AXIAL_SKY_BUTTON,
+                buttonX,
+                skyButtonY,
+                0.0f,
+                0.0f,
+                OFFICIAL_GAMEMODES_BUTTON_WIDTH,
+                AXIAL_SKY_BUTTON_HEIGHT,
+                1983,
+                793,
+                1983,
+                793
+        );
+        if (skyHovered) {
+            context.fill(buttonX, skyButtonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, skyButtonY + AXIAL_SKY_BUTTON_HEIGHT, 0x18000000);
+        }
+
         Text count = Text.literal(axial_cosmetics$serverCountText).styled(style -> style.withFont(UI_FONT));
         int countX = buttonX + OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING;
         int countY = buttonY - textRenderer.fontHeight - 4;
@@ -241,6 +268,20 @@ public abstract class TitleScreenBackgroundMixin {
                 screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
         );
         int buttonY = OFFICIAL_GAMEMODES_TOP + OFFICIAL_GAMEMODES_LABEL_HEIGHT + OFFICIAL_GAMEMODES_BUTTON_GAP;
+        int skyButtonY = buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT + AXIAL_SKY_BUTTON_GAP;
+        if (axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, skyButtonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, AXIAL_SKY_BUTTON_HEIGHT)) {
+            ConnectScreen.connect(
+                    screen,
+                    MinecraftClient.getInstance(),
+                    ServerAddress.parse(AXIAL_SKY_ADDRESS),
+                    new ServerInfo(AXIAL_SKY_NAME, AXIAL_SKY_ADDRESS, ServerInfo.ServerType.OTHER),
+                    false,
+                    (net.minecraft.client.network.CookieStorage) null
+            );
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
+        }
         if (!axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT)) {
             return;
         }
