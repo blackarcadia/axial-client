@@ -24,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 
 public final class AccountsScreen extends Screen {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
-    private static final Identifier IN_GAME_BUTTON = Identifier.of("axial_cosmetics", "textures/gui/buttons/in_game_button.png");
     private static final int MAX_PANEL_WIDTH = 360;
     private static final int MAX_ACCOUNTS_PER_PAGE = 4;
 
@@ -141,23 +140,14 @@ public final class AccountsScreen extends Screen {
         protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
             int x = getX(), y = getY();
             int buttonY = y + 2;
-            int border = switch (tone) {
-                case DANGER -> 0xFFF393AD;
-                case SELECTED -> 0xFF8FE0C6;
-                default -> 0xFFE7D9FF;
-            };
-            int foreground = tone == ButtonTone.SELECTED ? 0xFFBCF3DF : 0xFFF7F7FF;
-            if (!active) {
-                border = 0xFF5A5764;
-                foreground = 0xFF807B89;
-            }
+            boolean hovered = active && (isHovered() || isFocused());
+            int border = active ? 0xFFE7D9FF : 0xFF5A5764;
+            int foreground = active ? (tone == ButtonTone.SELECTED ? 0xFFBCF3DF : 0xFFF7F7FF) : 0xFF807B89;
 
-            // Match the compact in-game keybind control instead of using the account
-            // manager's former capsule treatment.
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, IN_GAME_BUTTON, x, buttonY,
-                    0.0f, 0.0f, width, 20, 200, 20, 200, 20);
-            if (active && (isHovered() || isFocused())) context.fill(x + 1, buttonY + 1, x + width - 1, buttonY + 19, 0x22FFFFFF);
-            if (!active) context.fill(x + 1, buttonY + 1, x + width - 1, buttonY + 19, 0x88000000);
+            // Match the Chunk Borders keybind input: a compact dark field with a
+            // light top edge and a clean pale outline.
+            context.fill(x, buttonY, x + width, buttonY + 20, hovered ? 0xBC20283A : 0xA0181D2C);
+            context.fill(x + 1, buttonY + 1, x + width - 1, buttonY + 2, hovered ? 0x33FFFFFF : 0x17FFFFFF);
             context.drawStrokedRectangle(x, buttonY, width, 20, border);
             var renderer = MinecraftClient.getInstance().textRenderer;
             var label = uiText(renderer.trimToWidth(getMessage(), Math.max(0, width - 8)).getString());
