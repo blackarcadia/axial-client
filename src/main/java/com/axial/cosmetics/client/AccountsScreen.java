@@ -1,7 +1,7 @@
 package com.axial.cosmetics.client;
 
 import com.google.gson.JsonParser;
-import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,6 +15,7 @@ import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
 
 import java.nio.file.Files;
+import java.net.Proxy;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -95,9 +96,21 @@ public final class AccountsScreen extends Screen {
     private void requestSkin(AccountStore.Entry entry) {
         if (skinTextures.containsKey(entry.uuid())) return;
         skinTextures.put(entry.uuid(), DefaultSkinHelper.getSkinTextures(entry.uuid()).body().texturePath());
-        MinecraftClient.getInstance().getSkinProvider()
-                .fetchSkinTextures(new GameProfile(entry.uuid(), entry.name()))
-                .thenAccept(skin -> skin.ifPresent(value -> skinTextures.put(entry.uuid(), value.body().texturePath())));
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return new YggdrasilAuthenticationService(Proxy.NO_PROXY)
+                        .createMinecraftSessionService()
+                        .fetchProfile(entry.uuid(), true)
+                        .profile();
+            } catch (Exception ignored) {
+                return null;
+            }
+        }).thenAccept(profile -> {
+            if (profile == null) return;
+            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getSkinProvider()
+                    .fetchSkinTextures(profile)
+                    .thenAccept(skin -> skin.ifPresent(value -> skinTextures.put(entry.uuid(), value.body().texturePath()))));
+        });
     }
 
     private static void roundedRect(DrawContext context, int x, int y, int w, int h, int color) {
