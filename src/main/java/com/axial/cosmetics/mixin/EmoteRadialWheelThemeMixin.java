@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget", remap = false)
 public abstract class EmoteRadialWheelThemeMixin {
     private static final int SEGMENT_COUNT = 8;
+    private static final int WHEEL_OUTLINE = 0xFF393442;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     @Inject(method = "method_48579", at = @At("HEAD"), remap = false)
@@ -36,8 +37,8 @@ public abstract class EmoteRadialWheelThemeMixin {
 
     private static void drawWheel(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius, int hoveredSegment) {
         drawRing(context, centerX, centerY, innerRadius, outerRadius, 0xD0161924);
-        drawRing(context, centerX, centerY, outerRadius - 2, outerRadius, 0xFF8F5DFF);
-        drawRing(context, centerX, centerY, innerRadius, innerRadius + 2, 0xFF8F5DFF);
+        drawRing(context, centerX, centerY, outerRadius - 2, outerRadius, WHEEL_OUTLINE);
+        drawRing(context, centerX, centerY, innerRadius, innerRadius + 2, WHEEL_OUTLINE);
         for (int index = 0; index < SEGMENT_COUNT; index++) {
             double angle = Math.PI / 2 - Math.PI * 2 * (index + 0.5) / SEGMENT_COUNT;
             drawRadialLine(context, centerX, centerY, innerRadius, outerRadius, angle, 0xFF312A45, 1);
