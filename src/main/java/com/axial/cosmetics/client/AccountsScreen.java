@@ -24,6 +24,8 @@ import java.util.concurrent.CompletableFuture;
 
 public final class AccountsScreen extends Screen {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
+    private static final int MAX_PANEL_WIDTH = 360;
+    private static final int MAX_ACCOUNTS_PER_PAGE = 4;
 
     private final Screen parent;
     private final AccountStore store = AccountStore.shared();
@@ -44,9 +46,9 @@ public final class AccountsScreen extends Screen {
     @Override protected void init() {
         try { entries = store.list(); }
         catch (Exception ex) { status = "Could not read saved accounts."; }
-        panelWidth = Math.min(420, width - 24);
-        pageSize = Math.max(1, (height - 192) / 70);
-        panelHeight = Math.min(height - 16, 176 + pageSize * 70);
+        panelWidth = Math.min(MAX_PANEL_WIDTH, width - 24);
+        pageSize = Math.max(1, Math.min(MAX_ACCOUNTS_PER_PAGE, (height - 160) / 54));
+        panelHeight = Math.min(height - 16, 146 + pageSize * 54);
         panelX = (width - panelWidth) / 2;
         panelY = (height - panelHeight) / 2;
         page = Math.min(page, Math.max(0, (entries.size() - 1) / pageSize));
@@ -58,18 +60,18 @@ public final class AccountsScreen extends Screen {
         clearChildren();
         button("Log out", panelX + panelWidth - 82, panelY + 19, 70,
                 this::logoutActive, !busy && AccountSessions.isSignedIn(), ButtonTone.DANGER);
-        int y = panelY + 66;
+        int y = panelY + 62;
         for (var entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
             boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
             boolean switching = entry.uuid().equals(switchingAccount);
-            button(switching ? "WORKING" : active ? "ACTIVE" : "SWITCH", panelX + panelWidth - 160, y + 21, 84,
+            button(switching ? "WORKING" : active ? "ACTIVE" : "SWITCH", panelX + panelWidth - 154, y + 12, 72,
                     () -> switchAccount(entry), !busy && !active, active ? ButtonTone.SELECTED : ButtonTone.DEFAULT);
-            button(active ? "LOG OUT" : "REMOVE", panelX + panelWidth - 70, y + 21, 58, () -> {
+            button(active ? "LOG OUT" : "REMOVE", panelX + panelWidth - 76, y + 12, 64, () -> {
                 if (active) { logoutActive(); return; }
                 try { store.remove(entry); status = "Removed " + entry.name() + " from saved accounts."; init(); }
                 catch (Exception ex) { status = "Could not remove account."; }
             }, !busy, ButtonTone.DANGER);
-            y += 70;
+            y += 54;
         }
         int footer = panelY + panelHeight - 64;
         button("<", panelX + 12, footer, 28, () -> { page--; rebuildButtons(); }, !busy && page > 0);
@@ -286,21 +288,21 @@ public final class AccountsScreen extends Screen {
     }
 
     private void drawProfileCards(DrawContext context) {
-        int y = panelY + 66;
+        int y = panelY + 62;
         for (AccountStore.Entry entry : entries.stream().skip((long) page * pageSize).limit(pageSize).toList()) {
             boolean active = entry.uuid().equals(MinecraftClient.getInstance().getSession().getUuidOrNull());
             boolean switching = entry.uuid().equals(switchingAccount);
             int border = switching ? 0xFF9774D6 : active ? 0xFF42695D : 0xFF454054;
             int background = switching ? 0xFF252038 : active ? 0xFF182825 : 0xFF191823;
-            roundedRect(context, panelX + 12, y, panelWidth - 24, 64, border);
-            roundedRect(context, panelX + 13, y + 1, panelWidth - 26, 62, background);
-            drawSkinHead(context, entry, panelX + 20, y + 8, 48);
-            int nameY = switching ? y + 19 : y + 27;
-            context.drawTextWithShadow(textRenderer, uiText(entry.name()), panelX + 80, nameY, active ? 0xFFBCF3DF : 0xFFF3EFFA);
+            roundedRect(context, panelX + 12, y, panelWidth - 24, 48, border);
+            roundedRect(context, panelX + 13, y + 1, panelWidth - 26, 46, background);
+            drawSkinHead(context, entry, panelX + 20, y + 8, 32);
+            int nameY = switching ? y + 9 : y + 19;
+            context.drawTextWithShadow(textRenderer, uiText(entry.name()), panelX + 68, nameY, active ? 0xFFBCF3DF : 0xFFF3EFFA);
             if (switching) {
-                context.drawTextWithShadow(textRenderer, uiText("REFRESHING SESSION…"), panelX + 80, y + 37, 0xFFD1BEFF);
+                context.drawTextWithShadow(textRenderer, uiText("REFRESHING SESSION…"), panelX + 68, y + 26, 0xFFD1BEFF);
             }
-            y += 70;
+            y += 54;
         }
     }
 
