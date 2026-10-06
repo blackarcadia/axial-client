@@ -307,7 +307,7 @@ public final class AccountsScreen extends Screen {
     private void drawSkinHead(DrawContext context, AccountStore.Entry entry, int x, int y, int size) {
         Identifier texture = skinTextures.getOrDefault(entry.uuid(), DefaultSkinHelper.getSkinTextures(entry.uuid()).body().texturePath());
         context.fill(x - 2, y - 2, x + size + 2, y + size + 2, 0xFF514065);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 8, 8, size, size, 64, 64);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 40, 8, size, size, 64, 64);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 8.0f, 8.0f, size, size, 8, 8, 64, 64);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 40.0f, 8.0f, size, size, 8, 8, 64, 64);
     }
 }
