@@ -55,7 +55,7 @@
     "MinecraftClientDebugHudEntryListAccessor",
     "ClientPlayNetworkHandlerIslandXpMixin",
     "EmoteListWidgetPermissionMixin",
-    "EmoteRadialMenuThemeMixin",
+    "EmoteRadialElementThemeMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
