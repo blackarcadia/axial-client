@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 
 public final class AccountsScreen extends Screen {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
+    private static final Identifier IN_GAME_BUTTON = Identifier.of("axial_cosmetics", "textures/gui/buttons/in_game_button.png");
     private static final int MAX_PANEL_WIDTH = 360;
     private static final int MAX_ACCOUNTS_PER_PAGE = 4;
 
@@ -136,83 +137,32 @@ public final class AccountsScreen extends Screen {
             this.tone = tone;
         }
 
-        private float hoverProgress;
-        private long lastFrameNanos;
-
         @Override
         protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
-            long now = System.nanoTime();
-            float elapsed = lastFrameNanos == 0 ? 0 : Math.min(0.05f, (now - lastFrameNanos) / 1_000_000_000f);
-            lastFrameNanos = now;
-            float target = active && (isHovered() || isFocused()) ? 1 : 0;
-            hoverProgress += (target - hoverProgress) * (1 - (float) Math.exp(-elapsed * 18));
-
-            int accent = switch (tone) {
-                case PRIMARY -> 0xFFB99AFF;
+            int x = getX(), y = getY();
+            int buttonY = y + 2;
+            int border = switch (tone) {
                 case DANGER -> 0xFFF393AD;
                 case SELECTED -> 0xFF8FE0C6;
-                default -> 0xFFB6ABEC;
+                default -> 0xFFE7D9FF;
             };
-            int top = tone == ButtonTone.PRIMARY ? 0xFF7252B8 : 0xFF292836;
-            int bottom = tone == ButtonTone.PRIMARY ? 0xFF493078 : 0xFF171720;
-            int foreground = tone == ButtonTone.SELECTED ? 0xFFBCF3DF : 0xFFF3EFFA;
-            int border = tone == ButtonTone.PRIMARY ? 0xFF9774D6 : 0xFF464252;
-            if (tone == ButtonTone.SELECTED) {
-                top = 0xFF243C38;
-                bottom = 0xFF182825;
-                border = 0xFF42695D;
+            int foreground = tone == ButtonTone.SELECTED ? 0xFFBCF3DF : 0xFFF7F7FF;
+            if (!active) {
+                border = 0xFF5A5764;
+                foreground = 0xFF807B89;
             }
-            if (!active && tone != ButtonTone.SELECTED) {
-                top = 0xFF20202A;
-                bottom = 0xFF181820;
-                border = 0xFF302E3B;
-                foreground = 0xFF767180;
-                accent = foreground;
-            }
-            top = blend(top, accent, hoverProgress * 0.22f);
-            bottom = blend(bottom, accent, hoverProgress * 0.12f);
-            border = blend(border, accent, hoverProgress * 0.85f);
 
-            int x = getX(), y = getY();
-            // Draw the entire capsule here: no shared button textures or vanilla skin.
-            capsule(context, x, y + 2, width, height, 0x50000000, 0x50000000);
-            capsule(context, x, y, width, height, border, blend(border, bottom, 0.45f));
-            capsule(context, x + 1, y + 1, width - 2, height - 2, top, bottom);
-            context.fill(x + 10, y + 1, x + width - 10, y + 2,
-                    blend(top, accent, active ? 0.45f : 0.12f));
-
-            // A small illuminated rail makes each action's color visible at rest.
-            if (width > 40) {
-                capsule(context, x + 7, y + 8, 3, 8, accent, blend(accent, bottom, 0.3f));
-            }
-            if (active && isFocused()) {
-                context.fill(x + 12, y + height - 3, x + width - 12, y + height - 2, accent);
-            }
+            // Match the compact in-game keybind control instead of using the account
+            // manager's former capsule treatment.
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, IN_GAME_BUTTON, x, buttonY,
+                    0.0f, 0.0f, width, 20, 200, 20, 200, 20);
+            if (active && (isHovered() || isFocused())) context.fill(x + 1, buttonY + 1, x + width - 1, buttonY + 19, 0x22FFFFFF);
+            if (!active) context.fill(x + 1, buttonY + 1, x + width - 1, buttonY + 19, 0x88000000);
+            context.drawStrokedRectangle(x, buttonY, width, 20, border);
             var renderer = MinecraftClient.getInstance().textRenderer;
-            int padding = width > 40 ? 28 : 12;
-            var label = uiText(renderer.trimToWidth(getMessage(), Math.max(0, width - padding)).getString());
+            var label = uiText(renderer.trimToWidth(getMessage(), Math.max(0, width - 8)).getString());
             context.drawText(renderer, label, x + (width - renderer.getWidth(label)) / 2,
-                    y + (height - renderer.fontHeight) / 2, foreground, false);
-        }
-
-        private static void capsule(DrawContext context, int x, int y, int w, int h, int top, int bottom) {
-            double radius = Math.min(w, h) / 2.0;
-            for (int row = 0; row < h; row++) {
-                double distance = Math.max(0, Math.abs(row + 0.5 - h / 2.0) - (h / 2.0 - radius));
-                int inset = (int) Math.ceil(radius - Math.sqrt(Math.max(0, radius * radius - distance * distance)));
-                context.fill(x + inset, y + row, x + w - inset, y + row + 1,
-                        blend(top, bottom, row / (float) Math.max(1, h - 1)));
-            }
-        }
-
-        private static int blend(int from, int to, float amount) {
-            int result = 0;
-            for (int shift = 0; shift <= 24; shift += 8) {
-                int a = (from >>> shift) & 255;
-                int b = (to >>> shift) & 255;
-                result |= Math.round(a + (b - a) * amount) << shift;
-            }
-            return result;
+                    buttonY + (20 - renderer.fontHeight) / 2, foreground, false);
         }
     }
 
