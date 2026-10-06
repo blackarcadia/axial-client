@@ -1,5 +1,6 @@
 package com.axial.cosmetics.mixin;
 
+import io.github.kosmx.emotes.PlatformTools;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,6 +13,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class EmoteRadialElementThemeMixin {
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true, remap = false)
     private void axial_cosmetics$drawAxialTile(DrawContext context, CallbackInfo ci) {
+        // The legacy layout is rendered as one unified wheel by
+        // EmoteRadialWheelThemeMixin. Keep these individual tiles transparent so
+        // their existing emote previews sit naturally inside the segments.
+        if (Boolean.TRUE.equals(PlatformTools.getConfig().oldChooseWheel.get())) {
+            ci.cancel();
+            return;
+        }
         ClickableWidget tile = (ClickableWidget) (Object) this;
         int x = tile.getX();
         int y = tile.getY();
@@ -26,6 +34,10 @@ public abstract class EmoteRadialElementThemeMixin {
 
     @Inject(method = "renderHover", at = @At("HEAD"), cancellable = true, remap = false)
     private void axial_cosmetics$drawAxialHover(DrawContext context, CallbackInfo ci) {
+        if (Boolean.TRUE.equals(PlatformTools.getConfig().oldChooseWheel.get())) {
+            ci.cancel();
+            return;
+        }
         ClickableWidget tile = (ClickableWidget) (Object) this;
         int x = tile.getX();
         int y = tile.getY();

@@ -56,6 +56,7 @@
     "ClientPlayNetworkHandlerIslandXpMixin",
     "EmoteListWidgetPermissionMixin",
     "EmoteRadialElementThemeMixin",
+    "EmoteRadialWheelThemeMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
