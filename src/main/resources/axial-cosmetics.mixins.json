@@ -57,6 +57,7 @@
     "EmoteListWidgetPermissionMixin",
     "EmoteRadialElementThemeMixin",
     "EmoteRadialMenuSizeMixin",
+    "EmoteRadialReleaseSelectMixin",
     "EmoteRadialWheelThemeMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
