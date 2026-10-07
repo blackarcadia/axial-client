@@ -18,8 +18,6 @@ import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.client.VerifiedMobAttack;
 import com.axial.cosmetics.client.WaypointWorldRenderer;
 import com.axial.cosmetics.data.CosmeticManager;
-import io.github.kosmx.emotes.PlatformTools;
-import io.github.kosmx.emotes.main.config.CloseWheel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -52,7 +50,6 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        forceEmotecraftDefaults();
         EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
 
         ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
@@ -123,7 +120,6 @@ public class AxialCosmetics implements ClientModInitializer {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            forceEmotecraftDefaults();
             MenuMusicController.tick(client);
             ChunkBordersConfig.sync(client);
             if (client.player != null) {
@@ -179,15 +175,6 @@ public class AxialCosmetics implements ClientModInitializer {
                 COSMETIC_MANAGER.reload(client);
             }
         });
-    }
-
-    /** Axial's wheel design and hold-release interaction require these Emotecraft options. */
-    private static void forceEmotecraftDefaults() {
-        var config = PlatformTools.getConfig();
-        config.oldChooseWheel.set(true);
-        config.showIconsIfPossible.set(true);
-        config.closeWheelType.set(CloseWheel.HOLD);
-        config.loadBuiltinEmotes.set(false);
     }
 
     public static Identifier id(String path) {
