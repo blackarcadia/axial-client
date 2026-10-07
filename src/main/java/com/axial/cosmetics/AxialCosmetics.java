@@ -7,7 +7,6 @@ import com.axial.cosmetics.client.CrosshairDynamicState;
 import com.axial.cosmetics.client.ChunkBordersConfig;
 import com.axial.cosmetics.client.ItemScalerConfig;
 import com.axial.cosmetics.client.EnchantGlintConfig;
-import com.axial.cosmetics.client.EmoteWheelReleaseHandler;
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
@@ -121,7 +120,6 @@ public class AxialCosmetics implements ClientModInitializer {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            EmoteWheelReleaseHandler.tick(client);
             MenuMusicController.tick(client);
             ChunkBordersConfig.sync(client);
             if (client.player != null) {
