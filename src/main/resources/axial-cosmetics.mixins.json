@@ -62,6 +62,7 @@
     "EmoteRadialSlotNumberMixin",
     "EmoteRadialConfigureButtonMixin",
     "EmoteAllButtonPressMixin",
+    "EmoteRadialPageArrowMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",

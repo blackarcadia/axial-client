@@ -55,11 +55,14 @@ public abstract class EmoteRadialWheelThemeMixin {
         double middle = Math.PI / 2 - segmentSize * segment;
         double start = middle - segmentSize / 2;
         double end = middle + segmentSize / 2;
-        int strokes = Math.max(24, outerRadius / 3);
+        // A dense fan here produces tens of thousands of GUI draw calls every
+        // frame. Wider overlapping strokes keep the segment solid at a fraction
+        // of that cost.
+        int strokes = 14;
         for (int stroke = 0; stroke <= strokes; stroke++) {
             double progress = stroke / (double) strokes;
             drawRadialLine(context, centerX, centerY, innerRadius, outerRadius,
-                    start + (end - start) * progress, color, 2);
+                    start + (end - start) * progress, color, 20);
         }
     }
 
