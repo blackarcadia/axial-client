@@ -188,6 +188,7 @@ public class AxialCosmetics implements ClientModInitializer {
         config.closeWheelType.set(CloseWheel.HOLD);
         config.oldChooseWheel.set(true);
         config.showIconsIfPossible.set(true);
+        config.loadBuiltinEmotes.set(false);
     }
 
     public static Identifier id(String path) {
