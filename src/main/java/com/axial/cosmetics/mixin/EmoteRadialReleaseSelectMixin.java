@@ -32,6 +32,9 @@ public abstract class EmoteRadialReleaseSelectMixin {
         for (IChooseElement element : fastMenu.getChooseElements()) {
             if (element.hasEmote() && element.isMouseOver(mouseX, mouseY)) {
                 ((FastMenuScreen) (Object) this).doHoverPart(element);
+                // doHoverPart only closes after a successful play; releasing the wheel
+                // must still dismiss it when the emote is unavailable.
+                client.setScreen(null);
                 cir.setReturnValue(true);
                 return;
             }
