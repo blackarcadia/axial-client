@@ -74,6 +74,7 @@ dependencies {
     include name: 'axialutils-1.0-SNAPSHOT'
     modCompileOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
     modRuntimeOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
+    modRuntimeOnly name: 'BendableCuboidsFabric-2.0.1+mc.1.21.11'
     modRuntimeOnly name: 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
@@ -118,6 +119,7 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
+        include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
     }
     into layout.projectDirectory.dir('run/mods')
@@ -367,6 +369,7 @@ tasks.register('releaseFatJar', Jar) {
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
+        include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
     }
 

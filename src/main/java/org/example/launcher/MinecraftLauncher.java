@@ -49,6 +49,7 @@ public class MinecraftLauncher {
     private static final String CLOTH_CONFIG_FILE = "cloth-config-21.11.153-fabric.jar";
     private static final String MORE_CULLING_FILE = "moreculling-fabric-1.21.11-1.6.2.jar";
     private static final String EMOTECRAFT_FILE = "emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar";
+    private static final String BENDABLE_CUBOIDS_FILE = "BendableCuboidsFabric-2.0.1+mc.1.21.11.jar";
     private static final String PLAYER_ANIMATION_LIB_FILE = "PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar";
     private static final String GANGNAM_STYLE_EMOTE_FILE = "gangnam_style.emotecraft";
     private static final String SIMPLE_MENU_URL = null;
@@ -752,19 +753,8 @@ public class MinecraftLauncher {
 
     private void installEmotecraft(FileLayout layout) throws IOException {
         installBundledMod(layout, EMOTECRAFT_FILE, "emotecraft-");
-        removeBendableCuboids(layout);
+        installBundledMod(layout, BENDABLE_CUBOIDS_FILE, "BendableCuboidsFabric-");
         installBundledMod(layout, PLAYER_ANIMATION_LIB_FILE, "PlayerAnimationLibFabric-");
-    }
-
-    private void removeBendableCuboids(FileLayout layout) throws IOException {
-        Path mods = layout.modsDir();
-        Files.createDirectories(mods);
-        try (var stream = Files.list(mods)) {
-            stream.filter(path -> path.getFileName().toString().startsWith("BendableCuboidsFabric-")
-                            && path.getFileName().toString().endsWith(".jar"))
-                    .forEach(this::deleteIfPossible);
-        }
-        logger.info("Removed incompatible Bendable Cuboids library.");
     }
 
     private void installBundledEmotes(FileLayout layout) throws IOException {
