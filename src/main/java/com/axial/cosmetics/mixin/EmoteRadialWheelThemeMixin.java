@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class EmoteRadialWheelThemeMixin {
     private static final int SEGMENT_COUNT = 8;
     private static final int WHEEL_OUTLINE = 0xFF393442;
+    private static final int HOVERED_SEGMENT = 0xCC4A4355;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     @Inject(method = "method_48579", at = @At("HEAD"), remap = false)
@@ -37,18 +38,28 @@ public abstract class EmoteRadialWheelThemeMixin {
 
     private static void drawWheel(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius, int hoveredSegment) {
         drawRing(context, centerX, centerY, innerRadius, outerRadius, 0xD0161924);
+        if (hoveredSegment >= 0) {
+            drawSegment(context, centerX, centerY, innerRadius + 2, outerRadius - 2, hoveredSegment, HOVERED_SEGMENT);
+        }
         drawRing(context, centerX, centerY, outerRadius - 2, outerRadius, WHEEL_OUTLINE);
         drawRing(context, centerX, centerY, innerRadius, innerRadius + 2, WHEEL_OUTLINE);
         for (int index = 0; index < SEGMENT_COUNT; index++) {
             double angle = Math.PI / 2 - Math.PI * 2 * (index + 0.5) / SEGMENT_COUNT;
             drawRadialLine(context, centerX, centerY, innerRadius, outerRadius, angle, 0xFF312A45, 1);
         }
-        if (hoveredSegment >= 0) {
-            double middle = Math.PI / 2 - Math.PI * 2 * hoveredSegment / SEGMENT_COUNT;
-            double edge = Math.PI / SEGMENT_COUNT / 2;
-            drawRadialLine(context, centerX, centerY, innerRadius + 2, outerRadius - 2, middle - edge, 0xFFB06AF3, 2);
-            drawRadialLine(context, centerX, centerY, innerRadius + 2, outerRadius - 2, middle + edge, 0xFFB06AF3, 2);
-            drawRadialLine(context, centerX, centerY, innerRadius + 8, outerRadius - 8, middle, 0xA86F3AA9, 7);
+    }
+
+    private static void drawSegment(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius,
+                                    int segment, int color) {
+        double segmentSize = Math.PI * 2 / SEGMENT_COUNT;
+        double middle = Math.PI / 2 - segmentSize * segment;
+        double start = middle - segmentSize / 2;
+        double end = middle + segmentSize / 2;
+        int strokes = Math.max(24, outerRadius / 3);
+        for (int stroke = 0; stroke <= strokes; stroke++) {
+            double progress = stroke / (double) strokes;
+            drawRadialLine(context, centerX, centerY, innerRadius, outerRadius,
+                    start + (end - start) * progress, color, 2);
         }
     }
 
