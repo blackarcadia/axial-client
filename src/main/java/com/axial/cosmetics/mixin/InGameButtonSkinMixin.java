@@ -51,6 +51,24 @@ public abstract class InGameButtonSkinMixin {
             return;
         }
 
+        if ("all emotes".equals(lower)
+                && "io.github.kosmx.emotes.arch.screen.ingame.FastMenuScreen".equals(currentScreen.getClass().getName())) {
+            int compactWidth = Math.min(160, Math.max(button.getWidth(), 1));
+            button.setWidth(compactWidth);
+            button.setX((client.getWindow().getScaledWidth() - compactWidth) / 2);
+            int x = button.getX();
+            int y = button.getY();
+            boolean hovered = button.isHovered() || button.isFocused();
+            context.fill(x, y, x + compactWidth, y + button.getHeight(), hovered ? 0xFF20202D : 0xFF11111B);
+            context.fill(x + 1, y + 1, x + compactWidth - 1, y + 2, hovered ? 0x44FFFFFF : 0x20FFFFFF);
+            context.drawStrokedRectangle(x, y, compactWidth, button.getHeight(), hovered ? 0xFFFFFFFF : 0xFFE7D9FF);
+            Text text = Text.literal(button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
+            context.drawCenteredTextWithShadow(client.textRenderer, text, x + compactWidth / 2,
+                    y + (button.getHeight() - client.textRenderer.fontHeight) / 2, 0xFFF7F7FF);
+            ci.cancel();
+            return;
+        }
+
         int renderedWidth = Math.max(button.getWidth(), 1);
         int renderedHeight = Math.max(button.getHeight(), 1);
         int x = button.getX();
