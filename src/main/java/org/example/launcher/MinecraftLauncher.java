@@ -753,8 +753,19 @@ public class MinecraftLauncher {
 
     private void installEmotecraft(FileLayout layout) throws IOException {
         installBundledMod(layout, EMOTECRAFT_FILE, "emotecraft-");
-        installBundledMod(layout, BENDABLE_CUBOIDS_FILE, "BendableCuboidsFabric-");
+        removeBendableCuboids(layout);
         installBundledMod(layout, PLAYER_ANIMATION_LIB_FILE, "PlayerAnimationLibFabric-");
+    }
+
+    private void removeBendableCuboids(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(path -> path.getFileName().toString().startsWith("BendableCuboidsFabric-")
+                            && path.getFileName().toString().endsWith(".jar"))
+                    .forEach(this::deleteIfPossible);
+        }
+        logger.info("Removed incompatible Bendable Cuboids library.");
     }
 
     private void installBundledEmotes(FileLayout layout) throws IOException {
