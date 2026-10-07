@@ -47,6 +47,7 @@ public abstract class InGameButtonSkinMixin {
         String buttonClass = button.getClass().getName().toLowerCase(Locale.ROOT);
         if (lower.contains("difficulty lock") || lower.contains("knowledge book") || lower.contains("recipe book")
                 || buttonClass.contains("recipebook") || buttonClass.contains("accountsscreen$accountbutton")
+                || buttonClass.contains("pagebutton")
                 || buttonClass.contains("emoteradialconfigurebuttonmixin$configureemotesbutton")) {
             return;
         }
