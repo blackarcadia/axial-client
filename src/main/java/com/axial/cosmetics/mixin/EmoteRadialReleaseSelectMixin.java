@@ -2,7 +2,6 @@ package com.axial.cosmetics.mixin;
 
 import io.github.kosmx.emotes.PlatformTools;
 import io.github.kosmx.emotes.arch.EmotecraftClientMod;
-import io.github.kosmx.emotes.arch.screen.ingame.FastMenuScreen;
 import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
 import io.github.kosmx.emotes.arch.screen.widget.IChooseElement;
 import net.minecraft.client.MinecraftClient;
@@ -47,9 +46,8 @@ public abstract class EmoteRadialReleaseSelectMixin {
 
     private void axial_cosmetics$select(MinecraftClient client, IChooseElement element,
                                         CallbackInfoReturnable<Boolean> cir) {
-        ((FastMenuScreen) (Object) this).doHoverPart(element);
-        // doHoverPart only closes after a successful play; releasing the wheel
-        // must still dismiss it when the emote is unavailable.
+        // This is Emotecraft's click action: play the selected holder, then close.
+        element.getEmote().playEmote();
         client.setScreen(null);
         cir.setReturnValue(true);
     }
