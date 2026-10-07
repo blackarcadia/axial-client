@@ -58,6 +58,8 @@
     "EmoteRadialWheelThemeMixin",
     "EmoteRadialReleaseSelectMixin",
     "EmoteRadialMenuSizeMixin",
+    "EmoteRadialCancelButtonMixin",
+    "EmoteRadialSlotNumberMixin",
     "MusicTrackerMixin",
     "MinecraftClientDynamicCrosshairMixin",
     "MinecraftClientAttackInvoker",
