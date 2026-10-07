@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(targets = "io.github.kosmx.emotes.arch.screen.ingame.FastMenuScreen", remap = false)
 public abstract class EmoteRadialMenuSizeMixin {
     @ModifyArg(
-            method = "init",
+            method = "repositionElements",
             at = @At(value = "INVOKE", target = "Lio/github/kosmx/emotes/arch/screen/widget/AbstractFastChooseWidget;setSize(I)V"),
             index = 0,
             remap = false,
