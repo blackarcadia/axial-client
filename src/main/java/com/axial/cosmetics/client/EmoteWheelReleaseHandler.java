@@ -18,6 +18,7 @@ public final class EmoteWheelReleaseHandler {
     private static Field fastMenuField;
     private static boolean wheelWasHeld;
     private static IChooseElement hoveredElement;
+    private static FastMenuScreen wheelScreen;
 
     private EmoteWheelReleaseHandler() {
     }
@@ -31,12 +32,15 @@ public final class EmoteWheelReleaseHandler {
         boolean wheelHeld = EmotecraftClientMod.OPEN_MENU_KEY.isPressed();
         if (client.currentScreen instanceof FastMenuScreen screen && wheelHeld) {
             wheelWasHeld = true;
+            wheelScreen = screen;
             hoveredElement = hoveredElement(client, screen);
             return;
         }
 
         if (wheelWasHeld && !wheelHeld && hoveredElement != null && hoveredElement.hasEmote()) {
-            hoveredElement.getEmote().playEmote();
+            // Use Emotecraft's own selection path so its normal availability checks and
+            // screen cleanup remain intact after the key-release event closes the wheel.
+            wheelScreen.doHoverPart(hoveredElement);
         }
         reset();
     }
@@ -55,8 +59,11 @@ public final class EmoteWheelReleaseHandler {
         int segment = segmentAt(centerX, centerY, innerRadius, outerRadius, mouseX, mouseY);
         if (segment < 0) return null;
 
+        // Emotecraft lays its legacy slots clockwise from the bottom, while the themed
+        // wheel numbers segments clockwise from the top.
+        int elementIndex = Math.floorMod(4 - segment, SEGMENT_COUNT);
         List<IChooseElement> elements = wheel.getChooseElements();
-        return segment < elements.size() ? elements.get(segment) : null;
+        return elementIndex < elements.size() ? elements.get(elementIndex) : null;
     }
 
     private static AbstractFastChooseWidget wheel(FastMenuScreen screen) {
@@ -83,5 +90,6 @@ public final class EmoteWheelReleaseHandler {
     private static void reset() {
         wheelWasHeld = false;
         hoveredElement = null;
+        wheelScreen = null;
     }
 }
