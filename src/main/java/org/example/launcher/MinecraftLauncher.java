@@ -753,8 +753,23 @@ public class MinecraftLauncher {
 
     private void installEmotecraft(FileLayout layout) throws IOException {
         installBundledMod(layout, EMOTECRAFT_FILE, "emotecraft-");
-        installBundledMod(layout, BENDABLE_CUBOIDS_FILE, "BendableCuboidsFabric-");
+        installBendableCuboids(layout);
         installBundledMod(layout, PLAYER_ANIMATION_LIB_FILE, "PlayerAnimationLibFabric-");
+    }
+
+    private void installBendableCuboids(FileLayout layout) throws IOException {
+        Path mods = layout.modsDir();
+        Files.createDirectories(mods);
+        try (var stream = Files.list(mods)) {
+            stream.filter(path -> path.getFileName().toString().startsWith("BendableCuboidsFabric-"))
+                    .forEach(this::deleteIfPossible);
+        }
+
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/launcher-mods/" + BENDABLE_CUBOIDS_FILE)) {
+            if (in == null) throw new IOException("Bundled Bendable Cuboids jar is missing from the launcher package.");
+            Files.copy(in, mods.resolve(BENDABLE_CUBOIDS_FILE), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Installed bundled mod: " + BENDABLE_CUBOIDS_FILE);
+        }
     }
 
     private void installBundledEmotes(FileLayout layout) throws IOException {

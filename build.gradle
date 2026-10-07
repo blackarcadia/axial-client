@@ -119,9 +119,9 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
-        include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
     }
+
     into layout.projectDirectory.dir('run/mods')
 }
 
@@ -369,8 +369,14 @@ tasks.register('releaseFatJar', Jar) {
         include 'cloth-config-21.11.153-fabric.jar'
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
-        include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
+    }
+
+    // Keep this compatibility-sensitive library in a launcher-only path so
+    // resource lookup cannot resolve a duplicate from a nested Fabric mod.
+    from('src/main/resources') {
+        include 'BendableCuboidsFabric-2.0.1+mc.1.21.11.jar'
+        into 'launcher-mods'
     }
 
     // Add all third-party runtime dependencies unchanged.
