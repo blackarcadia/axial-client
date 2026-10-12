@@ -62,6 +62,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier BOX_OF_CHOCOLATES_MODEL =
             Identifier.of("axial_cosmetics", "boxofchocolates");
+    private static final Identifier LOCKBOXNEW_MODEL =
+            Identifier.of("axial_cosmetics", "lockboxnew");
 
     @Redirect(
             method = {
