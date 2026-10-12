@@ -9,9 +9,14 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.texture.Sprite;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Draws a detailed top-down map of every loaded surface block in the viewport. */
 public final class MinimapRenderer {
@@ -22,6 +27,8 @@ public final class MinimapRenderer {
     private static final Identifier MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/minimap");
     private static final Identifier FULL_MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/full_map");
     private static final int[] HEIGHTS = new int[MAP_SIZE * MAP_SIZE];
+    /** Pixel data for the model's particle texture, keyed by the texture resource. */
+    private static final Map<Identifier, TexturePixels> BLOCK_TEXTURES = new HashMap<>();
 
     private static NativeImage image;
     private static NativeImageBackedTexture texture;
@@ -115,7 +122,7 @@ public final class MinimapRenderer {
             int worldZ = (int) Math.floor(originZ + mapZ * blocksPerPixel);
             pos.set(worldX, HEIGHTS[index], worldZ);
             BlockState state = client.world.getBlockState(pos);
-            int color = colorFor(state, client, pos, index, mapX, mapZ);
+            int color = colorFor(state, client, pos, index, mapX, mapZ, worldX, worldZ);
             image.setColorArgb(mapX, mapZ, MinimapConfig.isCircular() && outsideCircle(mapX, mapZ) ? 0 : color);
             MinimapExploration.discover(client, worldX, worldZ, color);
         }
@@ -123,7 +130,7 @@ public final class MinimapRenderer {
         MinimapExploration.saveIfDue();
     }
 
-    private static int colorFor(BlockState state, MinecraftClient client, BlockPos pos, int index, int mapX, int mapZ) {
+    private static int colorFor(BlockState state, MinecraftClient client, BlockPos pos, int index, int mapX, int mapZ, int worldX, int worldZ) {
         MapColor mapColor = state.getMapColor(client.world, pos);
         if (mapColor == MapColor.CLEAR) return 0xFF27303A;
 
@@ -133,7 +140,51 @@ public final class MinimapRenderer {
         int slope = height - (west + north) / 2;
         MapColor.Brightness brightness = slope > 1 ? MapColor.Brightness.HIGH
                 : slope < -1 ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
-        return mapColor.getRenderColor(brightness);
+        int fallback = mapColor.getRenderColor(brightness);
+        int textureColor = textureColorFor(state, client, worldX, worldZ);
+        return textureColor == 0 ? fallback : shade(textureColor, brightness);
+    }
+
+    /**
+     * MapColor intentionally groups many block types together. Sampling the model texture gives
+     * the map the grain, seams, and distinct colours of the blocks a player actually sees.
+     */
+    private static int textureColorFor(BlockState state, MinecraftClient client, int worldX, int worldZ) {
+        Sprite sprite = client.getBlockRenderManager().getModels().getModelParticleSprite(state);
+        Identifier textureId = sprite.getContents().getId();
+        TexturePixels pixels = BLOCK_TEXTURES.computeIfAbsent(textureId, id -> loadTexture(client, id));
+        return pixels.colorAt(worldX, worldZ);
+    }
+
+    private static TexturePixels loadTexture(MinecraftClient client, Identifier textureId) {
+        Identifier resourceId = textureId.withPath(path -> "textures/" + path + ".png");
+        try (var stream = client.getResourceManager().getResource(resourceId).orElseThrow().getInputStream();
+             NativeImage textureImage = NativeImage.read(stream)) {
+            return new TexturePixels(textureImage.copyPixelsArgb(), textureImage.getWidth(), textureImage.getHeight());
+        } catch (IOException | java.util.NoSuchElementException ignored) {
+            return TexturePixels.MISSING;
+        }
+    }
+
+    private static int shade(int color, MapColor.Brightness brightness) {
+        float multiplier = brightness == MapColor.Brightness.HIGH ? 1.15f
+                : brightness == MapColor.Brightness.LOW ? 0.78f : 1.0f;
+        int red = Math.min(255, Math.round(((color >>> 16) & 0xFF) * multiplier));
+        int green = Math.min(255, Math.round(((color >>> 8) & 0xFF) * multiplier));
+        int blue = Math.min(255, Math.round((color & 0xFF) * multiplier));
+        return 0xFF000000 | red << 16 | green << 8 | blue;
+    }
+
+    private record TexturePixels(int[] colors, int width, int height) {
+        private static final TexturePixels MISSING = new TexturePixels(new int[0], 0, 0);
+
+        private int colorAt(int worldX, int worldZ) {
+            if (colors.length == 0) return 0;
+            int x = Math.floorMod(worldX, width);
+            int z = Math.floorMod(worldZ, height);
+            int color = colors[z * width + x];
+            return (color >>> 24) == 0 ? 0 : color | 0xFF000000;
+        }
     }
 
     private static void drawPlayerMarker(DrawContext context, int left, int top, int size, float yaw) {
