@@ -116,6 +116,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             if (modelData != null && Float.valueOf(289.0F).equals(modelData.getFloat(0))) {
                 return BOX_OF_CHOCOLATES_MODEL;
             }
+            if (modelData != null && Float.valueOf(95.0F).equals(modelData.getFloat(0))) {
+                return LOCKBOXNEW_MODEL;
+            }
 
             if (modelData != null && Float.valueOf(248.0F).equals(modelData.getFloat(0))) {
                 return LAMPSHADE_MODEL;
