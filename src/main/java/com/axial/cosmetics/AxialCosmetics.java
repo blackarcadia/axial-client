@@ -12,6 +12,8 @@ import com.axial.cosmetics.client.MenuMusicConfig;
 import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.MinimapFullScreen;
 import com.axial.cosmetics.client.MinimapExploration;
+import com.axial.cosmetics.client.MinimapMapPayload;
+import com.axial.cosmetics.client.MinimapServerOverview;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import com.axial.cosmetics.client.CreateWaypointScreen;
@@ -24,7 +26,9 @@ import io.github.kosmx.emotes.main.config.CloseWheel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.KeyBinding.Category;
@@ -53,6 +57,10 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        PayloadTypeRegistry.playC2S().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) ->
+                context.client().execute(() -> MinimapServerOverview.receive(payload.data())));
         applyEmotecraftDefaults();
         EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
 

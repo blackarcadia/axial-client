@@ -52,7 +52,10 @@ public final class MinimapRenderer {
         int left = (width - size) / 2;
         int top = (height - size) / 2;
         context.fill(0, 0, width, height, 0xD8101217);
-        renderExploredMap(context, client, left, top, size, centerX, centerZ, blocksPerPixel);
+        MinimapServerOverview.request();
+        if (!MinimapServerOverview.render(context, client, left, top, size)) {
+            renderExploredMap(context, client, left, top, size, centerX, centerZ, blocksPerPixel);
+        }
         context.drawCenteredTextWithShadow(client.textRenderer, net.minecraft.text.Text.literal("FULL MAP  •  SCROLL TO ZOOM  •  DRAG TO PAN  •  PRESS " + AxialCosmetics.minimapMapKey().getBoundKeyLocalizedText().getString().toUpperCase() + " TO CLOSE"), width / 2, Math.max(12, top - 18), 0xFFF7F7FF);
     }
 
