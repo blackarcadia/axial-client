@@ -85,6 +85,9 @@ public final class MinimapRenderer {
         float terrainBlocksPerPixel = MinimapConfig.zoom() * SAMPLE_SCALE;
         drawWaypointMarkers(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel, MinimapConfig.isCircular());
         drawDeathMarker(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel);
+        MinimapServerOverview.renderHudOverlays(context, left, top, size, MAP_SIZE,
+                client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(),
+                terrainBlocksPerPixel, MinimapConfig.isCircular());
         drawPlayerMarker(context, left, top, size, client.player == null ? 0.0f : client.player.getYaw());
         if (!circular) context.fill(left, top, left + size, top + 1, 0x66FFFFFF);
     }
