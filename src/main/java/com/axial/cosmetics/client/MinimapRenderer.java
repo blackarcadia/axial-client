@@ -32,6 +32,7 @@ public final class MinimapRenderer {
     private static int lastCenterX = Integer.MIN_VALUE;
     private static int lastCenterZ = Integer.MIN_VALUE;
     private static int lastSampleTick = Integer.MIN_VALUE;
+    private static String lastWorldId;
 
     private MinimapRenderer() { }
 
@@ -60,6 +61,7 @@ public final class MinimapRenderer {
     }
 
     private static void render(DrawContext context, MinecraftClient client) {
+        updateWorld(client);
         int size = MinimapConfig.getSize();
         int left = MinimapConfig.getX(client.getWindow().getScaledWidth());
         int top = MinimapConfig.getY(client.getWindow().getScaledHeight());
@@ -72,24 +74,43 @@ public final class MinimapRenderer {
             context.fill(left - BORDER, top - BORDER, left + size + BORDER, top + size + BORDER, 0xE8101217);
             context.fill(left, top, left + size, top + size, 0xFF27303A);
         }
-        if (client.player != null && client.world != null) {
+        MinimapServerOverview.request();
+        boolean serverMapDisplayed = MinimapServerOverview.render(context, client, left, top, size);
+        if (!serverMapDisplayed && MinimapServerOverview.shouldFallBackToLocalTerrain() && client.player != null && client.world != null) {
             ensureTexture(client);
             int centerX = client.player.getBlockX();
             int centerZ = client.player.getBlockZ();
             if (needsRefresh(client.player.age, centerX, centerZ)) sampleTerrain(client, centerX, centerZ);
             context.drawTexture(RenderPipelines.GUI_TEXTURED, MAP_TEXTURE, left, top, 0.0f, 0.0f, size, size, MAP_SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE);
-        } else {
+        } else if (!serverMapDisplayed) {
             context.fill(left, top, left + size, top + size, 0xFF386B3D);
         }
 
-        float terrainBlocksPerPixel = MinimapConfig.zoom() * SAMPLE_SCALE;
-        drawWaypointMarkers(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel, MinimapConfig.isCircular());
-        drawDeathMarker(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel);
-        MinimapServerOverview.renderHudOverlays(context, left, top, size, MAP_SIZE,
-                client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(),
-                terrainBlocksPerPixel, MinimapConfig.isCircular());
-        drawPlayerMarker(context, left, top, size, client.player == null ? 0.0f : client.player.getYaw());
+        if (!serverMapDisplayed) {
+            float terrainBlocksPerPixel = MinimapConfig.zoom() * SAMPLE_SCALE;
+            drawWaypointMarkers(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel, MinimapConfig.isCircular());
+            drawDeathMarker(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel);
+            MinimapServerOverview.renderHudOverlays(context, left, top, size, MAP_SIZE,
+                    client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(),
+                    terrainBlocksPerPixel, MinimapConfig.isCircular());
+            drawPlayerMarker(context, left, top, size, client.player == null ? 0.0f : client.player.getYaw());
+        }
         if (!circular) context.fill(left, top, left + size, top + 1, 0x66FFFFFF);
+    }
+
+    private static void updateWorld(MinecraftClient client) {
+        if (client.world == null) return;
+        String worldId = WaypointConfig.worldId(client) + "|" + client.world.getRegistryKey().getValue();
+        if (worldId.equals(lastWorldId)) return;
+        lastWorldId = worldId;
+        lastCenterX = Integer.MIN_VALUE;
+        lastCenterZ = Integer.MIN_VALUE;
+        lastSampleTick = Integer.MIN_VALUE;
+        if (image != null) {
+            image.fillRect(0, 0, MAP_SIZE, MAP_SIZE, 0xFF171B25);
+            if (texture != null) texture.upload();
+        }
+        MinimapServerOverview.beginWorldChange();
     }
 
     private static boolean needsRefresh(int tick, int centerX, int centerZ) {

@@ -29,6 +29,7 @@ public final class MinimapServerOverview {
     private static NativeImageBackedTexture texture;
     private static boolean textureDirty;
     private static long lastRequestAt;
+    private static long waitingForOverviewSince = -1L;
 
     private MinimapServerOverview() { }
 
@@ -36,7 +37,20 @@ public final class MinimapServerOverview {
         long now = System.currentTimeMillis();
         if (now - lastRequestAt < 5_000) return;
         lastRequestAt = now;
+        if (activeWorld == null && waitingForOverviewSince < 0) waitingForOverviewSince = now;
         ClientPlayNetworking.send(new MinimapMapPayload(new byte[]{REQUEST}));
+    }
+
+    /** Clears the previous world's map while the server sends the next world's overview. */
+    public static void beginWorldChange() {
+        activeWorld = null;
+        lastRequestAt = 0L;
+        waitingForOverviewSince = System.currentTimeMillis();
+    }
+
+    /** Unmodded servers keep the existing nearby-terrain minimap after a short handshake window. */
+    public static boolean shouldFallBackToLocalTerrain() {
+        return activeWorld == null && waitingForOverviewSince > 0 && System.currentTimeMillis() - waitingForOverviewSince >= 1_500L;
     }
 
     public static void receive(byte[] payload) {
@@ -64,6 +78,7 @@ public final class MinimapServerOverview {
                 for (int column = 0; column < width; column++) overview.colors[offset + column] = input.readInt();
             }
             activeWorld = world;
+            waitingForOverviewSince = -1L;
             textureDirty = true;
         } catch (IOException ignored) { }
     }
@@ -84,7 +99,6 @@ public final class MinimapServerOverview {
                 pois[index] = new Poi(readString(input), input.readInt(), input.readInt(), input.readInt());
             }
             OVERLAYS_BY_WORLD.put(world, new Overlay(List.of(zones), List.of(pois)));
-            activeWorld = world;
         } catch (IOException ignored) { }
     }
 
@@ -94,6 +108,7 @@ public final class MinimapServerOverview {
         ensureTexture(client, overview);
         context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE_ID, left, top, 0.0f, 0.0f, size, size,
                 overview.width, overview.height, overview.width, overview.height);
+        drawOverlays(context, overview, left, top, size);
         if (client.player != null) {
             int x = Math.round(left + (float) (client.player.getX() - overview.minX) / (overview.width * overview.blockStep) * size);
             int z = Math.round(top + (float) (client.player.getZ() - overview.minZ) / (overview.height * overview.blockStep) * size);
@@ -103,7 +118,6 @@ public final class MinimapServerOverview {
                 context.fill(x, z, x + 1, z + 1, 0xFF2878FF);
             }
         }
-        drawOverlays(context, overview, left, top, size);
         return true;
     }
 
