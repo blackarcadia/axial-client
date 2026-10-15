@@ -65,8 +65,9 @@ public final class GitHubReleaseUpdater {
 
             String tag = normalizeVersion(release.get("tag_name").getAsString());
             String installedTag = installedClientTag();
-            if (!installedTag.isBlank() && !isNewer(tag, installedTag)) {
-                return UpdateStatus.upToDate(installedTag);
+            String minimumAcceptedVersion = newerVersion(installedTag, buildInfo.appVersion());
+            if (!minimumAcceptedVersion.isBlank() && !isNewer(tag, minimumAcceptedVersion)) {
+                return UpdateStatus.upToDate(minimumAcceptedVersion);
             }
 
             String assetUrl = findAssetUrl(release.getAsJsonArray("assets"), buildInfo.githubAsset());
@@ -127,6 +128,7 @@ public final class GitHubReleaseUpdater {
         if (appJar == null) {
             throw new IOException("No packaged client jar found in release app");
         }
+        verifyStagedBuild(stagedApp, releaseTag);
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
             List<String> installedFiles = installPackagedJarsFromBundle(jarFile, modsDir);
@@ -162,6 +164,37 @@ public final class GitHubReleaseUpdater {
         }
 
         return null;
+    }
+
+    /**
+     * A release asset must have been built by the release identified by its tag.
+     * Without this check, a correct, newer GitHub release tag could still carry a
+     * stale app zip and overwrite the installed client with an older payload.
+     */
+    static void verifyStagedBuild(Path stagedApp, String releaseTag) throws IOException {
+        long releaseBuild = buildNumber(releaseTag);
+        if (releaseBuild < 0) {
+            throw new IOException("Update release has no numeric build number: " + releaseTag);
+        }
+
+        Path appJar = locateAppJar(stagedApp);
+        if (appJar == null) {
+            throw new IOException("No packaged client jar found in release app");
+        }
+
+        try (JarFile jarFile = new JarFile(appJar.toFile())) {
+            var entry = jarFile.getJarEntry("version.properties");
+            if (entry == null) {
+                throw new IOException("Update app is missing version information");
+            }
+            try (InputStream in = jarFile.getInputStream(entry)) {
+                AppBuildInfo stagedInfo = AppBuildInfo.load(in);
+                if (buildNumber(stagedInfo.appVersion()) != releaseBuild) {
+                    throw new IOException("Update asset build " + stagedInfo.appVersion()
+                            + " does not match release " + releaseTag);
+                }
+            }
+        }
     }
 
     private static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
@@ -399,37 +432,42 @@ public final class GitHubReleaseUpdater {
         return version.trim().replaceFirst("^[vV]", "");
     }
 
-    private static boolean isNewer(String latest, String current) {
-        int[] left = parseVersion(latest);
-        int[] right = parseVersion(current);
-        int len = Math.max(left.length, right.length);
-        for (int i = 0; i < len; i++) {
-            int a = i < left.length ? left[i] : 0;
-            int b = i < right.length ? right[i] : 0;
-            if (a != b) {
-                return a > b;
-            }
-        }
-        return false;
+    static boolean isNewer(String latest, String current) {
+        long latestBuild = buildNumber(latest);
+        long currentBuild = buildNumber(current);
+        return latestBuild >= 0 && currentBuild >= 0 && latestBuild > currentBuild;
     }
 
-    private static int[] parseVersion(String version) {
-        String normalized = normalizeVersion(version);
-        String[] parts = VERSION_SPLIT.split(normalized);
-        List<Integer> values = new ArrayList<>();
-        for (String part : parts) {
-            if (part == null || part.isBlank()) {
+    private static String newerVersion(String first, String second) {
+        long firstBuild = buildNumber(first);
+        long secondBuild = buildNumber(second);
+        if (firstBuild < 0 && secondBuild < 0) {
+            return "";
+        }
+        return secondBuild > firstBuild ? second : first;
+    }
+
+    /**
+     * Release tags and packaged app versions share the CI run number as their
+     * final numeric component (for example {@code v1beta.245} and
+     * {@code 1.0.245}). That number is the only ordering used by the updater.
+     */
+    static long buildNumber(String version) {
+        if (version == null || version.isBlank()) {
+            return -1;
+        }
+        String[] parts = VERSION_SPLIT.split(normalizeVersion(version));
+        for (int i = parts.length - 1; i >= 0; i--) {
+            if (parts[i] == null || parts[i].isBlank()) {
                 continue;
             }
             try {
-                values.add(Integer.parseInt(part));
+                return Long.parseLong(parts[i]);
             } catch (NumberFormatException ignored) {
+                return -1;
             }
         }
-        if (values.isEmpty()) {
-            return new int[]{0};
-        }
-        return values.stream().mapToInt(Integer::intValue).toArray();
+        return -1;
     }
 
     public interface ProgressReporter {
