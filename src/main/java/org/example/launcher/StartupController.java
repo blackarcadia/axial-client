@@ -84,7 +84,7 @@ public final class StartupController {
     private boolean checkForUpdates(Path gameDir) {
         try {
             loadingScreen.update("Checking for updates", 5);
-            GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate();
+            GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate(gameDir);
             if (update.available()) {
                 loadingScreen.update(update.message(), 20);
                 loadingScreen.update("Downloading client update", 35);

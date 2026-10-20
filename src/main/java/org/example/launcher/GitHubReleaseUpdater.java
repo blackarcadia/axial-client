@@ -38,7 +38,7 @@ public final class GitHubReleaseUpdater {
         this.buildInfo = buildInfo;
     }
 
-    public UpdateStatus checkForUpdate() throws IOException {
+    public UpdateStatus checkForUpdate(Path gameDir) throws IOException {
         Request request = new Request.Builder()
                 .url(API_BASE + buildInfo.githubOwner() + "/" + buildInfo.githubRepo() + "/releases?per_page=100")
                 .header("Accept", "application/vnd.github+json")
@@ -64,8 +64,8 @@ public final class GitHubReleaseUpdater {
             }
 
             String tag = normalizeVersion(release.get("tag_name").getAsString());
-            String installedTag = installedClientTag();
-            String minimumAcceptedVersion = newerVersion(installedTag, buildInfo.appVersion());
+            String installedPayloadVersion = installedClientBuild(gameDir);
+            String minimumAcceptedVersion = newerVersion(installedPayloadVersion, buildInfo.appVersion());
             if (!minimumAcceptedVersion.isBlank() && !isNewer(tag, minimumAcceptedVersion)) {
                 return UpdateStatus.upToDate(minimumAcceptedVersion);
             }
@@ -284,6 +284,36 @@ public final class GitHubReleaseUpdater {
                 return "";
             }
             return Files.readString(CLIENT_RELEASE_MARKER).trim();
+        } catch (IOException ignored) {
+            return "";
+        }
+    }
+
+    /**
+     * The release marker is only a record of the last successful updater run. It
+     * is not a source of truth: it can remain after a user restores, replaces, or
+     * partially installs the mods directory. Read the bundled build information
+     * from the actual client JAR so a stale marker can never prevent recovery.
+     */
+    static String installedClientBuild(Path gameDir) {
+        if (gameDir == null) {
+            return "";
+        }
+
+        Path modJar = gameDir.resolve("mods").resolve("axial-cosmetics.jar");
+        if (!Files.isRegularFile(modJar)) {
+            return "";
+        }
+
+        try (JarFile jarFile = new JarFile(modJar.toFile())) {
+            var entry = jarFile.getJarEntry("version.properties");
+            if (entry == null) {
+                return "";
+            }
+            try (InputStream in = jarFile.getInputStream(entry)) {
+                String version = AppBuildInfo.load(in).appVersion();
+                return buildNumber(version) >= 0 ? version : "";
+            }
         } catch (IOException ignored) {
             return "";
         }

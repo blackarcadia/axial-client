@@ -33,7 +33,7 @@ public class ExternalLauncherUI {
     private final int switchH = 100;
 
     public ExternalLauncherUI() {
-        frame = new JFrame("AxialClient Version 1.0 Alphatest");
+        frame = new JFrame("AxialClient " + AppBuildInfo.load().appVersion());
         setFrameIcon(frame);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);

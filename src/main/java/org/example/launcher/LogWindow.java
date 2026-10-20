@@ -15,7 +15,7 @@ public class LogWindow {
     private final PrintStream stream;
 
     public LogWindow() {
-        frame = new JFrame("AxialClient Version 1.0 Alphatest");
+        frame = new JFrame("AxialClient " + AppBuildInfo.load().appVersion());
         setFrameIcon(frame);
         area = new JTextArea(18, 70);
         area.setEditable(false);
