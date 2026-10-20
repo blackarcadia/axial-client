@@ -54,6 +54,8 @@
     "MinecraftClientDebugHudEntryListAccessor",
     "ClientPlayNetworkHandlerIslandXpMixin",
     "EmoteListWidgetPermissionMixin",
+    "EmoteListDescriptionVisibilityMixin",
+    "EmoteListAuthorVisibilityMixin",
     "EmotecraftWheelKeyMixin",
     "DebugDumpVersionKeyMixin",
     "EmoteRadialElementThemeMixin",
