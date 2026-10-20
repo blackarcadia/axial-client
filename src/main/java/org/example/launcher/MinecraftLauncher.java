@@ -52,6 +52,7 @@ public class MinecraftLauncher {
     private static final String BENDABLE_CUBOIDS_FILE = "BendableCuboidsFabric-2.0.1+mc.1.21.11.jar";
     private static final String PLAYER_ANIMATION_LIB_FILE = "PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar";
     private static final String GANGNAM_STYLE_EMOTE_FILE = "gangnam_style.emotecraft";
+    private static final String RAT_DANCE_EMOTE_FILE = "rat_dance.emotecraft";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -774,11 +775,24 @@ public class MinecraftLauncher {
 
     private void installBundledEmotes(FileLayout layout) throws IOException {
         Files.createDirectories(layout.emotesDir());
-        Path target = layout.emotesDir().resolve(GANGNAM_STYLE_EMOTE_FILE);
-        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/emotes/" + GANGNAM_STYLE_EMOTE_FILE)) {
-            if (in == null) throw new IOException("Bundled Gangnam Style emote is missing from the launcher package.");
+        installBundledEmote(layout, GANGNAM_STYLE_EMOTE_FILE, "Gangnam Style");
+        installBundledEmote(layout, RAT_DANCE_EMOTE_FILE, "Rat Dance");
+    }
+
+    private void installBundledEmote(FileLayout layout, String fileName, String displayName) throws IOException {
+        Path target = layout.emotesDir().resolve(fileName);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/emotes/" + fileName)) {
+            if (in == null) throw new IOException("Bundled " + displayName + " emote is missing from the launcher package.");
             if (copyBundledModIfChanged(in, target)) {
-                logger.info("Installed bundled emote: Gangnam Style");
+                logger.info("Installed bundled emote: " + displayName);
+            }
+        }
+
+        String iconFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".png";
+        Path icon = layout.emotesDir().resolve(iconFileName);
+        try (InputStream in = MinecraftLauncher.class.getResourceAsStream("/emotes/" + iconFileName)) {
+            if (in != null && copyBundledModIfChanged(in, icon)) {
+                logger.info("Installed emote icon: " + displayName);
             }
         }
     }
