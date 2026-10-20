@@ -17,6 +17,6 @@ public abstract class EmoteRadialMenuSizeMixin {
     )
     private int axial_cosmetics$compactRadialWheel(int originalSize) {
         if (!Boolean.TRUE.equals(PlatformTools.getConfig().oldChooseWheel.get())) return originalSize;
-        return Math.max(280, Math.round(originalSize * 0.68f));
+        return Math.max(260, Math.round(originalSize * 0.55f));
     }
 }

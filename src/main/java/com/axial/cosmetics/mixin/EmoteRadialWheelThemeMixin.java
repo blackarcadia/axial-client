@@ -1,6 +1,8 @@
 package com.axial.cosmetics.mixin;
 
 import io.github.kosmx.emotes.PlatformTools;
+import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
+import io.github.kosmx.emotes.arch.screen.widget.IChooseElement;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -12,12 +14,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Draws an Axial-styled wheel behind Emotecraft's untouched radial-menu controls. */
+/** Draws a compact card-style wheel behind Emotecraft's untouched radial-menu controls. */
 @Mixin(targets = "io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget", remap = false)
 public abstract class EmoteRadialWheelThemeMixin {
     private static final int SEGMENT_COUNT = 8;
-    private static final int WHEEL_OUTLINE = 0xFF393442;
-    private static final int HOVERED_SEGMENT = 0xCC4A4355;
+    private static final int CARD_BACKGROUND = 0xE6181A28;
+    private static final int CARD_OUTLINE = 0xFF8359EE;
+    private static final int HOVERED_BACKGROUND = 0xE52B3550;
+    private static final int HOVERED_OUTLINE = 0xFF38DDF5;
+    private static final int MEDALLION_BACKGROUND = 0xF0212035;
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
     @Inject(method = "method_48579", at = @At("HEAD"), remap = false)
@@ -28,50 +33,77 @@ public abstract class EmoteRadialWheelThemeMixin {
         int size = Math.min(widget.getWidth(), widget.getHeight());
         int centerX = widget.getX() + widget.getWidth() / 2;
         int centerY = widget.getY() + widget.getHeight() / 2;
-        int innerRadius = Math.max(46, Math.round(size * 0.19f));
-        int outerRadius = Math.round(size * 0.49f);
+        int innerRadius = Math.max(44, Math.round(size * 0.18f));
+        int outerRadius = Math.round(size * 0.47f);
         int hoveredSegment = segmentAt(centerX, centerY, innerRadius, outerRadius, mouseX, mouseY);
 
+        AbstractFastChooseWidget wheel = (AbstractFastChooseWidget) (Object) this;
         drawWheel(context, centerX, centerY, innerRadius, outerRadius, hoveredSegment);
         drawSlotLabels(context, MinecraftClient.getInstance(), centerX, centerY, outerRadius);
+        if (hoveredSegment >= 0) drawTooltip(context, MinecraftClient.getInstance(), wheel, hoveredSegment, centerX, centerY, outerRadius);
     }
 
     private static void drawWheel(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius, int hoveredSegment) {
-        drawRing(context, centerX, centerY, innerRadius, outerRadius, 0xD0161924);
-        if (hoveredSegment >= 0) {
-            drawSegment(context, centerX, centerY, innerRadius + 2, outerRadius - 2, hoveredSegment, HOVERED_SEGMENT);
-        }
-        drawRing(context, centerX, centerY, outerRadius - 2, outerRadius, WHEEL_OUTLINE);
-        drawRing(context, centerX, centerY, innerRadius, innerRadius + 2, WHEEL_OUTLINE);
+        drawCircle(context, centerX, centerY, outerRadius + 8, 0x18000000);
         for (int index = 0; index < SEGMENT_COUNT; index++) {
-            double angle = Math.PI / 2 - Math.PI * 2 * (index + 0.5) / SEGMENT_COUNT;
-            drawRadialLine(context, centerX, centerY, innerRadius, outerRadius, angle, 0xFF312A45, 1);
+            boolean hovered = index == hoveredSegment;
+            drawSegmentCard(context, centerX, centerY, innerRadius, outerRadius, index,
+                    hovered ? HOVERED_BACKGROUND : CARD_BACKGROUND,
+                    hovered ? HOVERED_OUTLINE : CARD_OUTLINE);
         }
+        drawCenterControl(context, centerX, centerY, innerRadius);
     }
 
-    private static void drawSegment(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius,
-                                    int segment, int color) {
+    private static void drawSegmentCard(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius,
+                                        int segment, int background, int outline) {
         double segmentSize = Math.PI * 2 / SEGMENT_COUNT;
         double middle = Math.PI / 2 - segmentSize * segment;
-        double start = middle - segmentSize / 2;
-        double end = middle + segmentSize / 2;
+        double gap = 0.045;
+        double start = middle - segmentSize / 2 + gap;
+        double end = middle + segmentSize / 2 - gap;
         int strokes = Math.max(24, outerRadius / 3);
         for (int stroke = 0; stroke <= strokes; stroke++) {
             double progress = stroke / (double) strokes;
             drawRadialLine(context, centerX, centerY, innerRadius, outerRadius,
-                    start + (end - start) * progress, color, 2);
+                    start + (end - start) * progress, background, 2);
+        }
+        drawRadialLine(context, centerX, centerY, innerRadius, outerRadius, start, outline, 2);
+        drawRadialLine(context, centerX, centerY, innerRadius, outerRadius, end, outline, 2);
+        drawArc(context, centerX, centerY, innerRadius, start, end, outline);
+        drawArc(context, centerX, centerY, outerRadius, start, end, outline);
+
+        int medallionRadius = Math.max(20, (outerRadius - innerRadius) / 4);
+        int medallionDistance = (innerRadius + outerRadius) / 2;
+        int iconX = centerX + (int) Math.round(Math.cos(middle) * medallionDistance);
+        int iconY = centerY + (int) Math.round(Math.sin(middle) * medallionDistance);
+        drawCircle(context, iconX, iconY, medallionRadius + 2, outline);
+        drawCircle(context, iconX, iconY, medallionRadius, MEDALLION_BACKGROUND);
+    }
+
+    private static void drawCenterControl(DrawContext context, int centerX, int centerY, int radius) {
+        drawCircle(context, centerX, centerY, radius + 4, CARD_OUTLINE);
+        drawCircle(context, centerX, centerY, radius, 0xF01A1B2D);
+        int face = Math.max(4, radius / 10);
+        context.fill(centerX - face * 2, centerY - face, centerX - face, centerY + face, 0xFFF6F4FF);
+        context.fill(centerX + face, centerY - face, centerX + face * 2, centerY + face, 0xFFF6F4FF);
+        context.fill(centerX - face * 2, centerY + face * 2, centerX + face * 2, centerY + face * 3, 0xFFF6F4FF);
+    }
+
+    private static void drawCircle(DrawContext context, int centerX, int centerY, int radius, int color) {
+        int squaredRadius = radius * radius;
+        for (int relativeY = -radius; relativeY <= radius; relativeY++) {
+            int width = (int) Math.sqrt(Math.max(0, squaredRadius - relativeY * relativeY));
+            context.fill(centerX - width, centerY + relativeY, centerX + width + 1, centerY + relativeY + 1, color);
         }
     }
 
-    private static void drawRing(DrawContext context, int centerX, int centerY, int innerRadius, int outerRadius, int color) {
-        int outerSquared = outerRadius * outerRadius;
-        int innerSquared = innerRadius * innerRadius;
-        for (int relativeY = -outerRadius; relativeY <= outerRadius; relativeY++) {
-            int outerWidth = (int) Math.sqrt(Math.max(0, outerSquared - relativeY * relativeY));
-            int innerWidth = Math.abs(relativeY) < innerRadius
-                    ? (int) Math.sqrt(Math.max(0, innerSquared - relativeY * relativeY)) : 0;
-            context.fill(centerX - outerWidth, centerY + relativeY, centerX - innerWidth, centerY + relativeY + 1, color);
-            context.fill(centerX + innerWidth, centerY + relativeY, centerX + outerWidth + 1, centerY + relativeY + 1, color);
+    private static void drawArc(DrawContext context, int centerX, int centerY, int radius, double start, double end, int color) {
+        int steps = Math.max(20, radius / 3);
+        for (int step = 0; step <= steps; step++) {
+            double angle = start + (end - start) * step / steps;
+            int x = centerX + (int) Math.round(Math.cos(angle) * radius);
+            int y = centerY + (int) Math.round(Math.sin(angle) * radius);
+            context.fill(x - 1, y - 1, x + 2, y + 2, color);
         }
     }
 
@@ -100,13 +132,30 @@ public abstract class EmoteRadialWheelThemeMixin {
     }
 
     private static void drawSlotLabels(DrawContext context, MinecraftClient client, int centerX, int centerY, int outerRadius) {
-        int labelRadius = outerRadius - 17;
+        int labelRadius = outerRadius + 16;
         for (int index = 0; index < SEGMENT_COUNT; index++) {
             double angle = Math.PI / 2 - Math.PI * 2 * index / SEGMENT_COUNT;
             int x = centerX + (int) Math.round(Math.cos(angle) * labelRadius);
             int y = centerY + (int) Math.round(Math.sin(angle) * labelRadius);
+            drawCircle(context, x, y, 11, 0xEE171725);
+            drawCircle(context, x, y, 10, CARD_OUTLINE);
+            drawCircle(context, x, y, 8, 0xFF171725);
             context.drawCenteredTextWithShadow(client.textRenderer, uiText(Integer.toString(index + 1)), x, y - 4, 0xFFBFA0FF);
         }
+    }
+
+    private static void drawTooltip(DrawContext context, MinecraftClient client, AbstractFastChooseWidget wheel,
+                                    int hoveredSegment, int centerX, int centerY, int outerRadius) {
+        if (hoveredSegment >= wheel.getChooseElements().size()) return;
+        IChooseElement element = wheel.getChooseElements().get(hoveredSegment);
+        if (!element.hasEmote() || element.getEmote() == null) return;
+        String name = element.getEmote().name.getString();
+        int width = Math.max(112, client.textRenderer.getWidth(name) + 28);
+        int x = centerX - width / 2;
+        int y = centerY + outerRadius + 36;
+        context.fill(x - 2, y - 2, x + width + 2, y + 22, HOVERED_OUTLINE);
+        context.fill(x, y, x + width, y + 20, 0xF0101420);
+        context.drawCenteredTextWithShadow(client.textRenderer, uiText(name), centerX, y + 6, 0xFFF6F4FF);
     }
 
     private static Text uiText(String value) {
