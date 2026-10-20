@@ -56,8 +56,6 @@
     "EmoteListWidgetPermissionMixin",
     "EmoteListDescriptionVisibilityMixin",
     "EmoteListAuthorVisibilityMixin",
-    "EmoteMenuDashboardMixin",
-    "EmoteMenuDashboardBackgroundMixin",
     "EmotecraftWheelKeyMixin",
     "DebugDumpVersionKeyMixin",
     "EmoteRadialElementThemeMixin",
