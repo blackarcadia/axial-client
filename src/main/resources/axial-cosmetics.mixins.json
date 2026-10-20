@@ -55,6 +55,7 @@
     "ClientPlayNetworkHandlerIslandXpMixin",
     "EmoteListWidgetPermissionMixin",
     "EmotecraftWheelKeyMixin",
+    "DebugDumpVersionKeyMixin",
     "EmoteRadialElementThemeMixin",
     "EmoteRadialWheelThemeMixin",
     "EmoteRadialReleaseSelectMixin",
