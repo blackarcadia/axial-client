@@ -21,4 +21,17 @@ class EmotecraftBundledEmoteTest {
             assertEquals(256, image.getHeight());
         }
     }
+
+    @Test void deathEmoteAndItsIconArePackagedAndReadable() throws Exception {
+        try (var emote = getClass().getResourceAsStream("/emotes/death.emotecraft");
+             var icon = getClass().getResourceAsStream("/emotes/death.png")) {
+            assertNotNull(emote);
+            assertNotNull(icon);
+            assertEquals(8, new DataInputStream(emote).readInt());
+            var image = ImageIO.read(icon);
+            assertNotNull(image);
+            assertEquals(256, image.getWidth());
+            assertEquals(256, image.getHeight());
+        }
+    }
 }
