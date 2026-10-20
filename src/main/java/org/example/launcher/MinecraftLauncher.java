@@ -54,6 +54,7 @@ public class MinecraftLauncher {
     private static final String GANGNAM_STYLE_EMOTE_FILE = "gangnam_style.emotecraft";
     private static final String RAT_DANCE_EMOTE_FILE = "rat_dance.emotecraft";
     private static final String DEATH_EMOTE_FILE = "death.emotecraft";
+    private static final String FEAR_EMOTE_FILE = "fear.emotecraft";
     private static final String SIMPLE_MENU_URL = null;
     private static final String SIMPLE_MENU_FILE = "simplemenu-1.21.11-2.1.jar";
     private static final String COLLECTIVE_URL = null;
@@ -779,6 +780,7 @@ public class MinecraftLauncher {
         installBundledEmote(layout, GANGNAM_STYLE_EMOTE_FILE, "Gangnam Style");
         installBundledEmote(layout, RAT_DANCE_EMOTE_FILE, "Rat Dance");
         installBundledEmote(layout, DEATH_EMOTE_FILE, "Death");
+        installBundledEmote(layout, FEAR_EMOTE_FILE, "Fear");
     }
 
     private void installBundledEmote(FileLayout layout, String fileName, String displayName) throws IOException {
