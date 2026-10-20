@@ -1,6 +1,6 @@
 package com.axial.cosmetics.mixin;
 
-import io.github.kosmx.emotes.arch.screen.EmoteMenu;
+import com.axial.cosmetics.client.AxialEmoteLoadoutScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -38,7 +38,7 @@ public abstract class EmoteRadialConfigureButtonMixin extends Screen {
             Text label = button.getMessage();
             remove(button);
             addDrawableChild(new ConfigureEmotesButton(x, y, width, height, label,
-                    () -> client.setScreen(new EmoteMenu(this))));
+                    () -> client.setScreen(new AxialEmoteLoadoutScreen(this))));
             return;
         }
     }

@@ -1,7 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.TitleScreenAccountsDropdown;
-import io.github.kosmx.emotes.arch.screen.EmoteMenu;
+import com.axial.cosmetics.client.AxialEmoteLoadoutScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -28,7 +28,7 @@ public abstract class EmoteAllButtonPressMixin {
         if (screen != null
                 && "io.github.kosmx.emotes.arch.screen.ingame.FastMenuScreen".equals(screen.getClass().getName())
                 && "All Emotes".equalsIgnoreCase(button.getMessage().getString())) {
-            client.setScreen(new EmoteMenu(screen));
+            client.setScreen(new AxialEmoteLoadoutScreen(screen));
             ci.cancel();
         }
     }
