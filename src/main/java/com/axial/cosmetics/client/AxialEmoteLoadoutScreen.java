@@ -104,8 +104,8 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
             footerX = margin;
             footerWidth = width - margin * 2;
             int usableWidth = footerWidth - gap * 2;
-            int calculatedListWidth = Math.max(190, usableWidth * 34 / 100);
-            int calculatedPreviewWidth = Math.max(180, usableWidth * 33 / 100);
+            int calculatedListWidth = Math.max(210, usableWidth * 38 / 100);
+            int calculatedPreviewWidth = Math.max(170, usableWidth * 29 / 100);
             int calculatedWheelWidth = Math.max(150, usableWidth - calculatedListWidth - calculatedPreviewWidth);
             // If the window is exceptionally narrow, preserve the wheel and
             // preview by reducing the library first rather than overflowing.
