@@ -1,9 +1,6 @@
 package com.axial.cosmetics.client;
 
-import io.github.kosmx.emotes.arch.gui.widgets.EmoteListWidget;
-import io.github.kosmx.emotes.arch.gui.widgets.PlayerPreview;
 import io.github.kosmx.emotes.arch.screen.EmoteMenu;
-import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -11,16 +8,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.MultilineTextWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/**
- * A normal Emotecraft screen subclass, deliberately avoiding bytecode
- * injection into Emotecraft's lifecycle. It keeps Emotecraft's own widgets
- * and interaction model while arranging them into Axial's loadout layout.
- */
+/** A bounded, three-column Emotecraft screen that scales every region together. */
 public final class AxialEmoteLoadoutScreen extends EmoteMenu {
     private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
 
@@ -34,62 +26,52 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         if (list == null || preview == null || searchBox == null || fastChoose == null) return;
 
         Layout layout = new Layout(width, height);
-        // Emotecraft inherits EntryListWidget#position(width, height, x, y).
-        // Keeping this argument order is essential: swapping it constrains the
-        // list to a thin strip and sends its entries off-screen.
-        // The stock menu enables compact mode, which deliberately narrows the
-        // rows to one third of their container. The Axial panel needs the
-        // standard full-width list.
         list.setCompactMode(false);
-        list.position(layout.leftWidth, layout.contentHeight, layout.leftX, layout.top);
-        preview.setDimensions(layout.centerWidth, layout.contentHeight);
-        preview.setPosition(layout.centerX, layout.top);
-
-        searchBox.setDimensions(layout.centerWidth, 20);
-        searchBox.setPosition(layout.centerX, Math.max(22, layout.top - 42));
-
+        list.position(layout.listWidth, layout.contentHeight, layout.listX, layout.contentY);
+        preview.setDimensions(layout.previewWidth, layout.contentHeight);
+        preview.setPosition(layout.previewX, layout.contentY);
+        searchBox.setDimensions(layout.searchWidth, 20);
+        searchBox.setPosition(layout.searchX, layout.searchY);
         fastChoose.setSize(layout.wheelSize);
-        fastChoose.setPosition(layout.wheelX, layout.wheelY + 70);
-        arrangeButtons(layout);
+        fastChoose.setPosition(layout.wheelX, layout.wheelY);
+        arrangeNativeControls(layout);
     }
 
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         super.renderBackground(context, mouseX, mouseY, delta);
         Layout layout = new Layout(width, height);
-        drawPanel(context, layout.leftX, layout.top, layout.leftWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
-        drawPanel(context, layout.centerX, layout.top, layout.centerWidth, layout.contentHeight, 0xE8101422, 0xFF46DDF4);
-        drawPanel(context, layout.rightX, layout.top, layout.rightWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
-        context.fill(layout.rightX + 1, layout.top + 1, layout.rightX + layout.rightWidth - 1, layout.top + 54, 0x7A161427);
-        context.fill(layout.leftX, layout.top - 15, layout.leftX + 132, layout.top - 13, 0xFFCF4BFF);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("EMOTE LOADOUT"), layout.leftX, layout.top - 34, 0xFFF4F0FF);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("ASSIGN SELECTED EMOTE"), layout.rightX + 12, layout.top + 10, 0xFFF4F0FF);
+        drawPanel(context, layout.listX, layout.contentY, layout.listWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
+        drawPanel(context, layout.previewX, layout.contentY, layout.previewWidth, layout.contentHeight, 0xE8101422, 0xFF46DDF4);
+        drawPanel(context, layout.wheelPanelX, layout.contentY, layout.wheelPanelWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
+        context.fill(layout.listX, layout.contentY - 14, layout.listX + Math.min(172, layout.listWidth), layout.contentY - 12, 0xFFCF4BFF);
+        context.fill(layout.wheelPanelX + 1, layout.contentY + 1, layout.wheelPanelX + layout.wheelPanelWidth - 1, layout.contentY + 44, 0x5A161427);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("EMOTE LOADOUT"), layout.listX, layout.contentY - 32, 0xFFF4F0FF);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("PLAYER PREVIEW"), layout.previewX + 10, layout.contentY + 10, 0xFFF4F0FF);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("ASSIGN TO WHEEL"), layout.wheelPanelX + 10, layout.contentY + 10, 0xFFF4F0FF);
     }
 
-    private void arrangeButtons(Layout layout) {
+    private void arrangeNativeControls(Layout layout) {
         int footerIndex = 0;
         for (Element element : children()) {
-            if (!(element instanceof ClickableWidget button)) continue;
-            String label = button.getMessage().getString();
-            if (button instanceof MultilineTextWidget) {
-                if (label.startsWith("Set a key")) {
-                    button.setPosition(layout.rightX + 12, layout.top + 32);
-                } else if (label.startsWith("Select an emote")) {
-                    button.setPosition(layout.rightX + 12, layout.top + 86);
-                }
+            if (!(element instanceof ClickableWidget widget)) continue;
+            String label = widget.getMessage().getString();
+            if (widget instanceof MultilineTextWidget) {
+                if (label.startsWith("Set a key")) widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 28);
+                else if (label.startsWith("Select an emote")) widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 82);
                 continue;
             }
             if (label.equalsIgnoreCase("Open Emotes Folder") || label.equalsIgnoreCase("Done") || label.equalsIgnoreCase("Mod Options")) {
-                int footerWidth = Math.max(120, (layout.footerWidth - layout.gap * 2) / 3);
-                button.setDimensions(footerWidth, 20);
-                button.setPosition(layout.margin + footerIndex * (footerWidth + layout.gap), layout.footerY);
+                int buttonWidth = Math.max(88, (layout.footerWidth - layout.gap * 2) / 3);
+                widget.setDimensions(buttonWidth, 20);
+                widget.setPosition(layout.footerX + footerIndex * (buttonWidth + layout.gap), layout.footerY);
                 footerIndex++;
             } else if (label.equalsIgnoreCase("Reset")) {
-                button.setDimensions(layout.resetWidth, 20);
-                button.setPosition(layout.resetX, layout.top + 54);
-            } else if (button instanceof ButtonWidget) {
-                button.setDimensions(layout.keyWidth, 20);
-                button.setPosition(layout.rightX + 12, layout.top + 54);
+                widget.setDimensions(layout.resetWidth, 20);
+                widget.setPosition(layout.resetX, layout.contentY + 56);
+            } else if (widget instanceof ButtonWidget) {
+                widget.setDimensions(layout.keyWidth, 20);
+                widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 56);
             }
         }
     }
@@ -104,34 +86,43 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         return Text.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
-    private record Layout(int margin, int gap, int top, int footerY, int contentHeight,
-                          int leftX, int leftWidth, int centerX, int centerWidth,
-                          int rightX, int rightWidth, int searchX, int searchWidth,
-                          int wheelX, int wheelY, int wheelSize, int keyWidth,
-                          int resetX, int resetWidth, int footerWidth) {
-        private Layout(int width, int height) {
-            this(
-                    Math.max(24, width / 18),
-                    Math.max(12, width / 110),
-                    Math.max(76, height / 11),
-                    height - Math.max(48, height / 19),
-                    Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18),
-                    Math.max(24, width / 18),
-                    Math.max(270, width * 31 / 100),
-                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110),
-                    Math.max(250, width * 22 / 100),
-                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110),
-                    Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)),
-                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + (Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.min(Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)), Math.max(280, width * 30 / 100))) / 2,
-                    Math.min(Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)), Math.max(280, width * 30 / 100)),
-                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110) + (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5))) / 2,
-                    Math.max(76, height / 11) + 56 + (Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 56 - Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5))) / 2,
-                    Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5)),
-                    Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3),
-                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110) + Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3) + 14,
-                    Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3) - 26,
-                    width - Math.max(24, width / 18) * 2
-            );
+    private static final class Layout {
+        final int margin, gap, contentY, contentHeight, footerX, footerY, footerWidth;
+        final int listX, listWidth, previewX, previewWidth, wheelPanelX, wheelPanelWidth;
+        final int searchX, searchY, searchWidth, wheelX, wheelY, wheelSize, keyWidth, resetX, resetWidth;
+
+        Layout(int width, int height) {
+            margin = Math.max(12, width / 50);
+            gap = Math.max(8, width / 120);
+            contentY = Math.max(50, height / 11);
+            footerY = height - Math.max(30, height / 18);
+            contentHeight = Math.max(250, footerY - contentY - 14);
+            footerX = margin;
+            footerWidth = width - margin * 2;
+            int usableWidth = footerWidth - gap * 2;
+            int calculatedListWidth = Math.max(190, usableWidth * 34 / 100);
+            int calculatedPreviewWidth = Math.max(180, usableWidth * 33 / 100);
+            int calculatedWheelWidth = Math.max(150, usableWidth - calculatedListWidth - calculatedPreviewWidth);
+            // If the window is exceptionally narrow, preserve the wheel and
+            // preview by reducing the library first rather than overflowing.
+            if (calculatedListWidth + calculatedPreviewWidth + calculatedWheelWidth > usableWidth) {
+                calculatedListWidth = Math.max(140, usableWidth - calculatedPreviewWidth - calculatedWheelWidth);
+            }
+            listWidth = calculatedListWidth;
+            previewWidth = calculatedPreviewWidth;
+            wheelPanelWidth = calculatedWheelWidth;
+            listX = margin;
+            previewX = listX + listWidth + gap;
+            wheelPanelX = previewX + previewWidth + gap;
+            searchWidth = Math.min(previewWidth, Math.max(150, width / 3));
+            searchX = previewX + (previewWidth - searchWidth) / 2;
+            searchY = Math.max(16, contentY - 32);
+            wheelSize = Math.max(120, Math.min(260, Math.min(wheelPanelWidth - 20, contentHeight - 174)));
+            wheelX = wheelPanelX + (wheelPanelWidth - wheelSize) / 2;
+            wheelY = contentY + 150 + Math.max(0, (contentHeight - 150 - wheelSize) / 2);
+            keyWidth = Math.max(72, (wheelPanelWidth - 28) * 2 / 3);
+            resetX = wheelPanelX + 10 + keyWidth + 8;
+            resetWidth = Math.max(52, wheelPanelWidth - keyWidth - 28);
         }
     }
 }
