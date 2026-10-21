@@ -37,6 +37,10 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         // Emotecraft inherits EntryListWidget#position(width, height, x, y).
         // Keeping this argument order is essential: swapping it constrains the
         // list to a thin strip and sends its entries off-screen.
+        // The stock menu enables compact mode, which deliberately narrows the
+        // rows to one third of their container. The Axial panel needs the
+        // standard full-width list.
+        list.setCompactMode(false);
         list.position(layout.leftWidth, layout.contentHeight, layout.leftX, layout.top);
         preview.setDimensions(layout.centerWidth, layout.contentHeight);
         preview.setPosition(layout.centerX, layout.top);
