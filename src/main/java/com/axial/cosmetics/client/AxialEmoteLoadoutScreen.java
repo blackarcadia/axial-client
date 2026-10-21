@@ -61,8 +61,11 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
             if (!(element instanceof ClickableWidget widget)) continue;
             String label = widget.getMessage().getString();
             if (widget instanceof MultilineTextWidget) {
-                if (label.startsWith("Set a key")) widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 28);
-                else if (label.startsWith("Select an emote")) widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 82);
+                if (label.startsWith("Set a key")) {
+                    widget.visible = false;
+                } else if (label.startsWith("Select an emote")) {
+                    widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 50);
+                }
                 continue;
             }
             if (label.equalsIgnoreCase("Open Emotes Folder") || label.equalsIgnoreCase("Done") || label.equalsIgnoreCase("Mod Options")) {
@@ -71,11 +74,9 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
                 widget.setPosition(layout.footerX + footerIndex * (buttonWidth + layout.gap), layout.footerY);
                 footerIndex++;
             } else if (label.equalsIgnoreCase("Reset")) {
-                widget.setDimensions(layout.resetWidth, 20);
-                widget.setPosition(layout.resetX, layout.contentY + 56);
+                widget.visible = false;
             } else if (widget instanceof ButtonWidget) {
-                widget.setDimensions(layout.keyWidth, 20);
-                widget.setPosition(layout.wheelPanelX + 10, layout.contentY + 56);
+                widget.visible = false;
             }
         }
     }
@@ -123,7 +124,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
             searchY = Math.max(16, contentY - 32);
             wheelSize = Math.max(120, Math.min(260, Math.min(wheelPanelWidth - 20, contentHeight - 174)));
             wheelX = wheelPanelX + (wheelPanelWidth - wheelSize) / 2;
-            wheelY = contentY + 150 + Math.max(0, (contentHeight - 150 - wheelSize) / 2);
+            wheelY = contentY + 120;
             keyWidth = Math.max(72, (wheelPanelWidth - 28) * 2 / 3);
             resetX = wheelPanelX + 10 + keyWidth + 8;
             resetWidth = Math.max(52, wheelPanelWidth - keyWidth - 28);
