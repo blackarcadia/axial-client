@@ -30,6 +30,10 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         list.position(layout.listWidth, layout.contentHeight, layout.listX, layout.contentY);
         preview.setDimensions(layout.previewWidth, layout.contentHeight);
         preview.setPosition(layout.previewX, layout.contentY);
+        // Emotecraft's default side-by-side overlap guard runs before this
+        // responsive arrangement and hides the preview. These panes are now
+        // distinct, so keep the native preview renderer enabled.
+        preview.visible = true;
         searchBox.setDimensions(layout.searchWidth, 20);
         searchBox.setPosition(layout.searchX, layout.searchY);
         fastChoose.setSize(layout.wheelSize);
