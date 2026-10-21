@@ -34,7 +34,6 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         if (list == null || preview == null || searchBox == null || fastChoose == null) return;
 
         Layout layout = new Layout(width, height);
-        list.setCompactMode(false);
         // Emotecraft inherits EntryListWidget#position(width, height, x, y).
         // Keeping this argument order is essential: swapping it constrains the
         // list to a thin strip and sends its entries off-screen.
@@ -46,7 +45,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         searchBox.setPosition(layout.centerX, Math.max(22, layout.top - 42));
 
         fastChoose.setSize(layout.wheelSize);
-        fastChoose.setPosition(layout.wheelX, layout.wheelY);
+        fastChoose.setPosition(layout.wheelX, layout.wheelY + 70);
         arrangeButtons(layout);
     }
 
@@ -101,45 +100,34 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         return Text.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
-    private static final class Layout {
-        final int margin;
-        final int gap;
-        final int top;
-        final int footerY;
-        final int contentHeight;
-        final int leftX;
-        final int leftWidth;
-        final int centerX;
-        final int centerWidth;
-        final int rightX;
-        final int rightWidth;
-        final int wheelX;
-        final int wheelY;
-        final int wheelSize;
-        final int keyWidth;
-        final int resetX;
-        final int resetWidth;
-        final int footerWidth;
-
-        Layout(int width, int height) {
-            margin = Math.max(24, width / 18);
-            gap = Math.max(12, width / 110);
-            top = Math.max(76, height / 11);
-            contentHeight = Math.min(560, Math.max(440, height * 56 / 100));
-            footerY = top + contentHeight + 22;
-            leftX = margin;
-            leftWidth = Math.max(270, width * 31 / 100);
-            centerX = leftX + leftWidth + gap;
-            centerWidth = Math.max(250, width * 22 / 100);
-            rightX = centerX + centerWidth + gap;
-            rightWidth = Math.max(260, width - rightX - margin);
-            wheelSize = Math.max(220, Math.min(300, Math.min(rightWidth - 32, contentHeight - 190)));
-            wheelX = rightX + (rightWidth - wheelSize) / 2;
-            wheelY = top + 142 + Math.max(0, (contentHeight - 142 - wheelSize) / 2);
-            keyWidth = Math.max(120, (rightWidth - 26) * 2 / 3);
-            resetX = rightX + keyWidth + 14;
-            resetWidth = rightWidth - keyWidth - 26;
-            footerWidth = width - margin * 2;
+    private record Layout(int margin, int gap, int top, int footerY, int contentHeight,
+                          int leftX, int leftWidth, int centerX, int centerWidth,
+                          int rightX, int rightWidth, int searchX, int searchWidth,
+                          int wheelX, int wheelY, int wheelSize, int keyWidth,
+                          int resetX, int resetWidth, int footerWidth) {
+        private Layout(int width, int height) {
+            this(
+                    Math.max(24, width / 18),
+                    Math.max(12, width / 110),
+                    Math.max(76, height / 11),
+                    height - Math.max(48, height / 19),
+                    Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18),
+                    Math.max(24, width / 18),
+                    Math.max(270, width * 31 / 100),
+                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110),
+                    Math.max(250, width * 22 / 100),
+                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110),
+                    Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)),
+                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + (Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.min(Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)), Math.max(280, width * 30 / 100))) / 2,
+                    Math.min(Math.max(250, width * 22 / 100) + Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)), Math.max(280, width * 30 / 100)),
+                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110) + (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5))) / 2,
+                    Math.max(76, height / 11) + 56 + (Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 56 - Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5))) / 2,
+                    Math.min(Math.min(Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 24, Math.max(210, height - Math.max(48, height / 19) - Math.max(76, height / 11) - 18) - 72), Math.max(220, width / 5)),
+                    Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3),
+                    Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110) + Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3) + 14,
+                    Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - Math.max(120, (Math.max(260, width - (Math.max(24, width / 18) + Math.max(270, width * 31 / 100) + Math.max(12, width / 110) + Math.max(250, width * 22 / 100) + Math.max(12, width / 110)) - Math.max(24, width / 18)) - 26) * 2 / 3) - 26,
+                    width - Math.max(24, width / 18) * 2
+            );
         }
     }
 }
