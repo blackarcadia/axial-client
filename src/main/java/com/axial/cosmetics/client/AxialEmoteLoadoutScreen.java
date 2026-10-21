@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.MultilineTextWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
@@ -33,15 +34,18 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         if (list == null || preview == null || searchBox == null || fastChoose == null) return;
 
         Layout layout = new Layout(width, height);
-        list.position(layout.leftX, layout.top, layout.leftWidth, layout.contentHeight);
+        // Emotecraft inherits EntryListWidget#position(width, height, x, y).
+        // Keeping this argument order is essential: swapping it constrains the
+        // list to a thin strip and sends its entries off-screen.
+        list.position(layout.leftWidth, layout.contentHeight, layout.leftX, layout.top);
         preview.setDimensions(layout.centerWidth, layout.contentHeight);
         preview.setPosition(layout.centerX, layout.top);
 
-        searchBox.setDimensions(layout.searchWidth, 20);
-        searchBox.setPosition(layout.searchX, Math.max(22, layout.top - 42));
+        searchBox.setDimensions(layout.centerWidth, 20);
+        searchBox.setPosition(layout.centerX, Math.max(22, layout.top - 42));
 
         fastChoose.setSize(layout.wheelSize);
-        fastChoose.setPosition(layout.wheelX, layout.wheelY);
+        fastChoose.setPosition(layout.wheelX, layout.wheelY + 70);
         arrangeButtons(layout);
     }
 
@@ -63,6 +67,14 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         for (Element element : children()) {
             if (!(element instanceof ClickableWidget button)) continue;
             String label = button.getMessage().getString();
+            if (button instanceof MultilineTextWidget) {
+                if (label.startsWith("Set a key")) {
+                    button.setPosition(layout.rightX + 12, layout.top + 32);
+                } else if (label.startsWith("Select an emote")) {
+                    button.setPosition(layout.rightX + 12, layout.top + 86);
+                }
+                continue;
+            }
             if (label.equalsIgnoreCase("Open Emotes Folder") || label.equalsIgnoreCase("Done") || label.equalsIgnoreCase("Mod Options")) {
                 int footerWidth = Math.max(120, (layout.footerWidth - layout.gap * 2) / 3);
                 button.setDimensions(footerWidth, 20);
@@ -70,10 +82,10 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
                 footerIndex++;
             } else if (label.equalsIgnoreCase("Reset")) {
                 button.setDimensions(layout.resetWidth, 20);
-                button.setPosition(layout.resetX, layout.top + 27);
+                button.setPosition(layout.resetX, layout.top + 54);
             } else if (button instanceof ButtonWidget) {
                 button.setDimensions(layout.keyWidth, 20);
-                button.setPosition(layout.rightX + 12, layout.top + 27);
+                button.setPosition(layout.rightX + 12, layout.top + 54);
             }
         }
     }
