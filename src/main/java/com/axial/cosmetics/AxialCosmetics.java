@@ -1,6 +1,7 @@
 package com.axial.cosmetics;
 
 import com.axial.cosmetics.client.AlienHuskEntityRenderer;
+import com.axial.cosmetics.client.BundledEmoteSynchronizer;
 import com.axial.cosmetics.client.CosmeticFeatureRenderer;
 import com.axial.cosmetics.client.CrosshairConfigManager;
 import com.axial.cosmetics.client.CrosshairDynamicState;
@@ -57,6 +58,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        BundledEmoteSynchronizer.synchronize();
         PayloadTypeRegistry.playC2S().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) ->
