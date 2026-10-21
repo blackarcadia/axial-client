@@ -56,7 +56,6 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
     }
 
     private void arrangeNativeControls(Layout layout) {
-        int footerIndex = 0;
         for (Element element : children()) {
             if (!(element instanceof ClickableWidget widget)) continue;
             String label = widget.getMessage().getString();
@@ -68,11 +67,12 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
                 }
                 continue;
             }
-            if (label.equalsIgnoreCase("Open Emotes Folder") || label.equalsIgnoreCase("Done") || label.equalsIgnoreCase("Mod Options")) {
-                int buttonWidth = Math.max(88, (layout.footerWidth - layout.gap * 2) / 3);
+            if (label.equalsIgnoreCase("Open Emotes Folder") || label.equalsIgnoreCase("Mod Options")) {
+                widget.visible = false;
+            } else if (label.equalsIgnoreCase("Done")) {
+                int buttonWidth = Math.min(220, Math.max(120, layout.footerWidth / 3));
                 widget.setDimensions(buttonWidth, 20);
-                widget.setPosition(layout.footerX + footerIndex * (buttonWidth + layout.gap), layout.footerY);
-                footerIndex++;
+                widget.setPosition(layout.footerX + (layout.footerWidth - buttonWidth) / 2, layout.footerY);
             } else if (label.equalsIgnoreCase("Reset")) {
                 widget.visible = false;
             } else if (widget instanceof ButtonWidget) {
