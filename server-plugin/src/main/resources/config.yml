@@ -1,0 +1,19 @@
+# Empty means every loaded world with a border within max-border-diameter.
+worlds: []
+auto-render: true
+# Protects worlds still using Minecraft's enormous default border.
+# Set a real world border before building a map. Increase this limit deliberately.
+max-border-diameter: 16384
+# Overview edge length; the client supports up to 512 pixels per edge.
+resolution: 512
+# Allows unseen terrain to appear even when it has never been generated.
+# Rendering samples the overview, rather than pre-generating every chunk in the border.
+generate-missing-chunks: true
+# Chunk loading is asynchronous, with bounded concurrency and a TPS backoff.
+chunks-per-tick: 1
+max-in-flight: 2
+pause-below-tps: 18.5
+# Finished maps are refreshed on demand after this age, while the old map stays visible.
+refresh-minutes: 60
+# Total outgoing map packets across all players, each below 30 KB.
+messages-per-tick: 2

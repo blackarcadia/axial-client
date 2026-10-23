@@ -89,7 +89,6 @@ public final class MinimapRenderer {
             MinimapServerOverview.beginWorldChange();
         }
         MinimapServerOverview.request();
-        if(MinimapServerOverview.available())return;
         // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
         if(sampledTick==client.player.age)return;
         sampledTick=client.player.age;
@@ -128,8 +127,9 @@ public final class MinimapRenderer {
         for(int z=0;z<pixels;z++)for(int x=0;x<pixels;x++) {
             if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
             int wx=(int)Math.floor(view.centerX+(x/(double)pixels-.5)*span),wz=(int)Math.floor(view.centerZ+(z/(double)pixels-.5)*span);
-            int color=MinimapServerOverview.colorAt(wx,wz);
-            if(color==0)color=terrain.getOrDefault(wx+","+wz,UNKNOWN);
+            int color=full?MinimapServerOverview.colorAt(wx,wz):terrain.getOrDefault(wx+","+wz,0);
+            if(color==0)color=full?terrain.getOrDefault(wx+","+wz,UNKNOWN):MinimapServerOverview.colorAt(wx,wz);
+            if(color==0)color=UNKNOWN;
             target.setColorArgb(x,z,color);
         }
         if(full){fullTexture.upload();fullX=view.centerX;fullZ=view.centerZ;fullScale=view.scale;fullStamp=stamp;lastFullUpload=now;}

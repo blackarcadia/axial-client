@@ -2,7 +2,7 @@ package com.axial.cosmetics.client;
 
 /** One north-up projection shared by map drawing, mouse navigation and markers. */
 final class MapViewport {
-    static final double MIN_SCALE=.25, MAX_SCALE=64;
+    static final double MIN_SCALE=.25, MAX_SCALE=262144;
     double centerX, centerZ, scale;
     MapViewport(double x,double z,double scale) { centerX=x;centerZ=z;this.scale=Math.clamp(scale,MIN_SCALE,MAX_SCALE); }
     double worldX(double pixel,int left,int size) { return centerX+(pixel-left-size/2.0)*scale*256/size; }

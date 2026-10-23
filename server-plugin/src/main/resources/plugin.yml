@@ -1,0 +1,16 @@
+name: AxialWorldMap
+version: '${version}'
+main: com.axial.worldmap.AxialWorldMapPlugin
+api-version: '1.21.11'
+description: Cached world-border terrain overviews for AxialClient.
+author: Axial
+commands:
+  axialmap:
+    description: Build and manage full-world minimap caches.
+    usage: /axialmap <status|render|pause|resume|reload> [world]
+    permission: axialworldmap.admin
+permissions:
+  axialworldmap.admin:
+    default: op
+  axialworldmap.view:
+    default: true

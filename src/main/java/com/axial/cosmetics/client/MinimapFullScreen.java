@@ -16,10 +16,10 @@ public class MinimapFullScreen extends NavigationScreen {
     private NavigationLayout layout;
     private MapViewport view;
     private TextFieldWidget search;
-    private String query="",selectedId,armedDelete,contextKey="";
+    private String query="",selectedId,armedDelete,contextKey="",fittedWorld="";
     private int scroll;
     private boolean dragging,dimensionOnly=true;
-    private NavButton edit,delete,visibility,dimensions;
+    private NavButton edit,delete,visibility,dimensions,wholeWorld;
     private List<WaypointConfig.Entry> entries=List.of();
     public MinimapFullScreen(){this(null);}
     public MinimapFullScreen(Screen parent){super("Map & Waypoints",parent);}
@@ -37,11 +37,17 @@ public class MinimapFullScreen extends NavigationScreen {
         visibility=button("Markers",new Rect(x+126,foot,62,20),()->WaypointConfig.setEnabled(!WaypointConfig.enabled()));visibility.toggle=true;
         button("Recenter",new Rect(layout.panel.right()-84,foot,74,20),()->{if(client.player!=null){view.centerX=client.player.getX();view.centerZ=client.player.getZ();}});
         dimensions=button("This dimension",new Rect(layout.sidebar.x(),y+40,layout.sidebar.width(),17),()->{dimensionOnly=!dimensionOnly;scroll=0;refresh();});
+        wholeWorld=button("Whole World",new Rect(layout.map.x(),y+40,Math.min(90,layout.map.width()),17),this::fitWorld);
         refresh();
+    }
+    private void fitWorld() {
+        var bounds=MinimapServerOverview.fullWorldBounds();
+        if(bounds!=null){view.centerX=bounds.centerX();view.centerZ=bounds.centerZ();view.scale=Math.clamp(bounds.scale()*1.03,MapViewport.MIN_SCALE,MapViewport.MAX_SCALE);fittedWorld=bounds.world();}
     }
     @Override public void tick() {
         String key=WaypointConfig.worldId(client)+"|"+(client.world==null?"":client.world.getRegistryKey().getValue());
-        if(!key.equals(contextKey)){contextKey=key;selectedId=armedDelete=null;refresh();}
+        if(!key.equals(contextKey)){contextKey=key;selectedId=armedDelete=null;fittedWorld="";refresh();}
+        var bounds=MinimapServerOverview.fullWorldBounds();if(bounds!=null&&!bounds.world().equals(fittedWorld))fitWorld();
     }
     private void refresh() {
         String dim=client.world==null?"":client.world.getRegistryKey().getValue().toString();
@@ -81,6 +87,7 @@ public class MinimapFullScreen extends NavigationScreen {
         if(entries.isEmpty())line(c,query.isBlank()?"No saved locations yet":"No matching waypoints",layout.list.x()+8,layout.list.y()+16,MUTED,.8f,layout.list.width()-16,false);
         c.disableScissor();
         int max=layout.maxScroll(entries.size());if(max>0){int thumb=Math.max(12,layout.list.height()*layout.list.height()/Math.max(1,entries.size()*43));rounded(c,layout.list.right()-3,layout.list.y()+(layout.list.height()-thumb)*scroll/max,3,thumb,MUTED);}
+        wholeWorld.active=MinimapServerOverview.fullWorldBounds()!=null;
         edit.active=delete.active=selected()!=null;
         delete.label(armedDelete!=null?"Confirm":"Delete");
         visibility.selected=WaypointConfig.enabled();dimensions.label(dimensionOnly?"This dimension":"All dimensions");

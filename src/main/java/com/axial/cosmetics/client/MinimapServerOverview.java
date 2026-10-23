@@ -19,23 +19,25 @@ public final class MinimapServerOverview {
     private static final byte OVERLAYS = 2;
     private static final Map<String, Overview> OVERVIEWS = new HashMap<>();
     private static final Map<String, Overlay> OVERLAYS_BY_WORLD = new HashMap<>();
-    private static String activeWorld;
+    private static String activeWorld,fullWorldKey;
+    private static Overview fullWorld;
     private static long lastRequestAt;
     private static long revision;
 
     private MinimapServerOverview() { }
 
     public static void request() {
-        if(MinecraftClient.getInstance().getNetworkHandler()==null||!ClientPlayNetworking.canSend(MinimapMapPayload.ID))return;
+        if(MinecraftClient.getInstance().getNetworkHandler()==null)return;
         long now = System.currentTimeMillis();
         if (now - lastRequestAt < 5_000) return;
         lastRequestAt = now;
-        ClientPlayNetworking.send(new MinimapMapPayload(new byte[]{REQUEST}));
+        if(ClientPlayNetworking.canSend(WorldMapPayload.ID))ClientPlayNetworking.send(new WorldMapPayload(new byte[]{REQUEST}));
+        if(ClientPlayNetworking.canSend(MinimapMapPayload.ID))ClientPlayNetworking.send(new MinimapMapPayload(new byte[]{REQUEST}));
     }
 
     /** Clears the previous world's map while the server sends the next world's overview. */
     public static void beginWorldChange() {
-        activeWorld = null;
+        activeWorld = null;fullWorld=null;fullWorldKey=null;
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
     }
@@ -46,7 +48,12 @@ public final class MinimapServerOverview {
             receiveOverlays(payload);
             return;
         }
-        if (payload[0] != SNAPSHOT) return;
+        readSnapshot(payload,false);
+    }
+
+    public static void receiveFullWorld(byte[] payload){readSnapshot(payload,true);}
+    private static void readSnapshot(byte[] payload,boolean full) {
+        if(payload.length==0||payload[0]!=SNAPSHOT)return;
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(payload))) {
             input.readByte();
             String world = readString(input);
@@ -59,13 +66,16 @@ public final class MinimapServerOverview {
             int rowCount = input.readUnsignedShort();
             if (blockStep <= 0 || blockStep > 1_000_000 || width <= 0 || height <= 0 || width > 512 || height > 512 || rowCount == 0 || rowStart + rowCount > height || input.available() < rowCount * width * 4) return;
 
-            Overview overview = OVERVIEWS.compute(world, (ignored, current) -> current != null && current.matches(minX, minZ, blockStep, width, height)
-                    ? current : new Overview(minX, minZ, blockStep, width, height));
+            Overview overview;
+            if(full) {
+                overview=world.equals(fullWorldKey)&&fullWorld!=null&&fullWorld.matches(minX,minZ,blockStep,width,height)?fullWorld:new Overview(minX,minZ,blockStep,width,height);
+                fullWorld=overview;fullWorldKey=world;
+            } else overview=OVERVIEWS.compute(world,(ignored,current)->current!=null&&current.matches(minX,minZ,blockStep,width,height)?current:new Overview(minX,minZ,blockStep,width,height));
             for (int row = 0; row < rowCount; row++) {
                 int offset = (rowStart + row) * width;
                 for (int column = 0; column < width; column++) overview.colors[offset + column] = input.readInt();
             }
-            activeWorld = world;
+            if(!full)activeWorld = world;
             revision++;
         } catch (IOException ignored) { }
     }
@@ -92,9 +102,11 @@ public final class MinimapServerOverview {
     }
 
     public static long revision(){return revision;}
-    public static boolean available(){return activeWorld!=null&&OVERVIEWS.containsKey(activeWorld);}
+    public static boolean available(){return fullWorld!=null||activeWorld!=null&&OVERVIEWS.containsKey(activeWorld);}
+    public record WorldBounds(String world,double centerX,double centerZ,double scale) { }
+    public static WorldBounds fullWorldBounds(){return fullWorld==null?null:new WorldBounds(fullWorldKey,fullWorld.minX+fullWorld.width*(double)fullWorld.blockStep/2,fullWorld.minZ+fullWorld.height*(double)fullWorld.blockStep/2,Math.max(fullWorld.width,fullWorld.height)*(double)fullWorld.blockStep/256);}
     public static int colorAt(int x,int z) {
-        Overview o=activeWorld==null?null:OVERVIEWS.get(activeWorld);
+        Overview o=fullWorld!=null?fullWorld:activeWorld==null?null:OVERVIEWS.get(activeWorld);
         if(o==null)return 0;
         long dx=(long)x-o.minX,dz=(long)z-o.minZ;
         if(dx<0||dz<0||dx>=(long)o.width*o.blockStep||dz>=(long)o.height*o.blockStep)return 0;

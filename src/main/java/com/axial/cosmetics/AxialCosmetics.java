@@ -59,6 +59,10 @@ public class AxialCosmetics implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         BundledEmoteSynchronizer.synchronize();
+        PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.WorldMapPayload.ID, (payload, context) ->
+                context.client().execute(() -> MinimapServerOverview.receiveFullWorld(payload.data())));
         PayloadTypeRegistry.playC2S().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) ->
