@@ -18,6 +18,9 @@ final class ModMenuCatalog {
     static boolean isMain(Screen screen) throws ReflectiveOperationException {
         return "MAIN".equals(field(screen, "mode").toString());
     }
+    static boolean isOptions(Screen screen) throws ReflectiveOperationException {
+        return "OPTIONS".equals(field(screen,"mode").toString());
+    }
 
     static Screen parent(Screen screen) throws ReflectiveOperationException { return (Screen)field(screen,"parent"); }
 

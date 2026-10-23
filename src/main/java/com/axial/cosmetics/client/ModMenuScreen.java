@@ -75,7 +75,8 @@ public final class ModMenuScreen extends Screen {
         for (int i=0;i<3;i++) {
             int tab=i;
             add(tabs[i],new ModMenuLayout.Rect(navX+i*tabWidth,nav.y(),tabWidth,nav.height()),icons[i],
-                    () -> { if(tab!=0) run(() -> ModMenuCatalog.openMode(backend,tab==1?"OPTIONS":"MOVE")); },i==0,null);
+                    () -> { if(tab==1)client.setScreen(new ClientSettingsScreen(this));
+                        else if(tab==2)run(() -> ModMenuCatalog.openMode(backend,"MOVE")); },i==0,null);
         }
         var box=layout.search;
         search = new TextFieldWidget(textRenderer,box.x()+23,box.y()+(box.height()-9)/2,box.width()-29,12,text("Search mods"));
@@ -131,6 +132,10 @@ public final class ModMenuScreen extends Screen {
         var button=new MenuButton(label,bounds,icon,action,selected,entry,false);
         button.setTooltip(Tooltip.of(text(label)));
         return addDrawableChild(button);
+    }
+
+    void openHudEditor() {
+        run(() -> ModMenuCatalog.openMode(backend,"MOVE"));
     }
 
     @Override public void removed() { reopen=true; }
