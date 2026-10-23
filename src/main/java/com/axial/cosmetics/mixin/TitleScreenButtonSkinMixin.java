@@ -2,6 +2,7 @@ package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
 import com.axial.cosmetics.client.AccountsScreen;
+import com.axial.cosmetics.client.TitleMenuAccess;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
@@ -43,6 +44,7 @@ public abstract class TitleScreenButtonSkinMixin {
         TitleScreen titleScreen = client.currentScreen instanceof TitleScreen title ? title
                 : client.currentScreen instanceof AccountsScreen accounts ? accounts.renderedTitleScreen() : null;
         if (titleScreen == null) return;
+        if (titleScreen instanceof TitleMenuAccess access && access.axial$titleMenu()!=null) return;
 
         Object self = this;
         if (!(self instanceof ButtonWidget button)) {
