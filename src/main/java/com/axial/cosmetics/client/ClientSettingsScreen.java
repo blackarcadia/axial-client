@@ -222,7 +222,7 @@ public final class ClientSettingsScreen extends Screen {
         }
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
             boolean on=state.getAsBoolean();float progress=motion.value(on);
-            frame(c,new Rect(getX(),getY(),width,height),isHovered()||isFocused()?HOVER_LINE:LINE,FIELD);
+            frame(c,new Rect(getX(),getY(),width,height),LINE,FIELD);
             label(c,textRenderer,label,getX()+13,getY()+8,INK,.95f,width-65,true);
             label(c,textRenderer,description,getX()+13,getY()+23,MUTED,.8f,width-65,false);
             ModMenuUi.toggle(c,getRight()-43,getY()+11,30,16,14,progress,INK);

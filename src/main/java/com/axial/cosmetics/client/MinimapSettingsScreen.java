@@ -32,6 +32,7 @@ public final class MinimapSettingsScreen extends NavigationScreen {
         death=button("",new Rect(x,y+row*6,controlWidth,row-2),()->MinimapConfig.setDeath(!MinimapConfig.showDeath()));
         key=button("",new Rect(x,y+row*7,controlWidth,row-2),()->{capturing=true;createKey=false;});
         create=button("",new Rect(x,y+row*8,controlWidth,row-2),()->{capturing=true;createKey=true;});
+        enabled.toggle=coordinates.toggle=names.toggle=death.toggle=true;
         rows.addAll(java.util.List.of(enabled,shape,size,zoom,coordinates,names,death,key,create));
         positionRows();
         preview=side?new Rect(x+controlWidth+12,y,w-controlWidth-44,controls.height()):null;

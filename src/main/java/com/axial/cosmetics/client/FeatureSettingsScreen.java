@@ -259,13 +259,14 @@ public final class FeatureSettingsScreen extends Screen {
             Rect r=new Rect(getX(),getY(),width,height);
             boolean header=r.y()<layout.controls.y();
             if(getMessage().getString().equals("CLOSE")){icon(c,"close",getX()+4,getY()+5,11,11,hover?INK:MUTED);return;}
-            frame(c,r,hover?HOVER_LINE:selected&&!toggle?SELECTED_LINE:LINE,selected&&!toggle?SELECTED:hover?HOVER:FIELD);
             if(toggle) {
+                if(!header)frame(c,r,LINE,hover?HOVER:FIELD);
                 ModMenuUi.toggle(c,r.right()-34,r.y()+5,27,12,10,toggleAnimation.value(selected),INK);
                 String shown=header?(selected?"ON":"OFF"):label;
                 label(c,textRenderer,shown,r.x()+7,r.y()+7,INK,header?.78f:.8f,r.width()-45,false);
                 setMessage(text((header?"ENABLED":label)+": "+(selected?"ON":"OFF")));return;
             }
+            frame(c,r,hover?HOVER_LINE:selected?SELECTED_LINE:LINE,selected?SELECTED:hover?HOVER:FIELD);
             if(crosshairStyle>=0){ModFeaturePreviews.crosshairStyle(c,r,crosshairStyle);return;}
             if(setting instanceof Color color) {
                 int swatch=color.get().getAsInt();

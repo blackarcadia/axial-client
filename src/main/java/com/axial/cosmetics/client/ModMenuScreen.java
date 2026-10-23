@@ -102,11 +102,11 @@ public final class ModMenuScreen extends Screen {
             var entry=matches.get(i);
             var card=layout.card(i,scroll);
             if(entry.toggle()!=null) {
-                var button = new MenuButton("Toggle "+entry.title(),layout.toggle(card),"toggle",()->run(()->{
+                var button = new MenuButton("Toggle "+entry.title(),card,"toggle",()->run(()->{
                     entry.toggle().run();
                     rebuild();
                 }),false,entry,true);
-                button.visible = button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
+                button.visible = card.bottom() > layout.grid.y() && card.y() < layout.grid.bottom();
                 cardButtons.add(addSelectableChild(button));
             }
             if(entry.configure()!=null) {
@@ -279,6 +279,7 @@ public final class ModMenuScreen extends Screen {
         }
 
         @Override public boolean isMouseOver(double x,double y) {
+            if(icon.equals("toggle"))return layout.toggleContains(new ModMenuLayout.Rect(getX(),getY(),width,height),entry.configure()!=null,x,y);
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
@@ -293,9 +294,9 @@ public final class ModMenuScreen extends Screen {
                 int color=mixColor(RED,GREEN,progress);
                 // The state is present in narration as well as in color and knob position.
                 setMessage(text("Toggle "+entry.title()+": "+(on?"On":"Off")));
-                ModMenuUi.toggle(context,getX(),getY()+1,27,14,12,progress,0xFFFFFFFF);
-                label(context,textRenderer,on?"On":"Off",getX()+33,getY()+4,color,.85f,width-35,false);
-                if(hover) context.drawStrokedRectangle(getX()-2,getY()-1,Math.min(width,60),height+2,0xFFA9B3BC);
+                var toggle=layout.toggle(bounds);
+                ModMenuUi.toggle(context,toggle.x(),toggle.y()+1,27,14,12,progress,0xFFFFFFFF);
+                label(context,textRenderer,on?"On":"Off",toggle.x()+33,toggle.y()+4,color,.85f,toggle.width()-35,false);
                 return;
             }
             boolean close=icon.equals("close"),gear=icon.equals("gear")&&clipped;

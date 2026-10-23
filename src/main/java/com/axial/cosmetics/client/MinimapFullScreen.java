@@ -34,7 +34,7 @@ public class MinimapFullScreen extends NavigationScreen {
         int foot=layout.panel.bottom()-28;
         edit=button("Edit",new Rect(x+10,foot,48,20),()->{var e=selected();if(e!=null)client.setScreen(new CreateWaypointScreen(this,e));});
         delete=button("Delete",new Rect(x+63,foot,58,20),this::delete);delete.danger=true;
-        visibility=button("Markers",new Rect(x+126,foot,62,20),()->WaypointConfig.setEnabled(!WaypointConfig.enabled()));
+        visibility=button("Markers",new Rect(x+126,foot,62,20),()->WaypointConfig.setEnabled(!WaypointConfig.enabled()));visibility.toggle=true;
         button("Recenter",new Rect(layout.panel.right()-84,foot,74,20),()->{if(client.player!=null){view.centerX=client.player.getX();view.centerZ=client.player.getZ();}});
         dimensions=button("This dimension",new Rect(layout.sidebar.x(),y+40,layout.sidebar.width(),17),()->{dimensionOnly=!dimensionOnly;scroll=0;refresh();});
         refresh();

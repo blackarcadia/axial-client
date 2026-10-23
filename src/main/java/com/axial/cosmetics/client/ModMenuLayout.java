@@ -44,6 +44,9 @@ final class ModMenuLayout {
         return new Rect(grid.x()+(index%columns)*(cardWidth+gap), grid.y()+(index/columns)*(cardHeight+gap)-scroll, cardWidth, cardHeight);
     }
     Rect toggle(Rect card) { return new Rect(card.x()+8, card.bottom()-22, card.width()-42, 17); }
+    boolean toggleContains(Rect card,boolean hasConfiguration,double x,double y) {
+        return grid.contains(x,y)&&card.contains(x,y)&&(!hasConfiguration||!settings(card).contains(x,y));
+    }
     Rect settings(Rect card) { return new Rect(card.right()-27, card.bottom()-24, 20, 20); }
     Rect category(int index) {
         return sidebar ? new Rect(categories.x(), categories.y()+index*28, categories.width(), 24)

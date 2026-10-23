@@ -41,6 +41,20 @@ class ModMenuLayoutTest {
         assertTrue(layout.card(6,0).y()>=layout.grid.bottom());
         assertTrue(layout.maxScroll(17)>0);
     }
+    @Test void fullCardTogglesExceptForTheConfigurationButtonAndClippedAreas() {
+        var layout=new ModMenuLayout(854,480);
+        var card=layout.card(0,0);
+        var gear=layout.settings(card);
+        for(int y=card.y();y<card.bottom();y++)for(int x=card.x();x<card.right();x++) {
+            assertEquals(!gear.contains(x,y),layout.toggleContains(card,true,x,y));
+            assertTrue(layout.toggleContains(card,false,x,y));
+        }
+        assertFalse(layout.toggleContains(card,true,card.right(),card.y()));
+        assertFalse(layout.toggleContains(card,true,card.x()-1,card.y()));
+        var clipped=layout.card(0,12);
+        assertFalse(layout.toggleContains(clipped,false,clipped.x()+5,layout.grid.y()-1));
+        assertTrue(layout.toggleContains(clipped,false,clipped.x()+5,layout.grid.y()+1));
+    }
     private static void inside(ModMenuLayout.Rect child,ModMenuLayout.Rect parent) {
         assertTrue(child.width()>0&&child.height()>0,"non-positive bounds: "+child);
         assertTrue(child.x()>=parent.x()&&child.y()>=parent.y(),"outside: "+child+" parent "+parent);

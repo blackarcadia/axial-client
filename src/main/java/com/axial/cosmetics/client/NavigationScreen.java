@@ -41,13 +41,13 @@ abstract class NavigationScreen extends Screen {
     @Override public void close(){client.setScreen(parent);}
     protected class NavButton extends ButtonWidget {
         String label;
-        boolean selected,primary,danger;
+        boolean selected,primary,danger,toggle;
         NavButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),copy(label,.85f,false),b->attempt(action),DEFAULT_NARRATION_SUPPLIER);this.label=label;}
         void label(String value){label=value;setMessage(copy(value,.85f,false));}
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawIcon(DrawContext c,int mx,int my,float dt) {
             boolean hover=active&&(isHovered()||isFocused());
-            frame(c,new Rect(getX(),getY(),width,height),selected?BRAND:hover?HOVER_LINE:LINE,
+            frame(c,new Rect(getX(),getY(),width,height),selected?BRAND:!toggle&&hover?HOVER_LINE:LINE,
                     !active?SURFACE:hover?HOVER:primary?SELECTED:FIELD);
             int color=!active?MUTED:danger?RED:selected?BRAND:INK;
             int w=textRenderer.getWidth(copy(label,.85f,false));
