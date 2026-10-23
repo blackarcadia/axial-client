@@ -38,6 +38,7 @@
     "ChunkBorderRendererColorMixin",
     "AxialConfigScreenWaypointsMixin",
     "AxialConfigScreenMixin",
+    "AxialConfigScreenModMenuMixin",
     "AxialConfigScreenItemScalerMixin",
     "AxialUiThemeFontMixin",
     "AxialUiThemeNoCornerPixelsMixin",
