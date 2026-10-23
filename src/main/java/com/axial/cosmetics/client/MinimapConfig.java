@@ -14,6 +14,7 @@ public final class MinimapConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-minimap.json");
     private static Settings SETTINGS = loadSettings();
+    private static final float[] ZOOMS={.25f,.5f,.75f,1,1.5f,2};
 
     private MinimapConfig() { }
 
@@ -38,18 +39,16 @@ public final class MinimapConfig {
     public static boolean isCircular() { return "CIRCLE".equals(SETTINGS.style); }
     public static String styleLabel() { return isCircular() ? "CIRCLE" : "SQUARE"; }
     public static void cycleStyle() { SETTINGS.style = isCircular() ? "SQUARE" : "CIRCLE"; save(); }
-    public static float zoom() { return SETTINGS.zoom == null || !Float.isFinite(SETTINGS.zoom) || SETTINGS.zoom < 0.5f || SETTINGS.zoom > 2.0f ? 0.75f : SETTINGS.zoom; }
+    public static float zoom() { return SETTINGS.zoom == null || !Float.isFinite(SETTINGS.zoom) || SETTINGS.zoom < 0.25f || SETTINGS.zoom > 2.0f ? 0.75f : SETTINGS.zoom; }
     public static String zoomLabel() { return String.format("%.2fX", zoom()); }
     public static void cycleZoom() {
-        float value = zoom();
-        SETTINGS.zoom = value == 0.75f ? 1.0f : value == 1.0f ? 1.5f : value == 1.5f ? 2.0f : 0.75f;
-        save();
+        setZoomIndex((zoomIndex()+1)%ZOOMS.length);
     }
 
     public static int sizeIndex() { return size()==1 ? 0 : size()==1.5f ? 1 : size()==2 ? 2 : 3; }
-    public static int zoomIndex() { return zoom()==.75f ? 0 : zoom()==1 ? 1 : zoom()==1.5f ? 2 : 3; }
+    public static int zoomIndex() { for(int i=0;i<ZOOMS.length;i++)if(zoom()==ZOOMS[i])return i;return 2; }
     public static void setSizeIndex(int index) { SETTINGS.size=new float[]{1,1.5f,2,3}[Math.clamp(index,0,3)];save(); }
-    public static void setZoomIndex(int index) { SETTINGS.zoom=new float[]{.75f,1,1.5f,2}[Math.clamp(index,0,3)];save(); }
+    public static void setZoomIndex(int index) { SETTINGS.zoom=ZOOMS[Math.clamp(index,0,ZOOMS.length-1)];save(); }
     public static void setCircular(boolean value) { SETTINGS.style=value?"CIRCLE":"SQUARE";save(); }
     public static void resetAppearance() { SETTINGS.enabled=false;SETTINGS.size=1.5f;SETTINGS.zoom=.75f;SETTINGS.style="SQUARE";save(); }
     public static int getX(int screenWidth) { int size = getSize(); return clamp(SETTINGS.x == null ? screenWidth - size - 8 : SETTINGS.x, 0, screenWidth - size); }

@@ -17,6 +17,8 @@ import static com.axial.cosmetics.client.ModMenuUi.*;
 /** Budgeted terrain discovery, shared projections, and cached map textures. */
 public final class MinimapRenderer {
     private static final int UNKNOWN=0xFF20252B;
+    private static final int HUD_PIXELS=512,FULL_PIXELS=1024;
+    private static final MinimapSurfaceCache DETAILS=new MinimapSurfaceCache();
     private static final Identifier HUD=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/minimap");
     private static final Identifier FULL=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/full_map");
     private static NativeImage hudImage,fullImage;
@@ -25,7 +27,7 @@ public final class MinimapRenderer {
     private static net.minecraft.client.world.ClientWorld lastWorld;
     private static int sampledTick=Integer.MIN_VALUE,row;
     private static int sampleX,sampleZ;
-    private static float sampleScale;
+    private static int sampleWidth;
     private static long hudStamp,fullStamp,lastHudUpload,lastFullUpload;
     private static double hudX=Double.NaN,hudZ,hudScale,fullX=Double.NaN,fullZ,fullScale;
     private static boolean hudCircular;
@@ -57,7 +59,7 @@ public final class MinimapRenderer {
         if(!circle)frame(c,new ModMenuLayout.Rect(left-3,top-3,size+6,size+6),LINE,PANEL);
         else disc(c,left-3,top-3,size+6,PANEL);
         upload(client,view,false,circle);
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,HUD,left,top,0,0,size,size,128,128,128,128);
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,HUD,left,top,0,0,size,size,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS);
         c.enableScissor(left,top,left+size,top+size);
         overlays(c,client,view,left,top,size,circle,false);
         c.disableScissor();
@@ -77,7 +79,7 @@ public final class MinimapRenderer {
         if(client.world==null||client.player==null)return;
         update(client);upload(client,view,true,false);
         c.enableScissor(left,top,left+size,top+size);
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,256,256,256,256);
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS);
         overlays(c,client,view,left,top,size,false,true);
         c.disableScissor();
     }
@@ -85,37 +87,49 @@ public final class MinimapRenderer {
         String key=WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();
         if(lastWorld!=client.world||!worldKey.equals(key)) {
             lastWorld=client.world;
-            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
+            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;DETAILS.clear();
             MinimapServerOverview.beginWorldChange();
         }
+        DETAILS.checkResources(client);
         MinimapServerOverview.request();
         // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
         if(sampledTick==client.player.age)return;
         sampledTick=client.player.age;
-        if(row==0){sampleX=client.player.getBlockX();sampleZ=client.player.getBlockZ();sampleScale=MinimapConfig.zoom()*1.5f;}
+        if(row==0) {
+            sampleWidth=Math.max(144,(int)Math.ceil(192*MinimapConfig.zoom()));
+            sampleX=client.player.getBlockX()-sampleWidth/2;
+            sampleZ=client.player.getBlockZ()-sampleWidth/2;
+        }
         Map<String,Integer> pixels=MinimapExploration.terrainFor(client);
         BlockPos.Mutable pos=new BlockPos.Mutable();
-        for(int end=Math.min(128,row+16);row<end;row++)for(int col=0;col<128;col++) {
-            int x=(int)Math.floor(sampleX+(col-64)*sampleScale),z=(int)Math.floor(sampleZ+(row-64)*sampleScale);
+        int end=Math.min(sampleWidth,row+Math.max(1,2048/sampleWidth));
+        for(;row<end;row++)for(int col=0;col<sampleWidth;col++) {
+            int x=sampleX+col,z=sampleZ+row;
             if(!client.world.getChunkManager().isChunkLoaded(x>>4,z>>4))continue;
             int y=client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z)-1;
             pos.set(x,y,z);
-            MapColor color=client.world.getBlockState(pos).getMapColor(client.world,pos);
-            if(color==MapColor.CLEAR)continue;
+            var state=client.world.getBlockState(pos);
+            // Look through map-transparent decorations rather than punching holes in terrain.
+            for(int depth=0;depth<16&&state.getMapColor(client.world,pos)==MapColor.CLEAR&&y>client.world.getBottomY();depth++) {
+                pos.setY(--y);state=client.world.getBlockState(pos);
+            }
+            MapColor color=state.getMapColor(client.world,pos);
+            if(color==MapColor.CLEAR){DETAILS.remove(x,z);continue;}
             int north=client.world.getChunkManager().isChunkLoaded(x>>4,(z-1)>>4)?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z-1)-1:y;
-            MapColor.Brightness shade=y>north?MapColor.Brightness.HIGH:y<north?MapColor.Brightness.LOW:MapColor.Brightness.NORMAL;
-            int argb=color.getRenderColor(shade);
-            int endX=(int)Math.floor(sampleX+(col+1-64)*sampleScale),endZ=(int)Math.floor(sampleZ+(row+1-64)*sampleScale);
-            // Fill the sampled footprint so zoomed-out discovery has no checkerboard holes.
-            for(int wz=z;wz<Math.max(z+1,endZ);wz++)for(int wx=x;wx<Math.max(x+1,endX);wx++)MinimapExploration.discover(pixels,wx,wz,argb);
+            int west=client.world.getChunkManager().isChunkLoaded((x-1)>>4,z>>4)?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x-1,z)-1:y;
+            double shade=Math.clamp(1+(y-north)*.055+(y-west)*.035,.72,1.16);
+            var surface=DETAILS.capture(client,state,pos,shade);
+            int argb=surface!=null?surface.average():color.getRenderColor(y>north?MapColor.Brightness.HIGH:y<north?MapColor.Brightness.LOW:MapColor.Brightness.NORMAL);
+            MinimapExploration.discover(pixels,x,z,argb);
         }
-        if(row>=128)row=0;
+        if(row>=sampleWidth)row=0;
     }
+
     private static void upload(MinecraftClient client,MapViewport view,boolean full,boolean circle) {
-        int pixels=full?256:128;
+        int pixels=full?FULL_PIXELS:HUD_PIXELS;
         if(full&&fullTexture==null){fullImage=new NativeImage(pixels,pixels,true);fullTexture=new NativeImageBackedTexture(()->"axial/full_map",fullImage);client.getTextureManager().registerTexture(FULL,fullTexture);}
         if(!full&&hudTexture==null){hudImage=new NativeImage(pixels,pixels,true);hudTexture=new NativeImageBackedTexture(()->"axial/minimap",hudImage);client.getTextureManager().registerTexture(HUD,hudTexture);}
-        long stamp=MinimapExploration.revision()*31+MinimapServerOverview.revision();
+        long stamp=(MinimapExploration.revision()*31+MinimapServerOverview.revision())*31+DETAILS.revision();
         long now=System.currentTimeMillis();
         boolean unchanged=full?view.centerX==fullX&&view.centerZ==fullZ&&view.scale==fullScale&&stamp==fullStamp:
                 view.centerX==hudX&&view.centerZ==hudZ&&view.scale==hudScale&&circle==hudCircular&&stamp==hudStamp;
@@ -124,14 +138,43 @@ public final class MinimapRenderer {
         NativeImage target=full?fullImage:hudImage;
         Map<String,Integer> terrain=MinimapExploration.terrainFor(client);
         double span=view.scale*256;
-        for(int z=0;z<pixels;z++)for(int x=0;x<pixels;x++) {
-            if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
-            int wx=(int)Math.floor(view.centerX+(x/(double)pixels-.5)*span),wz=(int)Math.floor(view.centerZ+(z/(double)pixels-.5)*span);
-            int color=full?MinimapServerOverview.colorAt(wx,wz):terrain.getOrDefault(wx+","+wz,0);
-            if(color==0)color=full?terrain.getOrDefault(wx+","+wz,UNKNOWN):MinimapServerOverview.colorAt(wx,wz);
-            if(color==0)color=UNKNOWN;
-            target.setColorArgb(x,z,color);
+        double footprint=span/pixels;
+        int textureLevel=MinimapTile.levelFor(footprint);
+        boolean localDetail=span<=2048;
+        double[] worldXs=new double[pixels];
+        int[] worldColumns=new int[pixels],baseColors=new int[pixels];
+        MinimapSurfaceCache.Surface[] surfaces=new MinimapSurfaceCache.Surface[pixels];
+        for(int x=0;x<pixels;x++) {
+            worldXs[x]=view.centerX+((x+.5)/pixels-.5)*span;
+            worldColumns[x]=(int)Math.floor(worldXs[x]);
         }
+        int previousZ=Integer.MIN_VALUE;
+        for(int z=0;z<pixels;z++) {
+            double worldZ=view.centerZ+((z+.5)/pixels-.5)*span;
+            int wz=(int)Math.floor(worldZ);
+            if(wz!=previousZ) {
+                previousZ=wz;
+                int previousX=Integer.MIN_VALUE,base=UNKNOWN;
+                MinimapSurfaceCache.Surface surface=null;
+                for(int x=0;x<pixels;x++) {
+                    int wx=worldColumns[x];
+                    if(wx!=previousX) {
+                        previousX=wx;
+                        surface=localDetail?DETAILS.get(wx,wz):null;
+                        base=localDetail?terrain.getOrDefault(wx+","+wz,0):MinimapServerOverview.colorAt(wx,wz);
+                        if(base==0)base=localDetail?MinimapServerOverview.colorAt(wx,wz):terrain.getOrDefault(wx+","+wz,UNKNOWN);
+                        if(base==0)base=UNKNOWN;
+                    }
+                    surfaces[x]=surface;baseColors[x]=base;
+                }
+            }
+            for(int x=0;x<pixels;x++) {
+                if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
+                var surface=surfaces[x];
+                target.setColorArgb(x,z,surface==null?baseColors[x]:surface.color(worldXs[x],worldZ,textureLevel));
+            }
+        }
+
         if(full){fullTexture.upload();fullX=view.centerX;fullZ=view.centerZ;fullScale=view.scale;fullStamp=stamp;lastFullUpload=now;}
         else {hudTexture.upload();hudX=view.centerX;hudZ=view.centerZ;hudScale=view.scale;hudStamp=stamp;hudCircular=circle;lastHudUpload=now;}
     }
