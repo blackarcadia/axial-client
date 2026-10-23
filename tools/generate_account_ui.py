@@ -41,9 +41,12 @@ def png(name, logical_size, distance):
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     png('rounded', 32, rounded)
+    # A true outline keeps translucent panel fills from covering an opaque base.
+    png('outline', 32, lambda x, y: max(rounded(x, y), -rounded(x, y) - 1))
     (DEST / 'rounded.png.mcmeta').write_text(json.dumps({'gui': {'scaling': {
         'type': 'nine_slice', 'width': 32, 'height': 32, 'border': 8, 'stretch_inner': True
     }}}, indent=2) + '\n')
+    (DEST / 'outline.png.mcmeta').write_text((DEST / 'rounded.png.mcmeta').read_text())
     png('circle', 16, lambda x, y: math.hypot(x - 8, y - 8) - 7)
     png('close', 16, lambda x, y: min(segment(x, y, 3, 3, 13, 13), segment(x, y, 13, 3, 3, 13)))
     png('plus', 16, lambda x, y: min(segment(x, y, 8, 2, 8, 14), segment(x, y, 2, 8, 14, 8)))

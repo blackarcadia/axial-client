@@ -333,8 +333,7 @@ public final class AccountsScreen extends Screen {
     }
 
     private static void framed(DrawContext context, int x, int y, int w, int h, int border, int fill) {
-        roundedRect(context, x, y, w, h, border);
-        roundedRect(context, x + 1, y + 1, w - 2, h - 2, fill);
+        ModMenuUi.frame(context, new ModMenuLayout.Rect(x, y, w, h), border, fill);
     }
 
     private void drawSkinHead(DrawContext context, AccountStore.Entry entry, int x, int y, int size) {

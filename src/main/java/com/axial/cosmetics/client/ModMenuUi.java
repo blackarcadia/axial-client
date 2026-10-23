@@ -9,8 +9,8 @@ import net.minecraft.util.Identifier;
 final class ModMenuUi {
     static final int INK = 0xFFF0F2F3, MUTED = 0xFFA0A7AE, LINE = 0xFF454C53;
     static final int GREEN = 0xFF46D57D, RED = 0xFFF0646C;
-    static final int PANEL = 0xFA14171B, PANEL_BORDER = 0xFF646B73, SURFACE = 0xFF1B1F24;
-    static final int FIELD = 0xFF202429, DIVIDER = 0xFF353A40, FOCUS = 0xFF9099A3;
+    static final int PANEL = 0xD914171B, PANEL_BORDER = 0xFF646B73, SURFACE = 0xA61B1F24;
+    static final int FIELD = 0xC4202429, DIVIDER = 0xFF353A40, FOCUS = 0xFF9099A3;
     static final int SELECTED = 0xFF343B43, SELECTED_LINE = 0xFFB0B8C0;
     static final int HOVER = 0xFF2B323A, HOVER_LINE = 0xFF7C858E;
     private static float opacity=1;
@@ -42,8 +42,9 @@ final class ModMenuUi {
         } finally { context.getMatrices().popMatrix(); }
     }
     static void frame(DrawContext context, ModMenuLayout.Rect r, int border, int fill) {
-        rounded(context,r.x(),r.y(),r.width(),r.height(),border);
-        rounded(context,r.x()+1,r.y()+1,r.width()-2,r.height()-2,fill);
+        rounded(context,r.x(),r.y(),r.width(),r.height(),fill);
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axial_cosmetics","accounts/outline"),
+                r.x(),r.y(),r.width(),r.height(),tint(border));
     }
     static void label(DrawContext context, TextRenderer renderer, String value, int x, int y, int color, float scale, int maxWidth, boolean bold) {
         if (maxWidth <= 0 || opacity < .01f) return;

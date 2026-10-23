@@ -101,7 +101,7 @@ public final class QuickMenuScreen extends Screen {
                     logo.x(),logo.y(),0,0,logo.width(),logo.height(),240,117,240,117,tint(0xFFFFFFFF));
             var bar=layout.bar;
             rounded(context,bar.x(),bar.y()+3,bar.width(),bar.height(),0x44000000);
-            frame(context,bar,0xFF51575F,0xED171B20);
+            frame(context,bar,0xFF51575F,0xD9171B20);
             for(int i=1;i<6;i++) {
                 int x=bar.x()+6+i*layout.tileWidth;
                 context.fill(x,bar.y()+12,x+1,bar.bottom()-12,tint(0xFF3D444D));
