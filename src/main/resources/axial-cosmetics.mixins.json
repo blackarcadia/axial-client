@@ -4,6 +4,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
+    "LivingEntityRenderStateSmartMiningMixin",
+    "LivingEntityRendererSmartMiningMixin",
+    "DrawContextContrabandMixin",
     "AxialColorTileMixin",
     "AxialConfigHudColorDefaultsMixin",
     "AxialConfigNoHudBoxesMixin",
