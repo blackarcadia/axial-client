@@ -46,6 +46,10 @@ def main():
         'close': combine(lines([(3,3),(13,13)]),lines([(13,3),(3,13)])),
         'search': combine(ring(6.5,6.5,4.5),lines([(10,10),(14,14)])),
         'check': lines([(2,8),(6,12),(14,4)]),
+        'account': combine(ring(8,4,2.6),lines([(2,14),(2.5,11),(5,9),(11,9),(13.5,11),(14,14)],True)),
+        'pin': combine(lines([(8,15),(3,7),(3,4),(5,1.5),(11,1.5),(13,4),(13,7)],True),ring(8,5,1.7)),
+        'store': combine(lines([(1,2),(3,2),(5,10),(13,10),(15,4),(4,4)]),ring(6,13.5,1),ring(12,13.5,1)),
+        'forums': combine(lines([(1,2),(11,2),(11,9),(6,9),(3,12),(3,9),(1,9)],True),lines([(13,5),(15,5),(15,12),(13,12),(13,15),(10,12),(7,12)])),
     }
     for name, distance in icons.items():
         masks.png(name,16,distance)

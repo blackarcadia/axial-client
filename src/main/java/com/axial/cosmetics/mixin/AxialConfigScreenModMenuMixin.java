@@ -1,6 +1,6 @@
 package com.axial.cosmetics.mixin;
 
-import com.axial.cosmetics.client.ModMenuScreen;
+import com.axial.cosmetics.client.QuickMenuScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +16,7 @@ public abstract class AxialConfigScreenModMenuMixin {
         Screen backend = (Screen) (Object) this;
         MinecraftClient client = MinecraftClient.getInstance();
         client.send(() -> {
-            if (client.currentScreen == backend) ModMenuScreen.open(backend);
+            if (client.currentScreen == backend) QuickMenuScreen.open(backend);
         });
     }
 }

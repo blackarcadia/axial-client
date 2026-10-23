@@ -13,7 +13,7 @@ final class ModMenuLayout {
 
     ModMenuLayout(int width, int height) {
         int w = Math.min(720, (int)(width * .82));
-        int h = Math.min(440, height < 220 ? height-12 : (int)(height * .82));
+        int h = Math.min(304, height < 220 ? height-12 : Math.max(196,(int)(height * .68)));
         panel = new Rect((width-w)/2, (height-h)/2, w, h);
         tight = h < 190;
         sidebar = w >= 520 && h >= 260;
@@ -34,7 +34,7 @@ final class ModMenuLayout {
         grid = new Rect(contentX, gridY, contentW-8, panel.bottom()-19-gridY);
         columns = Math.max(1, Math.min(3, (grid.width()+gap)/137));
         cardWidth = (grid.width()-(columns-1)*gap)/columns;
-        cardHeight = Math.min(sidebar ? Math.max(64, Math.min(82, (grid.height()-gap*2)/3)) : 68, grid.height());
+        cardHeight = Math.min(sidebar ? Math.max(60,(grid.height()-gap)/2) : 68, grid.height());
         scrollbar = new Rect(grid.right()+4, grid.y(), 3, grid.height());
     }
 

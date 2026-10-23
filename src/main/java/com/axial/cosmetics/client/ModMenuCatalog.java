@@ -19,6 +19,19 @@ final class ModMenuCatalog {
         return "MAIN".equals(field(screen, "mode").toString());
     }
 
+    static Screen parent(Screen screen) throws ReflectiveOperationException { return (Screen)field(screen,"parent"); }
+
+    static Screen child(Screen backend,Screen parent,String name) {
+        try {
+            Class<?> modeClass=field(backend,"mode").getClass();
+            Field value=modeClass.getDeclaredField(name);
+            value.setAccessible(true);
+            var constructor=backend.getClass().getDeclaredConstructor(Screen.class,modeClass);
+            constructor.setAccessible(true);
+            return (Screen)constructor.newInstance(parent,value.get(null));
+        } catch(ReflectiveOperationException ex) { throw new IllegalStateException("Could not open "+name,ex); }
+    }
+
     static List<ModMenuEntry> read(Screen backend) throws ReflectiveOperationException {
         List<ModMenuEntry> entries = new ArrayList<>();
         for (Object tile : (List<?>) field(backend, "tiles")) {

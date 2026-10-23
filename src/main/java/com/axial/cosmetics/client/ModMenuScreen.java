@@ -21,6 +21,9 @@ import static com.axial.cosmetics.client.ModMenuUi.*;
 /** A native widget menu backed by the original modules and settings screens. */
 public final class ModMenuScreen extends Screen {
     private final Screen backend;
+    private final Screen returnTo;
+    private MenuAnimation animation=new MenuAnimation();
+    private boolean reopen;
     private final List<ModMenuEntry> entries;
     private ModMenuEntry.Category category = ModMenuEntry.Category.ALL;
     private String query = "", error = "";
@@ -30,21 +33,23 @@ public final class ModMenuScreen extends Screen {
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
 
-    private ModMenuScreen(Screen backend, List<ModMenuEntry> entries) {
+    private ModMenuScreen(Screen backend, List<ModMenuEntry> entries,Screen returnTo) {
         super(text("Mod menu"));
         this.backend = backend;
+        this.returnTo=returnTo;
         this.entries = entries;
     }
 
     public static void open(Screen backend) {
         try {
-            if (ModMenuCatalog.isMain(backend)) MinecraftClient.getInstance().setScreen(new ModMenuScreen(backend, ModMenuCatalog.read(backend)));
+            if (ModMenuCatalog.isMain(backend)) MinecraftClient.getInstance().setScreen(new ModMenuScreen(backend, ModMenuCatalog.read(backend),ModMenuCatalog.parent(backend)));
         } catch (ReflectiveOperationException ex) {
             LoggerFactory.getLogger(ModMenuScreen.class).warn("Could not open mod library; retaining the original menu",ex);
         }
     }
 
     @Override protected void init() {
+        if(reopen){animation=new MenuAnimation();reopen=false;}
         layout = new ModMenuLayout(width,height);
         if(layout.tight) category=ModMenuEntry.Category.ALL;
         rebuild();
@@ -123,9 +128,23 @@ public final class ModMenuScreen extends Screen {
         return addDrawableChild(button);
     }
 
-    @Override public void close() { backend.close(); }
+    @Override public void removed() { reopen=true; }
+    @Override public void close() { animation.close(); }
+    @Override public void tick() {
+        if(animation.finished()) {
+            if(returnTo instanceof QuickMenuScreen)client.setScreen(returnTo);
+            else backend.close();
+        }
+    }
 
     @Override public void render(DrawContext context,int mouseX,int mouseY,float delta) {
+        context.getMatrices().pushMatrix();
+        context.getMatrices().translate(0,animation.offset());
+        try { renderContent(context,mouseX,(int)(mouseY-animation.offset()),delta); }
+        finally { context.getMatrices().popMatrix(); }
+    }
+
+    private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
         frame(context,panel,0xFF646B73,0xFA14171B);
         boolean small = panel.height()<320;
@@ -195,10 +214,14 @@ public final class ModMenuScreen extends Screen {
         scrollTo((int)((mouseY-track.y())/track.height()*layout.maxScroll(filtered().size())));
     }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
+        if(animation.closing())return true;
+        y-=animation.offset();
         if(layout.panel.contains(x,y)){scrollTo(scroll-(int)Math.round(vertical*30));return true;}
         return false;
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
+        if(animation.closing())return true;
+        click=animatedClick(click);
         var track=layout.scrollbar;
         if(click.button()==0 && click.x()>=track.x()-2 && click.x()<track.right()+3 && click.y()>=track.y() && click.y()<track.bottom()) {
             draggingScrollbar=true;dragScroll(click.y());return true;
@@ -206,15 +229,20 @@ public final class ModMenuScreen extends Screen {
         return super.mouseClicked(click,doubled);
     }
     @Override public boolean mouseDragged(Click click,double dx,double dy) {
+        click=animatedClick(click);
         if(draggingScrollbar){dragScroll(click.y());return true;}
         return super.mouseDragged(click,dx,dy);
     }
     @Override public boolean mouseReleased(Click click) {
         draggingScrollbar=false;
-        return super.mouseReleased(click);
+        return super.mouseReleased(animatedClick(click));
     }
 
+    private Click animatedClick(Click click) { return new Click(click.x(),click.y()-animation.offset(),click.buttonInfo()); }
+
     @Override public boolean keyPressed(KeyInput input) {
+        if(animation.closing())return true;
+        if(!search.isFocused()&&QuickMenuScreen.isMenuKey(input)){close();return true;}
         if (!search.isFocused()) {
             switch(input.key()) {
                 case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollTo(scroll+layout.grid.height()); return true; }
@@ -231,6 +259,8 @@ public final class ModMenuScreen extends Screen {
         private final String icon;
         private final boolean selected,clipped;
         private final ModMenuEntry entry;
+        private float hoverProgress;
+        private long lastFrame=System.nanoTime();
         MenuButton(String label,ModMenuLayout.Rect r,String icon,Runnable action,boolean selected,ModMenuEntry entry,boolean clipped) {
             super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);
             this.icon=icon;this.selected=selected;this.entry=entry;this.clipped=clipped;
@@ -240,6 +270,9 @@ public final class ModMenuScreen extends Screen {
         }
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
             boolean hover=isHovered()||isFocused();
+            long now=System.nanoTime();
+            hoverProgress=MenuAnimation.hover(hoverProgress,hover,(now-lastFrame)/1_000_000_000f);
+            lastFrame=now;
             var bounds=new ModMenuLayout.Rect(getX(),getY(),width,height);
             if(icon.equals("toggle")) {
                 boolean on=entry.isEnabled();
@@ -253,7 +286,7 @@ public final class ModMenuScreen extends Screen {
                 return;
             }
             boolean close=icon.equals("close"),gear=icon.equals("gear")&&clipped;
-            if(selected||hover||gear)frame(context,bounds,selected?0xFFB0B8C0:hover?0xFF7C8791:LINE,selected?0xFF343B43:hover?0xFF2B323A:0xFF20262C);
+            if(selected||hoverProgress>.01f||gear)frame(context,bounds,selected?0xFFB0B8C0:mixColor(LINE,0xFF7C8791,hoverProgress),selected?0xFF343B43:mixColor(0xFF20262C,0xFF2B323A,hoverProgress));
             if(close||gear){ModMenuUi.icon(context,icon,getX()+(width-12)/2,getY()+(height-12)/2,12,12,hover?INK:MUTED);return;}
             if(icon.equals("filter")) {
                 int square=10;

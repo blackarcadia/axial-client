@@ -3,6 +3,7 @@ package com.axial.cosmetics.mixin;
 import com.axial.cosmetics.AxialCosmetics;
 import com.axial.cosmetics.client.AccountsScreen;
 import com.axial.cosmetics.client.ModMenuScreen;
+import com.axial.cosmetics.client.QuickMenuScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
@@ -36,7 +37,7 @@ public abstract class InGameButtonSkinMixin {
         Screen currentScreen = client.currentScreen;
         // Container controls include icon-only recipe buttons and creative page
         // arrows. Let Minecraft render their own sprites and hover states.
-        if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof HandledScreen<?>
+        if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen || currentScreen instanceof HandledScreen<?>
                 || currentScreen instanceof AccountsScreen accounts && accounts.renderedTitleScreen() != null) {
             return;
         }
