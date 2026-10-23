@@ -11,7 +11,7 @@ import java.util.List;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
-/** Only replaces the artwork within the existing official-server button rectangles. */
+/** Decorates the existing server buttons without changing the main-menu layout. */
 public final class ServerBulletinBoards {
     private record Image(Identifier texture,int width) {}
     private static Image image(String name,int width) {
@@ -19,6 +19,7 @@ public final class ServerBulletinBoards {
     }
     private static final List<Image> PRISONS=List.of(image("prisons-halloween",1671),image("prisons-spears",1672),image("prisons-cells",1672));
     private static final Image SKY=image("sky-coming-soon",1670);
+    private static final Identifier PRISONS_EMBLEM=Identifier.of("axial_cosmetics","textures/gui/title/bulletins/prisons-emblem.png");
     private final BulletinCarousel carousel=new BulletinCarousel(PRISONS.size());
 
     public void synchronizeClock(){carousel.synchronizeClock();}
@@ -27,11 +28,15 @@ public final class ServerBulletinBoards {
         Rect prisons=new Rect(x,y,width,prisonsHeight),sky=new Rect(x,y+prisonsHeight+gap,width,skyHeight);
         carousel.tick(!active||prisons.contains(mouseX,mouseY));
         rounded(c,x,y,width,prisonsHeight,0xC0101018);
-        Rect picture=picture(prisons);
+        Rect picture=new Rect(x+16,y+1,width-32,prisonsHeight-31);
         drawImage(c,PRISONS.get(carousel.current()),picture,1);
         if(carousel.progress()>0)drawImage(c,PRISONS.get(carousel.target()),picture,carousel.progress());
         var renderer=MinecraftClient.getInstance().textRenderer;
-        label(c,renderer,"AXIAL PRISONS",x+5,prisons.bottom()-10,INK,.75f,width-64,true);
+        // The supplied emblem rests over the lower edge, leaving the bulletin and controls clear.
+        int emblemWidth=Math.min(114,width-28),emblemHeight=emblemWidth/3;
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,PRISONS_EMBLEM,
+                x+(width-emblemWidth)/2,prisons.bottom()+5-emblemHeight,0,0,
+                emblemWidth,emblemHeight,2172,724,2172,724);
         for(int i=0;i<3;i++) {
             Rect dot=dot(prisons,i);
             circle(c,dot.x()+2,dot.y()+4,4,i==carousel.selected()?GREEN:dot.contains(mouseX,mouseY)?INK:MUTED);
@@ -59,9 +64,9 @@ public final class ServerBulletinBoards {
     }
 
     static Rect picture(Rect board){return new Rect(board.x()+1,board.y()+1,board.width()-2,board.height()-14);}
-    static Rect previous(Rect board){return new Rect(board.right()-55,board.bottom()-13,10,12);}
+    static Rect previous(Rect board){return new Rect(board.x()+2,board.bottom()-13,10,12);}
     static Rect next(Rect board){return new Rect(board.right()-13,board.bottom()-13,10,12);}
-    static Rect dot(Rect board,int page){return new Rect(board.right()-43+page*9,board.bottom()-13,8,12);}
+    static Rect dot(Rect board,int page){return new Rect(board.right()-12,board.y()+7+page*9,8,8);}
     static Rect fit(Rect area,int imageWidth) {
         double scale=Math.min(area.width()/(double)imageWidth,area.height()/941.0);
         int w=Math.max(1,(int)Math.round(imageWidth*scale)),h=Math.max(1,(int)Math.round(941*scale));
