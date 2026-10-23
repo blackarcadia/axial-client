@@ -19,7 +19,6 @@ import static com.axial.cosmetics.client.ModMenuUi.*;
 public final class MinimapRenderer {
     private static final int UNKNOWN=0xFF20252B;
     private static final int HUD_PIXELS=512,FULL_PIXELS=1024;
-    private static final MinimapSurfaceCache DETAILS=new MinimapSurfaceCache();
     private static final Identifier HUD=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/minimap");
     private static final Identifier FULL=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/full_map");
     private static NativeImage hudImage,fullImage;
@@ -88,10 +87,9 @@ public final class MinimapRenderer {
         String key=WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();
         if(lastWorld!=client.world||!worldKey.equals(key)) {
             lastWorld=client.world;
-            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;DETAILS.clear();
+            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
             MinimapServerOverview.beginWorldChange();
         }
-        DETAILS.checkResources(client);
         MinimapServerOverview.request();
         // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
         if(sampledTick==client.player.age)return;
@@ -115,7 +113,7 @@ public final class MinimapRenderer {
                 pos.setY(--y);state=client.world.getBlockState(pos);
             }
             MapColor color=state.getMapColor(client.world,pos);
-            if(color==MapColor.CLEAR){DETAILS.remove(x,z);continue;}
+            if(color==MapColor.CLEAR)continue;
             int north=heightAt(client,x,z-1,y),west=heightAt(client,x-1,z,y);
             int east=heightAt(client,x+1,z,y),south=heightAt(client,x,z+1,y);
             boolean water=state.getFluidState().isIn(FluidTags.WATER);
@@ -130,15 +128,14 @@ public final class MinimapRenderer {
                         bedPos.setY(bedPos.getY()-1);waterDepth++;
                         var below=client.world.getBlockState(bedPos);
                         if(!below.getFluidState().isIn(FluidTags.WATER)) {
-                            if(!below.isAir())bed=DETAILS.bedColor(client,below,bedPos);
+                            if(!below.isAir())bed=below.getMapColor(client.world,bedPos).getRenderColor(MapColor.Brightness.NORMAL);
                             break;
                         }
                     }
                 }
             }
             double shade=water?1:MinimapRelief.shade(y,north,east,south,west);
-            var surface=DETAILS.capture(client,state,pos,shade,bed,waterDepth);
-            int argb=surface!=null?surface.average():color.getRenderColor(y>north?MapColor.Brightness.HIGH:y<north?MapColor.Brightness.LOW:MapColor.Brightness.NORMAL);
+            int argb=MinimapRelief.color(color.getRenderColor(MapColor.Brightness.NORMAL),shade,bed,waterDepth);
             MinimapExploration.discover(pixels,x,z,argb);
         }
         if(row>=sampleWidth)row=0;
@@ -153,7 +150,7 @@ public final class MinimapRenderer {
         int pixels=full?FULL_PIXELS:HUD_PIXELS;
         if(full&&fullTexture==null){fullImage=new NativeImage(pixels,pixels,true);fullTexture=new NativeImageBackedTexture(()->"axial/full_map",fullImage);client.getTextureManager().registerTexture(FULL,fullTexture);}
         if(!full&&hudTexture==null){hudImage=new NativeImage(pixels,pixels,true);hudTexture=new NativeImageBackedTexture(()->"axial/minimap",hudImage);client.getTextureManager().registerTexture(HUD,hudTexture);}
-        long stamp=(MinimapExploration.revision()*31+MinimapServerOverview.revision())*31+DETAILS.revision();
+        long stamp=MinimapExploration.revision()*31+MinimapServerOverview.revision();
         long now=System.currentTimeMillis();
         boolean unchanged=full?view.centerX==fullX&&view.centerZ==fullZ&&view.scale==fullScale&&stamp==fullStamp:
                 view.centerX==hudX&&view.centerZ==hudZ&&view.scale==hudScale&&circle==hudCircular&&stamp==hudStamp;
@@ -162,15 +159,10 @@ public final class MinimapRenderer {
         NativeImage target=full?fullImage:hudImage;
         Map<String,Integer> terrain=MinimapExploration.terrainFor(client);
         double span=view.scale*256;
-        double footprint=span/pixels;
-        int textureLevel=MinimapTile.levelFor(footprint);
         boolean localDetail=span<=2048;
-        double[] worldXs=new double[pixels];
         int[] worldColumns=new int[pixels],baseColors=new int[pixels];
-        MinimapSurfaceCache.Surface[] surfaces=new MinimapSurfaceCache.Surface[pixels];
         for(int x=0;x<pixels;x++) {
-            worldXs[x]=view.centerX+((x+.5)/pixels-.5)*span;
-            worldColumns[x]=(int)Math.floor(worldXs[x]);
+            worldColumns[x]=(int)Math.floor(view.centerX+((x+.5)/pixels-.5)*span);
         }
         int previousZ=Integer.MIN_VALUE;
         for(int z=0;z<pixels;z++) {
@@ -179,23 +171,20 @@ public final class MinimapRenderer {
             if(wz!=previousZ) {
                 previousZ=wz;
                 int previousX=Integer.MIN_VALUE,base=UNKNOWN;
-                MinimapSurfaceCache.Surface surface=null;
                 for(int x=0;x<pixels;x++) {
                     int wx=worldColumns[x];
                     if(wx!=previousX) {
                         previousX=wx;
-                        surface=localDetail?DETAILS.get(wx,wz):null;
                         base=localDetail?terrain.getOrDefault(wx+","+wz,0):MinimapServerOverview.colorAt(wx,wz);
                         if(base==0)base=localDetail?MinimapServerOverview.colorAt(wx,wz):terrain.getOrDefault(wx+","+wz,UNKNOWN);
                         if(base==0)base=UNKNOWN;
                     }
-                    surfaces[x]=surface;baseColors[x]=base;
+                    baseColors[x]=base;
                 }
             }
             for(int x=0;x<pixels;x++) {
                 if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
-                var surface=surfaces[x];
-                target.setColorArgb(x,z,surface==null?baseColors[x]:surface.color(worldXs[x],worldZ,textureLevel));
+                target.setColorArgb(x,z,baseColors[x]);
             }
         }
 

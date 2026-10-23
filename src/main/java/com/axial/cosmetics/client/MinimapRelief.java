@@ -11,6 +11,14 @@ final class MinimapRelief {
         return Math.clamp(1+n*.065+w*.045+slopeZ*.025+slopeX*.018-shelter*.012,.64,1.22);
     }
 
+    static int color(int base,double shade,int bed,int waterDepth) {
+        int r=Math.clamp((int)Math.round(((base>>16)&255)*shade),0,255);
+        int g=Math.clamp((int)Math.round(((base>>8)&255)*shade),0,255);
+        int b=Math.clamp((int)Math.round((base&255)*shade),0,255);
+        int shaded=0xFF000000|(r<<16)|(g<<8)|b;
+        return waterDepth>0?water(shaded,bed,waterDepth):shaded;
+    }
+
     static int water(int surface,int bed,int depth) {
         int bounded=Math.clamp(depth,1,16);
         double visibility=bed==0?0:.62*Math.exp(-(bounded-1)*.25);

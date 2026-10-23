@@ -4,6 +4,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MinimapReliefTest {
+    @Test void flatColoursKeepReliefAndWaterDepthWithoutTextureSamples() {
+        int grass=0xFF80A040;
+        assertEquals(grass,MinimapRelief.color(grass,1,0,0));
+        assertEquals(0xFF405020,MinimapRelief.color(grass,.5,0,0));
+        assertEquals(0xFFFFFFFF,MinimapRelief.color(0xFFFFFFFF,1.22,0,0));
+        int blue=0xFF305FA0,sand=0xFFD9CB89;
+        assertEquals(MinimapRelief.water(blue,sand,3),MinimapRelief.color(blue,1,sand,3));
+    }
     @Test void flatGroundHasNoArtificialContoursOrCoordinateNoise() {
         assertEquals(1,MinimapRelief.shade(64,64,64,64,64));
         assertEquals(1,MinimapRelief.shade(170,170,170,170,170));
