@@ -1,0 +1,4 @@
+Inter font by The Inter Project Authors.
+Source: https://github.com/google/fonts/tree/main/ofl/inter
+License: SIL Open Font License 1.1 (see Inter-OFL.txt).
+The bundled fonts are static instances at optical size 18 and weights 400 and 600, generated from the upstream variable font using FontTools.
