@@ -342,10 +342,12 @@ public final class AccountsScreen extends Screen {
             this.entry = entry;
         }
 
-        @Override public boolean mouseClicked(Click click, boolean doubled) {
-            if (tone == Tone.CARD && click.x() >= layout.controlsStart(
+        @Override public boolean isMouseOver(double mouseX, double mouseY) {
+            // ParentElement chooses one hovered child before dispatching a click.
+            // Exclude the overlaid controls here so they receive clicks themselves.
+            if (tone == Tone.CARD && mouseX >= layout.controlsStart(
                     new AccountsLayout.Rect(getX(), getY(), width, height), isActive(entry))) return false;
-            return super.mouseClicked(click, doubled);
+            return super.isMouseOver(mouseX, mouseY);
         }
 
         @Override protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
