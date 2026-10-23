@@ -11,6 +11,15 @@ final class MapProtocol {
         return data.length>=1&&data[0]==0&&(data.length==1||data.length==2&&data[1]==1);
     }
     static boolean requestsFullMap(byte[] data){return isRequest(data)&&data.length==2;}
+    static byte[] status(String message,int done,int total) throws IOException {
+        byte[] text=message.getBytes(StandardCharsets.UTF_8);
+        if(text.length>255||done<0||total<done)throw new IllegalArgumentException("Invalid map status");
+        var bytes=new ByteArrayOutputStream();
+        try(var out=new DataOutputStream(bytes)) {
+            out.writeByte(3);out.writeShort(text.length);out.write(text);out.writeInt(done);out.writeInt(total);
+        }
+        return bytes.toByteArray();
+    }
     static int rowsPerPacket(WorldMap map) {
         int header=1+2+map.key().getBytes(StandardCharsets.UTF_8).length+12+8;
         return Math.max(1,(MAX_PACKET-header)/(map.geometry().width()*4));

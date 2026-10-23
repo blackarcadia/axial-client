@@ -105,6 +105,11 @@ public class MinimapFullScreen extends NavigationScreen {
             line(c,coordinates,layout.map.x()+7,layout.map.bottom()-14,INK,.8f,layout.map.width()-14,false);
         }
         line(c,"N  /  "+String.format(Locale.ROOT,"%.0f blocks across",view.scale*256),layout.map.x()+6,layout.map.y()+7,BRAND,.75f,layout.map.width()-12,true);
+        String loading=MinimapServerOverview.loadingMessage();
+        if(!loading.isEmpty()) {
+            rounded(c,layout.map.x()+5,layout.map.y()+19,layout.map.width()-10,15,PANEL);
+            line(c,loading,layout.map.x()+9,layout.map.y()+24,MUTED,.7f,layout.map.width()-18,false);
+        }
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
         if(layout.list.contains(click.x(),click.y())&&click.button()==0)for(int i=0;i<entries.size();i++) {

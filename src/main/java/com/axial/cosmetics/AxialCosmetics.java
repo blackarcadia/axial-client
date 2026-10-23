@@ -131,7 +131,7 @@ public class AxialCosmetics implements ClientModInitializer {
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->{
             MinimapExploration.flush();MinimapRenderer.refreshWorld(client);
         });
-        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client->MinimapExploration.flush());
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client->MinimapExploration.shutdown());
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, Category.MISC));

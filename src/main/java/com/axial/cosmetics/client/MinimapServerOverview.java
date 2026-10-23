@@ -11,8 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.BitSet;
+import java.util.function.IntBinaryOperator;
 
-/** Receives compact, server-authoritative world overviews from PrisonsCore. */
+/** Receives server-authoritative terrain from AxialWorldMap and PrisonsCore. */
 public final class MinimapServerOverview {
     private static final byte REQUEST = 0;
     private static final byte SNAPSHOT = 1;
@@ -25,15 +27,23 @@ public final class MinimapServerOverview {
     private static long revision;
     private static long worldGeneration;
     private static boolean fullRequestPending=true;
+    private static boolean checkedProvider,fullProviderAvailable;
+    private static String providerMessage="";
+    private static boolean providerRendering;
+    private static long lastFullAttempt,lastFullProgress;
 
     private MinimapServerOverview() { }
 
     public static void request() {
         if(MinecraftClient.getInstance().getNetworkHandler()==null)return;
         long now = System.currentTimeMillis();
+        checkedProvider=true;
+        fullProviderAvailable=ClientPlayNetworking.canSend(WorldMapPayload.ID);
+        if((fullWorld==null||!fullWorld.complete())&&now-Math.max(lastFullAttempt,lastFullProgress)>=30_000)fullRequestPending=true;
         if (now - lastRequestAt < 5_000) return;
         boolean sent=false;
-        if(ClientPlayNetworking.canSend(WorldMapPayload.ID)) {
+        if(fullProviderAvailable) {
+            if(fullRequestPending)lastFullAttempt=now;
             ClientPlayNetworking.send(new WorldMapPayload(nextWorldRequest()));
             sent=true;
         }
@@ -55,6 +65,7 @@ public final class MinimapServerOverview {
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
         fullRequestPending=true;worldGeneration++;
+        checkedProvider=fullProviderAvailable=providerRendering=false;providerMessage="";lastFullAttempt=lastFullProgress=0;
     }
 
     public static void receive(byte[] payload) {
@@ -66,7 +77,20 @@ public final class MinimapServerOverview {
         readSnapshot(payload,false);
     }
 
-    public static void receiveFullWorld(byte[] payload){readSnapshot(payload,true);}
+    public static void receiveFullWorld(byte[] payload) {
+        if(payload.length>0&&payload[0]==3) {
+            try(var input=new DataInputStream(new ByteArrayInputStream(payload))) {
+                input.readByte();String message=readString(input);
+                int done=input.readInt(),total=input.readInt();
+                if(done<0||total<0||done>total||input.available()!=0)return;
+                providerMessage=message+(total>0?" ("+(int)(done*100L/total)+"%)":"");
+                providerRendering=total>0&&done<total;
+                checkedProvider=fullProviderAvailable=true;
+            } catch(IOException ignored){ }
+            return;
+        }
+        readSnapshot(payload,true);
+    }
     private static void readSnapshot(byte[] payload,boolean full) {
         if(payload.length==0||payload[0]!=SNAPSHOT)return;
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(payload))) {
@@ -90,6 +114,8 @@ public final class MinimapServerOverview {
                 int offset = (rowStart + row) * width;
                 for (int column = 0; column < width; column++) overview.colors[offset + column] = input.readInt();
             }
+            overview.rows.set(rowStart,rowStart+rowCount);
+            if(full){lastFullProgress=System.currentTimeMillis();checkedProvider=fullProviderAvailable=true;if(!providerRendering)providerMessage="";}
             if(!full)activeWorld = world;
             revision++;
         } catch (IOException ignored) { }
@@ -118,11 +144,35 @@ public final class MinimapServerOverview {
 
     public static long revision(){return revision;}
     public static long worldGeneration(){return worldGeneration;}
+    public static String loadingMessage() {
+        if(providerRendering)return providerMessage;
+        if(fullWorld!=null)return fullWorld.complete()?"":"Loading full map: "+fullWorld.rows.cardinality()*100/fullWorld.height+"%";
+        if(!providerMessage.isEmpty())return providerMessage;
+        if(checkedProvider&&!fullProviderAvailable)return "Full-world map unavailable on this server";
+        return "Waiting for full-world map...";
+    }
     public static boolean available(){return fullWorld!=null||activeWorld!=null&&OVERVIEWS.containsKey(activeWorld);}
     public record WorldBounds(String world,double centerX,double centerZ,double scale) { }
     public static WorldBounds fullWorldBounds(){return fullWorld==null?null:new WorldBounds(fullWorldKey,fullWorld.minX+fullWorld.width*(double)fullWorld.blockStep/2,fullWorld.minZ+fullWorld.height*(double)fullWorld.blockStep/2,Math.max(fullWorld.width,fullWorld.height)*(double)fullWorld.blockStep/256);}
     public static int colorAt(int x,int z) {
-        Overview o=fullWorld!=null?fullWorld:activeWorld==null?null:OVERVIEWS.get(activeWorld);
+        return compositeColor(fullWorld,activeWorld==null?null:OVERVIEWS.get(activeWorld),x,z);
+    }
+    /** Captures one world's array, so worker builds cannot switch worlds halfway through. */
+    static IntBinaryOperator terrainReader() {
+        Overview overview=fullWorld,legacy=activeWorld==null?null:OVERVIEWS.get(activeWorld);
+        return (x,z)->compositeColor(overview,legacy,x,z);
+    }
+    private static int compositeColor(Overview full,Overview legacy,int x,int z) {
+        if(full==null)return colorAt(legacy,x,z);
+        if(!contains(full,x,z))return 0;
+        int color=colorAt(full,x,z);
+        return color==0?colorAt(legacy,x,z):color;
+    }
+    private static boolean contains(Overview o,int x,int z) {
+        long dx=(long)x-o.minX,dz=(long)z-o.minZ;
+        return dx>=0&&dz>=0&&dx<(long)o.width*o.blockStep&&dz<(long)o.height*o.blockStep;
+    }
+    private static int colorAt(Overview o,int x,int z) {
         if(o==null)return 0;
         long dx=(long)x-o.minX,dz=(long)z-o.minZ;
         if(dx<0||dz<0||dx>=(long)o.width*o.blockStep||dz>=(long)o.height*o.blockStep)return 0;
@@ -192,6 +242,7 @@ public final class MinimapServerOverview {
     private static final class Overview {
         private final int minX, minZ, blockStep, width, height;
         private final int[] colors;
+        private final BitSet rows=new BitSet();
 
         private Overview(int minX, int minZ, int blockStep, int width, int height) {
             this.minX = minX;
@@ -205,6 +256,7 @@ public final class MinimapServerOverview {
         private boolean matches(int minX, int minZ, int blockStep, int width, int height) {
             return this.minX == minX && this.minZ == minZ && this.blockStep == blockStep && this.width == width && this.height == height;
         }
+        private boolean complete(){return rows.cardinality()==height;}
     }
 
     private record Overlay(List<Zone> zones, List<Poi> pois) { }

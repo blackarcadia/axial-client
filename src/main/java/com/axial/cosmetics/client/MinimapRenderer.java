@@ -12,20 +12,24 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
-import java.util.Map;
+import java.util.concurrent.*;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 
 /** Budgeted terrain discovery, shared projections, and cached map textures. */
 public final class MinimapRenderer {
     private static final int UNKNOWN=0xFF20252B;
-    private static final int HUD_PIXELS=512,FULL_PIXELS=1024;
+    private static final int HUD_PIXELS=256,FULL_PIXELS=1024;
     private static final Identifier HUD=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/minimap");
     private static final Identifier FULL=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/full_map");
     private static NativeImage hudImage,fullImage;
     private static NativeImageBackedTexture hudTexture,fullTexture;
     private static String worldKey="";
     private static net.minecraft.client.world.ClientWorld lastWorld;
-    private static int sampledTick=Integer.MIN_VALUE,row;
+    private static int sampledTick=Integer.MIN_VALUE,row,column,lastDrawTick=Integer.MIN_VALUE;
+    private static final ExecutorService RASTER=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"axial-map-raster");t.setDaemon(true);return t;});
+    private record ImageBuild(double x,double z,double scale,long stamp,long generation,boolean circle) { }
+    private static Future<ImageBuild> hudBuild,fullBuild;
+    private static boolean hudReady,fullReady;
     private static int sampleX,sampleZ;
     private static int sampleWidth;
     private static long hudStamp,fullStamp,lastHudUpload,lastFullUpload;
@@ -37,7 +41,7 @@ public final class MinimapRenderer {
     public static void refreshWorld(MinecraftClient client) {
         lastWorld=client.world;
         worldKey=contextKey(client);
-        sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
+        sampledTick=lastDrawTick=Integer.MIN_VALUE;row=column=0;hudX=fullX=Double.NaN;hudReady=fullReady=false;
         lastHudUpload=lastFullUpload=0;
         MinimapServerOverview.beginWorldChange();
     }
@@ -47,7 +51,12 @@ public final class MinimapRenderer {
     /** Runs even when the HUD minimap and full-map screen are closed. */
     public static void tick(MinecraftClient client) {
         syncWorld(client);
-        if(client.world!=null&&client.player!=null)MinimapServerOverview.request();
+        if(client.world!=null&&client.player!=null) {
+            MinimapServerOverview.request();
+            boolean full=client.currentScreen instanceof MinimapFullScreen;
+            if(full||MinimapConfig.isEnabled()&&!client.options.hudHidden&&client.currentScreen==null
+                    ||lastDrawTick!=Integer.MIN_VALUE&&client.player.age-lastDrawTick<=2)sample(client,full);
+        }
     }
     public static void syncWorld(MinecraftClient client) {
         if(lastWorld!=client.world||!worldKey.equals(contextKey(client)))refreshWorld(client);
@@ -75,11 +84,12 @@ public final class MinimapRenderer {
         if(client.world==null||client.player==null)return;
         update(client);
         boolean circle=MinimapConfig.isCircular();
-        var view=new MapViewport(client.player.getX(),client.player.getZ(),MinimapConfig.zoom()*.75);
+        double scale=MinimapConfig.zoom()*.75,step=scale*256/HUD_PIXELS;
+        var view=new MapViewport(Math.rint(client.player.getX()/step)*step,Math.rint(client.player.getZ()/step)*step,scale);
         if(!circle)frame(c,new ModMenuLayout.Rect(left-3,top-3,size+6,size+6),LINE,PANEL);
         else disc(c,left-3,top-3,size+6,PANEL);
         upload(client,view,false,circle);
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,HUD,left,top,0,0,size,size,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS);
+        if(hudReady)c.drawTexture(RenderPipelines.GUI_TEXTURED,HUD,left,top,0,0,size,size,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS,HUD_PIXELS);
         c.enableScissor(left,top,left+size,top+size);
         overlays(c,client,view,left,top,size,circle,false);
         c.disableScissor();
@@ -99,27 +109,34 @@ public final class MinimapRenderer {
         if(client.world==null||client.player==null)return;
         update(client);upload(client,view,true,false);
         c.enableScissor(left,top,left+size,top+size);
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS);
+        if(fullReady)c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS);
         overlays(c,client,view,left,top,size,false,true);
         c.disableScissor();
     }
     private static void update(MinecraftClient client) {
         syncWorld(client);
-        MinimapServerOverview.request();
-        // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
+        lastDrawTick=client.player.age;
+    }
+    private static void sample(MinecraftClient client,boolean full) {
+        // Live world access stays on the game thread, bounded by time and column count.
         if(sampledTick==client.player.age)return;
         sampledTick=client.player.age;
-        if(row==0) {
+        if(row==0&&column==0) {
             sampleWidth=Math.max(144,(int)Math.ceil(192*MinimapConfig.zoom()));
             sampleX=client.player.getBlockX()-sampleWidth/2;
             sampleZ=client.player.getBlockZ()-sampleWidth/2;
         }
-        Map<String,Integer> pixels=MinimapExploration.terrainFor(client);
+        MinimapTerrain pixels=MinimapExploration.terrainFor(client);
         BlockPos.Mutable pos=new BlockPos.Mutable(),bedPos=new BlockPos.Mutable();
-        int end=Math.min(sampleWidth,row+Math.max(1,2048/sampleWidth));
-        for(;row<end;row++)for(int col=0;col<sampleWidth;col++) {
-            int x=sampleX+col,z=sampleZ+row;
+        long deadline=System.nanoTime()+(full?1_500_000:750_000);
+        int sampled=0,visited=0;
+        while(row<sampleWidth&&sampled<(full?2048:512)&&visited<8192) {
+            if((visited++&15)==0&&System.nanoTime()>=deadline)break;
+            int x=sampleX+column,z=sampleZ+row;
+            if(++column>=sampleWidth){column=0;row++;}
+            if(!pixels.shouldSample(x,z,client.player.age))continue;
             if(!client.world.getChunkManager().isChunkLoaded(x>>4,z>>4))continue;
+            sampled++;
             int y=client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z)-1;
             pos.set(x,y,z);
             var state=client.world.getBlockState(pos);
@@ -152,6 +169,7 @@ public final class MinimapRenderer {
             double shade=water?1:MinimapRelief.shade(y,north,east,south,west);
             int argb=MinimapRelief.color(color.getRenderColor(MapColor.Brightness.NORMAL),shade,bed,waterDepth);
             MinimapExploration.discover(pixels,x,z,argb);
+            pixels.sampled(x,z,client.player.age);
         }
         if(row>=sampleWidth)row=0;
     }
@@ -165,46 +183,41 @@ public final class MinimapRenderer {
         int pixels=full?FULL_PIXELS:HUD_PIXELS;
         if(full&&fullTexture==null){fullImage=new NativeImage(pixels,pixels,true);fullTexture=new NativeImageBackedTexture(()->"axial/full_map",fullImage);client.getTextureManager().registerTexture(FULL,fullTexture);}
         if(!full&&hudTexture==null){hudImage=new NativeImage(pixels,pixels,true);hudTexture=new NativeImageBackedTexture(()->"axial/minimap",hudImage);client.getTextureManager().registerTexture(HUD,hudTexture);}
+        Future<ImageBuild> pending=full?fullBuild:hudBuild;
+        if(pending!=null) {
+            if(!pending.isDone())return;
+            try {
+                ImageBuild result=pending.get();
+                if(result.generation==MinimapServerOverview.worldGeneration()) {
+                    if(full) {
+                        fullTexture.upload();fullReady=true;fullX=result.x;fullZ=result.z;fullScale=result.scale;fullStamp=result.stamp;lastFullUpload=System.currentTimeMillis();
+                    } else {
+                        hudTexture.upload();hudReady=true;hudX=result.x;hudZ=result.z;hudScale=result.scale;hudStamp=result.stamp;hudCircular=result.circle;lastHudUpload=System.currentTimeMillis();
+                    }
+                }
+            } catch(InterruptedException ex){Thread.currentThread().interrupt();}
+            catch(ExecutionException ex){org.slf4j.LoggerFactory.getLogger(MinimapRenderer.class).warn("Could not build map image",ex.getCause());}
+            if(full)fullBuild=null;else hudBuild=null;
+        }
         long stamp=MinimapExploration.revision()*31+MinimapServerOverview.revision();
         long now=System.currentTimeMillis();
         boolean unchanged=full?view.centerX==fullX&&view.centerZ==fullZ&&view.scale==fullScale&&stamp==fullStamp:
                 view.centerX==hudX&&view.centerZ==hudZ&&view.scale==hudScale&&circle==hudCircular&&stamp==hudStamp;
-        if(unchanged)return;
-        if(full?now-lastFullUpload<100:now-lastHudUpload<50)return;
+        if(unchanged|| (full?now-lastFullUpload<100:now-lastHudUpload<50))return;
         NativeImage target=full?fullImage:hudImage;
-        Map<String,Integer> terrain=MinimapExploration.terrainFor(client);
-        double span=view.scale*256;
-        boolean localDetail=span<=2048;
-        int[] worldColumns=new int[pixels],baseColors=new int[pixels];
-        for(int x=0;x<pixels;x++) {
-            worldColumns[x]=(int)Math.floor(view.centerX+((x+.5)/pixels-.5)*span);
-        }
-        int previousZ=Integer.MIN_VALUE;
-        for(int z=0;z<pixels;z++) {
-            double worldZ=view.centerZ+((z+.5)/pixels-.5)*span;
-            int wz=(int)Math.floor(worldZ);
-            if(wz!=previousZ) {
-                previousZ=wz;
-                int previousX=Integer.MIN_VALUE,base=UNKNOWN;
-                for(int x=0;x<pixels;x++) {
-                    int wx=worldColumns[x];
-                    if(wx!=previousX) {
-                        previousX=wx;
-                        base=localDetail?terrain.getOrDefault(wx+","+wz,0):MinimapServerOverview.colorAt(wx,wz);
-                        if(base==0)base=localDetail?MinimapServerOverview.colorAt(wx,wz):terrain.getOrDefault(wx+","+wz,UNKNOWN);
-                        if(base==0)base=UNKNOWN;
-                    }
-                    baseColors[x]=base;
-                }
-            }
-            for(int x=0;x<pixels;x++) {
-                if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
-                target.setColorArgb(x,z,baseColors[x]);
-            }
-        }
-
-        if(full){fullTexture.upload();fullX=view.centerX;fullZ=view.centerZ;fullScale=view.scale;fullStamp=stamp;lastFullUpload=now;}
-        else {hudTexture.upload();hudX=view.centerX;hudZ=view.centerZ;hudScale=view.scale;hudStamp=stamp;hudCircular=circle;lastHudUpload=now;}
+        var local=MinimapExploration.terrainFor(client).reader();
+        var server=MinimapServerOverview.terrainReader();
+        boolean localDetail=view.scale*256<=2048;
+        ImageBuild build=new ImageBuild(view.centerX,view.centerZ,view.scale,stamp,MinimapServerOverview.worldGeneration(),circle);
+        Future<ImageBuild> future=RASTER.submit(()->{
+            MinimapRaster.paint(pixels,build.x,build.z,build.scale,circle,(x,z)->{
+                int color=localDetail?local.applyAsInt(x,z):server.applyAsInt(x,z);
+                if(color==0)color=localDetail?server.applyAsInt(x,z):local.applyAsInt(x,z);
+                return color==0?UNKNOWN:color;
+            },target::setColorArgb);
+            return build;
+        });
+        if(full)fullBuild=future;else hudBuild=future;
     }
     private static void overlays(DrawContext c,MinecraftClient client,MapViewport view,int left,int top,int size,boolean circle,boolean names) {
         MinimapServerOverview.renderHudOverlays(c,left,top,size,256,view.centerX,view.centerZ,(float)view.scale,circle,names);

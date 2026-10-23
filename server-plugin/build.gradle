@@ -1,6 +1,7 @@
 plugins { id 'java' }
 group = 'com.axial'
 version = '1.0.0'
+base { archivesName = 'AxialWorldMap' }
 repositories {
     mavenLocal()
     mavenCentral()
