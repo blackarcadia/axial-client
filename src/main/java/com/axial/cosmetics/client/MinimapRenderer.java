@@ -2,6 +2,7 @@ package com.axial.cosmetics.client;
 
 import com.axial.cosmetics.AxialCosmetics;
 import net.minecraft.block.MapColor;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
@@ -101,7 +102,7 @@ public final class MinimapRenderer {
             sampleZ=client.player.getBlockZ()-sampleWidth/2;
         }
         Map<String,Integer> pixels=MinimapExploration.terrainFor(client);
-        BlockPos.Mutable pos=new BlockPos.Mutable();
+        BlockPos.Mutable pos=new BlockPos.Mutable(),bedPos=new BlockPos.Mutable();
         int end=Math.min(sampleWidth,row+Math.max(1,2048/sampleWidth));
         for(;row<end;row++)for(int col=0;col<sampleWidth;col++) {
             int x=sampleX+col,z=sampleZ+row;
@@ -115,14 +116,37 @@ public final class MinimapRenderer {
             }
             MapColor color=state.getMapColor(client.world,pos);
             if(color==MapColor.CLEAR){DETAILS.remove(x,z);continue;}
-            int north=client.world.getChunkManager().isChunkLoaded(x>>4,(z-1)>>4)?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z-1)-1:y;
-            int west=client.world.getChunkManager().isChunkLoaded((x-1)>>4,z>>4)?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x-1,z)-1:y;
-            double shade=Math.clamp(1+(y-north)*.055+(y-west)*.035,.72,1.16);
-            var surface=DETAILS.capture(client,state,pos,shade);
+            int north=heightAt(client,x,z-1,y),west=heightAt(client,x-1,z,y);
+            int east=heightAt(client,x+1,z,y),south=heightAt(client,x,z+1,y);
+            boolean water=state.getFluidState().isIn(FluidTags.WATER);
+            int waterDepth=0,bed=0;
+            if(water) {
+                // Inspect at most sixteen blocks vertically in this already-loaded column.
+                // Keep opaque waterlogged blocks (e.g. slabs) as their own visible surface.
+                water=state.getBlock()==net.minecraft.block.Blocks.WATER;
+                if(water) {
+                    bedPos.set(pos);
+                    while(waterDepth<16&&bedPos.getY()>client.world.getBottomY()) {
+                        bedPos.setY(bedPos.getY()-1);waterDepth++;
+                        var below=client.world.getBlockState(bedPos);
+                        if(!below.getFluidState().isIn(FluidTags.WATER)) {
+                            if(!below.isAir())bed=DETAILS.bedColor(client,below,bedPos);
+                            break;
+                        }
+                    }
+                }
+            }
+            double shade=water?1:MinimapRelief.shade(y,north,east,south,west);
+            var surface=DETAILS.capture(client,state,pos,shade,bed,waterDepth);
             int argb=surface!=null?surface.average():color.getRenderColor(y>north?MapColor.Brightness.HIGH:y<north?MapColor.Brightness.LOW:MapColor.Brightness.NORMAL);
             MinimapExploration.discover(pixels,x,z,argb);
         }
         if(row>=sampleWidth)row=0;
+    }
+
+    private static int heightAt(MinecraftClient client,int x,int z,int fallback) {
+        return client.world.getChunkManager().isChunkLoaded(x>>4,z>>4)
+                ?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z)-1:fallback;
     }
 
     private static void upload(MinecraftClient client,MapViewport view,boolean full,boolean circle) {

@@ -15,9 +15,10 @@ import java.util.*;
 
 /** Session detail, bounded to 512 chunks; texture data is shared between block columns. */
 final class MinimapSurfaceCache {
-    record Surface(MinimapTile tile,int tint,double shade) {
-        int color(double x,double z,int level){return tile.sample(x,z,level,tint,shade);}
-        int average(){return tile.average(tint,shade);}
+    record Surface(MinimapTile tile,int tint,double shade,int bed,int waterDepth) {
+        int color(double x,double z,int level){return finish(tile.sample(x,z,level,tint,shade));}
+        int average(){return finish(tile.average(tint,shade));}
+        private int finish(int color){return waterDepth>0?MinimapRelief.water(color,bed,waterDepth):color;}
     }
     private record Face(MinimapTile tile,int tintIndex) { }
     private final Map<BlockState,Face> faces=new HashMap<>();
@@ -41,11 +42,18 @@ final class MinimapSurfaceCache {
         int index=(z&15)*16+(x&15);
         if(chunk!=null&&chunk[index]!=null){chunk[index]=null;revision++;}
     }
-    Surface capture(MinecraftClient client,BlockState state,BlockPos pos,double shade) {
+    int bedColor(MinecraftClient client,BlockState state,BlockPos pos) {
+        Face face=faces.computeIfAbsent(state,s->face(client,s));
+        if(face.tile==null)return state.getMapColor(client.world,pos).getRenderColor(net.minecraft.block.MapColor.Brightness.NORMAL);
+        return face.tile.average(tint(client,state,pos,face),1);
+    }
+    private int tint(MinecraftClient client,BlockState state,BlockPos pos,Face face) {
+        return face.tintIndex<0?0xFFFFFF:client.getBlockColors().getColor(state,client.world,pos,face.tintIndex);
+    }
+    Surface capture(MinecraftClient client,BlockState state,BlockPos pos,double shade,int bed,int waterDepth) {
         Face face=faces.computeIfAbsent(state,s->face(client,s));
         if(face.tile==null){remove(pos.getX(),pos.getZ());return null;}
-        int tint=face.tintIndex<0?0xFFFFFF:client.getBlockColors().getColor(state,client.world,pos,face.tintIndex);
-        Surface surface=new Surface(face.tile,tint,shade);
+        Surface surface=new Surface(face.tile,tint(client,state,pos,face),shade,bed,waterDepth);
         Surface[] chunk=chunks.computeIfAbsent(key(pos.getX()>>4,pos.getZ()>>4),ignored->new Surface[256]);
         int index=(pos.getZ()&15)*16+(pos.getX()&15);
         if(!surface.equals(chunk[index])){chunk[index]=surface;revision++;}
