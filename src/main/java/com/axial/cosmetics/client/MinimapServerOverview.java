@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.BitSet;
+import java.util.LinkedHashMap;
 import java.util.function.IntBinaryOperator;
 
 /** Receives server-authoritative terrain from AxialWorldMap and PrisonsCore. */
@@ -23,6 +24,8 @@ public final class MinimapServerOverview {
     private static final Map<String, Overlay> OVERLAYS_BY_WORLD = new HashMap<>();
     private static String activeWorld,fullWorldKey;
     private static Overview fullWorld;
+    private static String cacheScope;
+    private static final LinkedHashMap<String,Overview> WORLD_CACHE=new LinkedHashMap<>(8,.75f,true);
     private static long lastRequestAt;
     private static long revision;
     private static long worldGeneration;
@@ -61,6 +64,15 @@ public final class MinimapServerOverview {
 
     /** Clears the previous world's map while the server sends the next world's overview. */
     public static void beginWorldChange() {
+        beginWorldChange(null);
+        WORLD_CACHE.clear();
+    }
+    public static void beginWorldChange(String nextScope) {
+        if(cacheScope!=null&&fullWorld!=null&&fullWorldKey!=null) {
+            WORLD_CACHE.put(cacheScope+"\0"+fullWorldKey,fullWorld.copy());
+            if(WORLD_CACHE.size()>8)WORLD_CACHE.remove(WORLD_CACHE.keySet().iterator().next());
+        }
+        cacheScope=nextScope;
         activeWorld = null;fullWorld=null;fullWorldKey=null;
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
@@ -107,7 +119,9 @@ public final class MinimapServerOverview {
 
             Overview overview;
             if(full) {
-                overview=world.equals(fullWorldKey)&&fullWorld!=null&&fullWorld.matches(minX,minZ,blockStep,width,height)?fullWorld:new Overview(minX,minZ,blockStep,width,height);
+                Overview cached=cacheScope==null?null:WORLD_CACHE.get(cacheScope+"\0"+world);
+                overview=world.equals(fullWorldKey)&&fullWorld!=null&&fullWorld.matches(minX,minZ,blockStep,width,height)?fullWorld:
+                        cached!=null&&cached.matches(minX,minZ,blockStep,width,height)?cached.copy():new Overview(minX,minZ,blockStep,width,height);
                 fullWorld=overview;fullWorldKey=world;
             } else overview=OVERVIEWS.compute(world,(ignored,current)->current!=null&&current.matches(minX,minZ,blockStep,width,height)?current:new Overview(minX,minZ,blockStep,width,height));
             for (int row = 0; row < rowCount; row++) {
@@ -257,6 +271,10 @@ public final class MinimapServerOverview {
             return this.minX == minX && this.minZ == minZ && this.blockStep == blockStep && this.width == width && this.height == height;
         }
         private boolean complete(){return rows.cardinality()==height;}
+        private Overview copy() {
+            Overview copy=new Overview(minX,minZ,blockStep,width,height);
+            System.arraycopy(colors,0,copy.colors,0,colors.length);copy.rows.or(rows);return copy;
+        }
     }
 
     private record Overlay(List<Zone> zones, List<Poi> pois) { }

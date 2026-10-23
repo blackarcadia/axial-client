@@ -13,7 +13,17 @@ generate-missing-chunks: true
 chunks-per-tick: 1
 max-in-flight: 2
 pause-below-tps: 18.5
+# Already-loaded chunks can be read directly, sharing a time budget with completions.
+# These settings also apply when upgrading an existing configuration without these keys.
+loaded-chunks-per-tick: 64
+render-time-budget-ms: 2.0
+# Show the current cache first, then refresh the whole world in the background on arrival.
+# Rapid world hops share the same scan rather than restarting it.
+refresh-on-world-change: true
+world-change-refresh-cooldown-seconds: 30
 # Finished maps are refreshed on demand after this age, while the old map stays visible.
 refresh-minutes: 60
 # Total outgoing map packets across all players, each below 30 KB.
 messages-per-tick: 2
+# Faster initial transfer on joins/world changes; ordinary incremental updates use the above limit.
+initial-transfer-packets-per-tick: 12

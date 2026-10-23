@@ -9,6 +9,33 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Exercises the real plugin encoder through the real Fabric client decoder. */
 class WorldMapClientCompatibilityTest {
     @BeforeEach void reset(){MinimapServerOverview.beginWorldChange();}
+    @Test void revisitingTheExactWorldRestoresItsWholeCachedMapOnTheFirstStripe() throws Exception {
+        var g=new MapGeometry(-256,-256,1,512,512);var id=UUID.randomUUID();int[] colors=new int[512*512];Arrays.fill(colors,0xFF123456);
+        var map=new WorldMap(id,g,1,colors);
+        MinimapServerOverview.beginWorldChange("server-a|overworld");
+        for(int row:TransferPlan.stripes(map,null))MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(map,row));
+        MinimapServerOverview.beginWorldChange("server-a|nether");assertFalse(MinimapServerOverview.available());
+        MinimapServerOverview.beginWorldChange("server-a|overworld");
+        colors[0]=0xFF654321;var updated=new WorldMap(id,g,2,colors);
+        MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(updated,0));
+        assertEquals(0xFF654321,MinimapServerOverview.colorAt(-256,-256));
+        assertEquals(0xFF123456,MinimapServerOverview.colorAt(255,255));
+        assertEquals(map.key(),MinimapServerOverview.fullWorldBounds().world());
+    }
+    @Test void cacheCannotLeakAcrossServersWorldIdsOrChangedBorders() throws Exception {
+        var g=new MapGeometry(0,0,1,512,512);var id=UUID.randomUUID();int[] colors=new int[512*512];Arrays.fill(colors,0xFF123456);
+        var map=new WorldMap(id,g,1,colors);
+        MinimapServerOverview.beginWorldChange("server-a|overworld");
+        for(int row:TransferPlan.stripes(map,null))MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(map,row));
+        MinimapServerOverview.beginWorldChange("server-b|overworld");
+        MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(map,0));assertEquals(0,MinimapServerOverview.colorAt(511,511));
+        MinimapServerOverview.beginWorldChange("server-a|overworld");
+        var other=new WorldMap(UUID.randomUUID(),g,2,colors);
+        MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(other,0));assertEquals(0,MinimapServerOverview.colorAt(511,511));
+        MinimapServerOverview.beginWorldChange("server-a|overworld");
+        var moved=new WorldMap(id,new MapGeometry(10,10,1,512,512),3,colors);
+        MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(moved,0));assertEquals(0,MinimapServerOverview.colorAt(511,511));
+    }
     @Test void serverReportsRenderingProgressInsteadOfSilentlyShowingAFallback() throws Exception {
         MinimapServerOverview.receiveFullWorld(MapProtocol.status("Rendering full-world map",50,100));
         assertEquals("Rendering full-world map (50%)",MinimapServerOverview.loadingMessage());
