@@ -105,7 +105,7 @@ public final class ClientSettingsScreen extends Screen {
                 c.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
                         layout.panel.x()+8,layout.panel.y()+5,0,0,64,32,240,117,240,117);
                 if(brandWidth>175)label(c,textRenderer,"AXIAL CLIENT",layout.panel.x()+77,layout.panel.y()+17,
-                        0xFFC78DF5,1.2f,brandWidth-70,true);
+                        BRAND,1.2f,brandWidth-70,true);
             }
             c.fill(layout.panel.x()+1,layout.headerBottom,layout.panel.right()-1,layout.headerBottom+1,DIVIDER);
             if(!layout.compact) {

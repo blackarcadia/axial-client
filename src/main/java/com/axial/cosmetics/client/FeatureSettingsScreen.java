@@ -156,7 +156,7 @@ public final class FeatureSettingsScreen extends Screen {
         frame(c,layout.panel,PANEL_BORDER,PANEL);
         int titleWidth=layout.panel.width()-(model.enabled()!=null?(layout.panel.width()<400?170:184):100);
         int titleCenter=layout.panel.x()+65+titleWidth/2;
-        centered(c,"AXIAL CLIENT",titleCenter,layout.panel.y()+8,MUTED,.75f,titleWidth,false);
+        centered(c,"AXIAL CLIENT",titleCenter,layout.panel.y()+8,BRAND,.75f,titleWidth,false);
         centered(c,model.title(),titleCenter,layout.panel.y()+21,INK,1f,titleWidth,true);
         c.fill(layout.panel.x()+12,layout.controls.y()-5,layout.panel.right()-12,layout.controls.y()-4,DIVIDER);
         c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());

@@ -162,7 +162,7 @@ public final class ModMenuScreen extends Screen {
         context.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
                 panel.x()+10,panel.y()+4,0,0,logoSize*2,logoSize,240,117,240,117);
         if(!layout.tight) {
-            label(context,textRenderer,"AXIAL CLIENT",panel.x()+logoSize*2+18,panel.y()+9,INK,small?1f:1.2f,panel.width()-logoSize*2-55,true);
+            label(context,textRenderer,"AXIAL CLIENT",panel.x()+logoSize*2+18,panel.y()+9,BRAND,small?1f:1.2f,panel.width()-logoSize*2-55,true);
             label(context,textRenderer,"Mod menu",panel.x()+logoSize*2+18,panel.y()+25,MUTED,.85f,panel.width()-logoSize*2-55,false);
         }
         int dividerY=layout.navigation.bottom()+3;

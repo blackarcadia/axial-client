@@ -8,6 +8,7 @@ import net.minecraft.util.Identifier;
 
 final class ModMenuUi {
     static final int INK = 0xFFF0F2F3, MUTED = 0xFFA0A7AE, LINE = 0xFF454C53;
+    static final int BRAND = 0xFFC78DF5;
     static final int GREEN = 0xFF46D57D, RED = 0xFFF0646C;
     static final int PANEL = 0xD914171B, PANEL_BORDER = 0xFF646B73, SURFACE = 0xA61B1F24;
     static final int FIELD = 0xC4202429, DIVIDER = 0xFF353A40, FOCUS = 0xFF9099A3;
