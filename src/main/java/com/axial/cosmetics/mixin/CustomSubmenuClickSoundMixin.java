@@ -2,10 +2,8 @@ package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.ChunkBordersSettingsScreen;
 import com.axial.cosmetics.client.CompassSettingsScreen;
-import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.client.CrosshairSettingsScreen;
 import com.axial.cosmetics.client.ItemScalerSettingsScreen;
-import com.axial.cosmetics.client.WaypointSettingsScreen;
 import net.minecraft.client.gui.Click;
 import org.axial.axialutils.client.AxialUiTheme;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,14 +11,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Applies AxialUtils' standard press sound to controls drawn by our custom screens. */
+/** Legacy screens draw their controls manually and need a click-sound hook.
+ * Navigation screens use native widgets with their own sounds and inherit mouseClicked.
+ */
 @Mixin({
         ChunkBordersSettingsScreen.class,
         CompassSettingsScreen.class,
-        CreateWaypointScreen.class,
         CrosshairSettingsScreen.class,
-        ItemScalerSettingsScreen.class,
-        WaypointSettingsScreen.class
+        ItemScalerSettingsScreen.class
 })
 public abstract class CustomSubmenuClickSoundMixin {
     @Inject(method = "mouseClicked", at = @At("RETURN"))
