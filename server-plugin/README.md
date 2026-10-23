@@ -37,6 +37,7 @@ Players require `axialworldmap.view`, granted by default, to receive terrain.
 - Complete caches survive restarts under `plugins/AxialWorldMap/maps/`. Files are compressed, validated against the current world UUID and border geometry, and atomically replaced.
 - Normal block-place/break events refresh affected sampled chunks after a short debounce. A periodic refresh becomes eligible on client requests after `refresh-minutes`. For bulk edits, mine resets, explosions, or changes made without these events, run `/axialmap render world_name` to refresh immediately.
 - Transfers are spread over ticks, each packet stays below 29 KB, and unchanged map stripes are not resent. Logout, respawn and world changes reset the per-player transfer state.
+- Updated clients clear their overview on every join/world replacement and explicitly request a complete transfer again. Install the updated plugin JAR as well as the client for this refresh handshake; regular requests continue to use incremental stripes. This reloads the current server map rather than regenerating world terrain on every join.
 
 ## Existing PrisonsCore support
 

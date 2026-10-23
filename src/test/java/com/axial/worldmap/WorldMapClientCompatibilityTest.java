@@ -28,4 +28,19 @@ class WorldMapClientCompatibilityTest {
         MinimapServerOverview.receiveFullWorld(new byte[]{1,0,5,1});
         assertEquals(0xFF123456,MinimapServerOverview.colorAt(-10,-10));
     }
+    @Test void completeReloadRestoresAllRowsAfterLeavingAndRejoiningTheSameWorld() throws Exception {
+        var g=new MapGeometry(-256,-256,1,512,512);
+        int[] colors=new int[g.width()*g.height()];
+        for(int i=0;i<colors.length;i++)colors[i]=0xFF000000|i;
+        var map=new WorldMap(UUID.randomUUID(),g,1,colors);
+        for(int start:TransferPlan.stripes(map,null))MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(map,start));
+        MinimapServerOverview.beginWorldChange();
+        assertFalse(MinimapServerOverview.available());
+        // A full request discards the server's old sent-map baseline instead of diffing it.
+        assertTrue(MapProtocol.requestsFullMap(new byte[]{0,1}));
+        assertTrue(TransferPlan.stripes(map,map).isEmpty());
+        for(int start:TransferPlan.stripes(map,null))MinimapServerOverview.receiveFullWorld(MapProtocol.snapshot(map,start));
+        for(int i=0;i<colors.length;i++)assertEquals(colors[i],MinimapServerOverview.colorAt(g.x(i),g.z(i)));
+        assertEquals(map.key(),MinimapServerOverview.fullWorldBounds().world());
+    }
 }

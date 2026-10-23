@@ -23,6 +23,8 @@ public final class MinimapServerOverview {
     private static Overview fullWorld;
     private static long lastRequestAt;
     private static long revision;
+    private static long worldGeneration;
+    private static boolean fullRequestPending=true;
 
     private MinimapServerOverview() { }
 
@@ -30,9 +32,21 @@ public final class MinimapServerOverview {
         if(MinecraftClient.getInstance().getNetworkHandler()==null)return;
         long now = System.currentTimeMillis();
         if (now - lastRequestAt < 5_000) return;
-        lastRequestAt = now;
-        if(ClientPlayNetworking.canSend(WorldMapPayload.ID))ClientPlayNetworking.send(new WorldMapPayload(new byte[]{REQUEST}));
-        if(ClientPlayNetworking.canSend(MinimapMapPayload.ID))ClientPlayNetworking.send(new MinimapMapPayload(new byte[]{REQUEST}));
+        boolean sent=false;
+        if(ClientPlayNetworking.canSend(WorldMapPayload.ID)) {
+            ClientPlayNetworking.send(new WorldMapPayload(nextWorldRequest()));
+            sent=true;
+        }
+        if(ClientPlayNetworking.canSend(MinimapMapPayload.ID)) {
+            ClientPlayNetworking.send(new MinimapMapPayload(new byte[]{REQUEST}));sent=true;
+        }
+        if(sent)lastRequestAt = now;
+    }
+
+    static byte[] nextWorldRequest() {
+        byte[] request=fullRequestPending?new byte[]{REQUEST,1}:new byte[]{REQUEST};
+        fullRequestPending=false;
+        return request;
     }
 
     /** Clears the previous world's map while the server sends the next world's overview. */
@@ -40,6 +54,7 @@ public final class MinimapServerOverview {
         activeWorld = null;fullWorld=null;fullWorldKey=null;
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
+        fullRequestPending=true;worldGeneration++;
     }
 
     public static void receive(byte[] payload) {
@@ -102,6 +117,7 @@ public final class MinimapServerOverview {
     }
 
     public static long revision(){return revision;}
+    public static long worldGeneration(){return worldGeneration;}
     public static boolean available(){return fullWorld!=null||activeWorld!=null&&OVERVIEWS.containsKey(activeWorld);}
     public record WorldBounds(String world,double centerX,double centerZ,double scale) { }
     public static WorldBounds fullWorldBounds(){return fullWorld==null?null:new WorldBounds(fullWorldKey,fullWorld.minX+fullWorld.width*(double)fullWorld.blockStep/2,fullWorld.minZ+fullWorld.height*(double)fullWorld.blockStep/2,Math.max(fullWorld.width,fullWorld.height)*(double)fullWorld.blockStep/256);}

@@ -6,6 +6,15 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MapProtocolTest {
+    @Test void fullReloadRequestsAreDistinctFromRegularIncrementalRequests() {
+        assertTrue(MapProtocol.isRequest(new byte[]{0}));
+        assertFalse(MapProtocol.requestsFullMap(new byte[]{0}));
+        assertTrue(MapProtocol.isRequest(new byte[]{0,1}));
+        assertTrue(MapProtocol.requestsFullMap(new byte[]{0,1}));
+        for(byte[] invalid:List.of(new byte[0],new byte[]{1},new byte[]{0,0},new byte[]{0,2},new byte[]{0,1,1})) {
+            assertFalse(MapProtocol.isRequest(invalid));assertFalse(MapProtocol.requestsFullMap(invalid));
+        }
+    }
     @Test void stripesStayWithinMessageLimitsAndReconstructEveryPixel() throws Exception {
         var g=MapGeometry.forBorder(0,0,16384,512);int[] pixels=new int[g.width()*g.height()];
         for(int i=0;i<pixels.length;i++)pixels[i]=0xFF000000|i;

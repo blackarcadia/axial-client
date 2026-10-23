@@ -14,6 +14,7 @@ import com.axial.cosmetics.client.MenuMusicController;
 import com.axial.cosmetics.client.MinimapFullScreen;
 import com.axial.cosmetics.client.MinimapExploration;
 import com.axial.cosmetics.client.MinimapMapPayload;
+import com.axial.cosmetics.client.MinimapRenderer;
 import com.axial.cosmetics.client.MinimapServerOverview;
 import com.axial.cosmetics.client.WeatherDetectorModelRegistry;
 import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
@@ -61,12 +62,24 @@ public class AxialCosmetics implements ClientModInitializer {
         BundledEmoteSynchronizer.synchronize();
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
-        ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.WorldMapPayload.ID, (payload, context) ->
-                context.client().execute(() -> MinimapServerOverview.receiveFullWorld(payload.data())));
+        ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.WorldMapPayload.ID, (payload, context) -> {
+            var client=context.client();var world=client.world;var connection=client.getNetworkHandler();
+            client.execute(() -> {
+                if(client.world!=world||client.getNetworkHandler()!=connection)return;
+                MinimapRenderer.syncWorld(client);
+                MinimapServerOverview.receiveFullWorld(payload.data());
+            });
+        });
         PayloadTypeRegistry.playC2S().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(MinimapMapPayload.ID, MinimapMapPayload.CODEC);
-        ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) ->
-                context.client().execute(() -> MinimapServerOverview.receive(payload.data())));
+        ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) -> {
+            var client=context.client();var world=client.world;var connection=client.getNetworkHandler();
+            client.execute(() -> {
+                if(client.world!=world||client.getNetworkHandler()!=connection)return;
+                MinimapRenderer.syncWorld(client);
+                MinimapServerOverview.receive(payload.data());
+            });
+        });
         applyEmotecraftDefaults();
         EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
 
@@ -113,7 +126,11 @@ public class AxialCosmetics implements ClientModInitializer {
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
         WaypointWorldRenderer.register();
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->MinimapExploration.flush());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->MinimapRenderer.refreshWorld(client));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client,world)->MinimapRenderer.refreshWorld(client));
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->{
+            MinimapExploration.flush();MinimapRenderer.refreshWorld(client);
+        });
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client->MinimapExploration.flush());
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
@@ -140,6 +157,7 @@ public class AxialCosmetics implements ClientModInitializer {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            MinimapRenderer.tick(client);
             applyEmotecraftDefaults();
             MenuMusicController.tick(client);
             ChunkBordersConfig.sync(client);

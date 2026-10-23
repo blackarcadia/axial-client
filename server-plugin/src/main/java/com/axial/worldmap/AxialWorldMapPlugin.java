@@ -162,9 +162,11 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         sendToSubscribers(job.world);
     }
     @Override public void onPluginMessageReceived(String channel,Player player,byte[] data) {
-        if(!MapProtocol.CHANNEL.equals(channel)||data.length!=1||data[0]!=0||!player.hasPermission("axialworldmap.view"))return;
+        if(!MapProtocol.CHANNEL.equals(channel)||!MapProtocol.isRequest(data)||!player.hasPermission("axialworldmap.view"))return;
         long now=System.currentTimeMillis();if(now-requests.getOrDefault(player.getUniqueId(),0L)<2_000)return;
         requests.put(player.getUniqueId(),now);subscribers.add(player.getUniqueId());
+        // A new client world has no previous stripes, even if this map is unchanged.
+        if(MapProtocol.requestsFullMap(data)){sent.remove(player.getUniqueId());transfers.remove(player.getUniqueId());}
         World world=player.getWorld();if(!eligible(world))return;
         ensure(world,false);WorldMap map=maps.get(world.getUID());if(map!=null&&matches(world,map.geometry()))send(player,map);
     }

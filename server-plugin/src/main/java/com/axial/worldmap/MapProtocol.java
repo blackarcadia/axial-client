@@ -7,6 +7,10 @@ final class MapProtocol {
     static final String CHANNEL="axial_cosmetics:world_map";
     static final int MAX_PACKET=29_000;
     private MapProtocol(){ }
+    static boolean isRequest(byte[] data) {
+        return data.length>=1&&data[0]==0&&(data.length==1||data.length==2&&data[1]==1);
+    }
+    static boolean requestsFullMap(byte[] data){return isRequest(data)&&data.length==2;}
     static int rowsPerPacket(WorldMap map) {
         int header=1+2+map.key().getBytes(StandardCharsets.UTF_8).length+12+8;
         return Math.max(1,(MAX_PACKET-header)/(map.geometry().width()*4));

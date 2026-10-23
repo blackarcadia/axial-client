@@ -33,6 +33,26 @@ public final class MinimapRenderer {
     private static boolean hudCircular;
     private MinimapRenderer() { }
 
+    /** Called at connection/world boundaries, before any new overview is rendered. */
+    public static void refreshWorld(MinecraftClient client) {
+        lastWorld=client.world;
+        worldKey=contextKey(client);
+        sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
+        lastHudUpload=lastFullUpload=0;
+        MinimapServerOverview.beginWorldChange();
+    }
+    private static String contextKey(MinecraftClient client) {
+        return client.world==null?"":WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();
+    }
+    /** Runs even when the HUD minimap and full-map screen are closed. */
+    public static void tick(MinecraftClient client) {
+        syncWorld(client);
+        if(client.world!=null&&client.player!=null)MinimapServerOverview.request();
+    }
+    public static void syncWorld(MinecraftClient client) {
+        if(lastWorld!=client.world||!worldKey.equals(contextKey(client)))refreshWorld(client);
+    }
+
     public static void render(DrawContext c,RenderTickCounter ticks) {
         MinecraftClient client=MinecraftClient.getInstance();
         if(!MinimapConfig.isEnabled()||client.options.hudHidden||client.player==null||client.world==null||client.currentScreen!=null)return;
@@ -84,12 +104,7 @@ public final class MinimapRenderer {
         c.disableScissor();
     }
     private static void update(MinecraftClient client) {
-        String key=WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();
-        if(lastWorld!=client.world||!worldKey.equals(key)) {
-            lastWorld=client.world;
-            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
-            MinimapServerOverview.beginWorldChange();
-        }
+        syncWorld(client);
         MinimapServerOverview.request();
         // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
         if(sampledTick==client.player.age)return;

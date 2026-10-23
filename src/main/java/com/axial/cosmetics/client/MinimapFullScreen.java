@@ -17,6 +17,7 @@ public class MinimapFullScreen extends NavigationScreen {
     private MapViewport view;
     private TextFieldWidget search;
     private String query="",selectedId,armedDelete,contextKey="",fittedWorld="";
+    private long worldGeneration=-1;
     private int scroll;
     private boolean dragging,dimensionOnly=true;
     private NavButton edit,delete,visibility,dimensions,wholeWorld;
@@ -46,7 +47,12 @@ public class MinimapFullScreen extends NavigationScreen {
     }
     @Override public void tick() {
         String key=WaypointConfig.worldId(client)+"|"+(client.world==null?"":client.world.getRegistryKey().getValue());
-        if(!key.equals(contextKey)){contextKey=key;selectedId=armedDelete=null;fittedWorld="";refresh();}
+        long generation=MinimapServerOverview.worldGeneration();
+        if(!key.equals(contextKey)||generation!=worldGeneration) {
+            contextKey=key;worldGeneration=generation;selectedId=armedDelete=null;fittedWorld="";dragging=false;
+            view=new MapViewport(client.player==null?0:client.player.getX(),client.player==null?0:client.player.getZ(),MinimapConfig.zoom());
+            refresh();
+        }
         var bounds=MinimapServerOverview.fullWorldBounds();if(bounds!=null&&!bounds.world().equals(fittedWorld))fitWorld();
     }
     private void refresh() {
