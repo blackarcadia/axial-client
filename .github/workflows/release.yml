@@ -38,7 +38,7 @@ jobs:
 
       - name: Build macOS package
         run: |
-          ./gradlew clean test --tests 'org.example.launcher.*' jpackageMac \
+          ./gradlew clean :test --tests 'org.example.launcher.*' :server-plugin:test jpackageMac \
             -PappVersion="${APP_VERSION}" \
             -PappChannel="${APP_CHANNEL}"
 
@@ -160,7 +160,7 @@ jobs:
       - name: Build Windows packages
         shell: pwsh
         run: |
-          ./gradlew.bat clean test --tests 'org.example.launcher.*' prepareWindowsPortableZipLayout jpackageWindowsInstaller `
+          ./gradlew.bat clean :test --tests 'org.example.launcher.*' :server-plugin:test prepareWindowsPortableZipLayout jpackageWindowsInstaller `
             -PappVersion="${env:APP_VERSION}" `
             -PappChannel="${env:APP_CHANNEL}"
 
