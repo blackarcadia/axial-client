@@ -6,6 +6,9 @@ import com.axial.cosmetics.client.ModMenuScreen;
 import com.axial.cosmetics.client.QuickMenuScreen;
 import com.axial.cosmetics.client.FeatureSettingsScreen;
 import com.axial.cosmetics.client.ClientSettingsScreen;
+import com.axial.cosmetics.client.MinimapFullScreen;
+import com.axial.cosmetics.client.MinimapSettingsScreen;
+import com.axial.cosmetics.client.CreateWaypointScreen;
 import com.axial.cosmetics.client.CrosshairColorPickerScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -41,6 +44,7 @@ public abstract class InGameButtonSkinMixin {
         // Container controls include icon-only recipe buttons and creative page
         // arrows. Let Minecraft render their own sprites and hover states.
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
+                || currentScreen instanceof MinimapFullScreen || currentScreen instanceof MinimapSettingsScreen || currentScreen instanceof CreateWaypointScreen
                 || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof ClientSettingsScreen
                 || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
                 || currentScreen instanceof AccountsScreen accounts && accounts.renderedTitleScreen() != null) {

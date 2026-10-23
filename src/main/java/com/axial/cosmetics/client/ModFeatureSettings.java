@@ -16,9 +16,10 @@ import static com.axial.cosmetics.client.FeatureSettingsScreen.*;
 final class ModFeatureSettings {
     private ModFeatureSettings() {}
     static Screen create(String feature, Screen parent, Screen backend) {
+        if(feature.equals("MINIMAP"))return new MinimapSettingsScreen(parent);
+        if(feature.equals("WAYPOINTS"))return new WaypointSettingsScreen(parent);
         Model model=switch(feature) {
             case "CROSSHAIR" -> crosshair();
-            case "MINIMAP" -> minimap(backend,parent);
             case "ARMOR HUD" -> armor();
             case "HUD" -> information();
             case "SATCHEL HELPER" -> satchel();
@@ -28,7 +29,6 @@ final class ModFeatureSettings {
             case "ITEM SCALER" -> items();
             case "POTIONS HUD" -> potions();
             case "TITLE OVERLAY" -> titles();
-            case "WAYPOINTS" -> waypoints(parent,backend);
             default -> null;
         };
         return model==null?null:new FeatureSettingsScreen(parent,model);
@@ -134,32 +134,6 @@ final class ModFeatureSettings {
                 range("OFF HAND",ItemScalerConfig::offHandScale,v->ItemScalerConfig.setOffHandScale((float)v),.25,3,.01,"X")),()->{
             ItemScalerConfig.setMainHandScale(1);ItemScalerConfig.setOffHandScale(1);
         });
-    }
-    private static Model minimap(Screen backend,Screen parent) {
-        return model("MINIMAP",MinimapConfig::isEnabled,MinimapConfig::toggle,rows(section("APPEARANCE"),
-                new Choice("STYLE",List.of("SQUARE","CIRCLE"),()->MinimapConfig.isCircular()?1:0,i->MinimapConfig.setCircular(i==1),false),
-                new Choice("SIZE",List.of("1.0X","1.5X","2.0X","3.0X"),()->MinimapConfig.sizeIndex(),MinimapConfig::setSizeIndex,false),
-                new Choice("ZOOM",List.of("0.75X","1.0X","1.5X","2.0X"),()->MinimapConfig.zoomIndex(),MinimapConfig::setZoomIndex,false),
-                new Action("MOVE HUD",()->MinecraftClient.getInstance().setScreen(ModMenuCatalog.child(backend,parent,"MOVE"))),
-                section("KEYBIND"),new Key("OPEN FULL MAP",AxialCosmetics::minimapMapKey)),MinimapConfig::resetAppearance);
-    }
-    private static Model waypoints(Screen parent,Screen backend) {
-        List<Setting> rows=rows(section("KEYBIND"),new Key("CREATE WAYPOINT",AxialCosmetics::createWaypointKey),section("SAVED LOCATIONS"));
-        var entries=WaypointConfig.waypointsFor(MinecraftClient.getInstance());
-        if(entries.isEmpty())rows.add(section("NO CURRENT WAYPOINTS SET"));
-        for(var entry:entries) {
-            var current=new java.util.concurrent.atomic.AtomicReference<>(entry);
-            rows.add(section(entry.x()+" / "+entry.y()+" / "+entry.z()));
-            rows.add(new Input("NAME",()->current.get().name(),value->{
-                var old=current.get();WaypointConfig.rename(old,value);
-                if(!value.isBlank())current.set(new WaypointConfig.Entry(value.trim(),old.world(),old.dimension(),old.x(),old.y(),old.z(),old.color()));
-            }));
-            rows.add(new Color("WAYPOINT COLOR",()->current.get().color(),value->current.set(WaypointConfig.setColor(current.get(),value))));
-            rows.add(new Action("DELETE WAYPOINT",()->{
-                WaypointConfig.delete(current.get());open("WAYPOINTS",parent,backend);
-            }));
-        }
-        return new Model("WAYPOINTS",WaypointConfig::enabled,()->WaypointConfig.setEnabled(!WaypointConfig.enabled()),List.copyOf(rows),null,null);
     }
     private static Model nativeModel(String title,String flag,List<Setting> rows,String...fields) {
         return model(title,()->flag(flag),()->set(flag,!flag(flag)),rows,()->{

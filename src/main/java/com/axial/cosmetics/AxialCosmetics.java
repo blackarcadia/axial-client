@@ -109,6 +109,8 @@ public class AxialCosmetics implements ClientModInitializer {
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
         WaypointWorldRenderer.register();
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->MinimapExploration.flush());
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client->MinimapExploration.flush());
 
         reloadKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.axial_cosmetics.reload", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9, Category.MISC));
@@ -177,9 +179,7 @@ public class AxialCosmetics implements ClientModInitializer {
                 }
             }
             while (minimapMapKey.wasPressed()) {
-                if (client.currentScreen instanceof MinimapFullScreen) {
-                    client.setScreen(null);
-                } else if (client.player != null && client.currentScreen == null) {
+                if (client.player != null && client.currentScreen == null) {
                     client.setScreen(new MinimapFullScreen());
                 }
             }

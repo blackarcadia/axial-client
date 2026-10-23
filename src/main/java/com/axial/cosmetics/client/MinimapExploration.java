@@ -2,12 +2,15 @@ package com.axial.cosmetics.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,16 +18,24 @@ import java.util.Map;
 public final class MinimapExploration {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-explored-map.json");
+    private static boolean writable=true;
     private static Data data = load();
     private static boolean dirty;
     private static long lastSave;
+    private static long revision;
 
     private MinimapExploration() { }
 
     public static void discover(MinecraftClient client, int x, int z, int color) {
         String world = worldKey(client);
         Map<String, Integer> pixels = data.terrain.computeIfAbsent(world, ignored -> new HashMap<>());
-        if (!Integer.valueOf(color).equals(pixels.put(x + "," + z, color))) dirty = true;
+        if (!Integer.valueOf(color).equals(pixels.put(x + "," + z, color))) {dirty = true;revision++;}
+    }
+
+    public static long revision(){return revision;}
+    static Map<String,Integer> terrainFor(MinecraftClient client){return data.terrain.computeIfAbsent(worldKey(client),ignored->new HashMap<>());}
+    static void discover(Map<String,Integer> pixels,int x,int z,int color) {
+        if(!Integer.valueOf(color).equals(pixels.put(x+","+z,color))){dirty=true;revision++;}
     }
 
     public static int colorAt(MinecraftClient client, int x, int z) {
@@ -45,13 +56,24 @@ public final class MinimapExploration {
     }
 
     public static void saveIfDue() {
-        if (!dirty || System.currentTimeMillis() - lastSave < 4_000) return;
+        if(System.currentTimeMillis()-lastSave>=10_000)flush();
+    }
+
+    public static void flush() {
+        if(!dirty||!writable)return;
         try {
             Files.createDirectories(PATH.getParent());
-            Files.writeString(PATH, GSON.toJson(data));
-            dirty = false;
-            lastSave = System.currentTimeMillis();
-        } catch (IOException ignored) { }
+            Path temp=Files.createTempFile(PATH.getParent(),"exploration-",".tmp");
+            try {
+                Files.writeString(temp,GSON.toJson(data));
+                try{Files.move(temp,PATH,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
+                catch(AtomicMoveNotSupportedException ex){Files.move(temp,PATH,StandardCopyOption.REPLACE_EXISTING);}
+            } finally {Files.deleteIfExists(temp);}
+            dirty=false;lastSave=System.currentTimeMillis();
+        } catch(IOException ex){
+            lastSave=System.currentTimeMillis();
+            org.slf4j.LoggerFactory.getLogger(MinimapExploration.class).warn("Could not save explored map",ex);
+        }
     }
 
     private static Data load() {
@@ -63,7 +85,11 @@ public final class MinimapExploration {
                 if (value.deaths == null) value.deaths = new HashMap<>();
                 return value;
             }
-        } catch (IOException ignored) { }
+        } catch (IOException|JsonParseException ex) {
+            try{Files.copy(PATH,PATH.resolveSibling(PATH.getFileName()+".backup-"+System.currentTimeMillis()));}
+            catch(IOException backup){writable=false;}
+            org.slf4j.LoggerFactory.getLogger(MinimapExploration.class).warn("Could not read explored map; preserved original data",ex);
+        }
         return new Data();
     }
 

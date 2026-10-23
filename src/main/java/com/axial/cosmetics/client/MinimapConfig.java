@@ -2,6 +2,7 @@ package com.axial.cosmetics.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
@@ -28,10 +29,16 @@ public final class MinimapConfig {
         SETTINGS.size = current == 1.0f ? 1.5f : current == 1.5f ? 2.0f : current == 2.0f ? 3.0f : 1.0f;
         save();
     }
+    public static boolean showCoordinates(){return SETTINGS.showCoordinates;}
+    public static void setCoordinates(boolean value){SETTINGS.showCoordinates=value;save();}
+    public static boolean showWaypointNames(){return SETTINGS.showWaypointNames;}
+    public static void setWaypointNames(boolean value){SETTINGS.showWaypointNames=value;save();}
+    public static boolean showDeath(){return SETTINGS.showDeath;}
+    public static void setDeath(boolean value){SETTINGS.showDeath=value;save();}
     public static boolean isCircular() { return "CIRCLE".equals(SETTINGS.style); }
     public static String styleLabel() { return isCircular() ? "CIRCLE" : "SQUARE"; }
     public static void cycleStyle() { SETTINGS.style = isCircular() ? "SQUARE" : "CIRCLE"; save(); }
-    public static float zoom() { return SETTINGS.zoom == null || SETTINGS.zoom < 0.5f || SETTINGS.zoom > 2.0f ? 0.75f : SETTINGS.zoom; }
+    public static float zoom() { return SETTINGS.zoom == null || !Float.isFinite(SETTINGS.zoom) || SETTINGS.zoom < 0.5f || SETTINGS.zoom > 2.0f ? 0.75f : SETTINGS.zoom; }
     public static String zoomLabel() { return String.format("%.2fX", zoom()); }
     public static void cycleZoom() {
         float value = zoom();
@@ -58,12 +65,12 @@ public final class MinimapConfig {
         try {
             Settings settings = GSON.fromJson(Files.readString(PATH), Settings.class);
             return settings == null ? new Settings() : settings;
-        } catch (IOException ignored) { return new Settings(); }
+        } catch (IOException|JsonParseException ignored) { return new Settings(); }
     }
     private static float size() {
         if (SETTINGS.size == null || (SETTINGS.size != 1.0f && SETTINGS.size != 1.5f && SETTINGS.size != 2.0f && SETTINGS.size != 3.0f)) return 1.5f;
         return SETTINGS.size;
     }
     private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(value, Math.max(min, max))); }
-    private static final class Settings { boolean enabled; Integer x; Integer y; Float size; Float zoom; String style = "SQUARE"; }
+    private static final class Settings { boolean showCoordinates=true,showWaypointNames=true,showDeath=true; boolean enabled; Integer x; Integer y; Float size; Float zoom; String style = "SQUARE"; }
 }

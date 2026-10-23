@@ -1,276 +1,169 @@
 package com.axial.cosmetics.client;
 
 import com.axial.cosmetics.AxialCosmetics;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.MapColor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Heightmap;
+import java.util.Map;
+import static com.axial.cosmetics.client.ModMenuUi.*;
 
-/** Draws a detailed top-down map of every loaded surface block in the viewport. */
+/** Budgeted terrain discovery, shared projections, and cached map textures. */
 public final class MinimapRenderer {
-    private static final int MAP_SIZE = 128;
-    private static final int FULL_MAP_SIZE = 256;
-    private static final int BORDER = 2;
-    private static final int REFRESH_INTERVAL_TICKS = 10;
-    /** More terrain samples per map without changing the visible world area. */
-    private static final float SAMPLE_SCALE = 0.75f;
-    private static final Identifier MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/minimap");
-    private static final Identifier FULL_MAP_TEXTURE = Identifier.of(AxialCosmetics.MOD_ID, "dynamic/full_map");
-    private static final int[] HEIGHTS = new int[MAP_SIZE * MAP_SIZE];
-
-    private static NativeImage image;
-    private static NativeImageBackedTexture texture;
-    private static NativeImage fullMapImage;
-    private static NativeImageBackedTexture fullMapTexture;
-    private static int lastCenterX = Integer.MIN_VALUE;
-    private static int lastCenterZ = Integer.MIN_VALUE;
-    private static int lastSampleTick = Integer.MIN_VALUE;
-    private static String lastWorldId;
-
+    private static final int UNKNOWN=0xFF20252B;
+    private static final Identifier HUD=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/minimap");
+    private static final Identifier FULL=Identifier.of(AxialCosmetics.MOD_ID,"dynamic/full_map");
+    private static NativeImage hudImage,fullImage;
+    private static NativeImageBackedTexture hudTexture,fullTexture;
+    private static String worldKey="";
+    private static net.minecraft.client.world.ClientWorld lastWorld;
+    private static int sampledTick=Integer.MIN_VALUE,row;
+    private static int sampleX,sampleZ;
+    private static float sampleScale;
+    private static long hudStamp,fullStamp,lastHudUpload,lastFullUpload;
+    private static double hudX=Double.NaN,hudZ,hudScale,fullX=Double.NaN,fullZ,fullScale;
+    private static boolean hudCircular;
     private MinimapRenderer() { }
 
-    public static void render(DrawContext context, RenderTickCounter tickCounter) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (!MinimapConfig.isEnabled() || client.options.hudHidden || client.player == null || client.world == null || client.currentScreen != null) return;
-        render(context, client);
+    public static void render(DrawContext c,RenderTickCounter ticks) {
+        MinecraftClient client=MinecraftClient.getInstance();
+        if(!MinimapConfig.isEnabled()||client.options.hudHidden||client.player==null||client.world==null||client.currentScreen!=null)return;
+        render(c,client);
     }
-
-    public static void renderPreview(DrawContext context, MinecraftClient client) {
-        if (MinimapConfig.isEnabled()) render(context, client);
+    public static void renderPreview(DrawContext c,MinecraftClient client){if(MinimapConfig.isEnabled())render(c,client);}
+    private static void render(DrawContext c,MinecraftClient client) {
+        int size=Math.min(MinimapConfig.getSize(),Math.min(c.getScaledWindowWidth()-12,c.getScaledWindowHeight()-32));
+        if(size<16)return;
+        int left=Math.clamp(MinimapConfig.getX(c.getScaledWindowWidth()),6,c.getScaledWindowWidth()-size-6);
+        int top=Math.clamp(MinimapConfig.getY(c.getScaledWindowHeight()),6,c.getScaledWindowHeight()-size-26);
+        drawHud(c,client,left,top,size);
     }
-
-    /** Uses the real terrain renderer, even when the HUD feature is currently disabled. */
-    public static void renderSettingsPreview(DrawContext context, MinecraftClient client,int x,int y,int width,int height) {
-        if(client.world==null||client.player==null) {
-            ModMenuUi.label(context,client.textRenderer,"JOIN A WORLD",x+4,y+height/2-9,ModMenuUi.MUTED,.8f,width-8,false);
-            ModMenuUi.label(context,client.textRenderer,"TO PREVIEW",x+4,y+height/2+5,ModMenuUi.MUTED,.8f,width-8,false);
-            return;
+    public static void renderSettingsPreview(DrawContext c,MinecraftClient client,int x,int y,int width,int height) {
+        if(client.world==null||client.player==null){label(c,client.textRenderer,"Join a world to preview",x+8,y+height/2,MUTED,.85f,width-16,false);return;}
+        int size=Math.max(16,Math.min(Math.min(width-20,height-32),MinimapConfig.getSize()));
+        drawHud(c,client,x+(width-size)/2,y+(height-size-18)/2,size);
+    }
+    private static void drawHud(DrawContext c,MinecraftClient client,int left,int top,int size) {
+        if(client.world==null||client.player==null)return;
+        update(client);
+        boolean circle=MinimapConfig.isCircular();
+        var view=new MapViewport(client.player.getX(),client.player.getZ(),MinimapConfig.zoom()*.75);
+        if(!circle)frame(c,new ModMenuLayout.Rect(left-3,top-3,size+6,size+6),LINE,PANEL);
+        else disc(c,left-3,top-3,size+6,PANEL);
+        upload(client,view,false,circle);
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,HUD,left,top,0,0,size,size,128,128,128,128);
+        c.enableScissor(left,top,left+size,top+size);
+        overlays(c,client,view,left,top,size,circle,false);
+        c.disableScissor();
+        label(c,client.textRenderer,"N",left+size/2-3,top+4,BRAND,.85f,12,true);
+        if(MinimapConfig.showCoordinates()) {
+            rounded(c,left-3,top+size+5,size+6,16,PANEL);
+            String value=client.player.getBlockX()+"  /  "+client.player.getBlockY()+"  /  "+client.player.getBlockZ();
+            int w=UiTypography.width(client.textRenderer,value,.75f,false);
+            label(c,client.textRenderer,value,left+Math.max(2,(size-w)/2),top+size+10,MUTED,.75f,size-4,false);
         }
-        updateWorld(client);
-        int size=Math.max(1,Math.min(Math.min(width,height)-8,MinimapConfig.getSize()));
-        renderMap(context,client,x+(width-size)/2,y+(height-size)/2,size,MinimapConfig.isCircular());
     }
-
-    public static void renderFullScreen(DrawContext context, MinecraftClient client, float centerX, float centerZ, float blocksPerPixel) {
-        int width = client.getWindow().getScaledWidth();
-        int height = client.getWindow().getScaledHeight();
-        int size = Math.min(width - 48, height - 48);
-        int left = (width - size) / 2;
-        int top = (height - size) / 2;
-        context.fill(0, 0, width, height, 0xD8101217);
+    public static void renderFullScreen(DrawContext c,MinecraftClient client,float x,float z,float scale) {
+        int size=Math.max(1,Math.min(c.getScaledWindowWidth()-48,c.getScaledWindowHeight()-48));
+        renderFullMap(c,client,(c.getScaledWindowWidth()-size)/2,(c.getScaledWindowHeight()-size)/2,size,new MapViewport(x,z,scale));
+    }
+    static void renderFullMap(DrawContext c,MinecraftClient client,int left,int top,int size,MapViewport view) {
+        if(client.world==null||client.player==null)return;
+        update(client);upload(client,view,true,false);
+        c.enableScissor(left,top,left+size,top+size);
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,256,256,256,256);
+        overlays(c,client,view,left,top,size,false,true);
+        c.disableScissor();
+    }
+    private static void update(MinecraftClient client) {
+        String key=WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();
+        if(lastWorld!=client.world||!worldKey.equals(key)) {
+            lastWorld=client.world;
+            worldKey=key;sampledTick=Integer.MIN_VALUE;row=0;hudX=fullX=Double.NaN;
+            MinimapServerOverview.beginWorldChange();
+        }
         MinimapServerOverview.request();
-        if (!MinimapServerOverview.render(context, client, left, top, size)) {
-            renderExploredMap(context, client, left, top, size, centerX, centerZ, blocksPerPixel);
+        if(MinimapServerOverview.available())return;
+        // Terrain reads are bounded to 2,048 columns per tick and never load chunks.
+        if(sampledTick==client.player.age)return;
+        sampledTick=client.player.age;
+        if(row==0){sampleX=client.player.getBlockX();sampleZ=client.player.getBlockZ();sampleScale=MinimapConfig.zoom()*1.5f;}
+        Map<String,Integer> pixels=MinimapExploration.terrainFor(client);
+        BlockPos.Mutable pos=new BlockPos.Mutable();
+        for(int end=Math.min(128,row+16);row<end;row++)for(int col=0;col<128;col++) {
+            int x=(int)Math.floor(sampleX+(col-64)*sampleScale),z=(int)Math.floor(sampleZ+(row-64)*sampleScale);
+            if(!client.world.getChunkManager().isChunkLoaded(x>>4,z>>4))continue;
+            int y=client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z)-1;
+            pos.set(x,y,z);
+            MapColor color=client.world.getBlockState(pos).getMapColor(client.world,pos);
+            if(color==MapColor.CLEAR)continue;
+            int north=client.world.getChunkManager().isChunkLoaded(x>>4,(z-1)>>4)?client.world.getTopY(Heightmap.Type.WORLD_SURFACE,x,z-1)-1:y;
+            MapColor.Brightness shade=y>north?MapColor.Brightness.HIGH:y<north?MapColor.Brightness.LOW:MapColor.Brightness.NORMAL;
+            int argb=color.getRenderColor(shade);
+            int endX=(int)Math.floor(sampleX+(col+1-64)*sampleScale),endZ=(int)Math.floor(sampleZ+(row+1-64)*sampleScale);
+            // Fill the sampled footprint so zoomed-out discovery has no checkerboard holes.
+            for(int wz=z;wz<Math.max(z+1,endZ);wz++)for(int wx=x;wx<Math.max(x+1,endX);wx++)MinimapExploration.discover(pixels,wx,wz,argb);
         }
-        context.drawCenteredTextWithShadow(client.textRenderer, net.minecraft.text.Text.literal("FULL MAP  •  SCROLL TO ZOOM  •  DRAG TO PAN  •  PRESS " + AxialCosmetics.minimapMapKey().getBoundKeyLocalizedText().getString().toUpperCase() + " TO CLOSE"), width / 2, Math.max(12, top - 18), 0xFFF7F7FF);
+        if(row>=128)row=0;
     }
-
-    private static void render(DrawContext context, MinecraftClient client) {
-        updateWorld(client);
-        int size = MinimapConfig.getSize();
-        int left = MinimapConfig.getX(client.getWindow().getScaledWidth());
-        int top = MinimapConfig.getY(client.getWindow().getScaledHeight());
-        renderMap(context, client, left, top, size, MinimapConfig.isCircular());
-    }
-
-    private static void renderMap(DrawContext context, MinecraftClient client, int left, int top, int size, boolean circular) {
-        if (circular) drawCircleBorder(context, left, top, size);
-        else {
-            context.fill(left - BORDER, top - BORDER, left + size + BORDER, top + size + BORDER, 0xE8101217);
-            context.fill(left, top, left + size, top + size, 0xFF27303A);
+    private static void upload(MinecraftClient client,MapViewport view,boolean full,boolean circle) {
+        int pixels=full?256:128;
+        if(full&&fullTexture==null){fullImage=new NativeImage(pixels,pixels,true);fullTexture=new NativeImageBackedTexture(()->"axial/full_map",fullImage);client.getTextureManager().registerTexture(FULL,fullTexture);}
+        if(!full&&hudTexture==null){hudImage=new NativeImage(pixels,pixels,true);hudTexture=new NativeImageBackedTexture(()->"axial/minimap",hudImage);client.getTextureManager().registerTexture(HUD,hudTexture);}
+        long stamp=MinimapExploration.revision()*31+MinimapServerOverview.revision();
+        long now=System.currentTimeMillis();
+        boolean unchanged=full?view.centerX==fullX&&view.centerZ==fullZ&&view.scale==fullScale&&stamp==fullStamp:
+                view.centerX==hudX&&view.centerZ==hudZ&&view.scale==hudScale&&circle==hudCircular&&stamp==hudStamp;
+        if(unchanged)return;
+        if(full?now-lastFullUpload<100:now-lastHudUpload<50)return;
+        NativeImage target=full?fullImage:hudImage;
+        Map<String,Integer> terrain=MinimapExploration.terrainFor(client);
+        double span=view.scale*256;
+        for(int z=0;z<pixels;z++)for(int x=0;x<pixels;x++) {
+            if(circle&&Math.hypot(x+.5-pixels/2.0,z+.5-pixels/2.0)>pixels/2.0-1){target.setColorArgb(x,z,0);continue;}
+            int wx=(int)Math.floor(view.centerX+(x/(double)pixels-.5)*span),wz=(int)Math.floor(view.centerZ+(z/(double)pixels-.5)*span);
+            int color=MinimapServerOverview.colorAt(wx,wz);
+            if(color==0)color=terrain.getOrDefault(wx+","+wz,UNKNOWN);
+            target.setColorArgb(x,z,color);
         }
-        MinimapServerOverview.request();
-        boolean serverMapDisplayed = MinimapServerOverview.render(context, client, left, top, size);
-        if (!serverMapDisplayed && MinimapServerOverview.shouldFallBackToLocalTerrain() && client.player != null && client.world != null) {
-            ensureTexture(client);
-            int centerX = client.player.getBlockX();
-            int centerZ = client.player.getBlockZ();
-            if (needsRefresh(client.player.age, centerX, centerZ)) sampleTerrain(client, centerX, centerZ);
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, MAP_TEXTURE, left, top, 0.0f, 0.0f, size, size, MAP_SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE);
-        } else if (!serverMapDisplayed) {
-            context.fill(left, top, left + size, top + size, 0xFF386B3D);
+        if(full){fullTexture.upload();fullX=view.centerX;fullZ=view.centerZ;fullScale=view.scale;fullStamp=stamp;lastFullUpload=now;}
+        else {hudTexture.upload();hudX=view.centerX;hudZ=view.centerZ;hudScale=view.scale;hudStamp=stamp;hudCircular=circle;lastHudUpload=now;}
+    }
+    private static void overlays(DrawContext c,MinecraftClient client,MapViewport view,int left,int top,int size,boolean circle,boolean names) {
+        MinimapServerOverview.renderHudOverlays(c,left,top,size,256,view.centerX,view.centerZ,(float)view.scale,circle,names);
+        if(WaypointConfig.enabled())for(var e:WaypointConfig.visibleFor(client)) {
+            int x=(int)Math.round(view.pixelX(e.x()+.5,left,size)),y=(int)Math.round(view.pixelZ(e.z()+.5,top,size));
+            if(!inside(x,y,left,top,size,circle,6))continue;
+            ModMenuUi.circle(c,x-4,y-4,9,0xFF101419);ModMenuUi.circle(c,x-2,y-2,5,e.color());
+            if(names||MinimapConfig.showWaypointNames()) {
+                int edge=left+size;
+                if(circle){double radius=size/2.0-2,dy=Math.max(Math.abs(y-3-top-size/2.0),Math.abs(y+5-top-size/2.0));edge=left+size/2+(int)Math.sqrt(Math.max(0,radius*radius-dy*dy));}
+                label(c,client.textRenderer,e.name(),x+7,y-3,INK,.75f,Math.max(0,edge-x-10),false);
+            }
         }
-
-        if (!serverMapDisplayed) {
-            float terrainBlocksPerPixel = MinimapConfig.zoom() * SAMPLE_SCALE;
-            drawWaypointMarkers(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel, MinimapConfig.isCircular());
-            drawDeathMarker(context, client, left, top, size, MAP_SIZE, client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(), terrainBlocksPerPixel);
-            MinimapServerOverview.renderHudOverlays(context, left, top, size, MAP_SIZE,
-                    client.player == null ? 0 : client.player.getX(), client.player == null ? 0 : client.player.getZ(),
-                    terrainBlocksPerPixel, MinimapConfig.isCircular());
-            drawPlayerMarker(context, left, top, size, client.player == null ? 0.0f : client.player.getYaw());
+        var death=MinimapExploration.deathFor(client);
+        if(death!=null&&MinimapConfig.showDeath()) {
+            int x=(int)Math.round(view.pixelX(death.x(),left,size)),y=(int)Math.round(view.pixelZ(death.z(),top,size));
+            if(inside(x,y,left,top,size,circle,6)){label(c,client.textRenderer,"X",x-3,y-4,RED,.9f,10,true);}
         }
-        if (!circular) context.fill(left, top, left + size, top + 1, 0x66FFFFFF);
-    }
-
-    private static void updateWorld(MinecraftClient client) {
-        if (client.world == null) return;
-        String worldId = WaypointConfig.worldId(client) + "|" + client.world.getRegistryKey().getValue();
-        if (worldId.equals(lastWorldId)) return;
-        lastWorldId = worldId;
-        lastCenterX = Integer.MIN_VALUE;
-        lastCenterZ = Integer.MIN_VALUE;
-        lastSampleTick = Integer.MIN_VALUE;
-        if (image != null) {
-            image.fillRect(0, 0, MAP_SIZE, MAP_SIZE, 0xFF171B25);
-            if (texture != null) texture.upload();
-        }
-        MinimapServerOverview.beginWorldChange();
-    }
-
-    private static boolean needsRefresh(int tick, int centerX, int centerZ) {
-        return tick < lastSampleTick || centerX != lastCenterX || centerZ != lastCenterZ || tick - lastSampleTick >= REFRESH_INTERVAL_TICKS;
-    }
-
-    private static void ensureTexture(MinecraftClient client) {
-        if (texture != null) return;
-        image = new NativeImage(MAP_SIZE, MAP_SIZE, true);
-        texture = new NativeImageBackedTexture(() -> "axial_cosmetics/minimap", image);
-        client.getTextureManager().registerTexture(MAP_TEXTURE, texture);
-    }
-
-    private static void sampleTerrain(MinecraftClient client, int centerX, int centerZ) {
-        lastSampleTick = client.player.age;
-        lastCenterX = centerX;
-        lastCenterZ = centerZ;
-        BlockPos.Mutable pos = new BlockPos.Mutable();
-        float blocksPerPixel = MinimapConfig.zoom() * SAMPLE_SCALE;
-        int originX = (int) Math.floor(centerX - MAP_SIZE * blocksPerPixel / 2.0f);
-        int originZ = (int) Math.floor(centerZ - MAP_SIZE * blocksPerPixel / 2.0f);
-
-        for (int mapZ = 0; mapZ < MAP_SIZE; mapZ++) for (int mapX = 0; mapX < MAP_SIZE; mapX++) {
-            int worldX = (int) Math.floor(originX + mapX * blocksPerPixel);
-            int worldZ = (int) Math.floor(originZ + mapZ * blocksPerPixel);
-            HEIGHTS[mapZ * MAP_SIZE + mapX] = client.world.getTopY(Heightmap.Type.WORLD_SURFACE, worldX, worldZ) - 1;
-        }
-
-        for (int mapZ = 0; mapZ < MAP_SIZE; mapZ++) for (int mapX = 0; mapX < MAP_SIZE; mapX++) {
-            int index = mapZ * MAP_SIZE + mapX;
-            int worldX = (int) Math.floor(originX + mapX * blocksPerPixel);
-            int worldZ = (int) Math.floor(originZ + mapZ * blocksPerPixel);
-            pos.set(worldX, HEIGHTS[index], worldZ);
-            BlockState state = client.world.getBlockState(pos);
-            int color = colorFor(state, client, pos, index, mapX, mapZ);
-            image.setColorArgb(mapX, mapZ, MinimapConfig.isCircular() && outsideCircle(mapX, mapZ) ? 0 : color);
-            MinimapExploration.discover(client, worldX, worldZ, color);
-        }
-        texture.upload();
-        MinimapExploration.saveIfDue();
-    }
-
-    private static int colorFor(BlockState state, MinecraftClient client, BlockPos pos, int index, int mapX, int mapZ) {
-        MapColor mapColor = state.getMapColor(client.world, pos);
-        if (mapColor == MapColor.CLEAR) return 0xFF27303A;
-
-        int height = HEIGHTS[index];
-        int west = mapX == 0 ? height : HEIGHTS[index - 1];
-        int north = mapZ == 0 ? height : HEIGHTS[index - MAP_SIZE];
-        int slope = height - (west + north) / 2;
-        MapColor.Brightness brightness = slope > 1 ? MapColor.Brightness.HIGH
-                : slope < -1 ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
-        return mapColor.getRenderColor(brightness);
-    }
-
-    private static void drawPlayerMarker(DrawContext context, int left, int top, int size, float yaw) {
-        int center = size / 2;
-        double radians = Math.toRadians(yaw);
-        int tipX = left + center + (int) Math.round(-Math.sin(radians) * 7);
-        int tipY = top + center + (int) Math.round(Math.cos(radians) * 7);
-        int backX = left + center + (int) Math.round(Math.sin(radians) * 4);
-        int backY = top + center - (int) Math.round(Math.cos(radians) * 4);
-        drawLine(context, backX - 3, backY, tipX, tipY, 0xFFFFFFFF);
-        drawLine(context, backX + 3, backY, tipX, tipY, 0xFFFFFFFF);
-        context.fill(left + center - 2, top + center - 2, left + center + 3, top + center + 3, 0xFF20283A);
-    }
-
-    private static void renderExploredMap(DrawContext context, MinecraftClient client, int left, int top, int size, float centerX, float centerZ, float blocksPerPixel) {
-        context.fill(left - BORDER, top - BORDER, left + size + BORDER, top + size + BORDER, 0xE8101217);
-        ensureFullMapTexture(client);
-        float startX = centerX - FULL_MAP_SIZE * blocksPerPixel / 2.0f;
-        float startZ = centerZ - FULL_MAP_SIZE * blocksPerPixel / 2.0f;
-        for (int z = 0; z < FULL_MAP_SIZE; z++) for (int x = 0; x < FULL_MAP_SIZE; x++) {
-            fullMapImage.setColorArgb(x, z, MinimapExploration.colorAt(client, (int) Math.floor(startX + x * blocksPerPixel), (int) Math.floor(startZ + z * blocksPerPixel)));
-        }
-        fullMapTexture.upload();
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, FULL_MAP_TEXTURE, left, top, 0.0f, 0.0f, size, size, FULL_MAP_SIZE, FULL_MAP_SIZE, FULL_MAP_SIZE, FULL_MAP_SIZE);
-        drawWaypointMarkers(context, client, left, top, size, FULL_MAP_SIZE, centerX, centerZ, blocksPerPixel, false);
-        drawDeathMarker(context, client, left, top, size, FULL_MAP_SIZE, centerX, centerZ, blocksPerPixel);
-        if (client.player != null) {
-            float px = left + size / 2.0f + (float) ((client.player.getX() - centerX) / blocksPerPixel * size / FULL_MAP_SIZE);
-            float pz = top + size / 2.0f + (float) ((client.player.getZ() - centerZ) / blocksPerPixel * size / FULL_MAP_SIZE);
-            drawPlayerMarker(context, Math.round(px) - size / 2, Math.round(pz) - size / 2, size, client.player.getYaw());
+        int x=(int)Math.round(view.pixelX(client.player.getX(),left,size)),y=(int)Math.round(view.pixelZ(client.player.getZ(),top,size));
+        if(inside(x,y,left,top,size,circle,8)) {
+            ModMenuUi.circle(c,x-5,y-5,11,0xFF14171B);ModMenuUi.circle(c,x-3,y-3,7,INK);
+            double angle=Math.toRadians(client.player.getYaw());
+            int tx=x-(int)Math.round(Math.sin(angle)*9),ty=y+(int)Math.round(Math.cos(angle)*9);
+            ModMenuUi.circle(c,tx-2,ty-2,4,BRAND);
         }
     }
-
-    private static void ensureFullMapTexture(MinecraftClient client) {
-        if (fullMapTexture != null) return;
-        fullMapImage = new NativeImage(FULL_MAP_SIZE, FULL_MAP_SIZE, true);
-        fullMapTexture = new NativeImageBackedTexture(() -> "axial_cosmetics/full_map", fullMapImage);
-        client.getTextureManager().registerTexture(FULL_MAP_TEXTURE, fullMapTexture);
+    private static boolean inside(int x,int y,int l,int t,int size,boolean circle,int pad) {
+        return x>=l+pad&&x<l+size-pad&&y>=t+pad&&y<t+size-pad&&(!circle||Math.hypot(x-l-size/2.0,y-t-size/2.0)<size/2.0-pad);
     }
-
-    private static void drawWaypointMarkers(DrawContext context, MinecraftClient client, int left, int top, int size, int mapPixels, double centerX, double centerZ, float blocksPerPixel, boolean circular) {
-        if (!WaypointConfig.enabled()) return;
-        float pixelsPerBlock = size / (mapPixels * blocksPerPixel);
-        String dimension = client.world == null ? "" : client.world.getRegistryKey().getValue().toString();
-        for (WaypointConfig.Entry waypoint : WaypointConfig.waypointsFor(client)) {
-            if (!dimension.equals(waypoint.dimension())) continue;
-            float x = left + size / 2.0f + (float) ((waypoint.x() - centerX) * pixelsPerBlock);
-            float z = top + size / 2.0f + (float) ((waypoint.z() - centerZ) * pixelsPerBlock);
-            if (x < left || x >= left + size || z < top || z >= top + size || (circular && Math.hypot(x - left - size / 2.0, z - top - size / 2.0) > size / 2.0)) continue;
-            int markerX = Math.round(x), markerY = Math.round(z);
-            context.fill(markerX - 3, markerY, markerX + 4, markerY + 1, waypoint.color() | 0xFF000000);
-            context.fill(markerX, markerY - 3, markerX + 1, markerY + 4, waypoint.color() | 0xFF000000);
-            context.drawTextWithShadow(client.textRenderer, net.minecraft.text.Text.literal(waypoint.name()), markerX + 5, markerY - 4, 0xFFFFFFFF);
-        }
-    }
-
-    private static void drawDeathMarker(DrawContext context, MinecraftClient client, int left, int top, int size, int mapPixels, double centerX, double centerZ, float blocksPerPixel) {
-        MinimapExploration.Death death = MinimapExploration.deathFor(client);
-        if (death == null) return;
-        float pixelsPerBlock = size / (mapPixels * blocksPerPixel);
-        int x = Math.round(left + size / 2.0f + (float) ((death.x() - centerX) * pixelsPerBlock));
-        int z = Math.round(top + size / 2.0f + (float) ((death.z() - centerZ) * pixelsPerBlock));
-        if (x < left || x >= left + size || z < top || z >= top + size) return;
-        drawLine(context, x - 4, z - 4, x + 4, z + 4, 0xFFFF3B4E);
-        drawLine(context, x + 4, z - 4, x - 4, z + 4, 0xFFFF3B4E);
-    }
-
-    private static void drawLine(DrawContext context, int x0, int y0, int x1, int y1, int color) {
-        int dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1, dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1, error = dx + dy;
-        while (true) {
-            context.fill(x0, y0, x0 + 1, y0 + 1, color);
-            if (x0 == x1 && y0 == y1) return;
-            int twiceError = 2 * error;
-            if (twiceError >= dy) { error += dy; x0 += sx; }
-            if (twiceError <= dx) { error += dx; y0 += sy; }
-        }
-    }
-
-    private static boolean outsideCircle(int x, int y) {
-        float radius = MAP_SIZE / 2.0f - 1.0f;
-        float dx = x + 0.5f - MAP_SIZE / 2.0f;
-        float dy = y + 0.5f - MAP_SIZE / 2.0f;
-        return dx * dx + dy * dy > radius * radius;
-    }
-
-    private static void drawCircleBorder(DrawContext context, int left, int top, int size) {
-        float radius = size / 2.0f;
-        float center = radius;
-        for (int y = 0; y < size; y++) {
-            float distanceY = y + 0.5f - center;
-            int edge = (int) Math.sqrt(Math.max(0, radius * radius - distanceY * distanceY));
-            int start = (int) (center - edge);
-            int end = (int) (center + edge);
-            context.fill(left + start, top + y, left + Math.min(start + BORDER, end), top + y + 1, 0xE8101217);
-            context.fill(left + Math.max(start, end - BORDER), top + y, left + end, top + y + 1, 0xE8101217);
-        }
+    private static void disc(DrawContext c,int x,int y,int size,int color) {
+        for(int row=0;row<size;row++){double dy=row+.5-size/2.0;int half=(int)Math.sqrt(Math.max(0,size*size/4.0-dy*dy));c.fill(x+size/2-half,y+row,x+size/2+half,y+row+1,color);}
     }
 }
