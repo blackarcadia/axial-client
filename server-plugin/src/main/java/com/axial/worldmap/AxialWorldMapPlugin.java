@@ -29,14 +29,16 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     private final Map<UUID,Set<Long>> dirty=new HashMap<>();
     private final Set<UUID> subscribers=new HashSet<>();
     private final Queue<Runnable> completions=new ConcurrentLinkedQueue<>();
+    private final ChunkLoadQueue<ChunkTask,Chunk> chunkLoads=new ChunkLoadQueue<>();
+    private final Map<UUID,String> failures=new HashMap<>();
     private ExecutorService worker;
     private MapCache cache;
     private volatile boolean stopping;
     private boolean paused;
     private long tick;
-    private int resolution,chunksPerTick,maxInFlight,messagesPerTick,globalInFlight;
+    private int resolution,chunksPerTick,maxInFlight,messagesPerTick;
     private int initialPackets,loadedChunksPerTick;
-    private long renderBudgetNanos;
+    private long renderBudgetNanos,chunkTimeoutNanos;
     private double maxDiameter,minTps;
     private long refreshMillis;
     private boolean generate;
@@ -59,6 +61,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     private void settings() {
         resolution=Math.clamp(getConfig().getInt("resolution",512),32,512);
         chunksPerTick=Math.clamp(getConfig().getInt("chunks-per-tick",1),1,8);
+        chunkTimeoutNanos=TimeUnit.SECONDS.toNanos(Math.clamp(getConfig().getLong("chunk-load-timeout-seconds",60),5,300));
         maxInFlight=Math.clamp(getConfig().getInt("max-in-flight",2),1,8);
         messagesPerTick=Math.clamp(getConfig().getInt("messages-per-tick",2),1,16);
         initialPackets=Math.clamp(getConfig().getInt("initial-transfer-packets-per-tick",12),1,32);
@@ -76,13 +79,13 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         try{return eligible(world)&&geometry.equals(geometry(world));}catch(IllegalArgumentException ex){return false;}
     }
     private void ensure(World world,boolean force) {
-        if(stopping||!eligible(world)||jobs.containsKey(world.getUID()))return;
+        if(stopping||!eligible(world)||jobs.containsKey(world.getUID())||!force&&failures.containsKey(world.getUID()))return;
         MapGeometry geometry;
         try{geometry=geometry(world);}catch(IllegalArgumentException ex){getLogger().warning(world.getName()+": "+ex.getMessage());return;}
         WorldMap existing=maps.get(world.getUID());
         if(existing!=null&&!existing.geometry().equals(geometry)){maps.remove(world.getUID());existing=null;}
         if(!force&&existing!=null&&existing.complete()&&System.currentTimeMillis()-existing.renderedAt()<refreshMillis)return;
-        Job job=new Job(world.getUID(),geometry);jobs.put(job.world,job);
+        Job job=new Job(world.getUID(),geometry);jobs.put(job.world,job);failures.remove(job.world);
         String worldName=world.getName();
         final boolean readCache=existing==null;
         final WorldMap previous=existing;
@@ -130,6 +133,14 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         tick++;
         long deadline=System.nanoTime()+renderBudgetNanos;
         for(int i=0;i<64&&System.nanoTime()<deadline;i++){var callback=completions.poll();if(callback==null)break;callback.run();}
+        for(ChunkTask task:chunkLoads.expire(System.nanoTime(),chunkTimeoutNanos)) {
+            Job job=task.job();if(jobs.get(job.world)!=job)continue;
+            job.inFlight--;
+            if(task.attempt()>=3){fail(job,new TimeoutException("Chunk "+task.sample().x()+", "+task.sample().z()+" did not load after 3 attempts"));continue;}
+            job.tasks.addLast(task.sample());
+            getLogger().warning("Retrying stalled map chunk "+task.sample().x()+", "+task.sample().z()+" for "+job.world+" (attempt "+(task.attempt()+1)+"/3)");
+        }
+        while(System.nanoTime()<deadline&&chunkLoads.drainOne(this::sampleLoaded,(task,error)->fail(task.job(),error))){ }
         sendPackets();
         for(Job job:jobs.values())if(job.ready&&job.fullScan&&job.done>0&&tick-job.lastCheckpoint>=600)checkpoint(job);
         if(paused||Bukkit.getTPS()[0]<minTps)return;
@@ -156,30 +167,38 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     private static long chunkKey(int x,int z){return ((long)x<<32)|(z&0xffffffffL);}
     private void load(Job active,long deadline) {
         World world=Bukkit.getWorld(active.world);
-        if(world==null||!matches(world,active.geometry)){jobs.remove(active.world);return;}
+        if(world==null||!matches(world,active.geometry)){cancel(active);return;}
         // Loaded terrain needs only its sampled surface columns, not a full chunk snapshot.
         for(int i=0;i<loadedChunksPerTick&&jobs.get(active.world)==active&&!active.tasks.isEmpty()&&System.nanoTime()<deadline;i++) {
             var sample=active.tasks.peekFirst();if(!world.isChunkLoaded(sample.x(),sample.z()))break;
-            active.tasks.removeFirst();active.inFlight++;globalInFlight++;
+            active.tasks.removeFirst();active.inFlight++;
             try{apply(active,sample,render(world,sample,active.geometry));finished(active);}
             catch(Exception ex){fail(active,ex);return;}
         }
-        for(int i=0;i<chunksPerTick&&jobs.get(active.world)==active&&globalInFlight<maxInFlight&&!active.tasks.isEmpty();i++) {
-            var sample=active.tasks.removeFirst();active.inFlight++;globalInFlight++;
-            try {
-            world.getChunkAtAsync(sample.x(),sample.z(),generate,false).whenComplete((chunk,failure)->complete(()->{
-                if(jobs.get(active.world)!=active){finished(active);return;}
-                if(failure!=null){fail(active,failure);return;}
-                if(chunk==null){active.missing++;markSampled(active,sample);finished(active);return;}
-                try {
-                    if(!world.isChunkLoaded(sample.x(),sample.z())) {
-                        active.inFlight--;globalInFlight--;active.tasks.addFirst(sample);return;
-                    }
-                    apply(active,sample,render(world,sample,active.geometry));finished(active);
-                } catch(Exception ex){fail(active,ex);}
-            }));
-            } catch(Exception ex){fail(active,ex);}
+        for(int i=0;i<chunksPerTick&&jobs.get(active.world)==active&&chunkLoads.size()<maxInFlight&&!active.tasks.isEmpty();i++) {
+            var sample=active.tasks.removeFirst();active.inFlight++;
+            int attempt=active.attempts.merge(chunkKey(sample.x(),sample.z()),1,Integer::sum);
+            var task=new ChunkTask(active,sample,attempt);
+            chunkLoads.submit(task,System.nanoTime(),()->world.getChunkAtAsync(sample.x(),sample.z(),generate,false),chunk->{
+                // Paper completes this future on the main thread. Pin the loaded chunk NOW,
+                // before the time-budgeted sampling queue can be delayed until another tick.
+                chunk.addPluginChunkTicket(this);
+                return ()->{try{chunk.removePluginChunkTicket(this);}catch(Exception ex){getLogger().log(Level.WARNING,"Could not release map chunk ticket",ex);}};
+            });
         }
+    }
+    private void sampleLoaded(ChunkTask task,Chunk chunk) {
+        Job job=task.job();if(jobs.get(job.world)!=job)return;
+        var sample=task.sample();World world=Bukkit.getWorld(job.world);
+        if(world==null||!matches(world,job.geometry)){cancel(job);return;}
+        try {
+            if(chunk==null){job.missing++;markSampled(job,sample);}
+            else {
+                if(!world.isChunkLoaded(sample.x(),sample.z()))throw new IllegalStateException("Pinned map chunk was forcibly unloaded: "+sample.x()+", "+sample.z());
+                apply(job,sample,render(world,sample,job.geometry));
+            }
+            job.attempts.remove(chunkKey(sample.x(),sample.z()));finished(job);
+        } catch(Exception ex){fail(job,ex);}
     }
     private static void apply(Job job,MapGeometry.ChunkSamples sample,int[] colors) {
         for(int n=0;n<colors.length;n++)job.colors[sample.indices()[n]]=colors[n];markSampled(job,sample);
@@ -202,12 +221,17 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         return colors;
     }
     private void fail(Job job,Throwable error) {
-        globalInFlight=Math.max(0,globalInFlight-1);job.inFlight--;
         if(jobs.get(job.world)!=job)return;
-        jobs.remove(job.world);getLogger().log(Level.WARNING,"Map render stopped for "+job.world+"; retry with /axialmap render",error);
+        if(job.fullScan&&job.ready&&job.done>0)checkpoint(job);
+        cancel(job);failures.put(job.world,"Full map stopped; progress saved. Check server log; /axialmap render to retry");
+        getLogger().log(Level.WARNING,"Map render stopped for "+job.world+"; progress saved; retry with /axialmap render",error);
+    }
+    private void cancel(Job job) {
+        if(jobs.get(job.world)==job)jobs.remove(job.world);
+        chunkLoads.cancel(task->task.job()==job);job.inFlight=0;
     }
     private void finished(Job job) {
-        globalInFlight=Math.max(0,globalInFlight-1);job.inFlight--;
+        job.inFlight--;
         if(jobs.get(job.world)!=job)return;
         job.done++;
         if(job.done<job.total)return;
@@ -258,11 +282,19 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         }
         else {
             Job job=jobs.get(world.getUID());
-            status(player,paused?"Full-map rendering paused":job==null?"Full map unavailable; server render needs attention":job.ready?"Rendering full-world map":"Preparing full-world map",job==null?0:job.done,job==null?0:job.total);
+            status(player,progressMessage(world,job),job==null?0:job.done,job==null?0:job.total);
         }
     }
+    private String progressMessage(World world,Job job) {
+        if(job==null)return failures.getOrDefault(world.getUID(),"Full map unavailable; server render needs attention");
+        if(!job.ready)return job.total>0&&job.done==job.total?"Saving completed full-world map":"Preparing full-world map";
+        if(paused)return "Full-map rendering paused";
+        if(Bukkit.getTPS()[0]<minTps)return "Full-map scan waiting for server TPS to recover";
+        if(job.tasks.isEmpty()&&job.inFlight>0)return "Finishing full map: "+(job.total-job.done)+" chunks remaining";
+        return "Rendering full-world map";
+    }
     private void status(Player player,String message,int done,int total) {
-        try{player.sendPluginMessage(this,MapProtocol.CHANNEL,MapProtocol.status(message,done,total));}
+        try{player.sendPluginMessage(this,MapProtocol.CHANNEL,MapProtocol.status(message.length()>180?message.substring(0,180):message,done,total));}
         catch(Exception ex){getLogger().log(Level.FINE,"Could not send map status",ex);}
     }
     private void sendToSubscribers(UUID world) {
@@ -310,7 +342,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     @EventHandler public void changeWorld(PlayerChangedWorldEvent event){arriving(event.getPlayer());}
     @EventHandler public void respawn(PlayerRespawnEvent event){arriving(event.getPlayer());}
     @EventHandler public void quit(PlayerQuitEvent event){clearPlayer(event.getPlayer());subscribers.remove(event.getPlayer().getUniqueId());}
-    @EventHandler(ignoreCancelled=true) public void unload(WorldUnloadEvent event){UUID id=event.getWorld().getUID();Job job=jobs.remove(id);if(job!=null&&job.ready&&job.done>0)checkpoint(job);maps.remove(id);dirty.remove(id);dirtySince.remove(id);}
+    @EventHandler(ignoreCancelled=true) public void unload(WorldUnloadEvent event){UUID id=event.getWorld().getUID();Job job=jobs.get(id);if(job!=null){if(job.ready&&job.done>0)checkpoint(job);cancel(job);}maps.remove(id);dirty.remove(id);dirtySince.remove(id);}
     @EventHandler public void loaded(WorldLoadEvent event){
         UUID id=event.getWorld().getUID();
         getServer().getScheduler().runTask(this,()->{
@@ -339,8 +371,13 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         if(action.equals("reload")){reloadConfig();settings();sender.sendMessage("World map settings reloaded. Cached terrain is retained.");return true;}
         if(action.equals("status")) {
             long completed=maps.values().stream().filter(WorldMap::complete).count();
-            sender.sendMessage("AxialWorldMap: "+completed+" complete maps, "+(maps.size()-completed)+" partial maps, "+jobs.size()+" jobs"+(paused?" (paused)":""));
-            for(var job:jobs.values()){World w=Bukkit.getWorld(job.world);sender.sendMessage((w==null?job.world:w.getName())+": "+(job.ready?job.done+"/"+job.total+" chunks, "+job.inFlight+" in flight":"loading cache / preparing"));}
+            sender.sendMessage("AxialWorldMap: "+completed+" complete maps, "+(maps.size()-completed)+" partial maps, "+jobs.size()+" jobs"+(paused?" (paused)":Bukkit.getTPS()[0]<minTps?" (waiting for TPS recovery)":""));
+            for(var job:jobs.values()){
+                World w=Bukkit.getWorld(job.world);var waiting=chunkLoads.oldestWaiting(task->task.job()==job,System.nanoTime());
+                String pending=waiting==null?"":", waiting for "+waiting.task().sample().x()+", "+waiting.task().sample().z()+" ("+TimeUnit.NANOSECONDS.toSeconds(waiting.ageNanos())+"s, attempt "+waiting.task().attempt()+"/3)";
+                sender.sendMessage((w==null?job.world:w.getName())+": "+(job.ready?job.done+"/"+job.total+" chunks, "+job.inFlight+" in flight"+pending:job.done==job.total&&job.total>0?"saving completed cache":"loading cache / preparing"));
+            }
+            failures.values().forEach(sender::sendMessage);
             return true;
         }
         if(action.equals("render")) {
@@ -361,14 +398,15 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     @Override public void onDisable() {
         stopping=true;getServer().getScheduler().cancelTasks(this);
         if(worker!=null)for(Job job:jobs.values())if(job.ready&&job.done>0)checkpoint(job);
-        jobs.clear();transfers.clear();completions.clear();
+        chunkLoads.cancel(task->true);jobs.clear();transfers.clear();completions.clear();
         if(worker!=null){worker.shutdown();try{if(!worker.awaitTermination(5,TimeUnit.SECONDS))worker.shutdownNow();}catch(InterruptedException ex){Thread.currentThread().interrupt();worker.shutdownNow();}}
     }
     private static final class Job {
         final UUID world;final MapGeometry geometry;final int[] colors;
-        final BitSet sampled=new BitSet();long lastCheckpoint;
+        final BitSet sampled=new BitSet();final Map<Long,Integer> attempts=new HashMap<>();long lastCheckpoint;
         Deque<MapGeometry.ChunkSamples> tasks=new ArrayDeque<>();int total,done,inFlight,missing;boolean ready,fullScan=true;
         Job(UUID world,MapGeometry geometry){this.world=world;this.geometry=geometry;colors=new int[geometry.width()*geometry.height()];Arrays.fill(colors,UNKNOWN);}
     }
+    private record ChunkTask(Job job,MapGeometry.ChunkSamples sample,int attempt) { }
     private record Transfer(WorldMap map,Deque<Integer> rows,boolean initial) { }
 }

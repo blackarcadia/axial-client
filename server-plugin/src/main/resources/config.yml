@@ -14,6 +14,8 @@ generate-missing-chunks: true
 # Chunk loading is asynchronous, with bounded concurrency and a TPS backoff.
 chunks-per-tick: 1
 max-in-flight: 2
+# Retry a stuck asynchronous load, up to three attempts, then save progress and report failure.
+chunk-load-timeout-seconds: 60
 pause-below-tps: 18.5
 # Already-loaded chunks can be read directly, sharing a time budget with completions.
 # These settings also apply when upgrading an existing configuration without these keys.
