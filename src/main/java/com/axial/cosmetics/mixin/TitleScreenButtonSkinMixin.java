@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.AxialCosmetics;
+import com.axial.cosmetics.client.AccountsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.RenderPipelines;
@@ -39,9 +40,9 @@ public abstract class TitleScreenButtonSkinMixin {
     @Inject(method = "renderWidget", at = @At("HEAD"), cancellable = true)
     private void axial_cosmetics$renderTitleButton(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!(client.currentScreen instanceof TitleScreen titleScreen)) {
-            return;
-        }
+        TitleScreen titleScreen = client.currentScreen instanceof TitleScreen title ? title
+                : client.currentScreen instanceof AccountsScreen accounts ? accounts.renderedTitleScreen() : null;
+        if (titleScreen == null) return;
 
         Object self = this;
         if (!(self instanceof ButtonWidget button)) {

@@ -7,6 +7,7 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.PlayerSkinWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -49,6 +50,7 @@ public final class AccountsScreen extends Screen {
     private AccountsLayout layout;
     private TextFieldWidget search;
     private AccountButton menuButton;
+    private boolean renderingParent;
 
     public AccountsScreen(Screen parent) {
         this(parent, AccountStore.shared());
@@ -61,6 +63,10 @@ public final class AccountsScreen extends Screen {
     }
 
     @Override protected void init() {
+        if (parent != null) {
+            if (parent.width != width || parent.height != height) parent.resize(width, height);
+            parent.setFocused(null);
+        }
         try {
             entries = store.list().stream().sorted(java.util.Comparator.comparing((AccountStore.Entry entry) -> !isActive(entry))).toList();
         }
@@ -210,8 +216,23 @@ public final class AccountsScreen extends Screen {
         });
     }
 
-    // Intentionally no panorama, scenery, blur, or full-screen backdrop.
-    @Override public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {}
+    /** The menu keeps its own button theme while being drawn beneath this modal. */
+    public TitleScreen renderedTitleScreen() {
+        return renderingParent && parent instanceof TitleScreen title ? title : null;
+    }
+
+    @Override public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        if (parent == null) return;
+        renderingParent = true;
+        try {
+            // Only the account manager receives input; the menu has no hover or focus.
+            parent.renderBackground(context, -1, -1, delta);
+            context.createNewRootLayer();
+            parent.render(context, -1, -1, delta);
+        } finally {
+            renderingParent = false;
+        }
+    }
 
     @Override public boolean mouseClicked(Click click, boolean doubled) {
         if (menuButton != null) {
