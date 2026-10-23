@@ -4,7 +4,7 @@
       "type": "ttf",
       "file": "axial_cosmetics:inter.ttf",
       "size": 9.0,
-      "oversample": 3.0,
+      "oversample": 4.0,
       "shift": [
         0,
         0

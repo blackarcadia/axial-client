@@ -14,7 +14,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.player.SkinTextures;
-import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.raphimc.minecraftauth.MinecraftAuth;
@@ -32,8 +31,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class AccountsScreen extends Screen {
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axial_cosmetics", "accounts"));
-    private static final StyleSpriteSource.Font HEADING_FONT = new StyleSpriteSource.Font(Identifier.of("axial_cosmetics", "accounts_bold"));
     private static final int INK = 0xFFF4F0FA, MUTED = 0xFF9693AB, PURPLE = 0xFFC18AFF;
     private static final int GREEN = 0xFF69E5AA, AMBER = 0xFFFFC15C, PANEL = 0xFF101019;
 
@@ -296,10 +293,10 @@ public final class AccountsScreen extends Screen {
         centeredText(context, "Microsoft account", center, preview.bottom() - 36, MUTED, 0.75f, preview.width() - 20);
     }
 
-    private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
+    private static Text uiText(String value) { return UiTypography.text(value,1,false); }
 
     private static Text displayText(String value, float scale) {
-        return Text.literal(value).styled(style -> style.withFont(scale > 1.0f ? HEADING_FONT : UI_FONT));
+        return UiTypography.text(value,scale,scale>1);
     }
 
     private void text(DrawContext context, String value, int x, int y, int color, float scale) {
@@ -308,18 +305,13 @@ public final class AccountsScreen extends Screen {
 
     private void text(DrawContext context, String value, int x, int y, int color, float scale, int maxWidth) {
         if (maxWidth <= 0) return;
-        Text label = displayText(textRenderer.trimToWidth(displayText(value, scale), (int) (maxWidth / scale)).getString(), scale);
-        var matrices = context.getMatrices();
-        matrices.pushMatrix();
-        matrices.translate(x, y);
-        matrices.scale(scale, scale);
-        context.drawText(textRenderer, label, 0, 0, color, false);
-        matrices.popMatrix();
+        Text label=displayText(textRenderer.trimToWidth(displayText(value,scale),maxWidth).getString(),scale);
+        context.drawText(textRenderer,label,x,y,color,false);
     }
 
     private void centeredText(DrawContext context, String value, int center, int y, int color, float scale, int maxWidth) {
-        String trimmed = textRenderer.trimToWidth(displayText(value, scale), (int) (maxWidth / scale)).getString();
-        text(context, trimmed, center - Math.round(textRenderer.getWidth(displayText(trimmed, scale)) * scale / 2), y, color, scale);
+        String trimmed=textRenderer.trimToWidth(displayText(value,scale),maxWidth).getString();
+        text(context,trimmed,center-textRenderer.getWidth(displayText(trimmed,scale))/2,y,color,scale);
     }
 
     private void rightText(DrawContext context, String value, int right, int y, int color) {

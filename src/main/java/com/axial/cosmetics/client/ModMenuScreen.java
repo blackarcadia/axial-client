@@ -173,13 +173,9 @@ public final class ModMenuScreen extends Screen {
             int titleX=card.x()+size+17;
             label(context,textRenderer,entry.title(),titleX,card.y()+9,INK,.95f,card.right()-titleX-7,true);
             if(card.height()>=60) {
-                var lines=textRenderer.wrapLines(text(entry.description()),Math.max(1,(int)((card.right()-titleX-8)/.78f)));
+                var lines=textRenderer.wrapLines(UiTypography.text(entry.description(),.78f,false),Math.max(1,card.right()-titleX-8));
                 for(int line=0;line<Math.min(2,lines.size());line++) {
-                    context.getMatrices().pushMatrix();
-                    context.getMatrices().translate(titleX,card.y()+22+line*9);
-                    context.getMatrices().scale(.78f,.78f);
-                    context.drawText(textRenderer,lines.get(line),0,0,MUTED,false);
-                    context.getMatrices().popMatrix();
+                    context.drawText(textRenderer,lines.get(line),titleX,card.y()+22+line*9,MUTED,false);
                 }
             }
             if(entry.toggle()==null) label(context,textRenderer,"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
@@ -296,7 +292,7 @@ public final class ModMenuScreen extends Screen {
                 return;
             }
             boolean categoryButton=false;
-            for(var value:ModMenuEntry.Category.values())if(getMessage().getString().equals(value.label))categoryButton=true;
+            for(var value:ModMenuEntry.Category.values())if(getMessage().getString().equalsIgnoreCase(value.label))categoryButton=true;
             if(categoryButton&&!layout.sidebar){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
             if(!categoryButton && width<85) {
                 label(context,textRenderer,getMessage().getString(),getX()+5,getY()+(height-9)/2,INK,.8f,width-10,false);

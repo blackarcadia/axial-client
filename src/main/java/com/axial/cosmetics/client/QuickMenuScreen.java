@@ -106,8 +106,8 @@ public final class QuickMenuScreen extends Screen {
             }
             super.render(context,mouseX,(int)(mouseY-animation.offset()),delta);
             String hint=error.isBlank()?"Esc to close":error;
-            int textWidth=textRenderer.getWidth(text(hint));
-            label(context,textRenderer,hint,(width-(int)(textWidth*.8f))/2,layout.hintY,error.isBlank()?MUTED:RED,.8f,width-24,false);
+            int textWidth=UiTypography.width(textRenderer,hint,.8f,false);
+            label(context,textRenderer,hint,(width-textWidth)/2,layout.hintY,error.isBlank()?MUTED:RED,.8f,width-24,false);
         } finally {
             context.getMatrices().popMatrix();
             opacity(previous);
@@ -144,7 +144,7 @@ public final class QuickMenuScreen extends Screen {
             ModMenuUi.icon(context,icon,getX()+(width-size)/2,iconY,size,size,active?INK:0xFF727A84);
             if(layout.labels) {
                 String label=getMessage().getString();
-                int labelWidth=Math.round(textRenderer.getWidth(text(label))*.8f);
+                int labelWidth=UiTypography.width(textRenderer,label,.8f,false);
                 label(context,textRenderer,label,getX()+(width-labelWidth)/2,getBottom()-13,active?INK:MUTED,.8f,width-6,false);
             }
         }
