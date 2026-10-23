@@ -50,16 +50,6 @@ public final class ModMenuScreen extends Screen {
         }
     }
 
-    public static void openFromTitle(Screen parent) {
-        try {
-            Screen backend=(Screen)Class.forName("org.axial.axialutils.client.AxialConfigScreen").getConstructor(Screen.class).newInstance(parent);
-            MinecraftClient.getInstance().setScreen(backend);
-            open(backend);
-        } catch(ReflectiveOperationException ex) {
-            LoggerFactory.getLogger(ModMenuScreen.class).warn("Could not open mod menu from the title screen",ex);
-        }
-    }
-
     @Override protected void init() {
         if(reopen){animation=new MenuAnimation();reopen=false;}
         layout = new ModMenuLayout(width,height);
@@ -146,7 +136,7 @@ public final class ModMenuScreen extends Screen {
     @Override public void close() { animation.close(); }
     @Override public void tick() {
         if(animation.finished()) {
-            if(returnTo!=null)client.setScreen(returnTo);
+            if(returnTo instanceof QuickMenuScreen)client.setScreen(returnTo);
             else backend.close();
         }
     }

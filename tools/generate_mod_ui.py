@@ -25,10 +25,6 @@ def main():
     masks.DEST = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/axial_cosmetics/textures/gui/sprites/mods'
     masks.DEST.mkdir(parents=True, exist_ok=True)
     icons = {
-        'mountain': lines([(1,13),(6,3),(9,8),(11,5),(15,13)],True),
-        'power': combine(lines([(8,1),(8,8)]),lambda x,y: max(ring(8,9,5.5)(x,y),3-y) if 5<x<11 else ring(8,9,5.5)(x,y)),
-        'music': combine(lines([(5,12),(5,3),(13,1),(13,10)]),ring(3,12,2),ring(11,10,2)),
-        'speaker': combine(lines([(1,6),(4,6),(8,2),(8,14),(4,10),(1,10)],True),lines([(11,5),(13,8),(11,11)])),
         'monitor': combine(box(1.5,2,13,9),lines([(8,11),(8,14)]),lines([(4.5,14),(11.5,14)])),
         'backpack': combine(box(3,5,10,9),box(6,2,4,3),box(5,9,6,3)),
         'sun': combine(ring(8,8,3),*[lines([(8+math.cos(a)*5.5,8+math.sin(a)*5.5),(8+math.cos(a)*7,8+math.sin(a)*7)]) for a in [i*math.pi/4 for i in range(8)]]),
