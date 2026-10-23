@@ -108,7 +108,9 @@ public final class ModMenuScreen extends Screen {
                 cardButtons.add(addSelectableChild(button));
             }
             if(entry.configure()!=null) {
-                var button = new MenuButton("Configure "+entry.title(),layout.settings(card),"gear",()->run(entry.configure()),false,entry,true);
+                var button = new MenuButton("Configure "+entry.title(),layout.settings(card),"gear",()->run(()->{
+                    if(!ModFeatureSettings.open(entry.title().toUpperCase(java.util.Locale.ROOT),this,backend))entry.configure().run();
+                }),false,entry,true);
                 button.visible = button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
                 button.setTooltip(Tooltip.of(text("Configure "+entry.title())));
                 cardButtons.add(addSelectableChild(button));
@@ -148,7 +150,7 @@ public final class ModMenuScreen extends Screen {
 
     private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
-        frame(context,panel,0xFF646B73,0xFA14171B);
+        frame(context,panel,PANEL_BORDER,PANEL);
         boolean small = panel.height()<320;
         int logoSize=layout.tight?23:small?29:36;
         context.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
@@ -158,10 +160,10 @@ public final class ModMenuScreen extends Screen {
             label(context,textRenderer,"Mod menu",panel.x()+logoSize*2+18,panel.y()+25,MUTED,.85f,panel.width()-logoSize*2-55,false);
         }
         int dividerY=layout.navigation.bottom()+3;
-        context.fill(panel.x()+10,dividerY,panel.right()-10,dividerY+1,0xFF353A40);
-        frame(context,layout.search,search.isFocused()?0xFF9099A3:LINE,0xFF202429);
+        context.fill(panel.x()+10,dividerY,panel.right()-10,dividerY+1,DIVIDER);
+        frame(context,layout.search,search.isFocused()?FOCUS:LINE,FIELD);
         icon(context,"search",layout.search.x()+7,layout.search.y()+5,11,11,MUTED);
-        if(layout.sidebar) context.fill(layout.categories.right()+4,layout.categories.y(),layout.categories.right()+5,layout.grid.bottom(),0xFF353A40);
+        if(layout.sidebar) context.fill(layout.categories.right()+4,layout.categories.y(),layout.categories.right()+5,layout.grid.bottom(),DIVIDER);
         super.render(context,mouseX,mouseY,delta);
         context.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
         var matches=filtered();
@@ -169,7 +171,7 @@ public final class ModMenuScreen extends Screen {
             var card=layout.card(i,scroll);
             if(card.bottom()<=layout.grid.y() || card.y()>=layout.grid.bottom()) continue;
             var entry=matches.get(i);
-            frame(context,card,card.contains(mouseX,mouseY)?0xFF7C858E:LINE,0xFF1B1F24);
+            frame(context,card,card.contains(mouseX,mouseY)?HOVER_LINE:LINE,SURFACE);
             int size=card.height()<55?14:22;
             icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
             int titleX=card.x()+size+17;
@@ -188,7 +190,7 @@ public final class ModMenuScreen extends Screen {
         }
         context.disableScissor();
         drawScrollbar(context,matches.size());
-        context.fill(panel.x()+10,panel.bottom()-17,panel.right()-10,panel.bottom()-16,0xFF353A40);
+        context.fill(panel.x()+10,panel.bottom()-17,panel.right()-10,panel.bottom()-16,DIVIDER);
         String count=error.isBlank()?matches.size()+" of "+entries.size()+" mods":error;
         label(context,textRenderer,count,panel.x()+12,panel.bottom()-12,error.isBlank()?MUTED:RED,.75f,panel.width()-90,false);
         label(context,textRenderer,"Esc to close",panel.right()-68,panel.bottom()-12,MUTED,.75f,60,false);
@@ -197,7 +199,7 @@ public final class ModMenuScreen extends Screen {
     private void drawScrollbar(DrawContext context,int count) {
         if(layout.maxScroll(count)==0)return;
         var track=layout.scrollbar;
-        rounded(context,track.x(),track.y(),track.width(),track.height(),0xFF353A40);
+        rounded(context,track.x(),track.y(),track.width(),track.height(),DIVIDER);
         int thumb=Math.max(12,track.height()*layout.grid.height()/layout.contentHeight(count));
         int y=track.y()+(track.height()-thumb)*scroll/layout.maxScroll(count);
         rounded(context,track.x(),y,track.width(),thumb,0xFF8F99A2);
@@ -288,11 +290,11 @@ public final class ModMenuScreen extends Screen {
                 return;
             }
             boolean close=icon.equals("close"),gear=icon.equals("gear")&&clipped;
-            if(selected||hoverProgress>.01f||gear)frame(context,bounds,selected?0xFFB0B8C0:mixColor(LINE,0xFF7C8791,hoverProgress),selected?0xFF343B43:mixColor(0xFF20262C,0xFF2B323A,hoverProgress));
+            if(selected||hoverProgress>.01f||gear)frame(context,bounds,selected?SELECTED_LINE:mixColor(LINE,0xFF7C8791,hoverProgress),selected?SELECTED:mixColor(0xFF20262C,HOVER,hoverProgress));
             if(close||gear){ModMenuUi.icon(context,icon,getX()+(width-12)/2,getY()+(height-12)/2,12,12,hover?INK:MUTED);return;}
             if(icon.equals("filter")) {
                 int square=10;
-                frame(context,new ModMenuLayout.Rect(getX()+3,getY()+(height-square)/2,square,square),selected?GREEN:MUTED,0xFF202429);
+                frame(context,new ModMenuLayout.Rect(getX()+3,getY()+(height-square)/2,square,square),selected?GREEN:MUTED,FIELD);
                 if(selected)ModMenuUi.icon(context,"check",getX()+4,getY()+(height-8)/2,8,8,GREEN);
                 label(context,textRenderer,layout.sidebar?"Enabled only":"On only",getX()+18,getY()+(height-8)/2,INK,.8f,width-20,false);
                 return;

@@ -3,7 +3,6 @@ package com.axial.cosmetics.mixin;
 import com.axial.cosmetics.client.ChunkBordersSettingsScreen;
 import com.axial.cosmetics.client.CompassSettingsScreen;
 import com.axial.cosmetics.client.CreateWaypointScreen;
-import com.axial.cosmetics.client.CrosshairColorPickerScreen;
 import com.axial.cosmetics.client.CrosshairSettingsScreen;
 import com.axial.cosmetics.client.ItemScalerSettingsScreen;
 import com.axial.cosmetics.client.WaypointSettingsScreen;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
         ChunkBordersSettingsScreen.class,
         CompassSettingsScreen.class,
         CreateWaypointScreen.class,
-        CrosshairColorPickerScreen.class,
         CrosshairSettingsScreen.class,
         ItemScalerSettingsScreen.class,
         WaypointSettingsScreen.class

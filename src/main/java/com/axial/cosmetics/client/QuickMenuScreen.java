@@ -46,7 +46,7 @@ public final class QuickMenuScreen extends Screen {
         if(reopen){animation=new MenuAnimation();reopen=false;}
         layout=new QuickMenuLayout(width,height);
         add("Accounts","account",0,()->client.setScreen(new AccountsScreen(this)),true);
-        add("Waypoints","pin",1,()->client.setScreen(new WaypointSettingsScreen(this)),true);
+        add("Waypoints","pin",1,()->ModFeatureSettings.open("WAYPOINTS",this,backend),true);
         add("Move HUD","move",2,()->client.setScreen(ModMenuCatalog.child(backend,this,"MOVE")),true);
         add("Mods","gear",3,()->client.setScreen(ModMenuCatalog.child(backend,this,"MAIN")),true);
         addLink("Store","store",4,QuickMenuLinks.get("store"));

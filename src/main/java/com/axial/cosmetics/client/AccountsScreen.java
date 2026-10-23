@@ -30,9 +30,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.axial.cosmetics.client.ModMenuUi.*;
+
 public final class AccountsScreen extends Screen {
-    private static final int INK = 0xFFF4F0FA, MUTED = 0xFF9693AB, PURPLE = 0xFFC18AFF;
-    private static final int GREEN = 0xFF69E5AA, AMBER = 0xFFFFC15C, PANEL = 0xFF101019;
+    private static final int AMBER = 0xFFFFC15C;
 
     private final Screen parent;
     private final AccountStore store;
@@ -244,15 +245,15 @@ public final class AccountsScreen extends Screen {
 
     @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         var panel = layout.panel;
-        framed(context, panel.x(), panel.y(), panel.width(), panel.height(), 0xFF57416D, PANEL);
-        if (!layout.tight) text(context, "AXIAL CLIENT", panel.x() + 13, panel.y() + 9, PURPLE, 0.75f);
+        framed(context, panel.x(), panel.y(), panel.width(), panel.height(), PANEL_BORDER, PANEL);
+        if (!layout.tight) text(context, "AXIAL CLIENT", panel.x() + 13, panel.y() + 9, INK, 0.75f);
         int titleY = panel.y() + (layout.tight ? 7 : layout.compact ? 20 : 24);
         text(context, "Accounts", panel.x() + 13, titleY, INK, layout.compact ? 1.35f : 1.8f, panel.width() - 50);
         text(context, status.isBlank() ? "Choose who you play as." : status, panel.x() + 13,
                 panel.y() + (layout.tight ? 23 : layout.compact ? 36 : 47), MUTED, layout.compact ? 0.7f : 0.85f, panel.width() - 26);
-        framed(context, layout.content.x(), layout.content.y(), layout.content.width(), layout.content.height(), 0xFF2B293A, 0xFF12121C);
+        framed(context, layout.content.x(), layout.content.y(), layout.content.width(), layout.content.height(), LINE, SURFACE);
         if (layout.preview != null) {
-            context.fill(layout.preview.x(), layout.preview.y() + 1, layout.preview.x() + 1, layout.preview.bottom() - 1, 0xFF302C40);
+            context.fill(layout.preview.x(), layout.preview.y() + 1, layout.preview.x() + 1, layout.preview.bottom() - 1, DIVIDER);
             drawPreviewDetails(context);
         }
         if (!layout.compact) {
@@ -261,7 +262,7 @@ public final class AccountsScreen extends Screen {
             rightText(context, count, layout.list.right() - 14, layout.list.y() + 9, MUTED);
         }
         var box = layout.search;
-        framed(context, box.x(), box.y(), box.width(), box.height(), search.isFocused() ? 0xFF9774D6 : 0xFF3C374D, 0xFF171620);
+        framed(context, box.x(), box.y(), box.width(), box.height(), search.isFocused() ? FOCUS : LINE, FIELD);
         icon(context, Icon.SEARCH, box.x() + 7, box.y() + (box.height() - 11) / 2, 11, 11, MUTED);
         List<AccountStore.Entry> filtered = filteredEntries();
         if (filtered.isEmpty()) {
@@ -286,9 +287,9 @@ public final class AccountsScreen extends Screen {
         }
         centeredText(context, entry.name(), center, preview.bottom() - 73, INK, 1.15f, preview.width() - 20);
         String label = isActive(entry) ? "Active account" : reconnectAccounts.contains(entry.uuid()) ? "Sign in again" : "Saved account";
-        int color = isActive(entry) ? GREEN : reconnectAccounts.contains(entry.uuid()) ? AMBER : PURPLE;
+        int color = isActive(entry) ? GREEN : reconnectAccounts.contains(entry.uuid()) ? AMBER : MUTED;
         int badgeWidth = Math.min(preview.width() - 24, textRenderer.getWidth(uiText(label)) + 22);
-        roundedRect(context, center - badgeWidth / 2, preview.bottom() - 56, badgeWidth, 15, isActive(entry) ? 0xFF142B25 : 0xFF262034);
+        roundedRect(context, center - badgeWidth / 2, preview.bottom() - 56, badgeWidth, 15, isActive(entry) ? 0xFF193426 : FIELD);
         centeredText(context, label, center, preview.bottom() - 53, color, 0.8f, badgeWidth - 8);
         centeredText(context, "Microsoft account", center, preview.bottom() - 36, MUTED, 0.75f, preview.width() - 20);
     }
@@ -372,20 +373,20 @@ public final class AccountsScreen extends Screen {
                 return;
             }
             if (tone == Tone.MORE || tone == Tone.CHECK) {
-                if (hovered) roundedRect(context, x, y, width, height, 0xFF30263F);
+                if (hovered) roundedRect(context, x, y, width, height, HOVER);
                 icon(context, tone == Tone.MORE ? Icon.MORE : Icon.CHECK,
                         x + (width - 11) / 2, y + (height - 11) / 2, 11, 11, tone == Tone.CHECK ? GREEN : hovered ? INK : MUTED);
                 return;
             }
             if (tone == Tone.PREVIOUS || tone == Tone.NEXT) {
                 icon(context, tone == Tone.PREVIOUS ? Icon.PREVIOUS : Icon.NEXT,
-                        x + (width - 10) / 2, y + (height - 10) / 2, 10, 10, active ? PURPLE : 0xFF494356);
+                        x + (width - 10) / 2, y + (height - 10) / 2, 10, 10, active ? INK : LINE);
                 return;
             }
-            int border = tone == Tone.PRIMARY ? PURPLE : tone == Tone.DANGER ? 0xFF9D536A : hovered ? PURPLE : 0xFF665079;
-            int fill = tone == Tone.PRIMARY ? hovered ? 0xFFD1A1FF : 0xFFB985F0 : hovered ? 0xFF292036 : 0xFF18151F;
-            framed(context, x, y, width, height, border, active ? fill : 0xFF1C1923);
-            int foreground = !active ? 0xFF676173 : tone == Tone.PRIMARY ? 0xFF170D24 : tone == Tone.DANGER ? 0xFFFFB2C5 : PURPLE;
+            int border = tone == Tone.PRIMARY ? GREEN : tone == Tone.DANGER ? RED : hovered ? HOVER_LINE : LINE;
+            int fill = tone == Tone.PRIMARY ? hovered ? 0xFF6FE298 : GREEN : hovered ? HOVER : FIELD;
+            framed(context, x, y, width, height, border, active ? fill : SURFACE);
+            int foreground = !active ? MUTED : tone == Tone.PRIMARY ? 0xFF14171B : tone == Tone.DANGER ? RED : INK;
             int labelCenter = x + width / 2;
             if (tone == Tone.PRIMARY) {
                 icon(context, Icon.PLUS, x + 7, y + (height - 10) / 2, 10, 10, foreground);
@@ -399,8 +400,8 @@ public final class AccountsScreen extends Screen {
         private void drawCard(DrawContext context, boolean hovered) {
             boolean selected = entry.uuid().equals(selectedAccount);
             boolean switching = entry.uuid().equals(switchingAccount);
-            framed(context, getX(), getY(), width, height, selected ? 0xFFBD87F5 : hovered ? 0xFF665079 : 0xFF302B3D,
-                    selected ? 0xFF272033 : hovered ? 0xFF201B2B : 0xFF191720);
+            framed(context, getX(), getY(), width, height, selected ? SELECTED_LINE : hovered ? HOVER_LINE : LINE,
+                    selected ? SELECTED : hovered ? HOVER : SURFACE);
             int headSize = Math.max(8, Math.min(layout.compact ? 24 : 28, height - 10));
             drawSkinHead(context, entry, getX() + 8, getY() + (height - headSize) / 2, headSize);
             int labelX = getX() + headSize + 16;
@@ -410,7 +411,7 @@ public final class AccountsScreen extends Screen {
             if (twoLines) {
                 String state = switching ? "Signing in..." : isActive(entry) ? "Currently playing"
                         : reconnectAccounts.contains(entry.uuid()) ? "Sign in again" : "Ready to switch";
-                int color = switching ? PURPLE : isActive(entry) ? GREEN : reconnectAccounts.contains(entry.uuid()) ? AMBER : MUTED;
+                int color = switching ? INK : isActive(entry) ? GREEN : reconnectAccounts.contains(entry.uuid()) ? AMBER : MUTED;
                 roundedRect(context, labelX, getY() + height / 2 + 5, 5, 5, color);
                 text(context, state, labelX + 9, getY() + height / 2 + 3, color, 0.75f, available - 9);
             }

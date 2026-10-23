@@ -1,240 +1,104 @@
 package com.axial.cosmetics.client;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.StyleSpriteSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.sound.SoundManager;
+import org.axial.axialutils.client.AxialUiTheme;
 import java.awt.Color;
 import java.util.Locale;
 import java.util.function.IntConsumer;
+import static com.axial.cosmetics.client.ModMenuUi.*;
+import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
+/** Shared responsive shade/hue editor with native keyboard controls and hex input. */
 public final class CrosshairColorPickerScreen extends Screen {
-    private static final int PANEL_WIDTH = 360;
-    private static final int PANEL_HEIGHT = 236;
-    private static final int PANEL_PADDING = 18;
-    private static final int PICKER_Y = 44;
-    private static final int PICKER_WIDTH = 288;
-    private static final int PICKER_HEIGHT = 120;
-    private static final int HUE_WIDTH = 18;
-    private static final int PREVIEW_HEIGHT = 24;
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
-
     private final Screen parent;
-    private final String label;
     private final IntConsumer onChange;
     private final ColorPickerSaveAction saveAction;
-    private final int initialColor;
-    private int panelX;
-    private int panelY;
-    private float hue;
-    private float saturation;
-    private float brightness;
-    private int draggingControl = -1;
+    private final int resetColor;
+    private Rect panel,shade,hueBar;
+    private TextFieldWidget hex;
+    private float hue,saturation,brightness;
+    private int dragging=-1;
+    private boolean syncing;
 
-    public CrosshairColorPickerScreen(Screen parent, String label, int initialColor, IntConsumer onChange) {
-        this(parent, label, initialColor, onChange, CrosshairConfigManager::save);
+    public CrosshairColorPickerScreen(Screen parent,String label,int initialColor,IntConsumer onChange) {
+        this(parent,label,initialColor,onChange,CrosshairConfigManager::save);
     }
-
-    public CrosshairColorPickerScreen(Screen parent, String label, int initialColor, IntConsumer onChange, ColorPickerSaveAction saveAction) {
-        super(uiText((label + " COLOR").toUpperCase(Locale.ROOT)));
-        this.parent = parent;
-        this.label = label;
-        this.onChange = onChange;
-        this.saveAction = saveAction;
-        this.initialColor = HudColorDefaults.forPickerLabel(label, initialColor);
-        setColor(initialColor);
+    public CrosshairColorPickerScreen(Screen parent,String label,int initialColor,IntConsumer onChange,ColorPickerSaveAction saveAction) {
+        super(text(label.toUpperCase(Locale.ROOT).endsWith("COLOR")?label:label+" COLOR"));this.parent=parent;this.onChange=onChange;this.saveAction=saveAction;
+        resetColor=HudColorDefaults.forPickerLabel(label,initialColor);setColor(initialColor);
     }
-
-    @Override
-    protected void init() {
-        rebuildLayout();
+    @Override protected void init() {
+        int w=Math.min(360,width-20),h=Math.min(236,height-20);
+        panel=new Rect((width-w)/2,(height-h)/2,w,h);
+        shade=new Rect(panel.x()+14,panel.y()+43,w-62,Math.max(30,h-111));
+        hueBar=new Rect(panel.right()-32,shade.y(),18,shade.height());
+        addButton("BACK",new Rect(panel.x()+10,panel.y()+10,44,20),this::close);
+        addButton("RESET",new Rect(panel.x()+14,panel.bottom()-28,66,20),()->{setColor(resetColor);push();});
+        addButton("DONE",new Rect(panel.right()-80,panel.bottom()-28,66,20),this::close);
+        hex=addDrawableChild(new TextFieldWidget(textRenderer,panel.x()+62,shade.bottom()+14,w-79,14,text("HEX COLOR")));
+        hex.setMaxLength(7);hex.setDrawsBackground(false);hex.setTextShadow(false);hex.setEditableColor(INK);
+        hex.addFormatter((value,index)->text(value).asOrderedText());syncHex();
+        hex.setChangedListener(value->{
+            if(syncing)return;
+            String digits=value.startsWith("#")?value.substring(1):value;
+            if(!digits.matches("[0-9a-fA-F]{6}"))return;
+            setColor(0xFF000000|Integer.parseInt(digits,16));onChange.accept(currentColor());saveAction.save();
+        });
     }
-
-    @Override
-    public void close() {
-        saveAction.save();
-        MinecraftClient.getInstance().setScreen(parent);
-    }
-
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        super.render(context, mouseX, mouseY, deltaTicks);
-        rebuildLayout();
-        drawPanel(context);
-        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("CHOOSE A SHADE AND HUE."), panelX + PANEL_WIDTH / 2, panelY + 26, 0xFFC6D0F3);
-        drawPicker(context);
-        drawPreview(context);
-        drawBackButton(context, mouseX, mouseY);
-        drawResetButton(context, mouseX, mouseY);
-    }
-
-    @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if (super.mouseClicked(click, doubled)) {
-            return true;
+    @Override public void close(){saveAction.save();client.setScreen(parent);}
+    @Override public void render(DrawContext c,int mx,int my,float delta) {
+        frame(c,panel,PANEL_BORDER,PANEL);
+        label(c,textRenderer,title.getString(),panel.x()+64,panel.y()+16,INK,.85f,panel.width()-78,true);
+        for(int col=0;col<shade.width();col++) {
+            int color=Color.HSBtoRGB(hue,col/(float)Math.max(1,shade.width()-1),1);
+            c.fillGradient(shade.x()+col,shade.y(),shade.x()+col+1,shade.bottom(),color,0xFF000000);
         }
-        if (click.button() != 0) {
-            return false;
+        c.drawStrokedRectangle(shade.x()-1,shade.y()-1,shade.width()+2,shade.height()+2,LINE);
+        for(int row=0;row<hueBar.height();row++)c.fill(hueBar.x(),hueBar.y()+row,hueBar.right(),hueBar.y()+row+1,Color.HSBtoRGB(row/(float)Math.max(1,hueBar.height()-1),1,1));
+        int sx=shade.x()+Math.round(saturation*(shade.width()-1)),sy=shade.y()+Math.round((1-brightness)*(shade.height()-1));
+        circle(c,sx-4,sy-4,8,0xFF000000);circle(c,sx-3,sy-3,6,INK);circle(c,sx-2,sy-2,4,currentColor());
+        int hy=hueBar.y()+Math.round(hue*(hueBar.height()-1));
+        c.drawStrokedRectangle(hueBar.x()-2,hy-2,hueBar.width()+4,5,0xFF000000);
+        c.drawStrokedRectangle(hueBar.x()-1,hy-1,hueBar.width()+2,3,INK);
+        frame(c,new Rect(panel.x()+14,shade.bottom()+9,panel.width()-28,22),hex.isFocused()?FOCUS:LINE,FIELD);
+        rounded(c,panel.x()+19,shade.bottom()+13,28,14,currentColor());
+        super.render(c,mx,my,delta);
+    }
+    @Override public boolean mouseClicked(Click click,boolean doubled) {
+        if(super.mouseClicked(click,doubled))return true;
+        if(click.button()!=0)return false;
+        if(shade.contains(click.x(),click.y()))dragging=0;
+        else if(hueBar.contains(click.x(),click.y()))dragging=1;
+        else return false;
+        AxialUiTheme.playButtonClickSound();update(click.x(),click.y());return true;
+    }
+    @Override public boolean mouseDragged(Click click,double dx,double dy) {
+        if(dragging<0)return super.mouseDragged(click,dx,dy);
+        update(click.x(),click.y());return true;
+    }
+    @Override public boolean mouseReleased(Click click){dragging=-1;return super.mouseReleased(click);}
+    private void update(double x,double y) {
+        float vertical=(float)Math.clamp((y-shade.y())/Math.max(1,shade.height()-1),0,1);
+        if(dragging==0){saturation=(float)Math.clamp((x-shade.x())/Math.max(1,shade.width()-1),0,1);brightness=1-vertical;}
+        else hue=vertical;
+        push();
+    }
+    private void setColor(int color){float[] hsb=Color.RGBtoHSB((color>>16)&255,(color>>8)&255,color&255,null);hue=hsb[0];saturation=hsb[1];brightness=hsb[2];}
+    private int currentColor(){return Color.HSBtoRGB(hue,saturation,brightness);}
+    private void push(){onChange.accept(currentColor());saveAction.save();syncHex();}
+    private void syncHex(){if(hex==null)return;syncing=true;try{hex.setText(String.format(Locale.ROOT,"#%06X",currentColor()&0xFFFFFF));}finally{syncing=false;}}
+    private void addButton(String label,Rect r,Runnable action){addDrawableChild(new PickerButton(label,r,action));}
+    private final class PickerButton extends ButtonWidget {
+        PickerButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);}
+        @Override public void playDownSound(SoundManager soundManager){AxialUiTheme.playButtonClickSound();}
+        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+            boolean hover=isHovered()||isFocused();frame(c,new Rect(getX(),getY(),width,height),hover?HOVER_LINE:LINE,hover?HOVER:FIELD);
+            label(c,textRenderer,getMessage().getString(),getX()+7,getY()+6,INK,.8f,width-14,false);
         }
-
-        int backButtonX = panelX + PANEL_PADDING;
-        int backButtonY = panelY + 7;
-        if (inside(click.x(), click.y(), backButtonX, backButtonY, 24, 18)) {
-            close();
-            return true;
-        }
-
-        int resetX = panelX + PANEL_WIDTH - PANEL_PADDING - 80;
-        int resetY = panelY + PANEL_HEIGHT - PANEL_PADDING - 18;
-        if (inside(click.x(), click.y(), resetX, resetY, 80, 18)) {
-            setColor(initialColor);
-            pushColor();
-            return true;
-        }
-
-        if (inside(click.x(), click.y(), panelX + PANEL_PADDING, panelY + PICKER_Y, PICKER_WIDTH, PICKER_HEIGHT)) {
-            draggingControl = 0;
-            updateFromMouse(click.x(), click.y());
-            return true;
-        }
-        if (inside(click.x(), click.y(), hueX(), panelY + PICKER_Y, HUE_WIDTH, PICKER_HEIGHT)) {
-            draggingControl = 1;
-            updateFromMouse(click.x(), click.y());
-            return true;
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
-        if (draggingControl >= 0) {
-            updateFromMouse(click.x(), click.y());
-            return true;
-        }
-        return super.mouseDragged(click, deltaX, deltaY);
-    }
-
-    @Override
-    public boolean mouseReleased(Click click) {
-        if (click.button() == 0) {
-            draggingControl = -1;
-        }
-        return super.mouseReleased(click);
-    }
-
-    private void rebuildLayout() {
-        panelX = (width - PANEL_WIDTH) / 2;
-        panelY = Math.max(16, (height - PANEL_HEIGHT) / 2);
-    }
-
-    private void drawPanel(DrawContext context) {
-        context.fill(panelX, panelY, panelX + PANEL_WIDTH, panelY + PANEL_HEIGHT, 0xE8101018);
-        context.fill(panelX + 1, panelY + 1, panelX + PANEL_WIDTH - 1, panelY + 2, 0x44FFFFFF);
-        context.drawStrokedRectangle(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT, 0xD08F5DFF);
-    }
-
-    private void drawPicker(DrawContext context) {
-        int x = panelX + PANEL_PADDING;
-        int y = panelY + PICKER_Y;
-        // Each column fades from its fully bright shade to black.
-        for (int column = 0; column < PICKER_WIDTH; column++) {
-            int color = Color.HSBtoRGB(hue, column / (float) (PICKER_WIDTH - 1), 1.0f);
-            context.fillGradient(x + column, y, x + column + 1, y + PICKER_HEIGHT, color, 0xFF000000);
-        }
-        context.drawStrokedRectangle(x - 1, y - 1, PICKER_WIDTH + 2, PICKER_HEIGHT + 2, 0xCCFFFFFF);
-        for (int row = 0; row < PICKER_HEIGHT; row++) {
-            int color = Color.HSBtoRGB(row / (float) (PICKER_HEIGHT - 1), 1.0f, 1.0f);
-            context.fill(hueX(), y + row, hueX() + HUE_WIDTH, y + row + 1, color);
-        }
-        context.drawStrokedRectangle(hueX() - 1, y - 1, HUE_WIDTH + 2, PICKER_HEIGHT + 2, 0xCCFFFFFF);
-        int selectedX = x + Math.round(saturation * (PICKER_WIDTH - 1));
-        int selectedY = y + Math.round((1.0f - brightness) * (PICKER_HEIGHT - 1));
-        context.drawStrokedRectangle(selectedX - 3, selectedY - 3, 7, 7, 0xFF000000);
-        context.drawStrokedRectangle(selectedX - 2, selectedY - 2, 5, 5, 0xFFFFFFFF);
-        int hueY = y + Math.round(hue * (PICKER_HEIGHT - 1));
-        context.drawStrokedRectangle(hueX() - 2, hueY - 2, HUE_WIDTH + 4, 5, 0xFF000000);
-        context.drawStrokedRectangle(hueX() - 1, hueY - 1, HUE_WIDTH + 2, 3, 0xFFFFFFFF);
-    }
-
-    private int hueX() {
-        return panelX + PANEL_WIDTH - PANEL_PADDING - HUE_WIDTH;
-    }
-
-    private void updateFromMouse(double mouseX, double mouseY) {
-        float vertical = clamp((float) (mouseY - panelY - PICKER_Y) / (PICKER_HEIGHT - 1));
-        if (draggingControl == 0) {
-            saturation = clamp((float) (mouseX - panelX - PANEL_PADDING) / (PICKER_WIDTH - 1));
-            brightness = 1.0f - vertical;
-        } else {
-            hue = vertical;
-        }
-        pushColor();
-    }
-
-    private static float clamp(float value) {
-        return Math.max(0.0f, Math.min(1.0f, value));
-    }
-
-    private void drawBackButton(DrawContext context, int mouseX, int mouseY) {
-        ModMenuBackButton.draw(context, panelX + PANEL_PADDING, panelY + 7, mouseX, mouseY);
-    }
-
-    private void drawResetButton(DrawContext context, int mouseX, int mouseY) {
-        int resetX = panelX + PANEL_WIDTH - PANEL_PADDING - 80;
-        int resetY = panelY + PANEL_HEIGHT - PANEL_PADDING - 18;
-        boolean hovered = inside(mouseX, mouseY, resetX, resetY, 80, 18);
-        drawButton(context, resetX, resetY, 80, 18, hovered);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("RESET"), resetX + 40, resetY + 5, hovered ? 0xFFF7F7FF : 0xFFC6D0F3);
-    }
-
-    private void drawButton(DrawContext context, int x, int y, int width, int height, boolean hovered) {
-        int background = hovered ? 0xBC20283A : 0xA0181D2C;
-        int border = hovered ? 0xFFE7D9FF : 0xD08F5DFF;
-        context.fill(x, y, x + width, y + height, background);
-        context.fill(x + 1, y + 1, x + width - 1, y + 2, hovered ? 0x33FFFFFF : 0x17FFFFFF);
-        context.drawStrokedRectangle(x, y, width, height, border);
-    }
-
-    private void drawPreview(DrawContext context) {
-        int previewY = panelY + PICKER_Y + PICKER_HEIGHT + 10;
-        int previewX = panelX + PANEL_PADDING;
-        int previewWidth = PANEL_WIDTH - PANEL_PADDING * 2;
-        int previewColor = currentColor();
-        context.fill(previewX, previewY, previewX + previewWidth, previewY + PREVIEW_HEIGHT, 0xAA141822);
-        context.drawStrokedRectangle(previewX, previewY, previewWidth, PREVIEW_HEIGHT, 0xD08F5DFF);
-        context.fill(previewX + 5, previewY + 5, previewX + 23, previewY + 19, previewColor);
-        context.drawStrokedRectangle(previewX + 5, previewY + 5, 18, 14, 0xCCFFFFFF);
-        context.drawTextWithShadow(textRenderer, uiText(label.toUpperCase(Locale.ROOT)), previewX + 30, previewY + 7, previewColor);
-        context.drawTextWithShadow(textRenderer, uiText(String.format(Locale.ROOT, "#%06X", previewColor & 0xFFFFFF)), previewX + 178, previewY + 7, 0xFFC6D0F3);
-    }
-
-    private void setColor(int argb) {
-        float[] hsb = Color.RGBtoHSB((argb >> 16) & 255, (argb >> 8) & 255, argb & 255, null);
-        hue = hsb[0];
-        saturation = hsb[1];
-        brightness = hsb[2];
-    }
-
-    private void pushColor() {
-        onChange.accept(currentColor());
-        saveAction.save();
-    }
-
-    private int currentColor() {
-        return Color.HSBtoRGB(hue, saturation, brightness);
-    }
-
-    private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
-    }
-
-    private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 }

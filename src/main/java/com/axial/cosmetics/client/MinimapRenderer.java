@@ -46,6 +46,18 @@ public final class MinimapRenderer {
         if (MinimapConfig.isEnabled()) render(context, client);
     }
 
+    /** Uses the real terrain renderer, even when the HUD feature is currently disabled. */
+    public static void renderSettingsPreview(DrawContext context, MinecraftClient client,int x,int y,int width,int height) {
+        if(client.world==null||client.player==null) {
+            ModMenuUi.label(context,client.textRenderer,"JOIN A WORLD",x+4,y+height/2-9,ModMenuUi.MUTED,.8f,width-8,false);
+            ModMenuUi.label(context,client.textRenderer,"TO PREVIEW",x+4,y+height/2+5,ModMenuUi.MUTED,.8f,width-8,false);
+            return;
+        }
+        updateWorld(client);
+        int size=Math.max(1,Math.min(Math.min(width,height)-8,MinimapConfig.getSize()));
+        renderMap(context,client,x+(width-size)/2,y+(height-size)/2,size,MinimapConfig.isCircular());
+    }
+
     public static void renderFullScreen(DrawContext context, MinecraftClient client, float centerX, float centerZ, float blocksPerPixel) {
         int width = client.getWindow().getScaledWidth();
         int height = client.getWindow().getScaledHeight();
