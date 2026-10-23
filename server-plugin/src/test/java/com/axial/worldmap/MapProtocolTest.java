@@ -31,6 +31,19 @@ class MapProtocolTest {
         }
         assertEquals(g.height(),rows);assertArrayEquals(pixels,restored);
     }
+    @Test void preparedSnapshotsCarryTheirRevisionWithinThePacketLimit() throws Exception {
+        var g=new MapGeometry(0,0,1,512,512);var map=new WorldMap(UUID.randomUUID(),g,987654321,new int[512*512]);
+        int rows=0;
+        for(int row:TransferPlan.stripes(map,null)) {
+            byte[] packet=MapProtocol.completeSnapshot(map,row);assertTrue(packet.length<=MapProtocol.MAX_PACKET);
+            try(var in=new DataInputStream(new ByteArrayInputStream(packet))) {
+                assertEquals(4,in.readUnsignedByte());assertEquals(map.key(),in.readUTF());assertEquals(map.renderedAt(),in.readLong());
+                in.skipNBytes(12);assertEquals(512,in.readUnsignedShort());assertEquals(512,in.readUnsignedShort());
+                assertEquals(row,in.readUnsignedShort());int count=in.readUnsignedShort();rows+=count;assertEquals(count*512*4,in.available());
+            }
+        }
+        assertEquals(512,rows);
+    }
     @Test void unchangedMapsAreNotRetransmittedAndLocalChangesSendOnlyTheirStripe() {
         var g=new MapGeometry(0,0,16,512,512);var id=UUID.randomUUID();var first=new WorldMap(id,g,1,new int[512*512]);
         var same=new WorldMap(id,g,2,first.colors().clone());assertTrue(TransferPlan.stripes(same,first).isEmpty());

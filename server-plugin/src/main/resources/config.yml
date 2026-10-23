@@ -1,6 +1,8 @@
 # Empty means every loaded world with a border within max-border-diameter.
 worlds: []
 auto-render: true
+# Prepare every eligible loaded world on startup, retaining any completed cache while rebuilding.
+refresh-on-startup: true
 # Protects worlds still using Minecraft's enormous default border.
 # Set a real world border before building a map. Increase this limit deliberately.
 max-border-diameter: 16384
@@ -17,13 +19,10 @@ pause-below-tps: 18.5
 # These settings also apply when upgrading an existing configuration without these keys.
 loaded-chunks-per-tick: 64
 render-time-budget-ms: 2.0
-# Show the current cache first, then refresh the whole world in the background on arrival.
-# Rapid world hops share the same scan rather than restarting it.
-refresh-on-world-change: true
-world-change-refresh-cooldown-seconds: 30
-# Finished maps are refreshed on demand after this age, while the old map stays visible.
+# Background maintenance checks every minute; joins and world changes only transfer cached maps.
+# Completed snapshots stay available while replacements build and save.
 refresh-minutes: 60
 # Total outgoing map packets across all players, each below 30 KB.
 messages-per-tick: 2
-# Faster initial transfer on joins/world changes; ordinary incremental updates use the above limit.
+# Faster initial transfer on joins/world changes; background snapshot updates use the above limit.
 initial-transfer-packets-per-tick: 12

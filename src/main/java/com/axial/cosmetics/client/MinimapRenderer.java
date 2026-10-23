@@ -44,6 +44,7 @@ public final class MinimapRenderer {
         sampledTick=lastDrawTick=Integer.MIN_VALUE;row=column=0;hudX=fullX=Double.NaN;hudReady=fullReady=false;
         lastHudUpload=lastFullUpload=0;
         MinimapServerOverview.beginWorldChange(worldKey);
+        MinimapExploration.beginWorldChange();
     }
     private static String contextKey(MinecraftClient client) {
         return client.world==null?"":WaypointConfig.worldId(client)+"|"+client.world.getRegistryKey().getValue();

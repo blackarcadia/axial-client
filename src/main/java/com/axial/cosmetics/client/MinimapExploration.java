@@ -25,14 +25,28 @@ public final class MinimapExploration {
     private static volatile long savedRevision;
     private static long lastSave;
     private static Future<?> pending;
+    private static MinimapTerrain arrivingTerrain=new MinimapTerrain();
+    private static String boundWorldIdentity;
 
     private MinimapExploration() { }
     public static void discover(MinecraftClient client,int x,int z,int color){discover(terrainFor(client),x,z,color);}
     public static long revision(){return revision.get();}
-    static MinimapTerrain terrainFor(MinecraftClient client){return data.terrain.computeIfAbsent(worldKey(client),ignored->new MinimapTerrain());}
+    static void beginWorldChange(){arrivingTerrain=new MinimapTerrain();boundWorldIdentity=null;}
+    static MinimapTerrain terrainFor(MinecraftClient client){
+        // Paper may have several worlds with the same Minecraft dimension key.
+        // Wait for the plugin UUID instead of reusing another world's explored pixels.
+        if(MinimapServerOverview.awaitingPreparedWorld())return arrivingTerrain;
+        String identity=MinimapServerOverview.fullWorldIdentity();
+        String key=worldKey(client)+(identity==null?"":"|"+identity);
+        if(identity!=null&&!identity.equals(boundWorldIdentity)) {
+            // A new visit starts with fresh local observations over the complete server base.
+            data.terrain.put(key,arrivingTerrain);boundWorldIdentity=identity;revision.incrementAndGet();
+        }
+        return data.terrain.computeIfAbsent(key,ignored->new MinimapTerrain());
+    }
     static void discover(MinimapTerrain terrain,int x,int z,int color){if(terrain.put(x,z,color))revision.incrementAndGet();}
     public static int colorAt(MinecraftClient client,int x,int z) {
-        MinimapTerrain terrain=data.terrain.get(worldKey(client));
+        MinimapTerrain terrain=terrainFor(client);
         int color=terrain==null?0:terrain.get(x,z);
         return color==0?0xFF171B25:color;
     }

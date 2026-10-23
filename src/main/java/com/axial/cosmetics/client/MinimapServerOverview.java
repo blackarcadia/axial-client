@@ -23,7 +23,9 @@ public final class MinimapServerOverview {
     private static final Map<String, Overview> OVERVIEWS = new HashMap<>();
     private static final Map<String, Overlay> OVERLAYS_BY_WORLD = new HashMap<>();
     private static String activeWorld,fullWorldKey;
-    private static Overview fullWorld;
+    private static Overview fullWorld,pendingWorld;
+    private static String pendingWorldKey;
+    private static long pendingSnapshot,committedSnapshot=Long.MIN_VALUE;
     private static String cacheScope;
     private static final LinkedHashMap<String,Overview> WORLD_CACHE=new LinkedHashMap<>(8,.75f,true);
     private static long lastRequestAt;
@@ -74,6 +76,7 @@ public final class MinimapServerOverview {
         }
         cacheScope=nextScope;
         activeWorld = null;fullWorld=null;fullWorldKey=null;
+        pendingWorld=null;pendingWorldKey=null;pendingSnapshot=committedSnapshot=Long.MIN_VALUE;
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
         fullRequestPending=true;worldGeneration++;
@@ -101,7 +104,31 @@ public final class MinimapServerOverview {
             } catch(IOException ignored){ }
             return;
         }
+        if(payload.length>0&&payload[0]==4){readCompleteSnapshot(payload);return;}
         readSnapshot(payload,true);
+    }
+    /** Stage a revision separately; renderer readers only ever capture complete immutable images. */
+    private static void readCompleteSnapshot(byte[] payload) {
+        try(var input=new DataInputStream(new ByteArrayInputStream(payload))) {
+            input.readByte();String world=readString(input);long snapshot=input.readLong();
+            int minX=input.readInt(),minZ=input.readInt(),step=input.readInt();
+            int width=input.readUnsignedShort(),height=input.readUnsignedShort();
+            int start=input.readUnsignedShort(),count=input.readUnsignedShort();
+            if(step<=0||step>1_000_000||width<=0||height<=0||width>512||height>512||count==0||start+count>height||input.available()!=count*width*4)return;
+            if(world.equals(fullWorldKey)&&snapshot<committedSnapshot)return;
+            if(world.equals(pendingWorldKey)&&snapshot<pendingSnapshot)return;
+            if(pendingWorld==null||!world.equals(pendingWorldKey)||snapshot!=pendingSnapshot
+                    ||!pendingWorld.matches(minX,minZ,step,width,height)) {
+                pendingWorld=new Overview(minX,minZ,step,width,height);pendingWorldKey=world;pendingSnapshot=snapshot;
+            }
+            for(int i=start*width;i<(start+count)*width;i++)pendingWorld.colors[i]=input.readInt();
+            pendingWorld.rows.set(start,start+count);
+            lastFullProgress=System.currentTimeMillis();checkedProvider=fullProviderAvailable=true;
+            if(pendingWorld.complete()) {
+                fullWorld=pendingWorld;fullWorldKey=world;committedSnapshot=snapshot;
+                pendingWorld=null;pendingWorldKey=null;providerRendering=false;providerMessage="";revision++;
+            }
+        } catch(IOException ignored){ }
     }
     private static void readSnapshot(byte[] payload,boolean full) {
         if(payload.length==0||payload[0]!=SNAPSHOT)return;
@@ -156,9 +183,12 @@ public final class MinimapServerOverview {
         } catch (IOException ignored) { }
     }
 
+    public static String fullWorldIdentity(){return fullWorldKey;}
+    static boolean awaitingPreparedWorld(){return fullProviderAvailable&&fullWorldKey==null;}
     public static long revision(){return revision;}
     public static long worldGeneration(){return worldGeneration;}
     public static String loadingMessage() {
+        if(pendingWorld!=null&&fullWorld==null)return "Loading cached full map: "+pendingWorld.rows.cardinality()*100/pendingWorld.height+"%";
         if(providerRendering)return providerMessage;
         if(fullWorld!=null)return fullWorld.complete()?"":"Loading full map: "+fullWorld.rows.cardinality()*100/fullWorld.height+"%";
         if(!providerMessage.isEmpty())return providerMessage;

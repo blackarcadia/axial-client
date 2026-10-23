@@ -9,6 +9,52 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Exercises the real plugin encoder through the real Fabric client decoder. */
 class WorldMapClientCompatibilityTest {
     @BeforeEach void reset(){MinimapServerOverview.beginWorldChange();}
+    @Test void preparedSnapshotBecomesVisibleOnlyAfterEveryRowArrives() throws Exception {
+        var g=new MapGeometry(0,0,1,512,512);int[] pixels=new int[512*512];Arrays.fill(pixels,0xFF123456);
+        var map=new WorldMap(UUID.randomUUID(),g,100,pixels);var stripes=TransferPlan.stripes(map,null);
+        int last=stripes.removeLast();
+        for(int row:stripes)MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(map,row));
+        assertFalse(MinimapServerOverview.available());assertNull(MinimapServerOverview.fullWorldBounds());
+        assertTrue(MinimapServerOverview.loadingMessage().startsWith("Loading cached full map:"));
+        MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(map,last));
+        assertEquals(map.key(),MinimapServerOverview.fullWorldIdentity());assertEquals("",MinimapServerOverview.loadingMessage());
+        for(int i=0;i<pixels.length;i++)assertEquals(pixels[i],MinimapServerOverview.colorAt(g.x(i),g.z(i)));
+    }
+    @Test void replacementIsAtomicAndLateOlderRevisionsCannotOverwriteIt() throws Exception {
+        var g=new MapGeometry(0,0,1,512,512);var id=UUID.randomUUID();
+        int[] old=new int[512*512],next=old.clone();Arrays.fill(old,0xFF123456);Arrays.fill(next,0xFF654321);
+        var first=new WorldMap(id,g,100,old);var second=new WorldMap(id,g,200,next);
+        for(int row:TransferPlan.stripes(first,null))MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(first,row));
+        long revision=MinimapServerOverview.revision();
+        var stripes=TransferPlan.stripes(second,null);int last=stripes.removeLast();
+        for(int row:stripes)MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(second,row));
+        assertEquals(revision,MinimapServerOverview.revision());
+        assertEquals(old[0],MinimapServerOverview.colorAt(0,0));assertEquals(old[0],MinimapServerOverview.colorAt(511,511));
+        MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(second,last));
+        assertEquals(revision+1,MinimapServerOverview.revision());
+        for(int row:TransferPlan.stripes(first,null))MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(first,row));
+        assertEquals(next[0],MinimapServerOverview.colorAt(0,0));assertEquals(next[0],MinimapServerOverview.colorAt(511,511));
+    }
+    @Test void worldChangesDiscardUnfinishedTransfersAndAlwaysFetchTheEntireNewSnapshot() throws Exception {
+        var g=new MapGeometry(0,0,1,512,512);int[] a=new int[512*512],b=a.clone();Arrays.fill(a,0xFF112233);Arrays.fill(b,0xFF445566);
+        var first=new WorldMap(UUID.randomUUID(),g,100,a);var second=new WorldMap(UUID.randomUUID(),g,100,b);
+        MinimapServerOverview.beginWorldChange("server|overworld");
+        for(int row:TransferPlan.stripes(first,null))MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(first,row));
+        MinimapServerOverview.beginWorldChange("server|overworld"); // Two Paper worlds can share this dimension.
+        MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(second,0));
+        assertFalse(MinimapServerOverview.available());assertEquals(0,MinimapServerOverview.colorAt(0,0));
+        for(int row:TransferPlan.stripes(second,null))MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(second,row));
+        assertEquals(second.key(),MinimapServerOverview.fullWorldIdentity());assertEquals(b[0],MinimapServerOverview.colorAt(511,511));
+        MinimapServerOverview.beginWorldChange("server|overworld");
+        MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(first,0));assertFalse(MinimapServerOverview.available());
+        for(int row:TransferPlan.stripes(first,null))MinimapServerOverview.receiveFullWorld(MapProtocol.completeSnapshot(first,row));
+        assertEquals(a[0],MinimapServerOverview.colorAt(511,511));
+    }
+    @Test void incompleteRenderCannotBeEncodedAsAPreparedSnapshot() {
+        var g=new MapGeometry(0,0,1,2,2);
+        var partial=new WorldMap(UUID.randomUUID(),g,1,new int[4],new BitSet());
+        assertThrows(IllegalArgumentException.class,()->MapProtocol.completeSnapshot(partial,0));
+    }
     @Test void revisitingTheExactWorldRestoresItsWholeCachedMapOnTheFirstStripe() throws Exception {
         var g=new MapGeometry(-256,-256,1,512,512);var id=UUID.randomUUID();int[] colors=new int[512*512];Arrays.fill(colors,0xFF123456);
         var map=new WorldMap(id,g,1,colors);

@@ -12,7 +12,17 @@ final class MapCache {
     private final Path directory;
     MapCache(Path directory){this.directory=directory;}
     WorldMap read(UUID expected,MapGeometry geometry) throws IOException {
-        Path file=directory.resolve(expected+".map.gz");if(!Files.exists(file))return null;
+        return readFile(directory.resolve(expected+".map.gz"),expected,geometry);
+    }
+    WorldMap readCheckpoint(UUID expected,MapGeometry geometry) throws IOException {
+        WorldMap checkpoint=readFile(directory.resolve(expected+".checkpoint.gz"),expected,geometry);
+        if(checkpoint!=null)return checkpoint;
+        // Migrate unfinished caches written by the previous plugin without serving them.
+        WorldMap legacy=read(expected,geometry);
+        return legacy!=null&&!legacy.complete()?legacy:null;
+    }
+    private WorldMap readFile(Path file,UUID expected,MapGeometry geometry) throws IOException {
+        if(!Files.exists(file))return null;
         try(var in=new DataInputStream(new GZIPInputStream(Files.newInputStream(file)))) {
             int magic=in.readInt();if(magic!=MAGIC&&magic!=LEGACY_MAGIC)throw new IOException("Unknown map cache format");
             UUID world=new UUID(in.readLong(),in.readLong());
@@ -47,9 +57,10 @@ final class MapCache {
                 byte[] sampled=map.complete()?null:map.sampled().toByteArray();
                 out.writeInt(sampled==null?-1:sampled.length);if(sampled!=null)out.write(sampled);
             }
-            Path dest=directory.resolve(map.world()+".map.gz");
+            Path dest=directory.resolve(map.world()+(map.complete()?".map.gz":".checkpoint.gz"));
             try{Files.move(temp,dest,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
             catch(AtomicMoveNotSupportedException ex){Files.move(temp,dest,StandardCopyOption.REPLACE_EXISTING);}
+            if(map.complete())Files.deleteIfExists(directory.resolve(map.world()+".checkpoint.gz"));
         } finally {Files.deleteIfExists(temp);}
     }
 }

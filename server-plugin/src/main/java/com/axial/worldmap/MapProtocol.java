@@ -21,17 +21,25 @@ final class MapProtocol {
         return bytes.toByteArray();
     }
     static int rowsPerPacket(WorldMap map) {
-        int header=1+2+map.key().getBytes(StandardCharsets.UTF_8).length+12+8;
+        int header=1+2+map.key().getBytes(StandardCharsets.UTF_8).length+12+8+8;
         return Math.max(1,(MAX_PACKET-header)/(map.geometry().width()*4));
     }
     static byte[] snapshot(WorldMap map,int startRow) throws IOException {
+        return snapshot(map,startRow,false);
+    }
+    static byte[] completeSnapshot(WorldMap map,int startRow) throws IOException {
+        if(!map.complete())throw new IllegalArgumentException("Only completed maps can be transferred");
+        return snapshot(map,startRow,true);
+    }
+    private static byte[] snapshot(WorldMap map,int startRow,boolean complete) throws IOException {
         MapGeometry g=map.geometry();
         if(startRow<0||startRow>=g.height())throw new IllegalArgumentException("Invalid stripe row");
         int rows=Math.min(rowsPerPacket(map),g.height()-startRow);
         var bytes=new ByteArrayOutputStream();
         try(var out=new DataOutputStream(bytes)) {
             byte[] key=map.key().getBytes(StandardCharsets.UTF_8);
-            out.writeByte(1);out.writeShort(key.length);out.write(key);
+            out.writeByte(complete?4:1);out.writeShort(key.length);out.write(key);
+            if(complete)out.writeLong(map.renderedAt());
             out.writeInt(g.minX());out.writeInt(g.minZ());out.writeInt(g.step());
             out.writeShort(g.width());out.writeShort(g.height());out.writeShort(startRow);out.writeShort(rows);
             for(int i=startRow*g.width();i<(startRow+rows)*g.width();i++)out.writeInt(map.colors()[i]);

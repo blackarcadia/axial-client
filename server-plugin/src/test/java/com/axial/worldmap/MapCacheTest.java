@@ -16,11 +16,32 @@ class MapCacheTest {
         var colors=new int[32*32]; // A sampled void chunk is still complete, despite zero colours.
         var partial=new WorldMap(id,g,12345,colors,coverage);
         coverage.clear();assertTrue(partial.hasChunk(first));assertFalse(partial.complete());
-        var cache=new MapCache(dir);cache.write(partial);var restored=cache.read(id,g);
+        var cache=new MapCache(dir);cache.write(partial);assertNull(cache.read(id,g));var restored=cache.readCheckpoint(id,g);
         assertNotNull(restored);assertFalse(restored.complete());assertTrue(restored.hasChunk(first));
         assertFalse(restored.hasChunk(chunks.getLast()));
         assertEquals(1,chunks.stream().filter(restored::hasChunk).count());
         cache.write(new WorldMap(id,g,23456,colors));assertTrue(cache.read(id,g).complete());
+    }
+    @Test void backgroundCheckpointsNeverReplaceThePublishedSnapshot() throws Exception {
+        var id=UUID.randomUUID();var g=new MapGeometry(0,0,1,32,32);var cache=new MapCache(dir);
+        int[] old=new int[1024];Arrays.fill(old,0xFF123456);
+        cache.write(new WorldMap(id,g,100,old));
+        var progress=new BitSet();progress.set(0,512);int[] next=new int[1024];Arrays.fill(next,0xFF654321);
+        cache.write(new WorldMap(id,g,200,next,progress));
+        var restarted=new MapCache(dir);
+        assertEquals(100,restarted.read(id,g).renderedAt());assertArrayEquals(old,restarted.read(id,g).colors());
+        assertEquals(200,restarted.readCheckpoint(id,g).renderedAt());
+        restarted.write(new WorldMap(id,g,300,next));
+        assertArrayEquals(next,restarted.read(id,g).colors());assertNull(restarted.readCheckpoint(id,g));
+        assertFalse(Files.exists(dir.resolve(id+".checkpoint.gz")));
+    }
+    @Test void previousPartialCacheIsRecoveredOnlyAsStagingData() throws Exception {
+        var id=UUID.randomUUID();var g=new MapGeometry(0,0,1,2,2);var cache=new MapCache(dir);
+        var progress=new BitSet();progress.set(0);
+        cache.write(new WorldMap(id,g,1,new int[4],progress));
+        Files.move(dir.resolve(id+".checkpoint.gz"),dir.resolve(id+".map.gz"));
+        var restored=cache.readCheckpoint(id,g);assertNotNull(restored);assertFalse(restored.complete());
+        assertEquals(progress,restored.sampled());
     }
     @Test void completedCachesFromThePreviousPluginFormatStillLoad() throws Exception {
         var id=UUID.randomUUID();var g=new MapGeometry(-2,3,1,2,2);
