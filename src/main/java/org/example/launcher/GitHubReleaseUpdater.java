@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
+import java.util.Properties;
 
 public final class GitHubReleaseUpdater {
     private static final String API_BASE = "https://api.github.com/repos/";
@@ -64,17 +66,34 @@ public final class GitHubReleaseUpdater {
             }
 
             String tag = normalizeVersion(release.get("tag_name").getAsString());
-            String installedPayloadVersion = installedClientBuild(gameDir);
-            String minimumAcceptedVersion = newerVersion(installedPayloadVersion, buildInfo.appVersion());
-            if (!minimumAcceptedVersion.isBlank() && !isNewer(tag, minimumAcceptedVersion)) {
-                return UpdateStatus.upToDate(minimumAcceptedVersion);
-            }
-
             String assetUrl = findAssetUrl(release.getAsJsonArray("assets"), buildInfo.githubAsset());
             if (assetUrl == null) {
                 return UpdateStatus.notAvailable("Newest release has no update asset");
             }
-            return UpdateStatus.available(tag, URI.create(assetUrl));
+            return updateStatusForRelease(tag, URI.create(assetUrl), gameDir);
+        }
+    }
+
+    UpdateStatus updateStatusForRelease(String tag, URI assetUrl, Path gameDir) {
+        String installed = installedClientBuild(gameDir);
+        if (buildNumber(tag) < 0) {
+            return UpdateStatus.notAvailable("Published release has no valid build number");
+        }
+        if (buildNumber(installed) >= buildNumber(tag)) {
+            return UpdateStatus.upToDate(installed);
+        }
+        if (buildNumber(tag) < buildNumber(buildInfo.appVersion())) {
+            return UpdateStatus.notAvailable("Published release is older than this launcher; preparing bundled client");
+        }
+        // A current launcher does not prove its game payload is current. Download
+        // the same release again when the installed client is old or unreadable.
+        return UpdateStatus.available(tag, assetUrl);
+    }
+
+    void verifyInstallVersion(String releaseTag, Path gameDir) throws IOException {
+        if (!updateStatusForRelease(releaseTag, null, gameDir).available()) {
+            throw new IOException("Refusing to replace client build " + installedClientBuild(gameDir)
+                    + " with " + releaseTag + " (launcher " + buildInfo.appVersion() + ")");
         }
     }
 
@@ -129,6 +148,7 @@ public final class GitHubReleaseUpdater {
             throw new IOException("No packaged client jar found in release app");
         }
         verifyStagedBuild(stagedApp, releaseTag);
+        verifyInstallVersion(releaseTag, gameDir);
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
             List<String> installedFiles = installPackagedJarsFromBundle(jarFile, modsDir);
@@ -194,56 +214,111 @@ public final class GitHubReleaseUpdater {
                             + " does not match release " + releaseTag);
                 }
             }
+            var clientEntry = jarFile.getJarEntry("axial-cosmetics.jar");
+            if (clientEntry == null) {
+                throw new IOException("Update app is missing the client payload");
+            }
+            try (JarInputStream payload = new JarInputStream(jarFile.getInputStream(clientEntry))) {
+                java.util.jar.JarEntry nested;
+                while ((nested = payload.getNextJarEntry()) != null) {
+                    if (nested.getName().equals("version.properties")) {
+                        Properties properties = new Properties();
+                        properties.load(payload);
+                        String version = properties.getProperty("app.version", "");
+                        if (buildNumber(version) != releaseBuild) {
+                            throw new IOException("Client payload build " + version
+                                    + " does not match release " + releaseTag);
+                        }
+                        return;
+                    }
+                }
+                throw new IOException("Client payload is missing version information");
+            }
         }
     }
 
-    private static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
-        deleteManagedMods(modsDir);
-
-        int installed = 0;
+    static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
+        Path transaction = Files.createTempDirectory(modsDir.getParent(), ".client-update-");
+        Path staged = Files.createDirectory(transaction.resolve("staged"));
+        Path backup = Files.createDirectory(transaction.resolve("backup"));
         List<String> installedFiles = new ArrayList<>();
-        var entries = jarFile.entries();
-        while (entries.hasMoreElements()) {
-            var entry = entries.nextElement();
-            if (entry.isDirectory()) {
-                continue;
+        List<Path> committed = new ArrayList<>();
+        try {
+            // Finish extracting before touching the working installation.
+            var entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                var entry = entries.nextElement();
+                String name = entry.getName();
+                if (entry.isDirectory() || !name.endsWith(".jar")
+                        || (name.contains("/") && !name.startsWith("launcher-mods/"))) {
+                    continue;
+                }
+                String fileName = Path.of(name).getFileName().toString();
+                if (isRuntimeDependencyJar(fileName)) {
+                    continue;
+                }
+                try (InputStream in = jarFile.getInputStream(entry)) {
+                    Files.copy(in, staged.resolve(fileName));
+                }
+                installedFiles.add(fileName);
             }
-            String name = entry.getName();
-            if (!name.endsWith(".jar")) {
-                continue;
-            }
-            if (name.contains("/")) {
-                continue;
-            }
-            if (isRuntimeDependencyJar(name)) {
-                continue;
+            if (!installedFiles.contains("axial-cosmetics.jar")) {
+                throw new IOException("No client payload found in release bundle");
             }
 
-            String fileName = Path.of(name).getFileName().toString();
-            if (isRuntimeDependencyJar(fileName)) {
-                continue;
+            try {
+                backupManagedMods(modsDir, backup);
+                for (String fileName : installedFiles) {
+                    Path target = modsDir.resolve(fileName);
+                    if (Files.exists(target)) {
+                        Files.move(target, backup.resolve(fileName));
+                    }
+                    Files.move(staged.resolve(fileName), target);
+                    committed.add(target);
+                }
+            } catch (IOException failure) {
+                // Restore the previous installation if any replacement fails.
+                try {
+                    for (Path target : committed) {
+                        Files.deleteIfExists(target);
+                    }
+                    try (var files = Files.list(backup)) {
+                        for (Path previous : files.toList()) {
+                            Files.move(previous, modsDir.resolve(previous.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                } catch (IOException rollbackFailure) {
+                    failure.addSuppressed(rollbackFailure);
+                    // Retain the backup for recovery when restoration is impossible.
+                    throw new IOException("Update failed; backup retained at " + backup, failure);
+                }
+                throw failure;
             }
-
-            Path target = modsDir.resolve(fileName);
-            try (InputStream in = jarFile.getInputStream(entry);
-                 OutputStream out = Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-                in.transferTo(out);
+            deleteRecursive(transaction);
+            return installedFiles;
+        } finally {
+            // Never remove a backup that could not be restored.
+            try (var files = Files.list(backup)) {
+                if (files.findAny().isEmpty()) {
+                    deleteRecursive(transaction);
+                }
+            } catch (java.nio.file.NoSuchFileException ignored) {
+                // Successful commit already removed the transaction directory.
             }
-            installed++;
-            installedFiles.add(fileName);
         }
-
-        if (installed == 0) {
-            throw new IOException("No packaged mod jars found in release bundle");
-        }
-        return installedFiles;
     }
 
-    private static void deleteManagedMods(Path modsDir) throws IOException {
+    private static void backupManagedMods(Path modsDir, Path backup) throws IOException {
         List<String> previous = readInstalledClientManifest();
         if (!previous.isEmpty()) {
             for (String fileName : previous) {
-                Files.deleteIfExists(modsDir.resolve(fileName));
+                Path source = modsDir.resolve(fileName).normalize();
+                if (!source.getParent().equals(modsDir.normalize())) {
+                    throw new IOException("Invalid managed mod filename: " + fileName);
+                }
+                if (Files.exists(source)) {
+                    Files.move(source, backup.resolve(fileName));
+                }
             }
             return;
         }
@@ -267,7 +342,7 @@ public final class GitHubReleaseUpdater {
                         || name.startsWith("cloth-config-") || name.startsWith("moreculling-")
                         || name.startsWith("staticbgmod-")
                         || isRuntimeDependencyJar(name))) {
-                    Files.deleteIfExists(path);
+                    Files.move(path, backup.resolve(path.getFileName()));
                 }
             }
         }
@@ -466,15 +541,6 @@ public final class GitHubReleaseUpdater {
         long latestBuild = buildNumber(latest);
         long currentBuild = buildNumber(current);
         return latestBuild >= 0 && currentBuild >= 0 && latestBuild > currentBuild;
-    }
-
-    private static String newerVersion(String first, String second) {
-        long firstBuild = buildNumber(first);
-        long secondBuild = buildNumber(second);
-        if (firstBuild < 0 && secondBuild < 0) {
-            return "";
-        }
-        return secondBuild > firstBuild ? second : first;
     }
 
     /**

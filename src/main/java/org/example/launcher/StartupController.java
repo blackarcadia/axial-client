@@ -45,11 +45,10 @@ public final class StartupController {
             Instant startupShownAt = Instant.now();
             Path gameDir = ClientPaths.clientRoot();
             Files.createDirectories(gameDir);
-            boolean clientUpdated = false;
             if (!Boolean.getBoolean("axial.skipUpdateCheck")) {
-                clientUpdated = checkForUpdates(gameDir);
+                checkForUpdates(gameDir);
             } else {
-                loadingScreen.update("Up to date", 10);
+                loadingScreen.update("Update check skipped", 10);
             }
 
             holdStartupScreen(startupShownAt);
@@ -58,9 +57,6 @@ public final class StartupController {
             loadingScreen.update("Preparing account", 25);
 
             MinecraftLauncher launcher = new MinecraftLauncher(msg -> loadingScreen.update(msg, 50));
-            if (clientUpdated) {
-                launcher.skipBundledAxialCosmeticsInstallOnce();
-            }
             loadingScreen.update("Installing client", 55);
             launcher.ensureInstalled(request);
 
@@ -81,7 +77,7 @@ public final class StartupController {
         }
     }
 
-    private boolean checkForUpdates(Path gameDir) {
+    private void checkForUpdates(Path gameDir) {
         try {
             loadingScreen.update("Checking for updates", 5);
             GitHubReleaseUpdater.UpdateStatus update = updater.checkForUpdate(gameDir);
@@ -92,15 +88,14 @@ public final class StartupController {
                 loadingScreen.update("Installing client update", 95);
                 updater.installClientUpdate(stagedBundle, update.version(), gameDir);
                 loadingScreen.update("Client updated", 15);
-                return true;
+                return;
             } else {
-                loadingScreen.update("Up to date", 15);
+                loadingScreen.update(update.message(), 15);
             }
         } catch (Exception ex) {
             System.err.println("Update check failed; continuing with installed client: " + ex.getMessage());
             loadingScreen.update("Update unavailable", 15);
         }
-        return false;
     }
 
     private LaunchRequest buildLaunchRequest() throws IOException, InterruptedException, java.util.concurrent.TimeoutException {
@@ -218,7 +213,6 @@ public final class StartupController {
         if (!remaining.isPositive()) {
             return;
         }
-        loadingScreen.update("Up to date", 15);
         try {
             Thread.sleep(remaining.toMillis());
         } catch (InterruptedException e) {

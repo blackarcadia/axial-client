@@ -64,7 +64,6 @@ public class MinecraftLauncher {
 
     private final OkHttpClient http = new OkHttpClient();
     private final Gson gson = new GsonBuilder().create();
-    private boolean skipBundledAxialCosmeticsInstall;
 
     public MinecraftLauncher() {
         this(msg -> System.out.println(msg));
@@ -72,10 +71,6 @@ public class MinecraftLauncher {
 
     public MinecraftLauncher(Logger logger) {
         this.logger = logger;
-    }
-
-    public void skipBundledAxialCosmeticsInstallOnce() {
-        this.skipBundledAxialCosmeticsInstall = true;
     }
 
     public void ensureInstalled(LaunchRequest request) throws IOException {
@@ -102,12 +97,32 @@ public class MinecraftLauncher {
         downloadLibraries(layout, versionJson);
         downloadAssets(layout, versionJson);
         downloadToggleSprintMod(layout);
+        downloadModMenu(layout);
+        installBundledClient(request.getGameDir());
+        removeLegacyLauncherPacks(layout);
+        writeSimpleMenuConfig(layout);
+        removeLegacyResourcePackEntries(layout.optionsFile());
+        logger.info("Installation check complete.");
+    }
+
+    // Decide from the actual installed payload on every launch, including offline
+    // launches. The launcher itself remains at its original build after an update.
+    void installBundledClient(Path gameDir) throws IOException {
+        String installed = GitHubReleaseUpdater.installedClientBuild(gameDir);
+        String bundled = AppBuildInfo.load().appVersion();
+        if (GitHubReleaseUpdater.buildNumber(installed) >= 0
+                && (GitHubReleaseUpdater.buildNumber(bundled) < 0
+                || GitHubReleaseUpdater.isNewer(installed, bundled))) {
+            logger.info("Keeping installed client build " + installed
+                    + " and its dependencies; launcher bundle is " + bundled + ".");
+            return;
+        }
+        FileLayout layout = new FileLayout(gameDir);
         downloadFabricApi(layout);
         installFabricLanguageKotlin(layout);
         installYacl(layout);
         installZoomify(layout);
         installScrollableTooltips(layout);
-        downloadModMenu(layout);
         installSodium(layout);
         installLithium(layout);
         installFerriteCore(layout);
@@ -122,16 +137,7 @@ public class MinecraftLauncher {
         removeStaticBgMod(layout);
         removeCollective(layout);
         removeAxialUtils(layout);
-        if (skipBundledAxialCosmeticsInstall) {
-            logger.info("Keeping Axial cosmetics mod installed by updater.");
-            skipBundledAxialCosmeticsInstall = false;
-        } else {
-            installAxialCosmetics(layout);
-        }
-        removeLegacyLauncherPacks(layout);
-        writeSimpleMenuConfig(layout);
-        removeLegacyResourcePackEntries(layout.optionsFile());
-        logger.info("Installation check complete.");
+        installAxialCosmetics(layout);
     }
 
     public void launch(LaunchRequest request) throws IOException, InterruptedException {
