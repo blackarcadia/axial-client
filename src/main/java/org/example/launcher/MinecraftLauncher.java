@@ -27,6 +27,7 @@ public class MinecraftLauncher {
     }
 
     private final Logger logger;
+    private final AppBuildInfo buildInfo;
     private static final String VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
     private static final String FABRIC_LOADER_VERSION = "0.19.5";
     private static final String TOGGLE_MOD_URL = "https://cdn.modrinth.com/data/gejCNKwT/versions/731Py1cq/togglesneakhotkey-1.0.2.jar";
@@ -70,7 +71,12 @@ public class MinecraftLauncher {
     }
 
     public MinecraftLauncher(Logger logger) {
+        this(logger, AppBuildInfo.load());
+    }
+
+    MinecraftLauncher(Logger logger, AppBuildInfo buildInfo) {
         this.logger = logger;
+        this.buildInfo = buildInfo;
     }
 
     public void ensureInstalled(LaunchRequest request) throws IOException {
@@ -108,15 +114,30 @@ public class MinecraftLauncher {
     // Decide from the actual installed payload on every launch, including offline
     // launches. The launcher itself remains at its original build after an update.
     void installBundledClient(Path gameDir) throws IOException {
+        ClientInstallation.locked(gameDir, () -> {
+            installBundledClientLocked(gameDir);
+            return null;
+        });
+    }
+
+    private void installBundledClientLocked(Path gameDir) throws IOException {
         String installed = GitHubReleaseUpdater.installedClientBuild(gameDir);
-        String bundled = AppBuildInfo.load().appVersion();
+        String bundled = buildInfo.appVersion();
+        long minimum = ClientInstallation.minimumBuild(gameDir);
+        ClientInstallation.recordBuild(gameDir, GitHubReleaseUpdater.buildNumber(installed));
+        if (GitHubReleaseUpdater.buildNumber(bundled) < minimum
+                && GitHubReleaseUpdater.buildNumber(installed) < minimum) {
+            throw new IOException("Client build " + minimum + " needs repair; refusing to install older bundle " + bundled);
+        }
         if (GitHubReleaseUpdater.buildNumber(installed) >= 0
                 && (GitHubReleaseUpdater.buildNumber(bundled) < 0
                 || GitHubReleaseUpdater.isNewer(installed, bundled))) {
+            removeLegacyClientJars(new FileLayout(gameDir));
             logger.info("Keeping installed client build " + installed
                     + " and its dependencies; launcher bundle is " + bundled + ".");
             return;
         }
+        verifyBundledClientBuild(bundled);
         FileLayout layout = new FileLayout(gameDir);
         downloadFabricApi(layout);
         installFabricLanguageKotlin(layout);
@@ -138,6 +159,14 @@ public class MinecraftLauncher {
         removeCollective(layout);
         removeAxialUtils(layout);
         installAxialCosmetics(layout);
+        ClientInstallation.requireLaunchable(gameDir);
+    }
+
+    private void verifyBundledClientBuild(String expected) throws IOException {
+        try (InputStream resource = MinecraftLauncher.class.getResourceAsStream("/" + AXIAL_COSMETICS_FILE)) {
+            if (resource == null) throw new IOException("Bundled client payload is missing");
+            GitHubReleaseUpdater.verifyClientPayload(resource, GitHubReleaseUpdater.buildNumber(expected));
+        }
     }
 
     public void launch(LaunchRequest request) throws IOException, InterruptedException {
@@ -163,6 +192,11 @@ public class MinecraftLauncher {
     }
 
     private Process start(LaunchRequest request, java.io.PrintStream log, Path consoleLog) throws IOException {
+        return ClientInstallation.locked(request.getGameDir(), () -> startLocked(request, log, consoleLog));
+    }
+
+    private Process startLocked(LaunchRequest request, java.io.PrintStream log, Path consoleLog) throws IOException {
+        ClientInstallation.requireLaunchable(request.getGameDir());
         FileLayout layout = new FileLayout(request.getGameDir());
         JsonObject versionJson = readJson(layout.versionJson(request.getVersionId()));
         if (versionJson.has("inheritsFrom")) {
@@ -641,16 +675,24 @@ public class MinecraftLauncher {
             }
             if (!copyBundledModIfChanged(in, target)) {
                 logger.info("Axial cosmetics mod is already current.");
+                removeLegacyClientJars(layout);
                 return;
             }
         }
         logger.info("Installed Axial cosmetics mod: " + AXIAL_COSMETICS_FILE);
 
-        // Remove older Axial jars after the replacement has been staged successfully.
-        try (var stream = Files.list(mods)) {
-            stream.filter(p -> isLegacyAxialMod(p.getFileName().toString()))
-                    .filter(p -> !p.getFileName().toString().equals(AXIAL_COSMETICS_FILE))
-                    .forEach(this::deleteIfPossible);
+        removeLegacyClientJars(layout);
+    }
+
+    private void removeLegacyClientJars(FileLayout layout) throws IOException {
+        // Fabric must not see stale client jars beside the selected payload.
+        // If a legacy file is locked, abort instead of starting a mixed install.
+        try (var stream = Files.list(layout.modsDir())) {
+            for (Path path : stream.filter(p -> isLegacyAxialMod(p.getFileName().toString())).toList()) {
+                if (!Files.isSameFile(path, layout.modsDir().resolve(AXIAL_COSMETICS_FILE))) {
+                    Files.deleteIfExists(path);
+                }
+            }
         }
     }
 

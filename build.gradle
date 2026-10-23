@@ -83,6 +83,7 @@ dependencies {
 }
 
 processResources {
+    inputs.properties(appVersion: appVersion, appChannel: appChannel, clientVersion: clientVersion)
     exclude('axial-cosmetics-*.jar')
     exclude(axialUtilsFile)
     exclude('BendableCuboidsFabric-2.0.1+mc.1.21.11.jar')
@@ -401,6 +402,45 @@ tasks.register('releaseFatJar', Jar) {
 }
 
 
+// Verify the outer launcher and actual nested game payload before either platform packages it.
+tasks.register('verifyReleasePayload') {
+    group = 'verification'
+    dependsOn tasks.releaseFatJar
+    doLast {
+        def releaseJar = tasks.releaseFatJar.archiveFile.get().asFile
+        new java.util.jar.JarFile(releaseJar).withCloseable { outer ->
+            def launcherProperties = new Properties()
+            def metadata = outer.getJarEntry('version.properties')
+            if (metadata == null) throw new GradleException('Release launcher metadata is missing')
+            outer.getInputStream(metadata).withCloseable { launcherProperties.load(it) }
+            if (launcherProperties.getProperty('app.version') != appVersion) {
+                throw new GradleException('Release launcher build does not match requested appVersion')
+            }
+            def clientEntry = outer.getJarEntry('axial-cosmetics.jar')
+            if (clientEntry == null) throw new GradleException('Release game payload is missing')
+            def foundMetadata = false
+            new java.util.jar.JarInputStream(outer.getInputStream(clientEntry)).withCloseable { nested ->
+                java.util.jar.JarEntry entry
+                while ((entry = nested.nextJarEntry) != null) {
+                    if (entry.name == 'version.properties') {
+                        if (foundMetadata) throw new GradleException('Duplicate game payload metadata')
+                        def clientProperties = new Properties()
+                        clientProperties.load(nested)
+                        if (clientProperties.getProperty('app.version') != appVersion
+                                || clientProperties.getProperty('client.version') != clientVersion) {
+                            throw new GradleException('Release game payload is stale or belongs to a different build')
+                        }
+                        foundMetadata = true
+                    } else {
+                        nested.transferTo(OutputStream.nullOutputStream())
+                    }
+                }
+            }
+            if (!foundMetadata) throw new GradleException('Release game payload metadata is missing')
+        }
+    }
+}
+
 // ============================================================
 // Prepare protected release JAR for jpackage
 // ============================================================
@@ -412,7 +452,7 @@ tasks.register('prepareObfuscatedRelease', Copy) {
     group = 'distribution'
     description = 'Prepare protected AxialClient release JAR for jpackage'
 
-    dependsOn tasks.releaseFatJar
+    dependsOn tasks.verifyReleasePayload
 
     from(tasks.releaseFatJar.archiveFile)
     into(releaseInputDir)

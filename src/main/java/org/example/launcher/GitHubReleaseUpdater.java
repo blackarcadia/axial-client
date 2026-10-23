@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.List;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -30,14 +29,19 @@ import java.util.Properties;
 
 public final class GitHubReleaseUpdater {
     private static final String API_BASE = "https://api.github.com/repos/";
-    private static final Pattern VERSION_SPLIT = Pattern.compile("[^0-9]+");
-    private static final Path CLIENT_RELEASE_MARKER = ClientPaths.appRoot().resolve("client-release.tag");
-    private static final Path CLIENT_RELEASE_MANIFEST = ClientPaths.appRoot().resolve("client-release.files");
-    private final OkHttpClient client = new OkHttpClient();
+    private static final Pattern BUILD_VERSION = Pattern.compile("(?:[0-9]+\\.[0-9]+\\.[0-9]+|[0-9]+beta\\.[0-9]+)");
+    private final OkHttpClient client;
+    private final Path updatesRoot;
     private final AppBuildInfo buildInfo;
 
     public GitHubReleaseUpdater(AppBuildInfo buildInfo) {
+        this(buildInfo, new OkHttpClient(), ClientPaths.appRoot().resolve("updates"));
+    }
+
+    GitHubReleaseUpdater(AppBuildInfo buildInfo, OkHttpClient client, Path updatesRoot) {
         this.buildInfo = buildInfo;
+        this.client = client;
+        this.updatesRoot = updatesRoot;
     }
 
     public UpdateStatus checkForUpdate(Path gameDir) throws IOException {
@@ -74,10 +78,16 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    UpdateStatus updateStatusForRelease(String tag, URI assetUrl, Path gameDir) {
+    UpdateStatus updateStatusForRelease(String tag, URI assetUrl, Path gameDir) throws IOException {
         String installed = installedClientBuild(gameDir);
         if (buildNumber(tag) < 0) {
             return UpdateStatus.notAvailable("Published release has no valid build number");
+        }
+        long minimum = ClientInstallation.minimumBuild(gameDir);
+        if (buildNumber(tag) < minimum) {
+            return buildNumber(installed) >= minimum
+                    ? UpdateStatus.upToDate(installed)
+                    : UpdateStatus.notAvailable("Installed client needs repair; published release is too old");
         }
         if (buildNumber(installed) >= buildNumber(tag)) {
             return UpdateStatus.upToDate(installed);
@@ -98,8 +108,9 @@ public final class GitHubReleaseUpdater {
     }
 
     public Path downloadAndStage(URI downloadUri, String releaseTag, ProgressReporter reporter) throws IOException {
-        Path stagingRoot = ClientPaths.appRoot().resolve("updates").resolve(releaseTag);
-        Files.createDirectories(stagingRoot);
+        if (buildNumber(releaseTag) < 0) throw new IOException("Invalid release tag: " + releaseTag);
+        Files.createDirectories(updatesRoot);
+        Path stagingRoot = Files.createTempDirectory(updatesRoot, "build-" + buildNumber(releaseTag) + "-");
         Path assetFile = stagingRoot.resolve(buildInfo.githubAsset());
 
         Request request = new Request.Builder()
@@ -140,6 +151,13 @@ public final class GitHubReleaseUpdater {
             throw new IOException("Missing packaged app path for updater");
         }
 
+        ClientInstallation.locked(gameDir, () -> {
+            installClientUpdateLocked(stagedApp, releaseTag, gameDir);
+            return null;
+        });
+    }
+
+    private void installClientUpdateLocked(Path stagedApp, String releaseTag, Path gameDir) throws IOException {
         Path modsDir = gameDir.resolve("mods");
         Files.createDirectories(modsDir);
 
@@ -149,13 +167,15 @@ public final class GitHubReleaseUpdater {
         }
         verifyStagedBuild(stagedApp, releaseTag);
         verifyInstallVersion(releaseTag, gameDir);
+        ClientInstallation.recordBuild(gameDir, buildNumber(installedClientBuild(gameDir)));
 
         try (JarFile jarFile = new JarFile(appJar.toFile())) {
             List<String> installedFiles = installPackagedJarsFromBundle(jarFile, modsDir);
-            writeInstalledClientManifest(installedFiles);
+            ClientInstallation.recordBuild(gameDir, buildNumber(releaseTag));
+            writeInstalledClientManifest(gameDir, installedFiles);
         }
 
-        writeInstalledClientTag(releaseTag);
+        writeInstalledClientTag(gameDir, releaseTag);
     }
 
     private static Path locateAppJar(Path appBundle) throws IOException {
@@ -218,26 +238,47 @@ public final class GitHubReleaseUpdater {
             if (clientEntry == null) {
                 throw new IOException("Update app is missing the client payload");
             }
-            try (JarInputStream payload = new JarInputStream(jarFile.getInputStream(clientEntry))) {
-                java.util.jar.JarEntry nested;
-                while ((nested = payload.getNextJarEntry()) != null) {
-                    if (nested.getName().equals("version.properties")) {
-                        Properties properties = new Properties();
-                        properties.load(payload);
-                        String version = properties.getProperty("app.version", "");
-                        if (buildNumber(version) != releaseBuild) {
-                            throw new IOException("Client payload build " + version
-                                    + " does not match release " + releaseTag);
-                        }
-                        return;
-                    }
-                }
-                throw new IOException("Client payload is missing version information");
+            try (InputStream payload = jarFile.getInputStream(clientEntry)) {
+                verifyClientPayload(payload, releaseBuild);
             }
         }
     }
 
+    static void verifyClientPayload(InputStream input, long expectedBuild) throws IOException {
+        if (expectedBuild < 0) throw new IOException("Launcher has no valid build number");
+        boolean found = false;
+        try (JarInputStream payload = new JarInputStream(input)) {
+            java.util.jar.JarEntry entry;
+            while ((entry = payload.getNextJarEntry()) != null) {
+                if (entry.getName().equals("version.properties")) {
+                    if (found) throw new IOException("Client payload has duplicate version information");
+                    Properties properties = new Properties();
+                    properties.load(payload);
+                    String version = properties.getProperty("app.version", "");
+                    if (buildNumber(version) != expectedBuild) {
+                        throw new IOException("Client payload build " + version
+                                + " does not match expected build " + expectedBuild);
+                    }
+                    found = true;
+                } else {
+                    // Read every entry so corrupt/truncated payload data is rejected too.
+                    payload.transferTo(OutputStream.nullOutputStream());
+                }
+            }
+        }
+        if (!found) throw new IOException("Client payload is missing version information");
+    }
+
+    @FunctionalInterface
+    interface FileMover {
+        void move(Path source, Path target) throws IOException;
+    }
+
     static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir) throws IOException {
+        return installPackagedJarsFromBundle(jarFile, modsDir, (source, target) -> Files.move(source, target));
+    }
+
+    static List<String> installPackagedJarsFromBundle(JarFile jarFile, Path modsDir, FileMover mover) throws IOException {
         Path transaction = Files.createTempDirectory(modsDir.getParent(), ".client-update-");
         Path staged = Files.createDirectory(transaction.resolve("staged"));
         Path backup = Files.createDirectory(transaction.resolve("backup"));
@@ -273,7 +314,7 @@ public final class GitHubReleaseUpdater {
                     if (Files.exists(target)) {
                         Files.move(target, backup.resolve(fileName));
                     }
-                    Files.move(staged.resolve(fileName), target);
+                    mover.move(staged.resolve(fileName), target);
                     committed.add(target);
                 }
             } catch (IOException failure) {
@@ -309,7 +350,7 @@ public final class GitHubReleaseUpdater {
     }
 
     private static void backupManagedMods(Path modsDir, Path backup) throws IOException {
-        List<String> previous = readInstalledClientManifest();
+        List<String> previous = readInstalledClientManifest(modsDir.getParent());
         if (!previous.isEmpty()) {
             for (String fileName : previous) {
                 Path source = modsDir.resolve(fileName).normalize();
@@ -329,7 +370,7 @@ public final class GitHubReleaseUpdater {
         try (var stream = Files.list(modsDir)) {
             for (Path path : stream.toList()) {
                 String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
-                if (name.endsWith(".jar") && (name.startsWith("axial-") || name.startsWith("axialutils-")
+                if (name.endsWith(".jar") && (name.startsWith("axial-") || name.startsWith("axialclient") || name.startsWith("axialutils-")
                         || name.startsWith("geckolib-fabric-") || name.startsWith("fabric-api-")
                         || name.startsWith("fabric-language-kotlin-")
                         || name.startsWith("yet_another_config_lib_v3-") || name.startsWith("zoomify-")
@@ -340,7 +381,8 @@ public final class GitHubReleaseUpdater {
                         || name.startsWith("immediatelyfast-")
                         || name.startsWith("entityculling-")
                         || name.startsWith("cloth-config-") || name.startsWith("moreculling-")
-                        || name.startsWith("staticbgmod-")
+                        || name.startsWith("staticbgmod-") || name.startsWith("emotecraft-")
+                        || name.startsWith("bendablecuboidsfabric-") || name.startsWith("playeranimationlibfabric-")
                         || isRuntimeDependencyJar(name))) {
                     Files.move(path, backup.resolve(path.getFileName()));
                 }
@@ -355,10 +397,11 @@ public final class GitHubReleaseUpdater {
 
     public static String installedClientTag() {
         try {
-            if (!Files.exists(CLIENT_RELEASE_MARKER)) {
+            Path marker = ClientPaths.clientRoot().resolve(".client-release.tag");
+            if (!Files.exists(marker)) {
                 return "";
             }
-            return Files.readString(CLIENT_RELEASE_MARKER).trim();
+            return Files.readString(marker).trim();
         } catch (IOException ignored) {
             return "";
         }
@@ -386,25 +429,27 @@ public final class GitHubReleaseUpdater {
                 return "";
             }
             try (InputStream in = jarFile.getInputStream(entry)) {
-                String version = AppBuildInfo.load(in).appVersion();
+                Properties properties = new Properties();
+                properties.load(in);
+                String version = properties.getProperty("app.version", "");
                 return buildNumber(version) >= 0 ? version : "";
             }
-        } catch (IOException ignored) {
+        } catch (IOException | IllegalArgumentException ignored) {
             return "";
         }
     }
 
-    private static void writeInstalledClientTag(String releaseTag) throws IOException {
-        Files.createDirectories(CLIENT_RELEASE_MARKER.getParent());
-        Files.writeString(CLIENT_RELEASE_MARKER, releaseTag + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+    private static void writeInstalledClientTag(Path gameDir, String releaseTag) throws IOException {
+        Files.writeString(gameDir.resolve(".client-release.tag"), releaseTag + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
-    private static List<String> readInstalledClientManifest() {
+    private static List<String> readInstalledClientManifest(Path gameDir) {
         try {
-            if (!Files.exists(CLIENT_RELEASE_MANIFEST)) {
+            Path manifest = gameDir.resolve(".client-release.files");
+            if (!Files.exists(manifest)) {
                 return List.of();
             }
-            return Files.readAllLines(CLIENT_RELEASE_MANIFEST).stream()
+            return Files.readAllLines(manifest).stream()
                     .map(String::trim)
                     .filter(line -> !line.isBlank())
                     .toList();
@@ -413,9 +458,8 @@ public final class GitHubReleaseUpdater {
         }
     }
 
-    private static void writeInstalledClientManifest(List<String> fileNames) throws IOException {
-        Files.createDirectories(CLIENT_RELEASE_MANIFEST.getParent());
-        Files.write(CLIENT_RELEASE_MANIFEST, fileNames, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+    private static void writeInstalledClientManifest(Path gameDir, List<String> fileNames) throws IOException {
+        Files.write(gameDir.resolve(".client-release.files"), fileNames, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
     }
 
     public Path detectCurrentAppBundle() {
@@ -511,7 +555,7 @@ public final class GitHubReleaseUpdater {
      * finish out of order, so use the greatest release tag instead of allowing a
      * late-published older build to replace the installed client.
      */
-    private static JsonObject newestReleaseWithAsset(JsonArray releases, String preferredAssetName) {
+    static JsonObject newestReleaseWithAsset(JsonArray releases, String preferredAssetName) {
         JsonObject newest = null;
         for (JsonElement element : releases) {
             if (!element.isJsonObject()) {
@@ -521,7 +565,8 @@ public final class GitHubReleaseUpdater {
             if (release.has("draft") && release.get("draft").getAsBoolean()) {
                 continue;
             }
-            if (!release.has("tag_name") || !release.has("assets")
+            if (!release.has("tag_name") || buildNumber(release.get("tag_name").getAsString()) < 0
+                    || !release.has("assets")
                     || findAssetUrl(release.getAsJsonArray("assets"), preferredAssetName) == null) {
                 continue;
             }
@@ -552,18 +597,13 @@ public final class GitHubReleaseUpdater {
         if (version == null || version.isBlank()) {
             return -1;
         }
-        String[] parts = VERSION_SPLIT.split(normalizeVersion(version));
-        for (int i = parts.length - 1; i >= 0; i--) {
-            if (parts[i] == null || parts[i].isBlank()) {
-                continue;
-            }
-            try {
-                return Long.parseLong(parts[i]);
-            } catch (NumberFormatException ignored) {
-                return -1;
-            }
+        String normalized = normalizeVersion(version);
+        if (!BUILD_VERSION.matcher(normalized).matches()) return -1;
+        try {
+            return Long.parseLong(normalized.substring(normalized.lastIndexOf('.') + 1));
+        } catch (NumberFormatException ignored) {
+            return -1;
         }
-        return -1;
     }
 
     public interface ProgressReporter {
