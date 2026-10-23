@@ -6,6 +6,8 @@ import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.sound.SoundManager;
+import org.axial.axialutils.client.AxialUiTheme;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
@@ -128,6 +130,10 @@ public final class QuickMenuScreen extends Screen {
                 }
             },DEFAULT_NARRATION_SUPPLIER);
             this.icon=icon;
+        }
+
+        @Override public void playDownSound(SoundManager soundManager) {
+            AxialUiTheme.playButtonClickSound();
         }
 
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {

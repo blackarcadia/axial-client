@@ -5,6 +5,8 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.sound.SoundManager;
+import org.axial.axialutils.client.AxialUiTheme;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -261,6 +263,10 @@ public final class ModMenuScreen extends Screen {
             super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);
             this.icon=icon;this.selected=selected;this.entry=entry;this.clipped=clipped;
         }
+        @Override public void playDownSound(SoundManager soundManager) {
+            AxialUiTheme.playButtonClickSound();
+        }
+
         @Override public boolean isMouseOver(double x,double y) {
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
