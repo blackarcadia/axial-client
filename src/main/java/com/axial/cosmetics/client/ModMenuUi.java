@@ -33,6 +33,14 @@ final class ModMenuUi {
     static void circle(DrawContext context, int x, int y, int size, int color) {
         context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, Identifier.of("axial_cosmetics", "accounts/circle"), x, y, size, size, tint(color));
     }
+    static void toggle(DrawContext context, int x, int y, int width, int height, int knobSize, float progress, int knobColor) {
+        rounded(context,x,y,width,height,mixColor(RED,GREEN,progress));
+        context.getMatrices().pushMatrix();
+        try {
+            context.getMatrices().translate(1+(width-knobSize-2)*progress,0);
+            circle(context,x,y+(height-knobSize)/2,knobSize,knobColor);
+        } finally { context.getMatrices().popMatrix(); }
+    }
     static void frame(DrawContext context, ModMenuLayout.Rect r, int border, int fill) {
         rounded(context,r.x(),r.y(),r.width(),r.height(),border);
         rounded(context,r.x()+1,r.y()+1,r.width()-2,r.height()-2,fill);

@@ -44,6 +44,7 @@ public final class FeatureSettingsScreen extends Screen {
     private final Model model;
     private final List<Placement> placements = new ArrayList<>();
     private final List<Positioned> controls = new ArrayList<>();
+    private final java.util.Map<BooleanSupplier,ToggleAnimation> toggleAnimations = new java.util.IdentityHashMap<>();
     private FeatureSettingsLayout layout;
     private MenuAnimation animation = new MenuAnimation();
     private int scroll, contentHeight;
@@ -244,10 +245,13 @@ public final class FeatureSettingsScreen extends Screen {
 
     private final class SettingButton extends ButtonWidget {
         final boolean toggle;final BooleanSupplier state;final Setting setting;final String label;int crosshairStyle=-1;
+        final ToggleAnimation toggleAnimation;
         SettingButton(String label,Rect r,Runnable action,boolean toggle,BooleanSupplier state){this(label,r,action,toggle,state,null);}
         SettingButton(String label,Rect r,Runnable action,boolean toggle,BooleanSupplier state,Setting setting) {
             super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);
             this.toggle=toggle;this.state=state;this.setting=setting;this.label=label;
+            toggleAnimation=toggle?toggleAnimations.computeIfAbsent(state,key->new ToggleAnimation(key.getAsBoolean())):null;
+            if(toggleAnimation!=null)toggleAnimation.value(state.getAsBoolean());
         }
         @Override public void playDownSound(SoundManager soundManager){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
@@ -257,8 +261,7 @@ public final class FeatureSettingsScreen extends Screen {
             if(getMessage().getString().equals("CLOSE")){icon(c,"close",getX()+4,getY()+5,11,11,hover?INK:MUTED);return;}
             frame(c,r,hover?HOVER_LINE:selected&&!toggle?SELECTED_LINE:LINE,selected&&!toggle?SELECTED:hover?HOVER:FIELD);
             if(toggle) {
-                int color=selected?GREEN:RED,tx=r.right()-34;
-                rounded(c,tx,r.y()+5,27,12,color);circle(c,tx+(selected?15:1),r.y()+6,10,INK);
+                ModMenuUi.toggle(c,r.right()-34,r.y()+5,27,12,10,toggleAnimation.value(selected),INK);
                 String shown=header?(selected?"ON":"OFF"):label;
                 label(c,textRenderer,shown,r.x()+7,r.y()+7,INK,header?.78f:.8f,r.width()-45,false);
                 setMessage(text((header?"ENABLED":label)+": "+(selected?"ON":"OFF")));return;

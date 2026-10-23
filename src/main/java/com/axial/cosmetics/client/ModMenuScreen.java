@@ -34,6 +34,7 @@ public final class ModMenuScreen extends Screen {
     private ModMenuLayout layout;
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
+    private final java.util.Map<ModMenuEntry,ToggleAnimation> toggleAnimations = new java.util.HashMap<>();
 
     private ModMenuScreen(Screen backend, List<ModMenuEntry> entries,Screen returnTo) {
         super(text("Mod menu"));
@@ -259,11 +260,14 @@ public final class ModMenuScreen extends Screen {
         private final String icon;
         private final boolean selected,clipped;
         private final ModMenuEntry entry;
+        private final ToggleAnimation toggleAnimation;
         private float hoverProgress;
         private long lastFrame=System.nanoTime();
         MenuButton(String label,ModMenuLayout.Rect r,String icon,Runnable action,boolean selected,ModMenuEntry entry,boolean clipped) {
             super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);
             this.icon=icon;this.selected=selected;this.entry=entry;this.clipped=clipped;
+            toggleAnimation=icon.equals("toggle")?toggleAnimations.computeIfAbsent(entry,key->new ToggleAnimation(key.isEnabled())):null;
+            if(toggleAnimation!=null)toggleAnimation.value(entry.isEnabled());
         }
         @Override public void playDownSound(SoundManager soundManager) {
             AxialUiTheme.playButtonClickSound();
@@ -280,11 +284,11 @@ public final class ModMenuScreen extends Screen {
             var bounds=new ModMenuLayout.Rect(getX(),getY(),width,height);
             if(icon.equals("toggle")) {
                 boolean on=entry.isEnabled();
-                int color=on?GREEN:RED;
+                float progress=toggleAnimation.value(on);
+                int color=mixColor(RED,GREEN,progress);
                 // The state is present in narration as well as in color and knob position.
                 setMessage(text("Toggle "+entry.title()+": "+(on?"On":"Off")));
-                rounded(context,getX(),getY()+1,27,14,color);
-                circle(context,getX()+(on?15:2),getY()+2,12,0xFFFFFFFF);
+                ModMenuUi.toggle(context,getX(),getY()+1,27,14,12,progress,0xFFFFFFFF);
                 label(context,textRenderer,on?"On":"Off",getX()+33,getY()+4,color,.85f,width-35,false);
                 if(hover) context.drawStrokedRectangle(getX()-2,getY()-1,Math.min(width,60),height+2,0xFFA9B3BC);
                 return;
