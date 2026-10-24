@@ -87,6 +87,10 @@ final class ModMenuCatalog {
             }
             entries.add(new ModMenuEntry(title, description(label), category(label), icon(label), enabled, toggle, configure));
         }
+        entries.add(new ModMenuEntry("Enchantments", "Server enchantment guide", ModMenuEntry.Category.MINING,
+                "enchanted_book", null, null, () -> {
+                    var client=MinecraftClient.getInstance();client.setScreen(new EnchantmentsScreen(client.currentScreen));
+                }));
         return List.copyOf(entries);
     }
 

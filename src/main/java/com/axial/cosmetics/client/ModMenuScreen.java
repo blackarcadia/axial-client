@@ -32,6 +32,7 @@ public final class ModMenuScreen extends Screen {
     private boolean enabledOnly, draggingScrollbar;
     private int scroll;
     private ModMenuLayout layout;
+    private net.minecraft.item.ItemStack enchantmentsIcon;
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
     private final java.util.Map<ModMenuEntry,ToggleAnimation> toggleAnimations = new java.util.HashMap<>();
@@ -54,6 +55,7 @@ public final class ModMenuScreen extends Screen {
     @Override protected void init() {
         if(reopen){animation=new MenuAnimation();reopen=false;}
         layout = new ModMenuLayout(width,height);
+        if(enchantmentsIcon==null)enchantmentsIcon=new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_BOOK);
         if(layout.tight) category=ModMenuEntry.Category.ALL;
         rebuild();
     }
@@ -110,11 +112,11 @@ public final class ModMenuScreen extends Screen {
                 cardButtons.add(addSelectableChild(button));
             }
             if(entry.configure()!=null) {
-                var button = new MenuButton("Configure "+entry.title(),layout.settings(card),"gear",()->run(()->{
+                var button = new MenuButton((entry.title().equals("Enchantments")?"Open ":"Configure ")+entry.title(),entry.title().equals("Enchantments")?card:layout.settings(card),entry.title().equals("Enchantments")?"open":"gear",()->run(()->{
                     if(!ModFeatureSettings.open(entry.title().toUpperCase(java.util.Locale.ROOT),this,backend))entry.configure().run();
                 }),false,entry,true);
-                button.visible = button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
-                button.setTooltip(Tooltip.of(text("Configure "+entry.title())));
+                button.visible = entry.title().equals("Enchantments") ? card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom() : button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
+                button.setTooltip(Tooltip.of(text((entry.title().equals("Enchantments")?"Open ":"Configure ")+entry.title())));
                 cardButtons.add(addSelectableChild(button));
             }
         }
@@ -179,7 +181,8 @@ public final class ModMenuScreen extends Screen {
             var entry=matches.get(i);
             frame(context,card,card.contains(mouseX,mouseY)?HOVER_LINE:LINE,SURFACE);
             int size=card.height()<55?14:22;
-            icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
+            if(entry.title().equals("Enchantments"))context.drawItem(enchantmentsIcon,card.x()+9,card.y()+10);
+            else icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
             int titleX=card.x()+size+17;
             label(context,textRenderer,entry.title(),titleX,card.y()+9,INK,.95f,card.right()-titleX-7,true);
             if(card.height()>=60) {
@@ -188,7 +191,7 @@ public final class ModMenuScreen extends Screen {
                     context.drawText(textRenderer,lines.get(line),titleX,card.y()+22+line*9,MUTED,false);
                 }
             }
-            if(entry.toggle()==null) label(context,textRenderer,"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
+            if(entry.toggle()==null) label(context,textRenderer,entry.title().equals("Enchantments")?"Browse":"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
         }
         if(matches.isEmpty()) label(context,textRenderer,"No matching mods",layout.grid.x()+10,layout.grid.y()+15,MUTED,1f,layout.grid.width()-20,false);
         for(var button:cardButtons) {
@@ -283,6 +286,7 @@ public final class ModMenuScreen extends Screen {
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
+            if(icon.equals("open"))return;
             boolean hover=isHovered()||isFocused();
             long now=System.nanoTime();
             hoverProgress=MenuAnimation.hover(hoverProgress,hover,(now-lastFrame)/1_000_000_000f);

@@ -60,6 +60,15 @@ public class AxialCosmetics implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         BundledEmoteSynchronizer.synchronize();
+        PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.EnchantmentPayload.ID, com.axial.cosmetics.client.EnchantmentPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.EnchantmentPayload.ID, com.axial.cosmetics.client.EnchantmentPayload.CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.EnchantmentPayload.ID, (payload, context) -> {
+            var client=context.client();var connection=client.getNetworkHandler();
+            client.execute(() -> {if(client.getNetworkHandler()==connection)com.axial.cosmetics.client.EnchantmentGuide.receive(payload.data());});
+        });
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->com.axial.cosmetics.client.EnchantmentGuide.reset());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->com.axial.cosmetics.client.EnchantmentGuide.reset());
+
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.WorldMapPayload.ID, (payload, context) -> {
@@ -157,6 +166,7 @@ public class AxialCosmetics implements ClientModInitializer {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            com.axial.cosmetics.client.EnchantmentGuide.tick(client);
             MinimapRenderer.tick(client);
             applyEmotecraftDefaults();
             MenuMusicController.tick(client);
