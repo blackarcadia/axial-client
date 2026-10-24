@@ -418,10 +418,9 @@ public final class AccountsScreen extends Screen {
     }
     private void switchAccount(AccountStore.Entry entry) {
         if (busy) return;
-        if (client.world != null || client.getNetworkHandler() != null) {
-            status = "Return to the main menu before switching accounts.";
-            return;
-        }
+        final AccountSwitchFlow switchFlow;
+        try { switchFlow=AccountServerSwitch.capture(client); }
+        catch(IllegalStateException ex){status=ex.getMessage();return;}
         selectedAccount = entry.uuid();
         busy = true;
         switchingAccount = entry.uuid();
@@ -440,22 +439,29 @@ public final class AccountsScreen extends Screen {
                 return prepared;
             } catch (Exception ex) { throw new java.util.concurrent.CompletionException(ex); }
         }).whenComplete((prepared, error) -> MinecraftClient.getInstance().execute(() -> {
+            if(client.currentScreen!=this){busy=false;switchingAccount=null;return;}
             try {
                 if (error != null) {
                     reconnectAccounts.add(entry.uuid());
                     status = "Sign-in expired. Reconnect this Microsoft account.";
                 } else {
-                    prepared.apply();
-                    reconnectAccounts.remove(entry.uuid());
-                    status = "Playing as " + entry.name() + ".";
-                    try { store.select(entry.fileName()); }
-                    catch (Exception ex) { status = "Switched, but could not save the startup account."; }
+                    switchFlow.finish(prepared::apply,()->{
+                        reconnectAccounts.remove(entry.uuid());
+                        status = "Playing as " + entry.name() + ".";
+                        try { store.select(entry.fileName()); }
+                        catch (Exception ex) { status = "Switched, but could not save the startup account."; }
+                    });
                 }
-            } catch (Exception ex) { status = "Could not switch. Return to the main menu and retry."; }
-            finally {
+            } catch (Exception ex) {
+                status = "Could not complete the account switch. Please try again.";
+                if(switchFlow.disconnected()){
+                    var recovery=new AccountsScreen(AccountServerSwitch.serverList(),store);
+                    recovery.status=status;client.setScreen(recovery);
+                }
+            } finally {
                 busy = false;
                 switchingAccount = null;
-                init();
+                if(client.currentScreen==this)init();
             }
         }));
     }

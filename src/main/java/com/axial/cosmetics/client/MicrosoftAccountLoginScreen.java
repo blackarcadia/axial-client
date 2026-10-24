@@ -37,6 +37,9 @@ public final class MicrosoftAccountLoginScreen extends Screen {
 
     private void startLogin() {
         if (busy || cancelled) return;
+        final AccountSwitchFlow switching;
+        try {switching=AccountServerSwitch.capture(MinecraftClient.getInstance());}
+        catch(IllegalStateException ex){status=ex.getMessage();return;}
         started = true;
         busy = true;
         retryButton.active = false;
@@ -65,14 +68,16 @@ public final class MicrosoftAccountLoginScreen extends Screen {
             if (MinecraftClient.getInstance().currentScreen != this) return;
             try {
                 String file = AccountStore.shared().save(result.auth());
-                result.session().apply();
-                try { AccountStore.shared().select(file); }
-                catch (java.io.IOException ex) {
-                    status = "Signed in, but could not save the startup account.";
-                    return;
-                }
-                close();
-            } catch (Exception ex) { status = "Could not finish sign-in. Please try again."; }
+                boolean[] startupSaved={true};
+                switching.finish(result.session()::apply,()->{
+                    try {AccountStore.shared().select(file);}
+                    catch(java.io.IOException ex){startupSaved[0]=false;status="Signed in, but could not save the startup account.";}
+                });
+                if(!switching.reconnects()&&startupSaved[0])close();
+            } catch (Exception ex) {
+                status = "Could not finish sign-in. Please try again.";
+                if(switching.disconnected())MinecraftClient.getInstance().setScreen(new AccountsScreen(AccountServerSwitch.serverList()));
+            }
         }));
     }
 
