@@ -26,6 +26,19 @@ final class ModMenuUi {
     }
     static Text text(String value) { return UiTypography.text(value,1,false); }
     static void icon(DrawContext context, String name, int x, int y, int w, int h, int color) {
+        if(name.equals("book")) {
+            context.getMatrices().pushMatrix();
+            try {
+                context.getMatrices().translate(x,y);context.getMatrices().scale(w/24f,h/24f);
+                int ink=tint(color);
+                context.fill(2,4,4,20,ink);context.fill(20,4,22,20,ink);
+                context.fill(4,3,10,5,ink);context.fill(14,3,20,5,ink);
+                context.fill(10,4,14,6,ink);context.fill(11,5,13,22,ink);
+                context.fill(4,18,10,20,ink);context.fill(14,18,20,20,ink);
+                context.fill(10,19,14,21,ink);
+            } finally {context.getMatrices().popMatrix();}
+            return;
+        }
         context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, Identifier.of("axial_cosmetics", "mods/"+name), x, y, w, h, tint(color));
     }
     static void rounded(DrawContext context, int x, int y, int w, int h, int color) {

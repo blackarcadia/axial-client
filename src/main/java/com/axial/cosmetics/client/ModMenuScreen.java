@@ -32,7 +32,6 @@ public final class ModMenuScreen extends Screen {
     private boolean enabledOnly, draggingScrollbar;
     private int scroll;
     private ModMenuLayout layout;
-    private net.minecraft.item.ItemStack enchantmentsIcon;
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
     private final java.util.Map<ModMenuEntry,ToggleAnimation> toggleAnimations = new java.util.HashMap<>();
@@ -55,7 +54,6 @@ public final class ModMenuScreen extends Screen {
     @Override protected void init() {
         if(reopen){animation=new MenuAnimation();reopen=false;}
         layout = new ModMenuLayout(width,height);
-        if(enchantmentsIcon==null)enchantmentsIcon=new net.minecraft.item.ItemStack(net.minecraft.item.Items.ENCHANTED_BOOK);
         if(layout.tight) category=ModMenuEntry.Category.ALL;
         rebuild();
     }
@@ -181,8 +179,7 @@ public final class ModMenuScreen extends Screen {
             var entry=matches.get(i);
             frame(context,card,card.contains(mouseX,mouseY)?HOVER_LINE:LINE,SURFACE);
             int size=card.height()<55?14:22;
-            if(entry.title().equals("Enchantments"))context.drawItem(enchantmentsIcon,card.x()+9,card.y()+10);
-            else icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
+            icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
             int titleX=card.x()+size+17;
             label(context,textRenderer,entry.title(),titleX,card.y()+9,INK,.95f,card.right()-titleX-7,true);
             if(card.height()>=60) {
