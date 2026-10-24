@@ -22,6 +22,7 @@ public final class MinimapServerOverview {
     private static final byte OVERLAYS = 2;
     private static final Map<String, Overview> OVERVIEWS = new HashMap<>();
     private static final Map<String, Overlay> OVERLAYS_BY_WORLD = new HashMap<>();
+    private static final Map<String,ArmorZoneOverlay.MapData> ARMOR_BY_WORLD=new HashMap<>();
     private static String activeWorld,fullWorldKey;
     private static Overview fullWorld,pendingWorld;
     private static String pendingWorldKey;
@@ -95,7 +96,7 @@ public final class MinimapServerOverview {
         activeWorld = null;fullWorld=null;fullWorldKey=null;
         pendingWorld=null;pendingWorldKey=null;pendingSnapshot=committedSnapshot=Long.MIN_VALUE;
         textureSnapshot=null;wasVisible=pauseSent=false;
-        OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
+        OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();ARMOR_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
         fullRequestPending=true;worldGeneration++;
         checkedProvider=fullProviderAvailable=providerRendering=false;providerMessage="";lastFullAttempt=lastFullProgress=0;
@@ -103,6 +104,10 @@ public final class MinimapServerOverview {
 
     public static void receive(byte[] payload) {
         if (payload.length == 0) return;
+        if(payload[0]==3) {
+            try{var zones=ArmorZoneOverlay.read(payload);ARMOR_BY_WORLD.put(zones.world(),zones);}catch(IOException ignored){ }
+            return;
+        }
         if (payload[0] == OVERLAYS) {
             receiveOverlays(payload);
             return;
@@ -257,6 +262,7 @@ public final class MinimapServerOverview {
     /** Server zones and POIs drawn over the terrain map in the HUD. */
     public static void renderHudOverlays(DrawContext context, int left, int top, int size, int mapPixels,
                                          double centerX, double centerZ, float blocksPerPixel, boolean circular,boolean full) {
+        renderArmorOutlines(context,left,top,size,centerX,centerZ,blocksPerPixel,circular,full);
         Overlay overlay = activeWorld == null ? null : OVERLAYS_BY_WORLD.get(activeWorld);
         if (overlay == null) return;
         float pixelsPerBlock = size / (mapPixels * blocksPerPixel);
@@ -286,6 +292,28 @@ public final class MinimapServerOverview {
             if (!inside(left, top, size, x, z, circular)) continue;
             drawPoi(context, Math.round(x), Math.round(z), poi.color);
             if(full)NavigationScreen.line(context,MinecraftClient.getInstance().textRenderer,poi.name,Math.round(x)+5,Math.round(z)-3,ModMenuUi.INK,.75f,Math.max(0,left+size-Math.round(x)-8),false);
+        }
+    }
+
+    static ArmorZoneOverlay.MapData armorForActiveWorld(){return activeWorld==null?null:ARMOR_BY_WORLD.get(activeWorld);}
+    private static void renderArmorOutlines(DrawContext context,int left,int top,int size,double centerX,double centerZ,float scale,boolean circular,boolean full) {
+        var overlay=armorForActiveWorld();if(overlay==null)return;
+        double pixelsPerBlock=size/(scale*256.0);
+        for(var region:overlay.regions()) {
+            for(double[] ring:region.rings())for(int i=0,j=ring.length-2;i<ring.length;j=i,i+=2) {
+                double x1=left+size/2.0+(ring[j]-centerX)*pixelsPerBlock,y1=top+size/2.0+(ring[j+1]-centerZ)*pixelsPerBlock;
+                double x2=left+size/2.0+(ring[i]-centerX)*pixelsPerBlock,y2=top+size/2.0+(ring[i+1]-centerZ)*pixelsPerBlock;
+                var line=MinimapLineClip.clip(x1,y1,x2,y2,left,top,size,circular);if(line==null)continue;
+                double dx=line.x2()-line.x1(),dy=line.y2()-line.y1();
+                context.getMatrices().pushMatrix();
+                try {
+                    context.getMatrices().translate((float)line.x1(),(float)line.y1());
+                    context.getMatrices().rotate((float)Math.atan2(dy,dx));
+                    context.fill(0,-1,Math.max(1,(int)Math.ceil(Math.hypot(dx,dy))),1,region.color()|0xFF000000);
+                } finally{context.getMatrices().popMatrix();}
+            }
+            double x=left+size/2.0+(region.labelX()-centerX)*pixelsPerBlock,z=top+size/2.0+(region.labelZ()-centerZ)*pixelsPerBlock;
+            if(full&&inside(left,top,size,(float)x,(float)z,false))NavigationScreen.line(context,MinecraftClient.getInstance().textRenderer,region.name(),(int)x+4,(int)z+4,ModMenuUi.INK,.75f,Math.max(0,left+size-(int)x-8),false);
         }
     }
 
