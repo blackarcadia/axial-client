@@ -2,7 +2,6 @@ package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.ChunkBordersSettingsScreen;
 import com.axial.cosmetics.client.CompassSettingsScreen;
-import com.axial.cosmetics.client.CrosshairSettingsScreen;
 import com.axial.cosmetics.client.ItemScalerSettingsScreen;
 import net.minecraft.client.gui.Click;
 import org.axial.axialutils.client.AxialUiTheme;
@@ -17,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin({
         ChunkBordersSettingsScreen.class,
         CompassSettingsScreen.class,
-        CrosshairSettingsScreen.class,
         ItemScalerSettingsScreen.class
 })
 public abstract class CustomSubmenuClickSoundMixin {

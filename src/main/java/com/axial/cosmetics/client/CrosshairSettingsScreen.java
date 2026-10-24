@@ -1,146 +1,253 @@
 package com.axial.cosmetics.client;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.StyleSpriteSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.sound.SoundManager;
 import org.axial.axialutils.client.AxialUiTheme;
+import org.lwjgl.glfw.GLFW;
+import java.util.*;
+import java.util.function.IntConsumer;
+import static com.axial.cosmetics.client.ModMenuUi.*;
+import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
-import java.util.Locale;
+/** Visual preset library and precise editor, both using the gameplay renderer. */
+public final class CrosshairSettingsScreen extends NavigationScreen {
+    private record Positioned(ClickableWidget widget,int y){}
+    private record Caption(String label,int y){}
+    private final List<Positioned> widgets=new ArrayList<>();
+    private final List<Caption> captions=new ArrayList<>();
+    private final List<DimensionSlider> sliders=new ArrayList<>();
+    private final CrosshairHistory history=new CrosshairHistory();
+    private final int[] scrolls=new int[2];
+    private CrosshairEditorLayout layout;
+    private int tab,contentHeight,background,zoom=1;
+    private boolean draggingScrollbar,syncing;
+    private long pulseStart=System.nanoTime();
+    private NavButton undoButton,enabledButton;
 
-/** Compact, scrollable settings screen for the custom crosshair. */
-public final class CrosshairSettingsScreen extends Screen {
-    private static final int PANEL_WIDTH = 452, PANEL_HEIGHT = 280, PANEL_PADDING = 28, CONTROL_WIDTH = 370;
-    private static final int VIEWPORT_TOP = 26, VIEWPORT_BOTTOM = 14, CONTENT_HEIGHT = 524, ROW_HEIGHT = 20;
-    private static final int PREVIEW_DIVIDER_Y = 58, PREVIEW_Y = 84, PREVIEW_HEIGHT = 64;
-    private static final int STYLE_DIVIDER_Y = 158, STYLE_Y = 184, SIZE_Y = 226, LENGTH_Y = 264, WIDTH_Y = 302, GAP_Y = 340;
-    private static final int COLOR_DIVIDER_Y = 370, COLOR_Y = 396, OUTLINE_COLOR_Y = 426;
-    private static final int ADDITIONAL_DIVIDER_Y = 456, ADDITIONAL_Y = 482;
-    private static final int COMPACT_WIDTH = 170, COMPACT_GAP = 42, RESET_WIDTH = 86;
-    private static final float SIZE_MIN = 0.1f, SIZE_MAX = 4.0f, LENGTH_MIN = 0.0f, LENGTH_MAX = 32.0f, WIDTH_MIN = 2.0f, WIDTH_MAX = 12.0f, GAP_MIN = 0.0f, GAP_MAX = 20.0f;
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean"));
-
-    private final Screen parent;
-    private final SizeSliderWidget sizeSlider = new SizeSliderWidget(0, 0, 0, ROW_HEIGHT, CrosshairField.SIZE);
-    private final SizeSliderWidget lengthSlider = new SizeSliderWidget(0, 0, 0, ROW_HEIGHT, CrosshairField.LENGTH);
-    private final SizeSliderWidget widthSlider = new SizeSliderWidget(0, 0, 0, ROW_HEIGHT, CrosshairField.WIDTH);
-    private final SizeSliderWidget gapSlider = new SizeSliderWidget(0, 0, 0, ROW_HEIGHT, CrosshairField.GAP);
-    private int panelX, panelY, scrollOffset;
-
-    public CrosshairSettingsScreen(Screen parent) { super(uiText("CROSSHAIR")); this.parent = parent; }
-
-    @Override protected void init() { addDrawableChild(sizeSlider); addDrawableChild(lengthSlider); addDrawableChild(widthSlider); addDrawableChild(gapSlider); syncSliders(); rebuildLayout(); }
-    @Override public void close() { CrosshairConfigManager.save(); MinecraftClient.getInstance().setScreen(parent); }
-
-    @Override public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        rebuildLayout(); drawPanel(context);
-        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 8, 0xFFF7F7FF);
-        drawBackButton(context, mouseX, mouseY);
-        context.enableScissor(panelX, viewportTop(), panelX + PANEL_WIDTH, viewportBottom());
-        super.render(context, mouseX, mouseY, deltaTicks);
-        drawControls(context, mouseX, mouseY);
-        drawScrollBar(context); context.disableScissor();
+    public CrosshairSettingsScreen(net.minecraft.client.gui.screen.Screen parent){super("Crosshair",parent);}
+    private CrosshairConfig config(){return CrosshairConfigManager.get();}
+    @Override protected void init(){layout=new CrosshairEditorLayout(width,height);rebuild();}
+    private void rebuild(){
+        clearChildren();widgets.clear();captions.clear();sliders.clear();
+        button("Back",layout.back,this::close);
+        button("Close",layout.close,this::close);
+        button("Done",layout.done,this::close).primary=true;
+        button("Reset",layout.reset,()->edit(()->config().copyFrom(new CrosshairConfig())));
+        undoButton=button("Undo",layout.undo,()->{history.undo(config());save();rebuild();});
+        enabledButton=button("Enabled",layout.enabled,()->edit(()->config().enabled=!config().enabled));enabledButton.toggle=true;
+        button("Templates",layout.presets,()->switchTab(0)).selected=tab==0;
+        button("Customize",layout.customize,()->switchTab(1)).selected=tab==1;
+        if(tab==0)buildGallery();else buildCustomization();
+        buildPreviewButtons();position();refreshHeader();
     }
-
-    @Override public boolean mouseClicked(Click click, boolean doubled) {
-        rebuildLayout(); if (super.mouseClicked(click, doubled)) return true;
-        if (click.button() != 0) return false;
-        if (inside(click.x(), click.y(), panelX + 18, panelY + 6, 24, 18)) { close(); return true; }
-        CrosshairConfig config = CrosshairConfigManager.get();
-        if (inside(click.x(), click.y(), enabledX(), contentY(30), 416, ROW_HEIGHT)) { config.enabled = !config.enabled; CrosshairConfigManager.save(); return true; }
-        if (inside(click.x(), click.y(), controlX(), contentY(STYLE_Y), COMPACT_WIDTH, ROW_HEIGHT)) { cycleStyle(); return true; }
-        if (inside(click.x(), click.y(), resetX(), contentY(STYLE_Y), RESET_WIDTH, ROW_HEIGHT)) { resetCrosshair(); return true; }
-        if (inside(click.x(), click.y(), colorSwatchX(), contentY(COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("CROSSHAIR", config.color, value -> CrosshairConfigManager.get().color = value); return true; }
-        if (inside(click.x(), click.y(), colorSwatchX(), contentY(OUTLINE_COLOR_Y), 20, ROW_HEIGHT)) { openColorPicker("OUTLINE", config.outlineColor, value -> CrosshairConfigManager.get().outlineColor = value); return true; }
-        if (inside(click.x(), click.y(), controlX(), contentY(ADDITIONAL_Y), COMPACT_WIDTH, ROW_HEIGHT)) { config.outlineEnabled = !config.outlineEnabled; CrosshairConfigManager.save(); return true; }
-        if (inside(click.x(), click.y(), controlX() + COMPACT_WIDTH + COMPACT_GAP, contentY(ADDITIONAL_Y), COMPACT_WIDTH, ROW_HEIGHT)) { config.dynamicEnabled = !config.dynamicEnabled; CrosshairConfigManager.save(); return true; }
-        return false;
+    private void switchTab(int value){tab=value;rebuild();}
+    private void save(){CrosshairConfigManager.save();}
+    private void edit(Runnable action){history.checkpoint(config());action.run();save();rebuild();}
+    private void track(ClickableWidget widget,int y){widgets.add(new Positioned(widget,y));addDrawableChild(widget);}
+    private int caption(String label,int y){captions.add(new Caption(label,y));return y+18;}
+    private void buildGallery(){
+        int columns=layout.columns(),cell=(layout.controls.width()-(columns-1)*6)/columns;
+        int cardHeight=Math.min(56,layout.controls.height()),stride=cardHeight+6;
+        var templates=CrosshairPresets.templates();
+        for(int i=0;i<templates.size();i++){
+            var preset=templates.get(i);int y=i/columns*stride;
+            var b=new PresetButton(preset,new Rect(layout.controls.x()+i%columns*(cell+6),0,cell,cardHeight));
+            b.setTooltip(Tooltip.of(text(preset.description())));track(b,y);
+        }
+        contentHeight=((templates.size()+columns-1)/columns)*stride-6;
     }
-
-    @Override public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        rebuildLayout();
-        if (!inside(mouseX, mouseY, panelX, viewportTop(), PANEL_WIDTH, viewportBottom() - viewportTop()) || maxScroll() == 0) return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
-        scrollOffset = clamp(scrollOffset + (verticalAmount < 0 ? 18 : -18), 0, maxScroll()); return true;
+    private void buildCustomization(){
+        int y=caption("BASE SHAPE",0),columns=Math.max(1,layout.controls.width()/55);
+        int cell=(layout.controls.width()-(columns-1)*4)/columns;
+        var styles=CrosshairConfig.CrosshairStyle.values();
+        for(int i=0;i<styles.length;i++){
+            var style=styles[i];int index=i;
+            var b=new NavButton(styleName(style),new Rect(layout.controls.x()+i%columns*(cell+4),0,cell,30),()->edit(()->config().style=style)){
+                @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+                    frame(c,new Rect(getX(),getY(),width,height),config().style==style?BRAND:LINE,isHovered()?HOVER:FIELD);
+                    var sample=new CrosshairConfig();CrosshairPresets.apply(sample,style);sample.color=config().color;sample.outlineEnabled=false;sample.width=1;
+                    CrosshairRenderer.render(c,getX()+width/2,getY()+height/2,sample);
+                }
+            };
+            b.setTooltip(Tooltip.of(text(styleName(style))));track(b,y+index/columns*34);
+        }
+        y+=((styles.length+columns-1)/columns)*34+8;
+        y=caption("GEOMETRY • TYPE A VALUE OR DRAG",y);
+        for(Dimension dimension:List.of(Dimension.SCALE,Dimension.LENGTH,Dimension.WIDTH,Dimension.GAP)){addDimension(dimension,y);y+=38;}
+        y=caption("APPEARANCE",y+6);
+        int half=(layout.controls.width()-6)/2;
+        addColor("Crosshair",config().color,new Rect(layout.controls.x(),0,half,24),y,v->config().color=v);
+        addColor("Outline",config().outlineColor,new Rect(layout.controls.x()+half+6,0,layout.controls.width()-half-6,24),y,v->config().outlineColor=v);
+        y+=30;
+        int[] colors={0xFFFFFFFF,0xFF46E891,0xFF55DFFF,0xFFC78DF5,0xFFFFD65A,0xFFFF647B};
+        int swatch=Math.min(30,(layout.controls.width()-25)/6);
+        for(int i=0;i<colors.length;i++){
+            int color=colors[i];var b=new NavButton(String.format(Locale.ROOT,"#%06X",color&0xFFFFFF),new Rect(layout.controls.x()+i*(swatch+5),0,swatch,20),()->edit(()->config().color=color)){
+                @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){frame(c,new Rect(getX(),getY(),width,height),config().color==color?BRAND:LINE,color);}
+            };b.setTooltip(Tooltip.of(b.getMessage()));track(b,y);
+        }
+        y+=26;addDimension(Dimension.OPACITY,y);y+=44;
+        y=caption("DETAILS",y);
+        addToggle("Outline",()->config().outlineEnabled,()->config().outlineEnabled=!config().outlineEnabled,y);y+=28;
+        addToggle("Center Dot",()->config().centerDot,()->config().centerDot=!config().centerDot,y);y+=28;
+        addToggle("Dynamic Gap",()->config().dynamicEnabled,()->{config().dynamicEnabled=!config().dynamicEnabled;pulseStart=System.nanoTime();},y);y+=32;
+        addDimension(Dimension.OUTLINE,y);y+=38;addDimension(Dimension.DOT,y);y+=38;
+        contentHeight=y;
     }
-
-    private void rebuildLayout() {
-        panelX = (width - PANEL_WIDTH) / 2; panelY = (height - PANEL_HEIGHT) / 2; scrollOffset = clamp(scrollOffset, 0, maxScroll());
-        positionSlider(sizeSlider, SIZE_Y); positionSlider(lengthSlider, LENGTH_Y); positionSlider(widthSlider, WIDTH_Y); positionSlider(gapSlider, GAP_Y);
+    private void addColor(String label,int color,Rect r,int y,IntConsumer setter){
+        var button=new NavButton(label+" Color",r,()->{
+            history.checkpoint(config());
+            client.setScreen(new CrosshairColorPickerScreen(this,label,color,value->{setter.accept(value);save();},()->{}));
+        }){
+            @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+                super.drawIcon(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,label.equals("Crosshair")?config().color:config().outlineColor);
+            }
+        };track(button,y);
     }
-    private void positionSlider(SizeSliderWidget slider, int y) { int positionedY = contentY(y); slider.setPosition(controlX(), positionedY); slider.setWidth(CONTROL_WIDTH); slider.setY(positionedY); slider.visible = positionedY >= viewportTop() && positionedY + ROW_HEIGHT <= viewportBottom(); }
-
-    private void drawControls(DrawContext context, int mouseX, int mouseY) {
-        CrosshairConfig config = CrosshairConfigManager.get();
-        drawFullEnabled(context, mouseX, mouseY, config.enabled);
-        divider(context, PREVIEW_DIVIDER_Y, "PREVIEW"); drawPreview(context, contentY(PREVIEW_Y));
-        divider(context, STYLE_DIVIDER_Y, "STYLE"); drawStyleButton(context, mouseX, mouseY, config); drawResetButton(context, mouseX, mouseY);
-        drawSlider(context, sizeSlider, "SIZE SCALE"); drawSlider(context, lengthSlider, "LENGTH SCALE"); drawSlider(context, widthSlider, "WIDTH SCALE"); drawSlider(context, gapSlider, "GAP SCALE");
-        divider(context, COLOR_DIVIDER_Y, "COLOR"); drawColorRow(context, mouseX, mouseY, COLOR_Y, "CROSSHAIR COLOR", config.color); drawColorRow(context, mouseX, mouseY, OUTLINE_COLOR_Y, "OUTLINE COLOR", config.outlineColor);
-        divider(context, ADDITIONAL_DIVIDER_Y, "ADDITIONAL OPTIONS");
-        drawBooleanButton(context, mouseX, mouseY, controlX(), contentY(ADDITIONAL_Y), "OUTLINE", config.outlineEnabled);
-        drawBooleanButton(context, mouseX, mouseY, controlX() + COMPACT_WIDTH + COMPACT_GAP, contentY(ADDITIONAL_Y), "DYNAMIC", config.dynamicEnabled);
+    private void addToggle(String label,java.util.function.BooleanSupplier state,Runnable action,int y){
+        var b=new NavButton(label,new Rect(layout.controls.x(),0,layout.controls.width(),24),()->edit(action)){
+            private final ToggleAnimation animation=new ToggleAnimation(state.getAsBoolean());
+            @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+                frame(c,new Rect(getX(),getY(),width,height),LINE,FIELD);
+                line(c,label,getX()+9,getY()+8,INK,.85f,width-56,false);
+                ModMenuUi.toggle(c,getRight()-39,getY()+5,30,15,13,animation.value(state.getAsBoolean()),INK);
+                setMessage(text(label+": "+(state.getAsBoolean()?"On":"Off")));
+            }
+        };b.toggle=true;track(b,y);
     }
-
-    private void drawFullEnabled(DrawContext context, int mouseX, int mouseY, boolean enabled) {
-        int x = enabledX(), y = contentY(30);
-        AxialUiTheme.drawButton(context, textRenderer, x, y, 416, ROW_HEIGHT, "", "",
-                inside(mouseX, mouseY, x, y, 416, ROW_HEIGHT), false,
-                enabled ? AxialUiTheme.TOGGLE_ON : AxialUiTheme.TOGGLE_OFF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText(enabled ? "ENABLED" : "DISABLED"), x + 208, y + 5, 0xFFF7F7FF);
+    private void addDimension(Dimension dimension,int y){
+        var slider=new DimensionSlider(dimension);sliders.add(slider);track(slider,y);
+        var field=new TextFieldWidget(textRenderer,layout.controls.right()-53,0,44,14,text(dimension.label));
+        field.setMaxLength(6);field.setDrawsBackground(false);field.setTextShadow(false);field.setEditableColor(INK);
+        field.setText(dimension.shown(config()));field.setTooltip(Tooltip.of(text(dimension.label+": "+dimension.range.min()+" – "+dimension.range.max())));
+        field.setChangedListener(value->{
+            if(syncing)return;
+            slider.numberDirty=true;
+            try{double number=Double.parseDouble(value);if(!Double.isFinite(number)||number<dimension.range.min()||number>dimension.range.max()){field.setEditableColor(RED);return;}
+                field.setEditableColor(INK);
+                if(dimension.get(config())==dimension.range.clamp(number))return;
+                if(!slider.editingNumber){history.checkpoint(config());slider.editingNumber=true;}
+                dimension.set(config(),dimension.range.clamp(number));slider.sync();refreshHeader();
+            }catch(NumberFormatException ignored){field.setEditableColor(RED);}
+        });
+        slider.field=field;track(field,y+9);
     }
-    private void drawStyleButton(DrawContext context, int mouseX, int mouseY, CrosshairConfig config) {
-        int x = controlX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, COMPACT_WIDTH, inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT));
-        context.drawTextWithShadow(textRenderer, uiText("STYLE"), x + 8, y + 5, 0xFFC6D0F3); context.drawTextWithShadow(textRenderer, uiText(config.style.name()), x + 58, y + 5, 0xFFF7F7FF);
+    private void buildPreviewButtons(){
+        Rect p=layout.preview;if(p==null||p.height()<100)return;
+        button(zoom==1?"1×":"4×",new Rect(p.right()-43,p.y()+7,35,20),()->{zoom=zoom==1?4:1;rebuild();});
+        var pulse=button(config().dynamicEnabled?"Test Pulse":"Dynamic: Off",new Rect(p.x()+10,p.bottom()-56,p.width()-20,21),()->pulseStart=System.nanoTime());
+        pulse.active=config().dynamicEnabled;
+        pulse.setTooltip(Tooltip.of(text("Enable Dynamic Gap in Customize to preview the pulse")));
+        int w=(p.width()-28)/3;
+        for(int i=0;i<3;i++){int value=i;button(List.of("Dark","Light","Terrain").get(i),new Rect(p.x()+10+i*(w+4),p.bottom()-28,w,20),()->{background=value;rebuild();}).selected=background==i;}
     }
-    private void drawResetButton(DrawContext context, int mouseX, int mouseY) { int x = resetX(), y = contentY(STYLE_Y); drawPurpleButton(context, x, y, RESET_WIDTH, inside(mouseX, mouseY, x, y, RESET_WIDTH, ROW_HEIGHT)); context.drawCenteredTextWithShadow(textRenderer, uiText("RESET"), x + RESET_WIDTH / 2, y + 5, 0xFFF7F7FF); }
-    private void drawSlider(DrawContext context, SizeSliderWidget slider, String label) {
-        if (!slider.visible) return; int x = slider.getX(), y = slider.getY(), width = slider.getWidth();
-        context.drawTextWithShadow(textRenderer, uiText(label), x + 2, y - 12, 0xFFC6D0F3);
-        float progress = Math.max(0, Math.min(1, slider.sliderValue())); int thumbX = x + Math.round(progress * (width - 8));
-        context.fill(x, y, x + width, y + ROW_HEIGHT, 0xF00E1018); context.fill(x + 2, y + 8, x + width - 2, y + 12, 0xCC2A2F3C); context.fill(x + 2, y + 8, thumbX + 4, y + 12, 0xFF8AF0C2); context.fill(thumbX, y + 2, thumbX + 8, y + 18, 0xFFE9D9FF);
-        context.drawStrokedRectangle(thumbX, y + 2, 8, 16, 0xFF8F5DFF); context.drawStrokedRectangle(x, y, width, ROW_HEIGHT, 0xFF8F5DFF);
-        String value = slider.displayValue(); Text text = uiText(value); context.drawTextWithShadow(textRenderer, text, x + width - textRenderer.getWidth(text) - 8, y - 12, 0xFFF7F7FF);
+    private void position(){
+        int scroll=scrolls[tab]=Math.clamp(scrolls[tab],0,layout.maxScroll(contentHeight));
+        for(var p:widgets){var w=p.widget();w.setY(layout.controls.y()+p.y()-scroll);w.visible=layout.fullyVisible(new Rect(w.getX(),w.getY(),w.getWidth(),w.getHeight()));if(!w.visible&&w.isFocused())setFocused(null);}
     }
-    private void drawColorRow(DrawContext context, int mouseX, int mouseY, int baseY, String label, int color) {
-        int x = controlX(), y = contentY(baseY), swatchX = colorSwatchX(); context.drawTextWithShadow(textRenderer, uiText(label), x + 2, y + 6, 0xFFC6D0F3);
-        Text hex = uiText(String.format("#%06X", color & 0xFFFFFF)); context.drawTextWithShadow(textRenderer, hex, swatchX - textRenderer.getWidth(hex) - 10, y + 6, 0xFFC6D0F3);
-        boolean hovered = inside(mouseX, mouseY, swatchX, y, 20, ROW_HEIGHT); context.fill(swatchX, y + 2, swatchX + 16, y + 18, color); context.drawStrokedRectangle(swatchX, y + 2, 16, 16, hovered ? 0xFFFFFFFF : 0xFFB9C5E8);
+    private void refreshHeader(){
+        if(undoButton!=null)undoButton.active=history.available();
+        if(enabledButton!=null){enabledButton.label(config().enabled?"Enabled":"Disabled");enabledButton.selected=config().enabled;}
     }
-    private void drawBooleanButton(DrawContext context, int mouseX, int mouseY, int x, int y, String label, boolean enabled) {
-        boolean hovered = inside(mouseX, mouseY, x, y, COMPACT_WIDTH, ROW_HEIGHT); int fill = enabled ? (hovered ? 0xE42D7450 : 0xCC205239) : (hovered ? 0xE46D2D43 : 0xCC4E2432); int border = enabled ? 0xFF8AF0C2 : 0xFFFF7B97;
-        context.fill(x, y, x + COMPACT_WIDTH, y + ROW_HEIGHT, fill); context.drawStrokedRectangle(x, y, COMPACT_WIDTH, ROW_HEIGHT, border); context.drawTextWithShadow(textRenderer, uiText(label), x + 8, y + 5, 0xFFF7F7FF);
-        String state = enabled ? "ENABLED" : "DISABLED"; context.drawTextWithShadow(textRenderer, uiText(state), x + COMPACT_WIDTH - (enabled ? 58 : 66), y + 5, 0xFFF7F7FF);
+    @Override public void render(DrawContext c,int mx,int my,float delta){
+        refreshHeader();frame(c,layout.panel,PANEL_BORDER,PANEL);
+        int titleX=layout.back.right()+8,titleWidth=layout.enabled.x()-titleX-6;
+        line(c,"AXIAL CLIENT",titleX,layout.panel.y()+7,BRAND,.75f,titleWidth,false);
+        line(c,"CROSSHAIR",titleX,layout.panel.y()+21,INK,1f,titleWidth,true);
+        c.fill(layout.panel.x()+12,layout.panel.y()+37,layout.panel.right()-12,layout.panel.y()+38,DIVIDER);
+        c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
+        for(var caption:captions)line(c,caption.label(),layout.controls.x()+1,layout.controls.y()+caption.y()-scrolls[tab]+3,MUTED,.75f,layout.controls.width(),true);
+        for(var p:widgets)if(p.widget().visible)p.widget().render(c,mx,my,delta);
+        c.disableScissor();
+        if(layout.preview!=null)drawPreview(c,layout.preview);
+        else if(layout.done.x()-layout.undo.right()>=24){var sample=config().copy();sample.enabled=true;CrosshairRenderer.render(c,(layout.undo.right()+layout.done.x())/2,layout.done.y()+9,sample);}
+        for(var child:children())if(child instanceof NavButton b&&widgets.stream().noneMatch(p->p.widget()==b))b.render(c,mx,my,delta);
+        c.fill(layout.panel.x()+12,layout.panel.bottom()-32,layout.panel.right()-12,layout.panel.bottom()-31,DIVIDER);
+        if(layout.panel.width()>520)line(c,error.isEmpty()?"Saves automatically":error,layout.undo.right()+15,layout.done.y()+6,error.isEmpty()?MUTED:RED,.75f,layout.done.x()-layout.undo.right()-24,false);
+        int max=layout.maxScroll(contentHeight);
+        if(max>0){Rect r=layout.scrollbar;int thumb=Math.max(12,r.height()*r.height()/contentHeight);rounded(c,r.x(),r.y(),r.width(),r.height(),DIVIDER);rounded(c,r.x(),r.y()+(r.height()-thumb)*scrolls[tab]/max,r.width(),thumb,MUTED);}
     }
-    private void drawPreview(DrawContext context, int y) { int x = panelX + (PANEL_WIDTH - CONTROL_WIDTH) / 2; context.fill(x, y, x + CONTROL_WIDTH, y + PREVIEW_HEIGHT, 0xAA141822); context.drawStrokedRectangle(x, y, CONTROL_WIDTH, PREVIEW_HEIGHT, 0xD08F5DFF); context.fill(x + 1, y + PREVIEW_HEIGHT / 2, x + CONTROL_WIDTH - 1, y + PREVIEW_HEIGHT / 2 + 1, 0x22FFFFFF); context.fill(x + CONTROL_WIDTH / 2, y + 1, x + CONTROL_WIDTH / 2 + 1, y + PREVIEW_HEIGHT - 1, 0x22FFFFFF); CrosshairRenderer.render(context, x + CONTROL_WIDTH / 2, y + PREVIEW_HEIGHT / 2, CrosshairConfigManager.get(), 1.0f); }
-    private void divider(DrawContext context, int baseY, String label) { int x = panelX + 18, y = contentY(baseY); Text text = uiText(label); context.drawTextWithShadow(textRenderer, text, x + 2, y, 0xFFC6D0F3); context.fill(x + textRenderer.getWidth(text) + 12, y + 5, panelX + PANEL_WIDTH - 28, y + 6, 0x998F5DFF); }
-    private void drawBackButton(DrawContext context, int mouseX, int mouseY) { ModMenuBackButton.draw(context, panelX + 18, panelY + 6, mouseX, mouseY); }
-    private void drawPanel(DrawContext context) { context.fill(panelX, panelY, panelX + PANEL_WIDTH, panelY + PANEL_HEIGHT, 0xE8101018); context.fill(panelX + 1, panelY + 1, panelX + PANEL_WIDTH - 1, panelY + 2, 0x44FFFFFF); context.drawStrokedRectangle(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT, 0xD08F5DFF); }
-    private void drawPurpleButton(DrawContext context, int x, int y, int width, boolean hovered) { context.fill(x, y, x + width, y + ROW_HEIGHT, hovered ? 0xBC20283A : 0xA0181D2C); context.fill(x + 1, y + 1, x + width - 1, y + 2, hovered ? 0x33FFFFFF : 0x17FFFFFF); context.drawStrokedRectangle(x, y, width, ROW_HEIGHT, 0xFFE7D9FF); }
-    private void drawScrollBar(DrawContext context) { int max = maxScroll(); if (max == 0) return; int top = viewportTop(), height = viewportBottom() - top, content = Math.max(height + 1, CONTENT_HEIGHT - 48), thumb = Math.max(18, Math.round(height * (height / (float) content))), travel = Math.max(1, height - thumb), y = top + Math.round(scrollOffset / (float) max * travel), x = panelX + PANEL_WIDTH - 12; context.fill(x, top, x + 4, top + height, 0x2AFFFFFF); context.fill(x, y, x + 4, y + thumb, 0xFFB06AF3); }
-    private void openColorPicker(String label, int color, java.util.function.IntConsumer setter) { MinecraftClient.getInstance().setScreen(new CrosshairColorPickerScreen(this, label, color, value -> { setter.accept(value); CrosshairConfigManager.save(); })); }
-    private void syncSliders() { CrosshairConfig c = CrosshairConfigManager.get(); sizeSlider.updateFromConfig(c.size); lengthSlider.updateFromConfig(c.length); widthSlider.updateFromConfig(c.width); gapSlider.updateFromConfig(c.gap); }
-    private int controlX() { return panelX + PANEL_PADDING; } private int enabledX() { return panelX + 18; } private int resetX() { return controlX() + COMPACT_WIDTH + 10; } private int colorSwatchX() { return controlX() + CONTROL_WIDTH - 20; } private int contentY(int y) { return panelY + y - scrollOffset; } private int viewportTop() { return panelY + VIEWPORT_TOP; } private int viewportBottom() { return panelY + PANEL_HEIGHT - VIEWPORT_BOTTOM; } private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - PANEL_HEIGHT); }
-    private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); } private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) { return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height; } private static Text uiText(String value) { return Text.literal(value).styled(style -> style.withFont(UI_FONT)); }
-
-    private void cycleStyle() {
-        CrosshairConfig.CrosshairStyle next = switch (CrosshairConfigManager.get().style) { case CLASSIC -> CrosshairConfig.CrosshairStyle.LUNAR; case LUNAR -> CrosshairConfig.CrosshairStyle.DOT; case DOT -> CrosshairConfig.CrosshairStyle.SMALL_DOT; case SMALL_DOT -> CrosshairConfig.CrosshairStyle.PLUS; case PLUS -> CrosshairConfig.CrosshairStyle.T; case T -> CrosshairConfig.CrosshairStyle.X; case X -> CrosshairConfig.CrosshairStyle.CIRCLE; case CIRCLE -> CrosshairConfig.CrosshairStyle.SMALL_CROSS; case SMALL_CROSS -> CrosshairConfig.CrosshairStyle.CLASSIC; };
-        switch (next) { case CLASSIC -> applyPreset(next, 4, 2, 0, true); case LUNAR -> applyPreset(next, 4, 2, 2, true); case DOT -> applyPreset(next, 0, 2, 0, false); case SMALL_DOT -> applyPreset(next, 0, 1, 0, false); case PLUS -> applyPreset(next, 4, 2, 0, true); case T, X -> applyPreset(next, 4, 2, 2, true); case CIRCLE -> applyPreset(next, 3, 4, 0, true); case SMALL_CROSS -> applyPreset(next, 2, 2, 2, true); }
+    private void drawPreview(DrawContext c,Rect p){
+        frame(c,p,LINE,SURFACE);boolean compact=p.height()<100;
+        Rect scene=new Rect(p.x()+8,p.y()+(compact?4:35),p.width()-16,p.height()-(compact?8:100));
+        if(background==2){c.fill(scene.x(),scene.y(),scene.right(),scene.bottom(),0xFF7FACC2);int ground=scene.y()+scene.height()/2;c.fill(scene.x(),ground,scene.right(),scene.bottom(),0xFF59794D);c.fill(scene.x()+scene.width()/3,ground+scene.height()/6,scene.right(),scene.bottom(),0xFF7F7770);}
+        else c.fill(scene.x(),scene.y(),scene.right(),scene.bottom(),background==1?0xFFE5E2D9:0xFF14171D);
+        if(!compact){line(c,"LIVE PREVIEW",p.x()+10,p.y()+13,MUTED,.75f,p.width()-58,true);line(c,config().enabled?"Actual size • "+zoom+"× view":"Disabled in game",p.x()+10,p.bottom()-73,MUTED,.75f,p.width()-20,false);}
+        var sample=config().copy();sample.enabled=true;
+        float pulse=config().dynamicEnabled?CrosshairDynamicState.atElapsedMillis((System.nanoTime()-pulseStart)/1_000_000L%1500):1;
+        c.enableScissor(scene.x(),scene.y(),scene.right(),scene.bottom());c.getMatrices().pushMatrix();
+        try{c.getMatrices().translate(scene.x()+scene.width()/2,scene.y()+scene.height()/2);c.getMatrices().scale(zoom,zoom);CrosshairRenderer.render(c,0,0,sample,pulse);}
+        finally{c.getMatrices().popMatrix();c.disableScissor();}
     }
-    private void applyPreset(CrosshairConfig.CrosshairStyle style, float length, float width, float gap, boolean outline) { CrosshairConfig c = CrosshairConfigManager.get(); c.style = style; c.length = length; c.width = width; c.gap = gap; c.outlineEnabled = outline; CrosshairConfigManager.save(); syncSliders(); }
-    private void resetCrosshair() { CrosshairConfig c = CrosshairConfigManager.get(); c.enabled = true; c.style = CrosshairConfig.CrosshairStyle.LUNAR; c.color = 0xFFFFFFFF; c.size = 1.0f; c.length = 6.0f; c.width = 2.0f; c.gap = 2.0f; c.outlineEnabled = true; c.outlineColor = 0xFF000000; c.dynamicEnabled = false; CrosshairConfigManager.save(); syncSliders(); }
-    private enum CrosshairField { SIZE, LENGTH, WIDTH, GAP }
-    private final class SizeSliderWidget extends SliderWidget {
-        private final CrosshairField field;
-        private SizeSliderWidget(int x, int y, int width, int height, CrosshairField field) { super(x, y, width, height, Text.empty(), 0); this.field = field; }
-        private void updateFromConfig(float configured) { setValue(toSliderValue(configured)); updateMessage(); } private float sliderValue() { return (float) value; } private String displayValue() { return formatValue(fromSliderValue((float) value)); }
-        @Override protected void updateMessage() { setMessage(Text.empty()); }
-        @Override protected void applyValue() { float configured = fromSliderValue((float) value); switch (field) { case SIZE -> CrosshairConfigManager.get().size = configured; case LENGTH -> CrosshairConfigManager.get().length = configured; case WIDTH -> CrosshairConfigManager.get().width = configured; case GAP -> CrosshairConfigManager.get().gap = configured; } CrosshairConfigManager.save(); }
-        private float toSliderValue(float configured) { return switch (field) { case SIZE -> (Math.max(SIZE_MIN, Math.min(SIZE_MAX, configured)) - SIZE_MIN) / (SIZE_MAX - SIZE_MIN); case LENGTH -> snapEven(configured, LENGTH_MIN, LENGTH_MAX) / LENGTH_MAX; case WIDTH -> (snapEven(configured, WIDTH_MIN, WIDTH_MAX) - WIDTH_MIN) / (WIDTH_MAX - WIDTH_MIN); case GAP -> snapEven(configured, GAP_MIN, GAP_MAX) / GAP_MAX; }; }
-        private float fromSliderValue(float value) { float clamped = Math.max(0, Math.min(1, value)); return switch (field) { case SIZE -> SIZE_MIN + clamped * (SIZE_MAX - SIZE_MIN); case LENGTH -> snapEven(clamped * LENGTH_MAX, LENGTH_MIN, LENGTH_MAX); case WIDTH -> snapEven(WIDTH_MIN + clamped * (WIDTH_MAX - WIDTH_MIN), WIDTH_MIN, WIDTH_MAX); case GAP -> snapEven(clamped * GAP_MAX, GAP_MIN, GAP_MAX); }; }
-        private String formatValue(float value) { return field == CrosshairField.SIZE ? String.format(Locale.ROOT, "%.2fx", value) : value == Math.rint(value) ? String.format(Locale.ROOT, "%.0f", value) : String.format(Locale.ROOT, "%.1f", value); } private float snapEven(float value, float min, float max) { float clamped = Math.max(min, Math.min(max, value)); return Math.max(min, Math.min(max, Math.round(clamped / 2f) * 2f)); }
+    @Override public boolean mouseClicked(Click click,boolean doubled){
+        for(var slider:sliders)slider.editingNumber=false;
+        Rect bar=layout.scrollbar;
+        if(click.button()==0&&layout.maxScroll(contentHeight)>0&&click.x()>=bar.x()-2&&click.x()<bar.right()+3&&click.y()>=bar.y()&&click.y()<bar.bottom()){draggingScrollbar=true;dragScroll(click.y());return true;}
+        return super.mouseClicked(click,doubled);
+    }
+    @Override public boolean mouseDragged(Click click,double dx,double dy){if(draggingScrollbar){dragScroll(click.y());return true;}return super.mouseDragged(click,dx,dy);}
+    @Override public boolean mouseReleased(Click click){draggingScrollbar=false;return super.mouseReleased(click);}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(layout.controls.contains(x,y)){scrollTo(scrolls[tab]-(int)Math.round(vertical*32));return true;}return false;}
+    private void scrollTo(int value){scrolls[tab]=Math.clamp(value,0,layout.maxScroll(contentHeight));position();}
+    private void dragScroll(double y){Rect r=layout.scrollbar;int thumb=Math.max(12,r.height()*r.height()/contentHeight);scrollTo((int)Math.round((y-r.y()-thumb/2.0)/Math.max(1,r.height()-thumb)*layout.maxScroll(contentHeight)));}
+    @Override public boolean keyPressed(KeyInput input){
+        if(getFocused() instanceof TextFieldWidget)return super.keyPressed(input);
+        switch(input.key()){
+            case GLFW.GLFW_KEY_PAGE_DOWN -> {scrollTo(scrolls[tab]+layout.controls.height());return true;}
+            case GLFW.GLFW_KEY_PAGE_UP -> {scrollTo(scrolls[tab]-layout.controls.height());return true;}
+            case GLFW.GLFW_KEY_HOME -> {scrollTo(0);return true;}
+            case GLFW.GLFW_KEY_END -> {scrollTo(layout.maxScroll(contentHeight));return true;}
+        }
+        if(QuickMenuScreen.isMenuKey(input)){close();return true;}return super.keyPressed(input);
+    }
+    @Override public void removed(){save();}
+    @Override public void close(){save();super.close();}
+    private static String styleName(CrosshairConfig.CrosshairStyle style){return switch(style){case LUNAR->"Cross";case SMALL_DOT->"Pinpoint";case SMALL_CROSS->"Small Cross";default->style.name().charAt(0)+style.name().substring(1).toLowerCase(Locale.ROOT);};}
+    private final class PresetButton extends NavButton {
+        private final CrosshairPresets.Template preset;private final CrosshairConfig sample;
+        PresetButton(CrosshairPresets.Template preset,Rect r){super(preset.name(),r,()->edit(()->CrosshairPresets.applyTemplate(config(),preset)));this.preset=preset;sample=preset.preview(config());}
+        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+            boolean chosen=CrosshairPresets.matches(config(),preset);Rect r=new Rect(getX(),getY(),width,height);
+            frame(c,r,chosen?BRAND:LINE,isHovered()||isFocused()?HOVER:FIELD);
+            c.enableScissor(Math.max(layout.controls.x(),r.x()+2),Math.max(layout.controls.y(),r.y()+2),Math.min(layout.controls.right(),r.right()-2),Math.min(layout.controls.bottom(),r.bottom()-2));
+            CrosshairRenderer.render(c,height<45?getX()+17:getX()+width/2,height<45?getY()+height/2:getY()+22,sample);c.disableScissor();
+            line(c,preset.name(),getX()+(height<45?32:6),height<45?getY()+(height-8)/2:getBottom()-13,chosen?BRAND:INK,.75f,width-(height<45?38:12),chosen);
+        }
+    }
+    private enum Dimension {
+        SCALE("Scale",.1,4,.05),LENGTH("Arm Length / Radius",0,32,1),WIDTH("Thickness",1,12,1),GAP("Gap",0,20,1),
+        OPACITY("Opacity %",10,100,1),OUTLINE("Outline Thickness",1,4,1),DOT("Center Dot Size",1,8,1);
+        final String label;final SettingRange range;
+        Dimension(String label,double min,double max,double step){this.label=label;range=new SettingRange(min,max,step);}
+        double get(CrosshairConfig c){return switch(this){case SCALE->c.size;case LENGTH->c.length;case WIDTH->c.width;case GAP->c.gap;case OPACITY->c.opacity*100;case OUTLINE->c.outlineThickness;case DOT->c.dotSize;};}
+        void set(CrosshairConfig c,double v){switch(this){case SCALE->c.size=(float)v;case LENGTH->c.length=(float)v;case WIDTH->c.width=(float)v;case GAP->c.gap=(float)v;case OPACITY->c.opacity=(float)v/100;case OUTLINE->c.outlineThickness=(int)v;case DOT->c.dotSize=(int)v;}}
+        String shown(CrosshairConfig c){return this==SCALE?String.format(Locale.ROOT,"%.2f",get(c)):String.format(Locale.ROOT,"%.0f",get(c));}
+    }
+    private final class DimensionSlider extends SliderWidget {
+        final Dimension dimension;TextFieldWidget field;boolean dragging,editingNumber,numberDirty;
+        DimensionSlider(Dimension dimension){super(layout.controls.x(),0,layout.controls.width()-64,34,text(dimension.label),dimension.range.progress(dimension.get(config())));this.dimension=dimension;updateMessage();}
+        void sync(){value=dimension.range.progress(dimension.get(config()));updateMessage();}
+        @Override protected void updateMessage(){if(dimension!=null)setMessage(text(dimension.label+": "+dimension.shown(config())));}
+        @Override protected void applyValue(){
+            if(!dragging)history.checkpoint(config());dimension.set(config(),dimension.range.value(value));if(!dragging)save();updateMessage();
+            if(field!=null){syncing=true;try{field.setText(dimension.shown(config()));}finally{syncing=false;}}refreshHeader();
+        }
+        @Override public void onClick(Click click,boolean doubled){history.checkpoint(config());dragging=true;fromX(click.x());}
+        @Override protected void onDrag(Click click,double dx,double dy){fromX(click.x());}
+        @Override public void onRelease(Click click){dragging=false;save();}
+        private void fromX(double x){setValue(dimension.range.progress(dimension.range.value((x-getX()-5)/Math.max(1,width-10))));}
+        @Override public void playDownSound(SoundManager sound){AxialUiTheme.playButtonClickSound();}
+        @Override public void renderWidget(DrawContext c,int mx,int my,float delta){
+            if(field!=null&&!field.isFocused()&&numberDirty){syncing=true;try{field.setText(dimension.shown(config()));field.setEditableColor(INK);}finally{syncing=false;}numberDirty=false;editingNumber=false;save();}
+            line(c,dimension.label,getX()+1,getY()+3,MUTED,.8f,width,false);
+            int y=getY()+24,filled=(int)Math.round(value*(width-10));rounded(c,getX()+4,y,width-8,3,DIVIDER);rounded(c,getX()+4,y,Math.max(2,filled),3,BRAND);circle(c,getX()+filled,y-3,9,isHovered()||isFocused()?INK:BRAND);
+            frame(c,new Rect(layout.controls.right()-58,getY()+3,58,27),field!=null&&field.isFocused()?BRAND:LINE,FIELD);
+        }
     }
 }

@@ -34,7 +34,8 @@ class CustomSubmenuClickSoundMixinTest {
                     }
                 }
             }
-            assertTrue(checked>=4);
+            assertTrue(checked>=3);
+            assertTrue(targets.stream().noneMatch(t->t.getClassName().endsWith("CrosshairSettingsScreen")),"Native crosshair widgets already play their own click sound");
         }
     }
     private static Object value(AnnotationNode annotation,String key){int i=annotation.values.indexOf(key);assertTrue(i>=0);return annotation.values.get(i+1);}

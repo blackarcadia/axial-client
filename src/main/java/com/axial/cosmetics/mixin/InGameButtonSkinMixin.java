@@ -54,7 +54,7 @@ public abstract class InGameButtonSkinMixin {
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
                 || currentScreen instanceof MinimapFullScreen || currentScreen instanceof MinimapSettingsScreen || currentScreen instanceof CreateWaypointScreen
                 || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof GangsScreen || currentScreen instanceof ClientSettingsScreen
-                || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
+                || currentScreen instanceof com.axial.cosmetics.client.CrosshairSettingsScreen || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
                 || currentScreen instanceof AccountsScreen accounts && accounts.renderedTitleScreen() != null) {
             return;
         }

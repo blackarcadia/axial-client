@@ -16,6 +16,7 @@ import static com.axial.cosmetics.client.FeatureSettingsScreen.*;
 final class ModFeatureSettings {
     private ModFeatureSettings() {}
     static Screen create(String feature, Screen parent, Screen backend) {
+        if(feature.equals("CROSSHAIR"))return new CrosshairSettingsScreen(parent);
         if(feature.equals("MINIMAP"))return new MinimapSettingsScreen(parent);
         if(feature.equals("WAYPOINTS"))return new WaypointSettingsScreen(parent);
         Model model=switch(feature) {
@@ -23,7 +24,6 @@ final class ModFeatureSettings {
                     List.of(section("VISIBLE COOLDOWNS"),
                             new Toggle("PET COOLDOWNS",CooldownsConfig::pets,CooldownsConfig::setPets),
                             new Toggle("COMBAT TAG",CooldownsConfig::combat,CooldownsConfig::setCombat)),CooldownsConfig::reset);
-            case "CROSSHAIR" -> crosshair();
             case "ARMOR HUD" -> armor();
             case "HUD" -> information();
             case "SATCHEL HELPER" -> satchel();
@@ -51,25 +51,6 @@ final class ModFeatureSettings {
     }
     private static List<Setting> rows(Setting...settings){return new ArrayList<>(List.of(settings));}
 
-    private static Model crosshair() {
-        CrosshairConfig c=CrosshairConfigManager.get();
-        List<Setting> rows=rows(new Choice("STYLE",Arrays.stream(CrosshairConfig.CrosshairStyle.values()).map(Enum::name).toList(),
-                ()->c.style.ordinal(),i->{CrosshairPresets.apply(c,CrosshairConfig.CrosshairStyle.values()[i]);CrosshairConfigManager.save();},true),
-                section("APPEARANCE"),
-                range("SIZE",()->c.size,v->{c.size=(float)v;CrosshairConfigManager.save();},.1,4,.01,"X"),
-                range("LENGTH",()->c.length,v->{c.length=(float)v;CrosshairConfigManager.save();},0,32,2,""),
-                range("WIDTH",()->c.width,v->{c.width=(float)v;CrosshairConfigManager.save();},2,12,2,""),
-                range("GAP",()->c.gap,v->{c.gap=(float)v;CrosshairConfigManager.save();},0,20,2,""),
-                new Color("COLOR",()->c.color,v->{c.color=v;CrosshairConfigManager.save();}),
-                new Color("OUTLINE COLOR",()->c.outlineColor,v->{c.outlineColor=v;CrosshairConfigManager.save();}),
-                new Toggle("OUTLINE",()->c.outlineEnabled,v->{c.outlineEnabled=v;CrosshairConfigManager.save();}),
-                new Toggle("DYNAMIC",()->c.dynamicEnabled,v->{c.dynamicEnabled=v;CrosshairConfigManager.save();}));
-        return model("CROSSHAIR",()->c.enabled,()->{c.enabled=!c.enabled;CrosshairConfigManager.save();},rows,()->{
-            // Preserve the existing configure screen's reset preset.
-            c.enabled=true;c.style=CrosshairConfig.CrosshairStyle.LUNAR;c.color=0xFFFFFFFF;c.size=1;c.length=6;c.width=2;c.gap=2;
-            c.outlineEnabled=true;c.outlineColor=0xFF000000;c.dynamicEnabled=false;CrosshairConfigManager.save();
-        });
-    }
     private static Model armor() {
         List<Setting> r=rows(section("ELEMENTS"));
         String[] fields={"armorHudShowHelmet","armorHudShowChestplate","armorHudShowLeggings","armorHudShowBoots","armorHudShowHeldItem","armorHudShowDurability"};
