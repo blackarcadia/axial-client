@@ -20,6 +20,7 @@ final class ModFeatureSettings {
         if(feature.equals("MINIMAP"))return new MinimapSettingsScreen(parent);
         if(feature.equals("WAYPOINTS"))return new WaypointSettingsScreen(parent);
         Model model=switch(feature) {
+            case "KEYSTROKES" -> keystrokes();
             case "COOLDOWNS" -> model("COOLDOWNS",CooldownsConfig::enabled,CooldownsConfig::toggle,
                     List.of(section("VISIBLE COOLDOWNS"),
                             new Toggle("PET COOLDOWNS",CooldownsConfig::pets,CooldownsConfig::setPets),
@@ -51,6 +52,17 @@ final class ModFeatureSettings {
     }
     private static List<Setting> rows(Setting...settings){return new ArrayList<>(List.of(settings));}
 
+    private static Model keystrokes() {
+        List<Setting> settings=rows(section("UNIT"),
+                new Choice("LAYOUT",List.of("W / ASD","W / AS / D"),()->KeystrokesConfig.stacked()?1:0,i->KeystrokesConfig.setStacked(i==1),false),
+                range("SCALE",KeystrokesConfig::scale,v->KeystrokesConfig.setScale((float)v),.5,3,.05,"X"),
+                range("BACKGROUND OPACITY",()->KeystrokesConfig.opacity()*100,v->KeystrokesConfig.setOpacity((float)v/100),20,100,1,"%"),
+                new Color("PRESSED BACKGROUND",KeystrokesConfig::pressedColor,KeystrokesConfig::setPressedColor),section("VISIBLE KEYS"));
+        for(int i=0;i<6;i++){int bit=i;settings.add(new Toggle(KeystrokesLayout.LABELS[i],()->KeystrokesConfig.visible(bit),value->KeystrokesConfig.setVisible(bit,value)));}
+        settings.add(section("INDIVIDUAL TEXT COLORS"));
+        for(int i=0;i<6;i++){int bit=i;settings.add(new Color(KeystrokesLayout.LABELS[i]+" TEXT COLOR",()->KeystrokesConfig.textColor(bit),value->KeystrokesConfig.setTextColor(bit,value)));}
+        return model("KEYSTROKES",KeystrokesConfig::enabled,KeystrokesConfig::toggle,settings,KeystrokesConfig::reset);
+    }
     private static Model armor() {
         List<Setting> r=rows(section("ELEMENTS"));
         String[] fields={"armorHudShowHelmet","armorHudShowChestplate","armorHudShowLeggings","armorHudShowBoots","armorHudShowHeldItem","armorHudShowDurability"};

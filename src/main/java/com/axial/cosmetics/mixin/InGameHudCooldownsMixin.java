@@ -12,5 +12,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public abstract class InGameHudCooldownsMixin {
     @Inject(method="render",at=@At("TAIL"))
-    private void axial$renderCooldowns(DrawContext context,RenderTickCounter ticks,CallbackInfo ci){CombatCooldownHud.render(context);}
+    private void axial$renderCooldowns(DrawContext context,RenderTickCounter ticks,CallbackInfo ci){CombatCooldownHud.render(context);com.axial.cosmetics.client.KeystrokesHud.render(context);}
 }

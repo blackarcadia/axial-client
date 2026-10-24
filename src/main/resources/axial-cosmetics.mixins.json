@@ -92,6 +92,7 @@
     "AxialConfigScreenScoreboardMoveMixin",
     "InGameHudCooldownsMixin",
     "AxialConfigScreenCooldownsMoveMixin",
+    "AxialConfigScreenKeystrokesMoveMixin",
     "InGameHudCompassMixin",
     "InGameHudPotionsHudMixin",
     "HudTitleUnderlineMixin",

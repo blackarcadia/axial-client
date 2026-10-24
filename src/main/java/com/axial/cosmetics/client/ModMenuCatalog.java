@@ -87,6 +87,9 @@ final class ModMenuCatalog {
             }
             entries.add(new ModMenuEntry(title, description(label), category(label), icon(label), enabled, toggle, configure));
         }
+        entries.add(new ModMenuEntry("Keystrokes", "Keyboard and mouse inputs",ModMenuEntry.Category.HUD,
+                "mouse",KeystrokesConfig::enabled,KeystrokesConfig::toggle,
+                () -> ModFeatureSettings.open("KEYSTROKES",MinecraftClient.getInstance().currentScreen,backend)));
         entries.add(new ModMenuEntry("Cooldowns", "Pet and combat timers", ModMenuEntry.Category.HUD,
                 "compass", CooldownsConfig::enabled, CooldownsConfig::toggle,
                 () -> ModFeatureSettings.open("COOLDOWNS",MinecraftClient.getInstance().currentScreen,backend)));

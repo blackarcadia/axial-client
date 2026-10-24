@@ -15,6 +15,10 @@ final class ModFeaturePreviews {
     private ModFeaturePreviews() {}
     static void draw(String feature,DrawContext c,Rect area) {
         switch(feature) {
+            case "KEYSTROKES" -> {
+                if(KeystrokesConfig.visibleMask()==0)line(c,area,"NO KEYS SELECTED",area.y()+24,MUTED);
+                else KeystrokesHud.example(c,area.x()+(area.width()-KeystrokesConfig.width())/2,area.y()+Math.max(0,(area.height()-KeystrokesConfig.height())/2));
+            }
             case "COOLDOWNS" -> {
                 if(CooldownsConfig.combat())CombatCooldownHud.example(c,area.x()+(area.width()-CombatCooldownHud.SIZE)/2,area.y()+Math.max(0,(area.height()-CombatCooldownHud.SIZE)/2));
                 else line(c,area,"COMBAT TIMER HIDDEN",area.y()+24,MUTED);
