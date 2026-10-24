@@ -36,10 +36,27 @@ public final class MinimapServerOverview {
     private static String providerMessage="";
     private static boolean providerRendering;
     private static long lastFullAttempt,lastFullProgress;
+    private static boolean wasVisible,pauseSent;
+    private static TextureSnapshot textureSnapshot;
+
+    /** Hidden maps unsubscribe once; showing a map requests the current complete snapshot. */
+    public static void tick(boolean visible) {
+        if(MinecraftClient.getInstance().getNetworkHandler()==null)return;
+        if(!visible) {
+            wasVisible=false;
+            if(!pauseSent&&ClientPlayNetworking.canSend(WorldMapPayload.ID)) {
+                ClientPlayNetworking.send(new WorldMapPayload(new byte[]{REQUEST,2}));pauseSent=true;
+                pendingWorld=null;pendingWorldKey=null;
+            }
+            return;
+        }
+        if(!wasVisible){fullRequestPending=true;lastRequestAt=0;pauseSent=false;}
+        wasVisible=true;request();
+    }
 
     private MinimapServerOverview() { }
 
-    public static void request() {
+    private static void request() {
         if(MinecraftClient.getInstance().getNetworkHandler()==null)return;
         long now = System.currentTimeMillis();
         checkedProvider=true;
@@ -77,6 +94,7 @@ public final class MinimapServerOverview {
         cacheScope=nextScope;
         activeWorld = null;fullWorld=null;fullWorldKey=null;
         pendingWorld=null;pendingWorldKey=null;pendingSnapshot=committedSnapshot=Long.MIN_VALUE;
+        textureSnapshot=null;wasVisible=pauseSent=false;
         OVERVIEWS.clear();OVERLAYS_BY_WORLD.clear();revision++;
         lastRequestAt = 0L;
         fullRequestPending=true;worldGeneration++;
@@ -127,6 +145,8 @@ public final class MinimapServerOverview {
             if(pendingWorld.complete()) {
                 fullWorld=pendingWorld;fullWorldKey=world;committedSnapshot=snapshot;
                 pendingWorld=null;pendingWorldKey=null;providerRendering=false;providerMessage="";revision++;
+                textureSnapshot=new TextureSnapshot(fullWorld.minX,fullWorld.minZ,fullWorld.blockStep,fullWorld.width,fullWorld.height,fullWorld.colors);
+
             }
         } catch(IOException ignored){ }
     }
@@ -156,7 +176,7 @@ public final class MinimapServerOverview {
                 for (int column = 0; column < width; column++) overview.colors[offset + column] = input.readInt();
             }
             overview.rows.set(rowStart,rowStart+rowCount);
-            if(full){lastFullProgress=System.currentTimeMillis();checkedProvider=fullProviderAvailable=true;if(!providerRendering)providerMessage="";}
+            if(full){textureSnapshot=null;lastFullProgress=System.currentTimeMillis();checkedProvider=fullProviderAvailable=true;if(!providerRendering)providerMessage="";}
             if(!full)activeWorld = world;
             revision++;
         } catch (IOException ignored) { }
@@ -183,6 +203,17 @@ public final class MinimapServerOverview {
         } catch (IOException ignored) { }
     }
 
+    /** Only complete, revision-tagged images use the direct texture path; arrays stay immutable. */
+    static TextureSnapshot textureSnapshot(){return textureSnapshot;}
+    static final class TextureSnapshot {
+        final int minX,minZ,step,width,height;
+        final int[] colors;
+        final boolean opaque;
+        TextureSnapshot(int minX,int minZ,int step,int width,int height,int[] colors) {
+            this.minX=minX;this.minZ=minZ;this.step=step;this.width=width;this.height=height;this.colors=colors;
+            boolean filled=true;for(int color:colors)if((color>>>24)!=255){filled=false;break;}opaque=filled;
+        }
+    }
     public static String fullWorldIdentity(){return fullWorldKey;}
     static boolean awaitingPreparedWorld(){return fullProviderAvailable&&fullWorldKey==null;}
     public static long revision(){return revision;}

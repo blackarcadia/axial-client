@@ -5,6 +5,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
 import org.junit.jupiter.api.Test;
 import java.io.StringWriter;
+import java.io.StringReader;
+import com.google.gson.stream.JsonReader;
 import java.util.*;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +38,19 @@ class MinimapTerrainTest {
         var buffer=new StringWriter();try(var writer=new JsonWriter(buffer)){terrain.write(writer);}
         Map<String,Integer> restored=new Gson().fromJson(buffer.toString(),new TypeToken<Map<String,Integer>>(){}.getType());
         assertEquals(Map.of("-17,32",0xFF112233,"16,-1",0xFF654321),restored);
+    }
+    @Test void streamingLoadRetainsOldCoordinateFilesWithoutMaterialisingAStringMap() throws Exception {
+        String json="{\"-17,32\":-15584170,\"16,-1\":-10140895,\"bad\":9,\"4,5\":null,\"oops,1\":3}";
+        MinimapTerrain terrain;
+        try(var reader=new JsonReader(new StringReader(json))){terrain=MinimapTerrain.read(reader);}
+        assertEquals(0xFF123456,terrain.get(-17,32));assertEquals(0xFF654321,terrain.get(16,-1));assertEquals(0,terrain.get(4,5));
+    }
+    @Test void backgroundLoadOnlyFillsMissingPixelsAndPreservesNewlyObservedTerrain() {
+        var current=new MinimapTerrain();current.put(-17,32,0xFF112233);current.sampled(-17,32,50);
+        var saved=new MinimapTerrain();saved.put(-17,32,0xFF123456);saved.put(16,-1,0xFF654321);
+        current.mergeMissing(saved);
+        assertEquals(0xFF112233,current.get(-17,32));assertEquals(0xFF654321,current.reader().applyAsInt(16,-1));
+        assertFalse(current.shouldSample(-17,32,51));assertTrue(current.shouldSample(16,-1,51));
     }
     @Test void workerCanSaveWhileTheGameThreadDiscoversChunks() throws Exception {
         var terrain=new MinimapTerrain();

@@ -1,30 +1,29 @@
 package com.axial.cosmetics.client;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonWriter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** Discovered colours stay in primitive chunk arrays; streaming saves run on one worker. */
+/** Primitive terrain arrays; streaming loads and saves share one background worker. */
 public final class MinimapExploration {
-    private static final Gson GSON=new Gson();
     private static final Path PATH=FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-explored-map.json");
-    private static boolean writable=true;
-    private static final Data data=load();
+    private static volatile boolean writable=true,loaded;
+    private static final Data data=new Data();
     private static final AtomicLong revision=new AtomicLong();
     private static final ExecutorService WRITER=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"axial-map-save");t.setDaemon(true);return t;});
     private static volatile long savedRevision;
     private static long lastSave;
-    private static Future<?> pending;
+    private static Future<?> pending,loadTask;
     private static MinimapTerrain arrivingTerrain=new MinimapTerrain();
     private static String boundWorldIdentity;
 
@@ -33,6 +32,7 @@ public final class MinimapExploration {
     public static long revision(){return revision.get();}
     static void beginWorldChange(){arrivingTerrain=new MinimapTerrain();boundWorldIdentity=null;}
     static MinimapTerrain terrainFor(MinecraftClient client){
+        ensureLoaded();
         // Paper may have several worlds with the same Minecraft dimension key.
         // Wait for the plugin UUID instead of reusing another world's explored pixels.
         if(MinimapServerOverview.awaitingPreparedWorld())return arrivingTerrain;
@@ -52,19 +52,19 @@ public final class MinimapExploration {
     }
     public static void markDeath(MinecraftClient client) {
         if(client.player==null)return;
-        data.deaths.put(worldKey(client),new Death(client.player.getBlockX(),client.player.getBlockZ()));revision.incrementAndGet();
+        ensureLoaded();data.deaths.put(worldKey(client),new Death(client.player.getBlockX(),client.player.getBlockZ()));revision.incrementAndGet();
     }
     public static Death deathFor(MinecraftClient client){return data.deaths.get(worldKey(client));}
     private static String worldKey(MinecraftClient client){return WaypointConfig.worldId(client)+"|"+(client.world==null?"unknown":client.world.getRegistryKey().getValue());}
-    public static void saveIfDue(){if(System.currentTimeMillis()-lastSave>=10_000)flush();}
+    public static void saveIfDue(){if(loadTask!=null&&loaded&&System.currentTimeMillis()-lastSave>=60_000)flush();}
     public static void flush() {
-        if(!writable||savedRevision==revision.get()||WRITER.isShutdown()||pending!=null&&!pending.isDone())return;
+        if(!loaded||!writable||savedRevision==revision.get()||WRITER.isShutdown()||pending!=null&&!pending.isDone())return;
         lastSave=System.currentTimeMillis();pending=WRITER.submit(MinimapExploration::write);
     }
     /** Shutdown may wait for disk; regular ticks and disconnects never do. */
     public static void shutdown() {
         if(WRITER.isShutdown())return;
-        if(writable)WRITER.submit(MinimapExploration::write);
+        if(writable&&loadTask!=null)WRITER.submit(MinimapExploration::write);
         WRITER.shutdown();
         try{WRITER.awaitTermination(5,TimeUnit.SECONDS);}catch(InterruptedException ex){Thread.currentThread().interrupt();}
     }
@@ -93,26 +93,49 @@ public final class MinimapExploration {
             } finally {Files.deleteIfExists(temp);}
         } catch(IOException|UncheckedIOException ex){org.slf4j.LoggerFactory.getLogger(MinimapExploration.class).warn("Could not save explored map",ex);}
     }
+    /** No disk reads or legacy JSON object graph allocation on the game/render thread. */
+    private static void ensureLoaded() {
+        if(loadTask!=null)return;
+        loadTask=WRITER.submit(()->{
+            Data saved=load();
+            saved.terrain.forEach((key,terrain)->data.terrain.merge(key,terrain,(current,old)->{
+                if(!key.contains("|world:"))current.mergeMissing(old);
+                return current;
+            }));
+            saved.deaths.forEach(data.deaths::putIfAbsent);
+            revision.incrementAndGet();lastSave=System.currentTimeMillis();loaded=true;
+        });
+    }
     private static Data load() {
         Data result=new Data();
         if(!Files.exists(PATH))return result;
-        try(var reader=Files.newBufferedReader(PATH)) {
-            SavedData value=GSON.fromJson(reader,SavedData.class);
-            if(value!=null) {
-                if(value.terrain!=null)for(var world:value.terrain.entrySet()) {
-                    if(world.getValue()==null)continue;
-                    var terrain=new MinimapTerrain();
-                    for(var pixel:world.getValue().entrySet()) {
-                        String key=pixel.getKey();int comma=key.indexOf(',');
-                        if(comma<0||pixel.getValue()==null)continue;
-                        try{terrain.put(Integer.parseInt(key.substring(0,comma)),Integer.parseInt(key.substring(comma+1)),pixel.getValue());}
-                        catch(NumberFormatException ignored){ }
+        try(var reader=new JsonReader(Files.newBufferedReader(PATH))) {
+            reader.beginObject();
+            while(reader.hasNext()) {
+                String section=reader.nextName();
+                if(reader.peek()==JsonToken.NULL){reader.skipValue();continue;}
+                if(section.equals("terrain")) {
+                    reader.beginObject();
+                    while(reader.hasNext()) {
+                        String key=reader.nextName();
+                        if(reader.peek()==JsonToken.NULL){reader.skipValue();continue;}
+                        result.terrain.put(key,MinimapTerrain.read(reader));
                     }
-                    result.terrain.put(world.getKey(),terrain);
-                }
-                if(value.deaths!=null)value.deaths.forEach((key,death)->{if(death!=null)result.deaths.put(key,death);});
+                    reader.endObject();
+                } else if(section.equals("deaths")) {
+                    reader.beginObject();
+                    while(reader.hasNext()) {
+                        String key=reader.nextName();
+                        if(reader.peek()==JsonToken.NULL){reader.skipValue();continue;}
+                        int x=0,z=0;reader.beginObject();
+                        while(reader.hasNext()){String field=reader.nextName();if(field.equals("x"))x=reader.nextInt();else if(field.equals("z"))z=reader.nextInt();else reader.skipValue();}
+                        reader.endObject();result.deaths.put(key,new Death(x,z));
+                    }
+                    reader.endObject();
+                } else reader.skipValue();
             }
-        } catch(IOException|JsonParseException ex) {
+            reader.endObject();
+        } catch(IOException|JsonParseException|IllegalStateException|NumberFormatException ex) {
             try{Files.copy(PATH,PATH.resolveSibling(PATH.getFileName()+".backup-"+System.currentTimeMillis()));}catch(IOException backup){writable=false;}
             org.slf4j.LoggerFactory.getLogger(MinimapExploration.class).warn("Could not read explored map; preserved original data",ex);
         }
@@ -122,8 +145,5 @@ public final class MinimapExploration {
     private static final class Data {
         final Map<String,MinimapTerrain> terrain=new ConcurrentHashMap<>();
         final Map<String,Death> deaths=new ConcurrentHashMap<>();
-    }
-    private static final class SavedData {
-        Map<String,Map<String,Integer>> terrain=new HashMap<>();Map<String,Death> deaths=new HashMap<>();
     }
 }

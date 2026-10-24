@@ -241,6 +241,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     private void finishMap(Job job) {
         job.ready=false; // Keep the job registered until the durable snapshot is committed.
         var previous=maps.get(job.world);
+        if(!job.fullScan&&previous!=null&&previous.geometry().equals(job.geometry)&&Arrays.equals(previous.colors(),job.colors)) {jobs.remove(job.world);return;}
         long version=Math.max(System.currentTimeMillis(),previous==null?0:previous.renderedAt()+1);
         var map=new WorldMap(job.world,job.geometry,version,job.colors);
         worker.execute(()->{
@@ -265,6 +266,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     }
     @Override public void onPluginMessageReceived(String channel,Player player,byte[] data) {
         if(!MapProtocol.CHANNEL.equals(channel)||!MapProtocol.isRequest(data)||!player.hasPermission("axialworldmap.view"))return;
+        if(MapProtocol.pausesMap(data)){clearPlayer(player);subscribers.remove(player.getUniqueId());return;}
         long now=System.currentTimeMillis();if(now-requests.getOrDefault(player.getUniqueId(),0L)<2_000)return;
         requests.put(player.getUniqueId(),now);subscribers.add(player.getUniqueId());
         // A new client world has no previous stripes, even if this map is unchanged.
@@ -331,7 +333,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         clearPlayer(player);UUID expected=player.getWorld().getUID();
         getServer().getScheduler().runTaskLater(this,()->{
             if(!player.isOnline()||!player.getWorld().getUID().equals(expected)||!player.hasPermission("axialworldmap.view")
-                    ||!player.getListeningPluginChannels().contains(MapProtocol.CHANNEL))return;
+                    ||!subscribers.contains(player.getUniqueId())||!player.getListeningPluginChannels().contains(MapProtocol.CHANNEL))return;
             World world=player.getWorld();if(!eligible(world))return;
             UUID id=player.getUniqueId();subscribers.add(id);
             WorldMap map=maps.get(expected);

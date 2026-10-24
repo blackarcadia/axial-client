@@ -65,7 +65,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.WorldMapPayload.ID, (payload, context) -> {
             var client=context.client();var world=client.world;var connection=client.getNetworkHandler();
             client.execute(() -> {
-                if(client.world!=world||client.getNetworkHandler()!=connection)return;
+                if(client.world!=world||client.getNetworkHandler()!=connection||!MinimapRenderer.mapVisible(client))return;
                 MinimapRenderer.syncWorld(client);
                 MinimapServerOverview.receiveFullWorld(payload.data());
             });
@@ -75,7 +75,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(MinimapMapPayload.ID, (payload, context) -> {
             var client=context.client();var world=client.world;var connection=client.getNetworkHandler();
             client.execute(() -> {
-                if(client.world!=world||client.getNetworkHandler()!=connection)return;
+                if(client.world!=world||client.getNetworkHandler()!=connection||!MinimapRenderer.mapVisible(client))return;
                 MinimapRenderer.syncWorld(client);
                 MinimapServerOverview.receive(payload.data());
             });

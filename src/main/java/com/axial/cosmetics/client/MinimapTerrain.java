@@ -2,6 +2,8 @@ package com.axial.cosmetics.client;
 
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.stream.JsonWriter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.BiConsumer;
@@ -52,6 +54,25 @@ final class MinimapTerrain {
             if(chunk.colors[index]==color)return false;
             chunk.colors[index]=color;return true;
         }
+    }
+    /** Merge disk data without replacing columns already observed in the current session. */
+    void mergeMissing(MinimapTerrain saved) {
+        saved.forEachChunk((key,colors)->{
+            Chunk target=chunks.computeIfAbsent(key,ignored->new Chunk());
+            synchronized(target){for(int i=0;i<256;i++)if(target.colors[i]==0)target.colors[i]=colors[i];}
+        });
+    }
+    static MinimapTerrain read(JsonReader reader) throws IOException {
+        var terrain=new MinimapTerrain();reader.beginObject();
+        while(reader.hasNext()) {
+            String coordinate=reader.nextName();int comma=coordinate.indexOf(',');
+            if(comma<0||reader.peek()==JsonToken.NULL){reader.skipValue();continue;}
+            int x,z;
+            try{x=Integer.parseInt(coordinate.substring(0,comma));z=Integer.parseInt(coordinate.substring(comma+1));}
+            catch(NumberFormatException ex){reader.skipValue();continue;}
+            terrain.put(x,z,reader.nextInt());
+        }
+        reader.endObject();return terrain;
     }
     void write(JsonWriter writer) throws IOException {
         writer.beginObject();

@@ -8,9 +8,10 @@ final class MapProtocol {
     static final int MAX_PACKET=29_000;
     private MapProtocol(){ }
     static boolean isRequest(byte[] data) {
-        return data.length>=1&&data[0]==0&&(data.length==1||data.length==2&&data[1]==1);
+        return data.length>=1&&data[0]==0&&(data.length==1||data.length==2&&(data[1]==1||data[1]==2));
     }
-    static boolean requestsFullMap(byte[] data){return isRequest(data)&&data.length==2;}
+    static boolean requestsFullMap(byte[] data){return isRequest(data)&&data.length==2&&data[1]==1;}
+    static boolean pausesMap(byte[] data){return isRequest(data)&&data.length==2&&data[1]==2;}
     static byte[] status(String message,int done,int total) throws IOException {
         byte[] text=message.getBytes(StandardCharsets.UTF_8);
         if(text.length>255||done<0||total<done)throw new IllegalArgumentException("Invalid map status");

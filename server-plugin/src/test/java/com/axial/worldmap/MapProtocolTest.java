@@ -11,7 +11,9 @@ class MapProtocolTest {
         assertFalse(MapProtocol.requestsFullMap(new byte[]{0}));
         assertTrue(MapProtocol.isRequest(new byte[]{0,1}));
         assertTrue(MapProtocol.requestsFullMap(new byte[]{0,1}));
-        for(byte[] invalid:List.of(new byte[0],new byte[]{1},new byte[]{0,0},new byte[]{0,2},new byte[]{0,1,1})) {
+        assertTrue(MapProtocol.isRequest(new byte[]{0,2}));assertTrue(MapProtocol.pausesMap(new byte[]{0,2}));
+        assertFalse(MapProtocol.requestsFullMap(new byte[]{0,2}));assertFalse(MapProtocol.pausesMap(new byte[]{0,1}));
+        for(byte[] invalid:List.of(new byte[0],new byte[]{1},new byte[]{0,0},new byte[]{0,3},new byte[]{0,1,1})) {
             assertFalse(MapProtocol.isRequest(invalid));assertFalse(MapProtocol.requestsFullMap(invalid));
         }
     }
