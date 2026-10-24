@@ -105,6 +105,7 @@
     "PerformanceDroppedItemsMixin",
     "PerformanceLiquidsMixin",
     "PerformanceSodiumLiquidsMixin",
+    "IrisShadowRuntimeCompatibilityMixin",
     "PerformanceSpawnerMobsMixin",
     "PerformanceParticlesMixin",
     "PerformanceWeatherMixin",
