@@ -9,6 +9,7 @@ import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
@@ -88,6 +89,10 @@ public final class ClientSettingsScreen extends Screen {
                     EnchantGlintConfig.setColor(value);EnchantGlintConfig.save();
                 }),()->{}))),492);
         row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),492);
+        var wiki=QuickMenuLinks.get("wiki");
+        var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->ConfirmLinkScreen.open(this,wiki));
+        wikiButton.active=wiki!=null;
+        row(wikiButton,562);
         scroll=Math.clamp(scroll,0,layout.maxScroll());positionRows();
     }
 
@@ -121,7 +126,7 @@ public final class ClientSettingsScreen extends Screen {
                 label(c,textRenderer,"Performance and appearance",layout.controls.x(),layout.panel.y()+75,MUTED,.85f,layout.controls.width(),false);
             }
             c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
-            section(c,"GENERAL",0);section(c,"PERFORMANCE",112);section(c,"ENCHANT GLINT",438);
+            section(c,"GENERAL",0);section(c,"PERFORMANCE",112);section(c,"ENCHANT GLINT",438);section(c,"HELP & LINKS",544);
             frame(c,new Rect(layout.controls.x(),layout.controls.y()+456-scroll,layout.controls.width(),72),LINE,SURFACE);
             c.fill(layout.controls.x()+1,layout.controls.y()+492-scroll,layout.controls.right()-1,layout.controls.y()+493-scroll,DIVIDER);
             for(Row row:rows)if(row.widget().visible)row.widget().render(c,mx,(int)(my-offset),delta);

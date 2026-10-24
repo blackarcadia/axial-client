@@ -51,7 +51,6 @@ public final class QuickMenuScreen extends Screen {
         add("Mods","gear",3,()->client.setScreen(ModMenuCatalog.child(backend,this,"MAIN")),true);
         addLink("Store","store",4,QuickMenuLinks.get("store"));
         addLink("Forums","forums",5,QuickMenuLinks.get("forums"));
-        addLink("Wiki","book",6,QuickMenuLinks.get("wiki"));
     }
 
     private void addLink(String label,String icon,int index,URI uri) {

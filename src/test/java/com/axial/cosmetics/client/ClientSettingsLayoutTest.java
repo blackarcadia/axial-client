@@ -21,7 +21,7 @@ class ClientSettingsLayoutTest {
             assertTrue(l.controls.bottom()<l.reset.y());
             assertTrue(l.headerBottom<l.controls.y());
             // Each real control can be fully exposed by scrolling, even at the smallest supported height.
-            for(int[] row:new int[][]{{16,38},{58,38},{130,38},{172,36},{214,38},{256,38},{298,38},{340,38},{382,38},{456,36},{492,36}}) {
+            for(int[] row:new int[][]{{16,38},{58,38},{130,38},{172,36},{214,38},{256,38},{298,38},{340,38},{382,38},{456,36},{492,36},{562,36}}) {
                 int scroll=Math.clamp(row[0],0,l.maxScroll());
                 assertTrue(l.fullyVisible(new Rect(l.controls.x(),l.controls.y()+row[0]-scroll,l.controls.width(),row[1])));
             }

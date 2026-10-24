@@ -1,13 +1,13 @@
 package com.axial.cosmetics.client;
 
 final class QuickMenuLayout {
-    static final int ACTION_COUNT=7;
+    static final int ACTION_COUNT=6;
     final ModMenuLayout.Rect bar,logo;
     final int tileWidth,hintY;
     final boolean labels;
 
     QuickMenuLayout(int width,int height) {
-        int barWidth=Math.min(628,width-24);
+        int barWidth=Math.min(540,width-24);
         tileWidth=(barWidth-12)/ACTION_COUNT;
         barWidth=tileWidth*ACTION_COUNT+12;
         int barHeight=height<220?48:62;
