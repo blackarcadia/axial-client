@@ -130,6 +130,7 @@ public class AxialCosmetics implements ClientModInitializer {
         ThirdPersonNameTagsConfig.load();
         ItemScalerConfig.load();
         com.axial.cosmetics.client.PotionsHudConfig.load();
+        com.axial.cosmetics.client.ScoreboardHudConfig.load();
         InformationHudExtrasConfig.load();
         CrosshairConfigManager.load();
         ChunkBordersConfig.load();
