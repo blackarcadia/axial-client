@@ -22,7 +22,7 @@ public final class PetCooldownOverlay {
     private PetCooldownOverlay(){}
     public static void reset(){ITEMS.clear();CLOCK.reset();}
     public static void render(DrawContext context,ItemStack stack,int x,int y){
-        if(!stack.isOf(Items.PLAYER_HEAD))return;
+        if(!CooldownsConfig.petsVisible()||!stack.isOf(Items.PLAYER_HEAD))return;
         var client=MinecraftClient.getInstance();if(client.player==null)return;
         var data=stack.get(DataComponentTypes.CUSTOM_DATA);if(data==null)return;
         CachedPet cached;

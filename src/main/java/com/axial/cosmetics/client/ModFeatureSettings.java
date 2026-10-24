@@ -19,6 +19,10 @@ final class ModFeatureSettings {
         if(feature.equals("MINIMAP"))return new MinimapSettingsScreen(parent);
         if(feature.equals("WAYPOINTS"))return new WaypointSettingsScreen(parent);
         Model model=switch(feature) {
+            case "COOLDOWNS" -> model("COOLDOWNS",CooldownsConfig::enabled,CooldownsConfig::toggle,
+                    List.of(section("VISIBLE COOLDOWNS"),
+                            new Toggle("PET COOLDOWNS",CooldownsConfig::pets,CooldownsConfig::setPets),
+                            new Toggle("COMBAT TAG",CooldownsConfig::combat,CooldownsConfig::setCombat)),CooldownsConfig::reset);
             case "CROSSHAIR" -> crosshair();
             case "ARMOR HUD" -> armor();
             case "HUD" -> information();

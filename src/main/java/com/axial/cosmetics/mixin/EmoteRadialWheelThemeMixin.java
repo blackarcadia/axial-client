@@ -1,10 +1,10 @@
 package com.axial.cosmetics.mixin;
 
 import io.github.kosmx.emotes.PlatformTools;
+import com.axial.cosmetics.client.EmoteMenuTheme;
 import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
 import io.github.kosmx.emotes.arch.screen.widget.IChooseElement;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.StyleSpriteSource;
@@ -36,9 +36,9 @@ public abstract class EmoteRadialWheelThemeMixin {
         int centerY = widget.getY() + widget.getHeight() / 2;
         int radius = Math.round(size * 0.47f);
         int diameter = radius * 2;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, WHEEL_TEXTURE,
+        context.drawTexture(EmoteMenuTheme.WHEEL, WHEEL_TEXTURE,
                 centerX - radius, centerY - radius, 0.0f, 0.0f, diameter, diameter,
-                WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE);
+                WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, EmoteMenuTheme.BORDER);
 
         drawSlotLabels(context, MinecraftClient.getInstance(), centerX, centerY, radius);
         int hoveredSegment = segmentAt(centerX, centerY, Math.round(radius * 0.34f), radius, mouseX, mouseY);
@@ -68,9 +68,9 @@ public abstract class EmoteRadialWheelThemeMixin {
         context.getMatrices().rotateAbout(rotation, centerX, centerY);
         context.getMatrices().scaleAround(scale, centerX, centerY);
         int diameter = radius * 2;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, HOVER_TEXTURE,
+        context.drawTexture(EmoteMenuTheme.WHEEL, HOVER_TEXTURE,
                 centerX - radius, centerY - radius, 0.0f, 0.0f, diameter, diameter,
-                WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE);
+                WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, WHEEL_TEXTURE_SIZE, EmoteMenuTheme.BRAND);
         context.getMatrices().popMatrix();
     }
 
@@ -89,9 +89,9 @@ public abstract class EmoteRadialWheelThemeMixin {
             double angle = Math.PI / 2 - Math.PI * 2 * index / SEGMENT_COUNT;
             int x = centerX + (int) Math.round(Math.cos(angle) * labelRadius);
             int y = centerY + (int) Math.round(Math.sin(angle) * labelRadius);
-            context.fill(x - 9, y - 9, x + 10, y + 10, 0xEF171725);
-            context.drawStrokedRectangle(x - 9, y - 9, 19, 19, 0xFF8E5EFF);
-            context.drawCenteredTextWithShadow(client.textRenderer, uiText(Integer.toString(index + 1)), x, y - 4, 0xFFF2EEFF);
+            context.fill(x - 9, y - 9, x + 10, y + 10, EmoteMenuTheme.FIELD);
+            context.drawStrokedRectangle(x - 9, y - 9, 19, 19, EmoteMenuTheme.LINE);
+            context.drawCenteredTextWithShadow(client.textRenderer, uiText(Integer.toString(index + 1)), x, y - 4, EmoteMenuTheme.INK);
         }
     }
 
@@ -104,9 +104,9 @@ public abstract class EmoteRadialWheelThemeMixin {
         int width = Math.max(112, client.textRenderer.getWidth(name) + 28);
         int x = centerX - width / 2;
         int y = centerY + radius + 36 + Math.round((1.0f - progress) * 8.0f);
-        context.fill(x - 2, y - 2, x + width + 2, y + 22, 0xFF38DDF5);
-        context.fill(x, y, x + width, y + 20, 0xF0101420);
-        context.drawCenteredTextWithShadow(client.textRenderer, uiText(name), centerX, y + 6, 0xFFF6F4FF);
+        context.fill(x - 2, y - 2, x + width + 2, y + 22, EmoteMenuTheme.BRAND);
+        context.fill(x, y, x + width, y + 20, EmoteMenuTheme.PANEL);
+        context.drawCenteredTextWithShadow(client.textRenderer, uiText(name), centerX, y + 6, EmoteMenuTheme.INK);
     }
 
     private static Text uiText(String value) {

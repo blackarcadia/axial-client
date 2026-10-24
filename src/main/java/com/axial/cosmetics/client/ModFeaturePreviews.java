@@ -15,6 +15,10 @@ final class ModFeaturePreviews {
     private ModFeaturePreviews() {}
     static void draw(String feature,DrawContext c,Rect area) {
         switch(feature) {
+            case "COOLDOWNS" -> {
+                if(CooldownsConfig.combat())CombatCooldownHud.example(c,area.x()+(area.width()-CombatCooldownHud.SIZE)/2,area.y()+Math.max(0,(area.height()-CombatCooldownHud.SIZE)/2));
+                else line(c,area,"COMBAT TIMER HIDDEN",area.y()+24,MUTED);
+            }
             case "CROSSHAIR" -> CrosshairRenderer.render(c,area.x()+area.width()/2,area.y()+area.height()/2,CrosshairConfigManager.get(),1);
             case "ARMOR HUD" -> armor(c,area);
             case "MINIMAP" -> MinimapRenderer.renderSettingsPreview(c,MinecraftClient.getInstance(),area.x(),area.y(),area.width(),area.height());

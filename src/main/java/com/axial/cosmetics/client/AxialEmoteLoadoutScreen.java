@@ -34,6 +34,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         // responsive arrangement and hides the preview. These panes are now
         // distinct, so keep the native preview renderer enabled.
         preview.visible = true;
+        searchBox.setEditableColor(EmoteMenuTheme.INK);
         searchBox.setDimensions(layout.searchWidth, 20);
         searchBox.setPosition(layout.searchX, layout.searchY);
         fastChoose.setSize(layout.wheelSize);
@@ -45,14 +46,14 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
         super.renderBackground(context, mouseX, mouseY, delta);
         Layout layout = new Layout(width, height);
-        drawPanel(context, layout.listX, layout.contentY, layout.listWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
-        drawPanel(context, layout.previewX, layout.contentY, layout.previewWidth, layout.contentHeight, 0xE8101422, 0xFF46DDF4);
-        drawPanel(context, layout.wheelPanelX, layout.contentY, layout.wheelPanelWidth, layout.contentHeight, 0xE8141622, 0xFFB74DFF);
-        context.fill(layout.listX, layout.contentY - 14, layout.listX + Math.min(172, layout.listWidth), layout.contentY - 12, 0xFFCF4BFF);
-        context.fill(layout.wheelPanelX + 1, layout.contentY + 1, layout.wheelPanelX + layout.wheelPanelWidth - 1, layout.contentY + 44, 0x5A161427);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("EMOTE LOADOUT"), layout.listX, layout.contentY - 32, 0xFFF4F0FF);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("PLAYER PREVIEW"), layout.previewX + 10, layout.contentY + 10, 0xFFF4F0FF);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("ASSIGN TO WHEEL"), layout.wheelPanelX + 10, layout.contentY + 10, 0xFFF4F0FF);
+        drawPanel(context, layout.listX, layout.contentY, layout.listWidth, layout.contentHeight, EmoteMenuTheme.PANEL, EmoteMenuTheme.BORDER);
+        drawPanel(context, layout.previewX, layout.contentY, layout.previewWidth, layout.contentHeight, EmoteMenuTheme.PANEL, EmoteMenuTheme.BORDER);
+        drawPanel(context, layout.wheelPanelX, layout.contentY, layout.wheelPanelWidth, layout.contentHeight, EmoteMenuTheme.PANEL, EmoteMenuTheme.BORDER);
+        context.fill(layout.listX, layout.contentY - 14, layout.listX + Math.min(172, layout.listWidth), layout.contentY - 12, EmoteMenuTheme.BRAND);
+        context.fill(layout.wheelPanelX + 1, layout.contentY + 1, layout.wheelPanelX + layout.wheelPanelWidth - 1, layout.contentY + 44, EmoteMenuTheme.FIELD);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("EMOTE LOADOUT"), layout.listX, layout.contentY - 32, EmoteMenuTheme.INK);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("PLAYER PREVIEW"), layout.previewX + 10, layout.contentY + 10, EmoteMenuTheme.INK);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("ASSIGN TO WHEEL"), layout.wheelPanelX + 10, layout.contentY + 10, EmoteMenuTheme.INK);
     }
 
     private void arrangeNativeControls(Layout layout) {
@@ -83,7 +84,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
 
     private static void drawPanel(DrawContext context, int x, int y, int width, int height, int fill, int border) {
         context.fill(x, y, x + width, y + height, fill);
-        context.fill(x + 1, y + 1, x + width - 1, y + 2, 0x25FFFFFF);
+        context.fill(x + 1, y + 1, x + width - 1, y + 2, EmoteMenuTheme.LINE);
         context.drawStrokedRectangle(x, y, width, height, border);
     }
 

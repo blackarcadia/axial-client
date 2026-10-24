@@ -1,6 +1,7 @@
 package com.axial.cosmetics.mixin;
 
 import io.github.kosmx.emotes.PlatformTools;
+import com.axial.cosmetics.client.EmoteMenuTheme;
 import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
 import io.github.kosmx.emotes.arch.screen.widget.IChooseElement;
 import net.minecraft.client.gui.DrawContext;
@@ -55,9 +56,9 @@ public abstract class EmoteRadialElementThemeMixin {
         int width = tile.getWidth();
         int height = tile.getHeight();
 
-        context.fill(x, y, x + width, y + height, 0xD8101018);
-        context.fill(x + 1, y + 1, x + width - 1, y + 2, 0x44FFFFFF);
-        context.drawStrokedRectangle(x, y, width, height, 0xD08F5DFF);
+        context.fill(x, y, x + width, y + height, EmoteMenuTheme.FIELD);
+        context.fill(x + 1, y + 1, x + width - 1, y + 2, EmoteMenuTheme.LINE);
+        context.drawStrokedRectangle(x, y, width, height, EmoteMenuTheme.LINE);
         ci.cancel();
     }
 
@@ -73,8 +74,8 @@ public abstract class EmoteRadialElementThemeMixin {
         int width = tile.getWidth();
         int height = tile.getHeight();
 
-        context.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0x6A7440A8);
-        context.drawStrokedRectangle(x, y, width, height, 0xFFB06AF3);
+        context.fill(x + 1, y + 1, x + width - 1, y + height - 1, EmoteMenuTheme.HOVER);
+        context.drawStrokedRectangle(x, y, width, height, EmoteMenuTheme.BRAND);
         ci.cancel();
     }
 

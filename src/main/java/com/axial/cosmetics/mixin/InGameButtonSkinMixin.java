@@ -6,6 +6,8 @@ import com.axial.cosmetics.client.ModMenuScreen;
 import com.axial.cosmetics.client.QuickMenuScreen;
 import com.axial.cosmetics.client.FeatureSettingsScreen;
 import com.axial.cosmetics.client.EnchantmentsScreen;
+import com.axial.cosmetics.client.EmoteMenuTheme;
+import io.github.kosmx.emotes.arch.screen.EmoteMenu;
 import com.axial.cosmetics.client.ClientSettingsScreen;
 import com.axial.cosmetics.client.MinimapFullScreen;
 import com.axial.cosmetics.client.MinimapSettingsScreen;
@@ -42,6 +44,10 @@ public abstract class InGameButtonSkinMixin {
     private void axial_cosmetics$renderInGameButton(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         Screen currentScreen = client.currentScreen;
+        if(currentScreen instanceof EmoteMenu && (Object)this instanceof ClickableWidget emoteButton){
+            EmoteMenuTheme.button(context,emoteButton,client.textRenderer);ci.cancel();return;
+        }
+
         // Container controls include icon-only recipe buttons and creative page
         // arrows. Let Minecraft render their own sprites and hover states.
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
@@ -74,12 +80,12 @@ public abstract class InGameButtonSkinMixin {
             int x = button.getX();
             int y = button.getY();
             boolean hovered = button.isHovered() || button.isFocused();
-            context.fill(x, y, x + compactWidth, y + button.getHeight(), hovered ? 0xFF20202D : 0xFF11111B);
-            context.fill(x + 1, y + 1, x + compactWidth - 1, y + 2, hovered ? 0x44FFFFFF : 0x20FFFFFF);
-            context.drawStrokedRectangle(x, y, compactWidth, button.getHeight(), hovered ? 0xFFFFFFFF : 0xFFE7D9FF);
+            context.fill(x, y, x + compactWidth, y + button.getHeight(), hovered ? EmoteMenuTheme.HOVER : EmoteMenuTheme.FIELD);
+            context.fill(x + 1, y + 1, x + compactWidth - 1, y + 2, hovered ? EmoteMenuTheme.HOVER_LINE : EmoteMenuTheme.LINE);
+            context.drawStrokedRectangle(x, y, compactWidth, button.getHeight(), hovered ? EmoteMenuTheme.HOVER_LINE : EmoteMenuTheme.LINE);
             Text text = Text.literal(button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
             context.drawCenteredTextWithShadow(client.textRenderer, text, x + compactWidth / 2,
-                    y + (button.getHeight() - client.textRenderer.fontHeight) / 2, 0xFFF7F7FF);
+                    y + (button.getHeight() - client.textRenderer.fontHeight) / 2, EmoteMenuTheme.INK);
             ci.cancel();
             return;
         }
