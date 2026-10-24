@@ -51,6 +51,7 @@ public final class QuickMenuScreen extends Screen {
         add("Mods","gear",3,()->client.setScreen(ModMenuCatalog.child(backend,this,"MAIN")),true);
         addLink("Store","store",4,QuickMenuLinks.get("store"));
         addLink("Forums","forums",5,QuickMenuLinks.get("forums"));
+        addLink("Wiki","book",6,QuickMenuLinks.get("wiki"));
     }
 
     private void addLink(String label,String icon,int index,URI uri) {
@@ -102,7 +103,7 @@ public final class QuickMenuScreen extends Screen {
             var bar=layout.bar;
             rounded(context,bar.x(),bar.y()+3,bar.width(),bar.height(),0x44000000);
             frame(context,bar,0xFF51575F,0xD9171B20);
-            for(int i=1;i<6;i++) {
+            for(int i=1;i<QuickMenuLayout.ACTION_COUNT;i++) {
                 int x=bar.x()+6+i*layout.tileWidth;
                 context.fill(x,bar.y()+12,x+1,bar.bottom()-12,tint(0xFF3D444D));
             }
