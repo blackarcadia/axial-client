@@ -19,7 +19,7 @@ import java.util.*;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 
 /** A server-backed guide using the same shell and navigation as feature settings. */
-final class EnchantmentsScreen extends NavigationScreen {
+public final class EnchantmentsScreen extends NavigationScreen {
     private FeatureSettingsLayout layout;
     private Rect searchBox,list;
     private TextFieldWidget search;
