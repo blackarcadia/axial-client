@@ -39,6 +39,7 @@ public class MinecraftLauncher {
     private static final String SCROLLABLE_TOOLTIPS_FILE = "scrollable-tooltips-1.4.2+1.21.11-fabric.jar";
     private static final String MOD_MENU_URL = "https://cdn.modrinth.com/data/mOgUt4GM/versions/fP9olSIC/modmenu-17.0.0-alpha.1.jar";
     private static final String MOD_MENU_FILE = "modmenu-17.0.0-alpha.1.jar";
+    private static final String IRIS_FILE = "iris-fabric-1.10.8+mc1.21.11.jar";
     private static final String SODIUM_FILE = "sodium-fabric-0.8.13+mc1.21.11.jar";
     private static final String GECKOLIB_FILE = "geckolib-fabric-1.21.11-5.4.5.jar";
     private static final String AXIAL_COSMETICS_FILE = "axial-cosmetics.jar";
@@ -145,6 +146,7 @@ public class MinecraftLauncher {
         installZoomify(layout);
         installScrollableTooltips(layout);
         installSodium(layout);
+        installIris(layout);
         installLithium(layout);
         installFerriteCore(layout);
         installImmediatelyFast(layout);
@@ -719,6 +721,10 @@ public class MinecraftLauncher {
             Files.copy(in, target);
             logger.info("Installed GeckoLib mod: " + GECKOLIB_FILE);
         }
+    }
+
+    private void installIris(FileLayout layout) throws IOException {
+        installBundledMod(layout, IRIS_FILE, "iris-fabric-");
     }
 
     private void installSodium(FileLayout layout) throws IOException {
