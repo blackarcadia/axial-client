@@ -54,6 +54,8 @@ Players require `axialworldmap.view`, granted by default, to receive terrain.
 
 No PrisonsCore modifications are required. This plugin uses the separate `axial_cosmetics:world_map` channel; PrisonsCore's `axial_cosmetics:minimap_map` channel remains available for zones and points of interest. AxialClient prioritises the full-world terrain overview, so a legacy loaded-chunks snapshot cannot replace it.
 
+PrisonsCore's updated overlay sender also includes armour-region boundaries from its existing Armour Zone service: Chain `#555555`, Diamond `#80D8FF`, Gold `#FFD54F`, Iron `#FFFFFF`. Use the matching PrisonsCore build to supply those regions. The updated client draws their outlines on the corner minimap as well as the fullscreen map.
+
 This does not disable or reconfigure PrisonsCore's own overview service.
 
 ## Validation

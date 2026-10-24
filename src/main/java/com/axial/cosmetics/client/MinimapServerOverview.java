@@ -269,8 +269,14 @@ public final class MinimapServerOverview {
                 if(x2>x1&&z2>z1){cZone(context,x1,z1,x2,z2,zone.color);NavigationScreen.line(context,MinecraftClient.getInstance().textRenderer,zone.name,x1+4,z1+4,ModMenuUi.INK,.75f,x2-x1-8,false);}
                 continue;
             }
-            float x = left + size / 2.0f + (float) (((zone.minX + zone.maxX) / 2.0 - centerX) * pixelsPerBlock);
-            float z = top + size / 2.0f + (float) (((zone.minZ + zone.maxZ) / 2.0 - centerZ) * pixelsPerBlock);
+            MinimapZoneOutline.draw(left,top,size,circular,
+                    left+size/2.0+(zone.minX-centerX)*pixelsPerBlock,
+                    top+size/2.0+(zone.minZ-centerZ)*pixelsPerBlock,
+                    left+size/2.0+((double)zone.maxX+1-centerX)*pixelsPerBlock,
+                    top+size/2.0+((double)zone.maxZ+1-centerZ)*pixelsPerBlock,
+                    (x1,y1,x2,y2)->context.fill(x1,y1,x2,y2,zone.color|0xFF000000));
+            float x = left + size / 2.0f + (float) ((((double)zone.minX + zone.maxX) / 2.0 - centerX) * pixelsPerBlock);
+            float z = top + size / 2.0f + (float) ((((double)zone.minZ + zone.maxZ) / 2.0 - centerZ) * pixelsPerBlock);
             if (!inside(left, top, size, x, z, circular)) continue;
             drawPlus(context, Math.round(x), Math.round(z), zone.color | 0xFF000000);
         }
