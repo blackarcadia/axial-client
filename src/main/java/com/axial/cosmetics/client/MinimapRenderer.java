@@ -106,6 +106,8 @@ public final class MinimapRenderer {
         overlays(c,client,view,left,top,size,circle,false);
         c.disableScissor();
         label(c,client.textRenderer,"N",left+size/2-3,top+4,BRAND,.85f,12,true);
+        if(!client.mouse.isCursorLocked())renderZoneTooltip(c,client,view,left,top,size,circle,
+                (int)client.mouse.getScaledX(client.getWindow()),(int)client.mouse.getScaledY(client.getWindow()));
         if(MinimapConfig.showCoordinates()) {
             rounded(c,left-3,top+size+5,size+6,16,PANEL);
             String value=client.player.getBlockX()+"  /  "+client.player.getBlockY()+"  /  "+client.player.getBlockZ();
@@ -127,6 +129,12 @@ public final class MinimapRenderer {
         overlays(c,client,view,left,top,size,false,true);
         c.disableScissor();
     }
+    static void renderZoneTooltip(DrawContext context,MinecraftClient client,MapViewport view,int left,int top,int size,boolean circle,int mouseX,int mouseY) {
+        if(!inside(mouseX,mouseY,left,top,size,circle,0))return;
+        var names=MinimapServerOverview.zoneNamesAt(view.worldX(mouseX,left,size),view.worldZ(mouseY,top,size));
+        if(!names.isEmpty())context.drawTooltip(client.textRenderer,names.stream().<net.minecraft.text.Text>map(net.minecraft.text.Text::literal).toList(),mouseX,mouseY);
+    }
+
     private static void update(MinecraftClient client) {
         syncWorld(client);
     }

@@ -38,6 +38,33 @@ class ArmorZoneOverlayTest {
         MinimapServerOverview.receive(terrain("different-world"));assertNull(MinimapServerOverview.armorForActiveWorld());
         MinimapServerOverview.receive(terrain("prisons"));assertNotNull(MinimapServerOverview.armorForActiveWorld());
     }
+    private byte[] safezones(String... names) throws IOException {
+        var bytes=new ByteArrayOutputStream();try(var out=new DataOutputStream(bytes)) {
+            out.writeByte(2);out.writeUTF("prisons");out.writeShort(names.length);
+            for(String name:names){out.writeUTF(name);out.writeInt(1990);out.writeInt(1990);out.writeInt(2010);out.writeInt(2010);out.writeInt(0xFF37C9FF);}
+            out.writeShort(0);
+        }return bytes.toByteArray();
+    }
+    @Test void hoverReportsOverlappingSafezonesAndTheAccurateArmourTierWithoutDuplicates() throws Exception {
+        MinimapServerOverview.receive(terrain("prisons"));MinimapServerOverview.receive(fixture());
+        MinimapServerOverview.receive(safezones("Spawn Safezone","Gold Zone"));
+        assertEquals(List.of("Spawn Safezone","Gold Zone"),MinimapServerOverview.zoneNamesAt(2000,2000));
+        assertEquals(List.of("Spawn Safezone","Gold Zone"),MinimapServerOverview.zoneNamesAt(2010.999,2010.999));
+        assertEquals(List.of("Gold Zone"),MinimapServerOverview.zoneNamesAt(2011,2000));
+        assertEquals(List.of("Diamond Zone"),MinimapServerOverview.zoneNamesAt(-2000,-2000));
+        assertTrue(MinimapServerOverview.zoneNamesAt(4000,4000).isEmpty());
+        assertTrue(MinimapServerOverview.zoneNamesAt(Double.NaN,0).isEmpty());
+    }
+    @Test void hoverUsesTheSameWorldProjectionWhenPanningAndZooming() throws Exception {
+        MinimapServerOverview.receive(terrain("prisons"));MinimapServerOverview.receive(fixture());
+        var view=new MapViewport(0,0,7500/256.0);int left=300,top=50,size=600;
+        double mouseX=view.pixelX(2000,left,size),mouseY=view.pixelZ(2000,top,size);
+        assertEquals(List.of("Gold Zone"),MinimapServerOverview.zoneNamesAt(view.worldX(mouseX,left,size),view.worldZ(mouseY,top,size)));
+        view.pan(-50,20,size);view.zoom(2,mouseX,mouseY,left,top,size);
+        mouseX=view.pixelX(-86,left,size);mouseY=view.pixelZ(-81,top,size);
+        assertEquals(List.of("Chain Zone"),MinimapServerOverview.zoneNamesAt(view.worldX(mouseX,left,size),view.worldZ(mouseY,top,size)));
+        MinimapServerOverview.beginWorldChange();assertTrue(MinimapServerOverview.zoneNamesAt(-86,-81).isEmpty());
+    }
     @Test void truncatedOversizedAndNonfiniteContoursAreRejected() throws Exception {
         assertThrows(IOException.class,()->ArmorZoneOverlay.read(new byte[30_001]));
         assertThrows(IOException.class,()->ArmorZoneOverlay.read(new byte[]{3,0,50,1}));

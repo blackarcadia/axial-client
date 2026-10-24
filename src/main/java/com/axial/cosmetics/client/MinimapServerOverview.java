@@ -295,6 +295,19 @@ public final class MinimapServerOverview {
         }
     }
 
+    /** Include overlapping safe/custom zones and the underlying armour tier. */
+    static List<String> zoneNamesAt(double x,double z) {
+        if(activeWorld==null||!Double.isFinite(x)||!Double.isFinite(z))return List.of();
+        var names=new java.util.LinkedHashSet<String>();
+        var overlay=OVERLAYS_BY_WORLD.get(activeWorld);
+        if(overlay!=null)for(var zone:overlay.zones) {
+            if(x>=zone.minX&&x<(double)zone.maxX+1&&z>=zone.minZ&&z<(double)zone.maxZ+1)names.add(zone.name);
+        }
+        var armor=armorForActiveWorld();
+        if(armor!=null){String tier=armor.zoneAt(x,z);if(tier!=null)names.add(tier);}
+        return List.copyOf(names);
+    }
+
     static ArmorZoneOverlay.MapData armorForActiveWorld(){return activeWorld==null?null:ARMOR_BY_WORLD.get(activeWorld);}
     private static void renderArmorOutlines(DrawContext context,int left,int top,int size,double centerX,double centerZ,float scale,boolean circular,boolean full) {
         var overlay=armorForActiveWorld();if(overlay==null)return;

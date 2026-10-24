@@ -110,6 +110,8 @@ public class MinimapFullScreen extends NavigationScreen {
             rounded(c,layout.map.x()+5,layout.map.y()+19,layout.map.width()-10,15,PANEL);
             line(c,loading,layout.map.x()+9,layout.map.y()+24,MUTED,.7f,layout.map.width()-18,false);
         }
+        if(client.world!=null&&client.player!=null)MinimapRenderer.renderZoneTooltip(c,client,view,
+                layout.map.x(),layout.map.y(),layout.map.width(),false,mx,my);
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
         if(layout.list.contains(click.x(),click.y())&&click.button()==0)for(int i=0;i<entries.size();i++) {
