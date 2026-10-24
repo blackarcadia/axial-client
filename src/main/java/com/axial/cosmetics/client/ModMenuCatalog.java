@@ -90,6 +90,9 @@ final class ModMenuCatalog {
         entries.add(new ModMenuEntry("Cooldowns", "Pet and combat timers", ModMenuEntry.Category.HUD,
                 "compass", CooldownsConfig::enabled, CooldownsConfig::toggle,
                 () -> ModFeatureSettings.open("COOLDOWNS",MinecraftClient.getInstance().currentScreen,backend)));
+        entries.add(new ModMenuEntry("Gangs", "Server gangs and rankings",ModMenuEntry.Category.WORLD,"account",null,null,()->{
+            var client=MinecraftClient.getInstance();client.setScreen(new GangsScreen(client.currentScreen));
+        }));
         entries.add(new ModMenuEntry("Enchantments", "Server enchantment guide", ModMenuEntry.Category.MINING,
                 "book", null, null, () -> {
                     var client=MinecraftClient.getInstance();client.setScreen(new EnchantmentsScreen(client.currentScreen));

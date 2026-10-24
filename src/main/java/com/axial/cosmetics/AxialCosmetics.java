@@ -61,6 +61,13 @@ public class AxialCosmetics implements ClientModInitializer {
     public void onInitializeClient() {
         BundledEmoteSynchronizer.synchronize();
         com.axial.cosmetics.client.EmoteMenuTheme.initialize();
+        PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.GangDirectoryPayload.ID,(payload,context)->{
+            var client=context.client();var connection=client.getNetworkHandler();
+            client.execute(()->{if(client.getNetworkHandler()==connection&&client.currentScreen instanceof com.axial.cosmetics.client.GangsScreen)com.axial.cosmetics.client.GangDirectoryGuide.receive(payload.data());});
+        });
+
         com.axial.cosmetics.client.CooldownsConfig.load();
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.CombatCooldownPayload.ID,com.axial.cosmetics.client.CombatCooldownPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.CombatCooldownPayload.ID,(payload,context)->{
@@ -75,10 +82,10 @@ public class AxialCosmetics implements ClientModInitializer {
             client.execute(() -> {if(client.getNetworkHandler()==connection)com.axial.cosmetics.client.EnchantmentGuide.receive(payload.data());});
         });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->{
-            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();com.axial.cosmetics.client.CombatCooldownHud.reset();
+            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.GangDirectoryGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();com.axial.cosmetics.client.CombatCooldownHud.reset();
         });
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->{
-            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();com.axial.cosmetics.client.CombatCooldownHud.reset();
+            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.GangDirectoryGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();com.axial.cosmetics.client.CombatCooldownHud.reset();
         });
 
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
@@ -180,6 +187,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             com.axial.cosmetics.client.EnchantmentGuide.tick(client);
+            com.axial.cosmetics.client.GangDirectoryGuide.tick(client);
             MinimapRenderer.tick(client);
             applyEmotecraftDefaults();
             MenuMusicController.tick(client);

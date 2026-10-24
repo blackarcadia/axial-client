@@ -13,6 +13,7 @@ record ModMenuEntry(String title, String description, Category category, String 
         Category(String label, String icon) { this.label = label; this.icon = icon; }
     }
 
+    boolean opensMenu(){return title.equals("Enchantments")||title.equals("Gangs");}
     boolean isEnabled() { return enabled != null && enabled.getAsBoolean(); }
     boolean matches(Category filter, String query, boolean enabledOnly) {
         return (filter == Category.ALL || category == filter)

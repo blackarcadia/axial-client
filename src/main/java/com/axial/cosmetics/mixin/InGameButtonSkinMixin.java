@@ -6,6 +6,7 @@ import com.axial.cosmetics.client.ModMenuScreen;
 import com.axial.cosmetics.client.QuickMenuScreen;
 import com.axial.cosmetics.client.FeatureSettingsScreen;
 import com.axial.cosmetics.client.EnchantmentsScreen;
+import com.axial.cosmetics.client.GangsScreen;
 import com.axial.cosmetics.client.EmoteMenuTheme;
 import io.github.kosmx.emotes.arch.screen.EmoteMenu;
 import com.axial.cosmetics.client.ClientSettingsScreen;
@@ -52,7 +53,7 @@ public abstract class InGameButtonSkinMixin {
         // arrows. Let Minecraft render their own sprites and hover states.
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
                 || currentScreen instanceof MinimapFullScreen || currentScreen instanceof MinimapSettingsScreen || currentScreen instanceof CreateWaypointScreen
-                || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof ClientSettingsScreen
+                || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof GangsScreen || currentScreen instanceof ClientSettingsScreen
                 || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
                 || currentScreen instanceof AccountsScreen accounts && accounts.renderedTitleScreen() != null) {
             return;

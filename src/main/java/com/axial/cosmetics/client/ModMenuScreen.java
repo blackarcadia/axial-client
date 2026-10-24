@@ -110,11 +110,11 @@ public final class ModMenuScreen extends Screen {
                 cardButtons.add(addSelectableChild(button));
             }
             if(entry.configure()!=null) {
-                var button = new MenuButton((entry.title().equals("Enchantments")?"Open ":"Configure ")+entry.title(),entry.title().equals("Enchantments")?card:layout.settings(card),entry.title().equals("Enchantments")?"open":"gear",()->run(()->{
+                var button = new MenuButton((entry.opensMenu()?"Open ":"Configure ")+entry.title(),entry.opensMenu()?card:layout.settings(card),entry.opensMenu()?"open":"gear",()->run(()->{
                     if(!ModFeatureSettings.open(entry.title().toUpperCase(java.util.Locale.ROOT),this,backend))entry.configure().run();
                 }),false,entry,true);
-                button.visible = entry.title().equals("Enchantments") ? card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom() : button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
-                button.setTooltip(Tooltip.of(text((entry.title().equals("Enchantments")?"Open ":"Configure ")+entry.title())));
+                button.visible = entry.opensMenu() ? card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom() : button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
+                button.setTooltip(Tooltip.of(text((entry.opensMenu()?"Open ":"Configure ")+entry.title())));
                 cardButtons.add(addSelectableChild(button));
             }
         }
@@ -188,7 +188,7 @@ public final class ModMenuScreen extends Screen {
                     context.drawText(textRenderer,lines.get(line),titleX,card.y()+22+line*9,MUTED,false);
                 }
             }
-            if(entry.toggle()==null) label(context,textRenderer,entry.title().equals("Enchantments")?"Browse":"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
+            if(entry.toggle()==null) label(context,textRenderer,entry.opensMenu()?"Browse":"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
         }
         if(matches.isEmpty()) label(context,textRenderer,"No matching mods",layout.grid.x()+10,layout.grid.y()+15,MUTED,1f,layout.grid.width()-20,false);
         for(var button:cardButtons) {

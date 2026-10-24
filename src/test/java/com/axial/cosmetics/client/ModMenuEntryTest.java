@@ -17,6 +17,11 @@ class ModMenuEntryTest {
         state.set(false);
         assertFalse(entry.matches(ModMenuEntry.Category.ALL,"",true));
     }
+    @Test void gangBrowserIsAFullCardMenuActionWithoutAnEnabledState() {
+        var entry=new ModMenuEntry("Gangs","Server gangs and rankings",ModMenuEntry.Category.WORLD,"account",null,null,()->{});
+        assertTrue(entry.opensMenu());assertNull(entry.toggle());assertFalse(entry.isEnabled());assertNotNull(entry.configure());
+        assertTrue(entry.matches(ModMenuEntry.Category.ALL,"gang",false));
+    }
     @Test void configurationToolsAreNeverPresentedAsEnabledMods() {
         var entry=new ModMenuEntry("Item Scaler","Held item scale",ModMenuEntry.Category.VISUALS,"scale",null,null,()->{});
         assertTrue(entry.matches(ModMenuEntry.Category.ALL,"item",false));
