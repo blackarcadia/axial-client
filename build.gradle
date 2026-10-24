@@ -493,7 +493,7 @@ tasks.register('runtimeImage', Exec) {
 
     commandLine 'jlink',
             '--add-modules',
-            'java.base,java.net.http,java.desktop,java.logging,java.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.naming.dns,jdk.unsupported,jdk.unsupported.desktop,jdk.zipfs,jdk.jsobject,jdk.xml.dom',
+            'java.base,java.net.http,java.desktop,java.logging,java.management,jdk.management,java.naming,java.sql,java.compiler,jdk.crypto.ec,jdk.naming.dns,jdk.unsupported,jdk.unsupported.desktop,jdk.zipfs,jdk.jsobject,jdk.xml.dom',
             '--strip-debug',
             '--no-header-files',
             '--no-man-pages',
@@ -501,11 +501,28 @@ tasks.register('runtimeImage', Exec) {
             "${buildDir}/runtime"
 }
 
+// Iris accesses HotSpotDiagnosticMXBean only when shader shadows first render.
+// Check the actual trimmed runtime before distributing any platform's launcher.
+tasks.register('compileRuntimeProbe', JavaCompile) {
+    source = fileTree('src/testRuntime/java') { include '*.java' }
+    classpath = files()
+    destinationDirectory = layout.buildDirectory.dir('runtime-probe')
+}
+
+tasks.register('verifyRuntimeImage', Exec) {
+    group = 'verification'
+    description = 'Verify Iris shadow diagnostics in the packaged Java runtime'
+    dependsOn tasks.runtimeImage, tasks.compileRuntimeProbe
+    commandLine layout.buildDirectory.file(isWindows ? 'runtime/bin/java.exe' : 'runtime/bin/java').get().asFile.absolutePath,
+            '-cp', layout.buildDirectory.dir('runtime-probe').get().asFile.absolutePath,
+            'ShaderRuntimeProbe'
+}
+
 tasks.register('jpackageMac') {
     group = 'distribution'
     description = 'Package macOS app image (requires macOS + jpackage)'
 
-    dependsOn tasks.runtimeImage
+    dependsOn tasks.verifyRuntimeImage
     onlyIf { isMac }
 
     doLast {
@@ -573,7 +590,7 @@ tasks.register('jpackageWindows') {
     group = 'distribution'
     description = 'Package Windows app image (requires Windows + jpackage)'
 
-    dependsOn tasks.runtimeImage
+    dependsOn tasks.verifyRuntimeImage
     onlyIf { isWindows }
 
     doLast {
@@ -715,7 +732,7 @@ tasks.register('jpackageWindowsInstaller') {
     group = 'distribution'
     description = 'Package Windows installer with Desktop and Start Menu shortcuts (requires Windows + jpackage + WiX)'
 
-    dependsOn tasks.runtimeImage
+    dependsOn tasks.verifyRuntimeImage
     onlyIf { isWindows }
 
     doLast {
