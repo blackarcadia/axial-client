@@ -102,6 +102,13 @@
     "AxialConfigScreenPotionsMenuMixin",
     "AxialConfigScreenPotionsHudMoveMixin",
     "InGameHudMinimapMixin",
+    "PerformanceDroppedItemsMixin",
+    "PerformanceLiquidsMixin",
+    "PerformanceSodiumLiquidsMixin",
+    "PerformanceSpawnerMobsMixin",
+    "PerformanceParticlesMixin",
+    "PerformanceWeatherMixin",
+
     "InGameHudWaypointLabelsMixin",
     "WarpWaypointManagerMixin",
     "TitleScreenButtonSkinMixin",

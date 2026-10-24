@@ -67,19 +67,27 @@ public final class ClientSettingsScreen extends Screen {
         addDrawableChild(new SettingsButton("Reset Defaults",layout.reset,()->change(()->{
             AxialConfigManager.get().showPlayerShadows=true;AxialConfigManager.save();
             ThirdPersonNameTagsConfig.setEnabled(false);EnchantGlintConfig.setStrength(1);EnchantGlintConfig.resetColor();
-            strength.refresh();
+            PerformanceConfig.reset();strength.refresh();
         })));
         row(new ToggleButton("Player Shadows","Show shadows beneath players",()->Boolean.TRUE.equals(AxialConfigManager.get().showPlayerShadows),value->{
             AxialConfigManager.get().showPlayerShadows=value;AxialConfigManager.save();
         }),16);
         row(new ToggleButton("Third Person Name Tags","Show your name in third person",ThirdPersonNameTagsConfig::enabled,ThirdPersonNameTagsConfig::setEnabled),58);
-        strength=new StrengthSlider();row(strength,130);
+        row(new ToggleButton("Display FPS","Show the frame rate in the top-left corner",PerformanceConfig::displayFps,PerformanceConfig::setDisplayFps),130);
+        row(new SettingsButton("FPS COLOR",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->client.setScreen(
+                new CrosshairColorPickerScreen(this,"FPS DISPLAY",PerformanceConfig.fpsColor(),value->change(()->PerformanceConfig.setFpsColor(value)),()->{}))),172);
+        row(new ToggleButton("Render Dropped Items","Hide dropped items when off; pickups still work",PerformanceConfig::droppedItems,PerformanceConfig::setDroppedItems),214);
+        row(new ToggleButton("Render Liquids","Show water and lava surfaces; rebuilds chunks",PerformanceConfig::liquids,PerformanceConfig::setLiquids),256);
+        row(new ToggleButton("Disable Spawner Mobs","Hide miniature mobs inside regular and trial spawners",PerformanceConfig::disableSpawnerMobs,PerformanceConfig::setDisableSpawnerMobs),298);
+        row(new ToggleButton("Render Particles","Show particles such as smoke, sparks and spell effects",PerformanceConfig::particles,PerformanceConfig::setParticles),340);
+        row(new ToggleButton("Render Weather","Show rain, snow and rain splashes",PerformanceConfig::weather,PerformanceConfig::setWeather),382);
+        strength=new StrengthSlider();row(strength,456);
         int colorWidth=layout.controls.width()-66;
         row(new SettingsButton("COLOR",new Rect(layout.controls.x(),0,colorWidth,36),()->client.setScreen(
                 new CrosshairColorPickerScreen(this,"ENCHANT GLINT",EnchantGlintConfig.color(),value->change(()->{
                     EnchantGlintConfig.setColor(value);EnchantGlintConfig.save();
-                }),()->{}))),166);
-        row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),166);
+                }),()->{}))),492);
+        row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),492);
         scroll=Math.clamp(scroll,0,layout.maxScroll());positionRows();
     }
 
@@ -110,12 +118,12 @@ public final class ClientSettingsScreen extends Screen {
             c.fill(layout.panel.x()+1,layout.headerBottom,layout.panel.right()-1,layout.headerBottom+1,DIVIDER);
             if(!layout.compact) {
                 label(c,textRenderer,"Settings",layout.controls.x(),layout.panel.y()+54,INK,1.7f,layout.controls.width(),true);
-                label(c,textRenderer,"Personalise your client",layout.controls.x(),layout.panel.y()+75,MUTED,.85f,layout.controls.width(),false);
+                label(c,textRenderer,"Performance and appearance",layout.controls.x(),layout.panel.y()+75,MUTED,.85f,layout.controls.width(),false);
             }
             c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
-            section(c,"GENERAL",0);section(c,"ENCHANT GLINT",112);
-            frame(c,new Rect(layout.controls.x(),layout.controls.y()+130-scroll,layout.controls.width(),72),LINE,SURFACE);
-            c.fill(layout.controls.x()+1,layout.controls.y()+166-scroll,layout.controls.right()-1,layout.controls.y()+167-scroll,DIVIDER);
+            section(c,"GENERAL",0);section(c,"PERFORMANCE",112);section(c,"ENCHANT GLINT",438);
+            frame(c,new Rect(layout.controls.x(),layout.controls.y()+456-scroll,layout.controls.width(),72),LINE,SURFACE);
+            c.fill(layout.controls.x()+1,layout.controls.y()+492-scroll,layout.controls.right()-1,layout.controls.y()+493-scroll,DIVIDER);
             for(Row row:rows)if(row.widget().visible)row.widget().render(c,mx,(int)(my-offset),delta);
             c.disableScissor();
             for(var child:children())if(child instanceof SettingsButton button&&rows.stream().noneMatch(row->row.widget()==button))button.render(c,mx,(int)(my-offset),delta);
@@ -201,15 +209,18 @@ public final class ClientSettingsScreen extends Screen {
                 label(c,textRenderer,label,r.x()+22,r.y()+8,active?INK:MUTED,.8f,r.width()-25,false);
                 return;
             }
-            if(!label.equals("COLOR"))frame(c,r,hover?HOVER_LINE:label.equals("Done")?SELECTED_LINE:LINE,
+            boolean colorButton=label.equals("COLOR")||label.equals("FPS COLOR");
+            if(!colorButton||label.equals("FPS COLOR"))frame(c,r,hover?HOVER_LINE:label.equals("Done")?SELECTED_LINE:LINE,
                     hover?HOVER:label.equals("Done")?0xFFB0B8C9:FIELD);
-            if(label.equals("COLOR")) {
-                label(c,textRenderer,"Glint Color",r.x()+13,r.y()+14,INK,.9f,Math.min(100,r.width()/3),true);
+            if(colorButton) {
+                boolean fps=label.equals("FPS COLOR");
+                int color=fps?PerformanceConfig.fpsColor():EnchantGlintConfig.color();
+                label(c,textRenderer,fps?"FPS Color":"Glint Color",r.x()+13,r.y()+14,INK,.9f,Math.min(100,r.width()/3),true);
                 int fieldX=r.x()+Math.min(123,r.width()/2);
-                rounded(c,fieldX,r.y()+8,20,20,EnchantGlintConfig.color());
+                rounded(c,fieldX,r.y()+8,20,20,color);
                 frame(c,new Rect(fieldX+26,r.y()+8,Math.max(20,r.right()-fieldX-34),20),hover?HOVER_LINE:LINE,FIELD);
-                label(c,textRenderer,String.format(Locale.ROOT,"#%06X",EnchantGlintConfig.color()&0xFFFFFF),fieldX+34,r.y()+14,MUTED,.85f,r.right()-fieldX-42,false);
-                setMessage(text("ENCHANT GLINT COLOR: "+String.format(Locale.ROOT,"#%06X",EnchantGlintConfig.color()&0xFFFFFF)));return;
+                label(c,textRenderer,String.format(Locale.ROOT,"#%06X",color&0xFFFFFF),fieldX+34,r.y()+14,MUTED,.85f,r.right()-fieldX-42,false);
+                setMessage(text((fps?"FPS COLOR: ":"ENCHANT GLINT COLOR: ")+String.format(Locale.ROOT,"#%06X",color&0xFFFFFF)));return;
             }
             centered(c,label,r.x()+r.width()/2,r.y()+(r.height()-9)/2,label.equals("Done")&&!hover?0xFF14171B:INK,.8f,r.width()-10);
         }

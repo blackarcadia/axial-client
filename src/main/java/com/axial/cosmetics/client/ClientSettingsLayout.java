@@ -4,7 +4,7 @@ import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
 /** Fixed navigation and footer around one scrollable settings column. */
 final class ClientSettingsLayout {
-    static final int CONTENT_HEIGHT = 202;
+    static final int CONTENT_HEIGHT = 528;
     final Rect panel, controls, back, settings, editHud, close, reset, done, scrollbar;
     final boolean compact;
     final int headerBottom;

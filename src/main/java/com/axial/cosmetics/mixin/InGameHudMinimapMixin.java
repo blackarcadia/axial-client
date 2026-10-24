@@ -16,5 +16,6 @@ public abstract class InGameHudMinimapMixin {
     private void axial_cosmetics$renderMinimap(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         MinimapRenderer.render(context, tickCounter);
         IslandXpPopup.render(context);
+        com.axial.cosmetics.client.FpsHud.render(context);
     }
 }
