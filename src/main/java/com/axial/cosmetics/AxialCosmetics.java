@@ -66,8 +66,12 @@ public class AxialCosmetics implements ClientModInitializer {
             var client=context.client();var connection=client.getNetworkHandler();
             client.execute(() -> {if(client.getNetworkHandler()==connection)com.axial.cosmetics.client.EnchantmentGuide.receive(payload.data());});
         });
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->com.axial.cosmetics.client.EnchantmentGuide.reset());
-        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->com.axial.cosmetics.client.EnchantmentGuide.reset());
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->{
+            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();
+        });
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->{
+            com.axial.cosmetics.client.EnchantmentGuide.reset();com.axial.cosmetics.client.PetCooldownOverlay.reset();
+        });
 
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.WorldMapPayload.ID, com.axial.cosmetics.client.WorldMapPayload.CODEC);
