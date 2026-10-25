@@ -24,6 +24,14 @@ public final class ServerBoardLayout {
         int header=board.height()<120?18:32,footer=board.height()<120?24:30;
         return new Area(board.x()+7,board.y()+header,board.width()-14,Math.max(1,board.height()-header-footer));
     }
+    static Area prisonsNotice(Area board){
+        int header=board.height()<152?26:56,footer=board.height()<120?24:30;
+        return new Area(board.x()+7,board.y()+header,board.width()-14,Math.max(1,board.height()-header-footer));
+    }
+    static Area prisonsLogo(Area board){
+        int width=Math.min(board.height()<152?66:114,board.width()-18);
+        return new Area(board.x()+(board.width()-width)/2,board.y()+2,width,width/3);
+    }
     static Area join(Area board){
         int height=board.height()<120?18:22;
         return new Area(board.x()+7,board.bottom()-height-4,board.width()-14,height);
