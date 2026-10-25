@@ -46,8 +46,8 @@ class MiningFeatureRenderingTest {
         }
     }
     @Test void miningFadePreservesTintAndAlreadyReducedAlpha() {
-        assertEquals(0x66FFFFFF,SmartMiningVisuals.color(0xFFFFFFFF,true));
-        assertEquals(0x3380FF00,SmartMiningVisuals.color(0x8080FF00,true));
+        assertEquals(0x1AFFFFFF,SmartMiningVisuals.color(0xFFFFFFFF,true));
+        assertEquals(0x0D80FF00,SmartMiningVisuals.color(0x8080FF00,true));
         assertEquals(0x0080FF00,SmartMiningVisuals.color(0x0080FF00,true));
         assertEquals(0x8080FF00,SmartMiningVisuals.color(0x8080FF00,false));
     }
