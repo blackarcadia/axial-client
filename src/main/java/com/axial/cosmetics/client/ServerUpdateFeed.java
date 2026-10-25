@@ -17,7 +17,7 @@ final class ServerUpdateFeed {
     static final URI FORUM = URI.create("https://axialprisons.com/forums/server-updates.11/");
     private static final URI FEED = FORUM.resolve("index.rss");
     private static final int MAX_BYTES = 2 * 1024 * 1024;
-    record Update(String title, URI link, LocalDate date) {}
+    record Update(String title, URI link, LocalDate date, URI image) {}
     record State(Update update, String message) {}
     private static volatile State state = new State(null, "Loading latest update…");
     private static long nextCheck;
@@ -92,11 +92,39 @@ final class ServerUpdateFeed {
             catch (java.time.format.DateTimeParseException ignored) { }
             var time = published == null ? java.time.Instant.MIN : published.toInstant();
             if (newest == null || time.isAfter(newestTime)) {
-                newest = new Update(title, link, published == null ? null : published.toLocalDate());
+                newest = new Update(title, link, published == null ? null : published.toLocalDate(), image(item));
                 newestTime = time;
             }
         }
         return newest;
+    }
+
+    private static URI image(Element item) throws IOException {
+        // XenForo includes the article's lead image in content:encoded, as HTML inside CDATA.
+        String content = text(item, "content:encoded");
+        if (content.isBlank()) content = text(item, "description");
+        URI[] found = {null};
+        new javax.swing.text.html.parser.ParserDelegator().parse(new java.io.StringReader(content),
+                new javax.swing.text.html.HTMLEditorKit.ParserCallback() {
+                    @Override public void handleSimpleTag(javax.swing.text.html.HTML.Tag tag,
+                            javax.swing.text.MutableAttributeSet attributes, int position) {
+                        if (found[0] != null || tag != javax.swing.text.html.HTML.Tag.IMG) return;
+                        Object src = attributes.getAttribute(javax.swing.text.html.HTML.Attribute.SRC);
+                        if (src == null) src = attributes.getAttribute("data-src");
+                        if (src != null) found[0] = imageUri(src.toString());
+                    }
+                }, true);
+        return found[0];
+    }
+
+    static URI imageUri(String source) {
+        try {
+            URI uri = FORUM.resolve(source.strip());
+            if ("https".equalsIgnoreCase(uri.getScheme()) && "axialprisons.com".equalsIgnoreCase(uri.getHost())
+                    && uri.getUserInfo() == null && (uri.getPort() == -1 || uri.getPort() == 443)
+                    && (uri.getPath().startsWith("/attachments/") || uri.getPath().startsWith("/data/"))) return uri;
+        } catch (IllegalArgumentException ignored) { }
+        return null;
     }
 
     private static String text(Element item, String tag) {

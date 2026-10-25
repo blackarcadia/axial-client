@@ -36,4 +36,24 @@ class ServerUpdateFeedTest {
         assertThrows(Exception.class,()->ServerUpdateFeed.parse(("<!DOCTYPE rss [<!ENTITY secret SYSTEM 'file:///should-not-be-read'>]>"
                 +"<rss><channel><item><title>&secret;</title></item></channel></rss>").getBytes(StandardCharsets.UTF_8)));
     }
+    @Test void readsXenforoArticleImageFromEncodedHtml() throws Exception {
+        String post=item("Update","/threads/update.34/","").replace("</item>",
+                "<content:encoded><![CDATA[<div><img src='/attachments/lead-png.51/' width='1920'>"
+                +"<img src='/attachments/second-png.52/'></div>]]></content:encoded></item>");
+        assertEquals("https://axialprisons.com/attachments/lead-png.51/",parse(post).image().toString());
+    }
+    @Test void missingOrUnusableImageKeepsTheAnnouncement() throws Exception {
+        assertNull(parse(item("Update","/threads/update.34/","")).image());
+        String post=item("Update","/threads/update.34/","").replace("</item>",
+                "<description><![CDATA[<img src='https://external.test/tracker.png'>"
+                +"<img data-src='/data/cover.png?x=1&amp;y=2'>]]></description></item>");
+        var update=parse(post);
+        assertEquals("Update",update.title());
+        assertEquals("https://axialprisons.com/data/cover.png?x=1&y=2",update.image().toString());
+    }
+    @Test void imageLinksRequirePublicForumImagePaths() {
+        for(String source:new String[]{"file:///tmp/image.png","http://axialprisons.com/attachments/1/",
+                "https://elsewhere.test/attachments/1/","https://axialprisons.com/store",
+                "https://user@axialprisons.com/data/cover.png"})assertNull(ServerUpdateFeed.imageUri(source));
+    }
 }

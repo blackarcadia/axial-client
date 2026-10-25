@@ -51,32 +51,38 @@ public final class ServerBulletinBoards {
             label(c,font,status,r.x()+17,statusY-1,statusColor,.7f,r.width()-26,false);
         }
         Area notice=prisons?ServerBoardLayout.prisonsNotice(board):ServerBoardLayout.notice(board);
+        var thumbnail=prisons?ServerUpdateImage.get(displayed.update()==null?null:displayed.update().image()):null;
+        boolean withImage=thumbnail!=null&&notice.width()>=200&&notice.height()>=64;
         c.enableScissor(notice.x(),notice.y(),notice.right(),notice.bottom());
         if(prisons)rounded(c,notice.x(),notice.y(),notice.width(),notice.height(),mixColor(0xFF20232D,0xFF32273F,updateHover));
         int padding=compact?3:7, x=notice.x()+padding, y=notice.y()+padding;
-        int textWidth=notice.width()-padding*2;
+        int imageWidth=withImage?Math.min(92,notice.width()*2/5):0;
+        int textWidth=notice.width()-padding*2-(withImage?imageWidth+7:0);
+        if(withImage)drawThumbnail(c,thumbnail,new Area(notice.right()-padding-imageWidth,notice.y()+padding,
+                imageWidth,notice.height()-padding*2));
         String badge=prisons?"LATEST UPDATE":"COMING SOON";
         int badgeWidth=Math.min(textWidth,font.getWidth(UiTypography.text(badge,.55f,true))+8);
         rounded(c,x,y,badgeWidth,10,prisons?0xFF694488:0xFF343743);
         label(c,font,badge,x+4,y+2,INK,.55f,badgeWidth-8,true);
-        int titleY=y+13,lineHeight=compact?9:12;
+        int titleY=y+13,lineHeight=withImage?10:compact?9:12;
         int reserved=compact?0:17;
         int lines=Math.max(1,(notice.bottom()-padding-reserved-titleY)/lineHeight);
         String copy=prisons?(displayed.update()==null?displayed.message():displayed.update().title()):"Skyblock is coming soon.";
-        var wrapped=font.wrapLines(UiTypography.text(copy,compact?.65f:.85f,true),Math.max(1,textWidth));
+        var wrapped=font.wrapLines(UiTypography.text(copy,compact||withImage?.65f:.85f,true),Math.max(1,textWidth));
         for(int i=0;i<Math.min(lines,wrapped.size());i++){
             if(i==lines-1&&wrapped.size()>lines){
                 // Leave an explicit continuation marker when the smallest layouts cannot fit the title.
-                c.enableScissor(x,titleY+i*lineHeight,Math.max(x,notice.right()-padding-9),titleY+(i+1)*lineHeight);
+                c.enableScissor(x,titleY+i*lineHeight,Math.max(x,x+textWidth-9),titleY+(i+1)*lineHeight);
                 c.drawText(font,wrapped.get(i),x,titleY+i*lineHeight,INK,false);
                 c.disableScissor();
-                label(c,font,"…",notice.right()-padding-8,titleY+i*lineHeight,INK,.7f,8,false);
+                label(c,font,"…",x+textWidth-8,titleY+i*lineHeight,INK,.7f,8,false);
             }else c.drawText(font,wrapped.get(i),x,titleY+i*lineHeight,prisons?INK:MUTED,false);
         }
         if(!compact&&prisons){
             String date=displayed.update()!=null&&displayed.update().date()!=null?DATE.format(displayed.update().date()):"Server updates";
-            label(c,font,date,x,notice.bottom()-12,MUTED,.6f,Math.max(1,textWidth-65),false);
-            label(c,font,"Read post →",notice.right()-padding-60,notice.bottom()-12,mixColor(MUTED,INK,updateHover),.65f,60,true);
+            if(!withImage)label(c,font,date,x,notice.bottom()-12,MUTED,.6f,Math.max(1,textWidth-65),false);
+            label(c,font,"Read post →",withImage?x:notice.right()-padding-60,notice.bottom()-12,
+                    mixColor(MUTED,INK,updateHover),.65f,Math.min(60,textWidth),true);
         }
         c.disableScissor();
         int divider=notice.bottom();c.fill(r.x()+7,divider,r.right()-7,divider+1,DIVIDER);
@@ -96,6 +102,15 @@ public final class ServerBulletinBoards {
         AxialUiTheme.playButtonClickSound();
         Util.getOperatingSystem().open(displayed.update()==null?ServerUpdateFeed.FORUM:displayed.update().link());
         return true;
+    }
+    private static void drawThumbnail(DrawContext c,ServerUpdateImage.Thumbnail thumbnail,Area area){
+        double scale=Math.max(area.width()/(double)thumbnail.width(),area.height()/(double)thumbnail.height());
+        int width=(int)Math.ceil(thumbnail.width()*scale),height=(int)Math.ceil(thumbnail.height()*scale);
+        c.enableScissor(area.x(),area.y(),area.right(),area.bottom());
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,thumbnail.texture(),area.x()+(area.width()-width)/2,
+                area.y()+(area.height()-height)/2,0,0,width,height,
+                thumbnail.width(),thumbnail.height(),thumbnail.width(),thumbnail.height());
+        c.disableScissor();
     }
     private static Rect rect(Area r){return new Rect(r.x(),r.y(),r.width(),r.height());}
 }
