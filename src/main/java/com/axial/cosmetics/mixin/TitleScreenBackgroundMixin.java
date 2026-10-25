@@ -3,6 +3,7 @@ package com.axial.cosmetics.mixin;
 import com.axial.cosmetics.AxialCosmetics;
 import com.axial.cosmetics.client.TitleScreenAccountsDropdown;
 import com.axial.cosmetics.client.ServerBulletinBoards;
+import com.axial.cosmetics.client.ServerBoardLayout;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,8 +26,6 @@ import net.minecraft.client.gui.screen.SplashTextRenderer;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.text.StyleSpriteSource;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.SharedConstants;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,11 +42,6 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int AXIAL_TITLE_BACKGROUND_WIDTH = 1717;
     private static final int AXIAL_TITLE_BACKGROUND_HEIGHT = 916;
     private static final int TITLE_FLAME_PARTICLE_COUNT = 44;
-    private static final StyleSpriteSource.Font UI_FONT = new StyleSpriteSource.Font(Identifier.of("axialutils", "ui_clean_large"));
-    private static final String OFFICIAL_GAMEMODES = "OFFICIAL GAMEMODES";
-    private static final int OFFICIAL_GAMEMODES_RIGHT_MARGIN = 24;
-    private static final int OFFICIAL_GAMEMODES_TOP = 126;
-    private static final int OFFICIAL_GAMEMODES_LABEL_HEIGHT = 12;
     private static final String AXIAL_SERVER_HOST = "mc.axialprisons.com";
     private static final int AXIAL_SERVER_PORT = 25565;
     private static final String AXIAL_SERVER_ADDRESS = AXIAL_SERVER_HOST + ":" + AXIAL_SERVER_PORT;
@@ -56,12 +50,6 @@ public abstract class TitleScreenBackgroundMixin {
     private static final int AXIAL_SKY_PORT = 25603;
     private static final String AXIAL_SKY_ADDRESS = AXIAL_SKY_HOST + ":" + AXIAL_SKY_PORT;
     private static final String AXIAL_SKY_NAME = "Axial Sky";
-    private static final int OFFICIAL_GAMEMODES_BUTTON_WIDTH = 168;
-    private static final int OFFICIAL_GAMEMODES_BUTTON_HEIGHT = 72;
-    private static final int AXIAL_SKY_BUTTON_HEIGHT = 67;
-    private static final int AXIAL_SKY_BUTTON_GAP = 8;
-    private static final int OFFICIAL_GAMEMODES_BUTTON_GAP = 18;
-    private static final int OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING = 14;
     private static final long OFFICIAL_GAMEMODES_REFRESH_INTERVAL_MS = 30_000L;
     private static final Pattern OFFICIAL_GAMEMODES_ONLINE_PATTERN = Pattern.compile("\"online\"\\s*:\\s*(\\d+)");
     private volatile String axial_cosmetics$serverCountText = "Loading";
@@ -183,50 +171,13 @@ public abstract class TitleScreenBackgroundMixin {
         axial_cosmetics$ensureServerCount();
 
         TitleScreen screen = (TitleScreen) (Object) this;
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        Text label = Text.literal(OFFICIAL_GAMEMODES).styled(style -> style.withFont(UI_FONT));
-        int textWidth = textRenderer.getWidth(label);
-        int x = Math.max(OFFICIAL_GAMEMODES_RIGHT_MARGIN, screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - textWidth);
-        int y = OFFICIAL_GAMEMODES_TOP;
-
-        drawOutlinedText(context, textRenderer, label, x, y, 0xFFFFFFFF, 0xFF000000);
-
-        int buttonX = Math.max(
-                OFFICIAL_GAMEMODES_RIGHT_MARGIN,
-                screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
-        );
-        int buttonY = y + OFFICIAL_GAMEMODES_LABEL_HEIGHT + OFFICIAL_GAMEMODES_BUTTON_GAP;
-        boolean hovered = axial_cosmetics$inRect(mouseX, mouseY, buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT);
-        axial_cosmetics$bulletins.render(context, buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH,
-                OFFICIAL_GAMEMODES_BUTTON_HEIGHT, AXIAL_SKY_BUTTON_HEIGHT, AXIAL_SKY_BUTTON_GAP,
-                mouseX, mouseY, MinecraftClient.getInstance().currentScreen == screen);
-        if (hovered) {
-            context.fill(buttonX, buttonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT, 0x18000000);
-        }
-
-        int skyButtonY = buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT + AXIAL_SKY_BUTTON_GAP;
-        boolean skyHovered = axial_cosmetics$inRect(mouseX, mouseY, buttonX, skyButtonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, AXIAL_SKY_BUTTON_HEIGHT);
-        if (skyHovered) {
-            context.fill(buttonX, skyButtonY, buttonX + OFFICIAL_GAMEMODES_BUTTON_WIDTH, skyButtonY + AXIAL_SKY_BUTTON_HEIGHT, 0x18000000);
-        }
-
-        Text count = Text.literal(axial_cosmetics$serverCountText).styled(style -> style.withFont(UI_FONT));
-        int countX = buttonX + OFFICIAL_GAMEMODES_COUNT_LEFT_PADDING;
-        int countY = buttonY - textRenderer.fontHeight - 4;
-        drawOutlinedText(context, textRenderer, count, countX, countY, 0xFFFFFFFF, 0xFF000000);
+        axial_cosmetics$bulletins.render(context,screen.width,screen.height,mouseX,mouseY,
+                MinecraftClient.getInstance().currentScreen==screen,axial_cosmetics$serverCountText);
     }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void axial_cosmetics$drawAccountsDropdown(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         TitleScreenAccountsDropdown.render(context, (TitleScreen) (Object) this, MinecraftClient.getInstance().textRenderer, mouseX, mouseY);
-    }
-
-    private static void drawOutlinedText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int fillColor, int outlineColor) {
-        context.drawText(textRenderer, text, x - 1, y, outlineColor, false);
-        context.drawText(textRenderer, text, x + 1, y, outlineColor, false);
-        context.drawText(textRenderer, text, x, y - 1, outlineColor, false);
-        context.drawText(textRenderer, text, x, y + 1, outlineColor, false);
-        context.drawText(textRenderer, text, x, y, fillColor, false);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
@@ -244,17 +195,13 @@ public abstract class TitleScreenBackgroundMixin {
         }
 
         TitleScreen screen = (TitleScreen) (Object) this;
-        int buttonX = Math.max(
-                OFFICIAL_GAMEMODES_RIGHT_MARGIN,
-                screen.width - OFFICIAL_GAMEMODES_RIGHT_MARGIN - OFFICIAL_GAMEMODES_BUTTON_WIDTH
-        );
-        int buttonY = OFFICIAL_GAMEMODES_TOP + OFFICIAL_GAMEMODES_LABEL_HEIGHT + OFFICIAL_GAMEMODES_BUTTON_GAP;
-        int skyButtonY = buttonY + OFFICIAL_GAMEMODES_BUTTON_HEIGHT + AXIAL_SKY_BUTTON_GAP;
-        if (axial_cosmetics$bulletins.mouseClicked(click, buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT)) {
-            cir.setReturnValue(true);
-            return;
+        if(click.button()!=0)return;
+        var layout=new ServerBoardLayout(screen.width,screen.height);
+        if(axial_cosmetics$bulletins.mouseClicked(click,screen.width,screen.height)){
+            cir.setReturnValue(true);return;
         }
-        if (axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, skyButtonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, AXIAL_SKY_BUTTON_HEIGHT)) {
+        if(layout.sky.contains(click.x(),click.y())){
+            org.axial.axialutils.client.AxialUiTheme.playButtonClickSound();
             ConnectScreen.connect(
                     screen,
                     MinecraftClient.getInstance(),
@@ -267,9 +214,8 @@ public abstract class TitleScreenBackgroundMixin {
             cir.cancel();
             return;
         }
-        if (!axial_cosmetics$inRect((int) Math.round(click.x()), (int) Math.round(click.y()), buttonX, buttonY, OFFICIAL_GAMEMODES_BUTTON_WIDTH, OFFICIAL_GAMEMODES_BUTTON_HEIGHT)) {
-            return;
-        }
+        if(!layout.prisons.contains(click.x(),click.y()))return;
+        org.axial.axialutils.client.AxialUiTheme.playButtonClickSound();
 
         ConnectScreen.connect(
                 screen,
@@ -407,7 +353,4 @@ public abstract class TitleScreenBackgroundMixin {
         return 0;
     }
 
-    private static boolean axial_cosmetics$inRect(int mouseX, int mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height);
-    }
 }

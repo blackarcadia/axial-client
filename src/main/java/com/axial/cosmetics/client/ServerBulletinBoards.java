@@ -5,79 +5,91 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import org.axial.axialutils.client.AxialUiTheme;
-
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
+import com.axial.cosmetics.client.ServerBoardLayout.Area;
 
-/** Decorates the existing server buttons without changing the main-menu layout. */
+/** Official-server notices with independent browser and connection actions. */
 public final class ServerBulletinBoards {
-    private record Image(Identifier texture,int width) {}
-    private static Image image(String name,int width) {
-        return new Image(Identifier.of("axial_cosmetics","textures/gui/title/bulletins/"+name+".png"),width);
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH);
+    private ServerUpdateFeed.State displayed = new ServerUpdateFeed.State(null, "Loading latest update…");
+    private float prisonsHover,skyHover,updateHover;
+    private long lastFrame=System.nanoTime();
+    public void synchronizeClock(){lastFrame=System.nanoTime();}
+
+    public void render(DrawContext c,int screenWidth,int screenHeight,int mouseX,int mouseY,boolean active,String count){
+        var layout=new ServerBoardLayout(screenWidth,screenHeight);
+        long now=System.nanoTime();float seconds=(now-lastFrame)/1_000_000_000f;lastFrame=now;
+        prisonsHover=MenuAnimation.hover(prisonsHover,active&&layout.prisons.contains(mouseX,mouseY),seconds);
+        skyHover=MenuAnimation.hover(skyHover,active&&layout.sky.contains(mouseX,mouseY),seconds);
+        updateHover=MenuAnimation.hover(updateHover,active&&ServerBoardLayout.notice(layout.prisons).contains(mouseX,mouseY),seconds);
+        displayed=ServerUpdateFeed.current();
+        var font=MinecraftClient.getInstance().textRenderer;
+        label(c,font,"OFFICIAL SERVERS",layout.headingX,layout.headingY,INK,.85f,layout.prisons.width(),true);
+        board(c,layout.prisons,prisonsHover,"AXIAL PRISONS",count,true);
+        board(c,layout.sky,skyHover,"AXIAL SKY","Coming soon",false);
     }
-    private static final List<Image> PRISONS=List.of(image("prisons-halloween",1671),image("prisons-spears",1672),image("prisons-cells",1672));
-    private static final Image SKY=image("sky-coming-soon",1670);
-    private static final Identifier PRISONS_EMBLEM=Identifier.of("axial_cosmetics","textures/gui/title/bulletins/prisons-emblem.png");
-    private final BulletinCarousel carousel=new BulletinCarousel(PRISONS.size());
-
-    public void synchronizeClock(){carousel.synchronizeClock();}
-
-    public void render(DrawContext c,int x,int y,int width,int prisonsHeight,int skyHeight,int gap,int mouseX,int mouseY,boolean active) {
-        Rect prisons=new Rect(x,y,width,prisonsHeight),sky=new Rect(x,y+prisonsHeight+gap,width,skyHeight);
-        carousel.tick(!active||prisons.contains(mouseX,mouseY));
-        rounded(c,x,y,width,prisonsHeight,0xC0101018);
-        Rect picture=new Rect(x+16,y+1,width-32,prisonsHeight-31);
-        drawImage(c,PRISONS.get(carousel.current()),picture,1);
-        if(carousel.progress()>0)drawImage(c,PRISONS.get(carousel.target()),picture,carousel.progress());
-        var renderer=MinecraftClient.getInstance().textRenderer;
-        // The supplied emblem rests over the lower edge, leaving the bulletin and controls clear.
-        int emblemWidth=Math.min(114,width-28),emblemHeight=emblemWidth/3;
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,PRISONS_EMBLEM,
-                x+(width-emblemWidth)/2,prisons.bottom()+5-emblemHeight,0,0,
-                emblemWidth,emblemHeight,2172,724,2172,724);
-        for(int i=0;i<3;i++) {
-            Rect dot=dot(prisons,i);
-            circle(c,dot.x()+2,dot.y()+4,4,i==carousel.selected()?GREEN:dot.contains(mouseX,mouseY)?INK:MUTED);
+    private void board(DrawContext c,Area board,float hover,String title,String status,boolean prisons){
+        var font=MinecraftClient.getInstance().textRenderer;Rect r=rect(board);
+        rounded(c,r.x(),r.y()+3,r.width(),r.height(),0x66000000);
+        frame(c,r,mixColor(LINE,BRAND,hover),0xF0171B22);
+        boolean compact=r.height()<120;
+        label(c,font,title,r.x()+9,r.y()+7,INK,compact?.7f:.85f,r.width()-18,true);
+        if(!compact){
+            int statusColor=status.equals("Offline")?RED:status.equals("Loading")||!prisons?MUTED:GREEN;
+            circle(c,r.x()+9,r.y()+22,4,statusColor);
+            label(c,font,status,r.x()+17,r.y()+21,statusColor,.7f,r.width()-26,false);
         }
-        arrow(c,previous(prisons),"previous",mouseX,mouseY);
-        arrow(c,next(prisons),"next",mouseX,mouseY);
-        rounded(c,sky.x(),sky.y(),sky.width(),sky.height(),0xC0101018);
-        drawImage(c,SKY,picture(sky),1);
-        label(c,renderer,"AXIAL SKY",sky.x()+5,sky.bottom()-10,INK,.75f,width-10,true);
+        Area notice=ServerBoardLayout.notice(board);
+        c.enableScissor(notice.x(),notice.y(),notice.right(),notice.bottom());
+        if(prisons)rounded(c,notice.x(),notice.y(),notice.width(),notice.height(),mixColor(0xFF20232D,0xFF32273F,updateHover));
+        int padding=compact?3:7, x=notice.x()+padding, y=notice.y()+padding;
+        int textWidth=notice.width()-padding*2;
+        String badge=prisons?"LATEST UPDATE":"COMING SOON";
+        int badgeWidth=Math.min(textWidth,font.getWidth(UiTypography.text(badge,.55f,true))+8);
+        rounded(c,x,y,badgeWidth,10,prisons?0xFF694488:0xFF343743);
+        label(c,font,badge,x+4,y+2,INK,.55f,badgeWidth-8,true);
+        int titleY=y+13,lineHeight=compact?9:12;
+        int reserved=compact?0:17;
+        int lines=Math.max(1,(notice.bottom()-padding-reserved-titleY)/lineHeight);
+        String copy=prisons?(displayed.update()==null?displayed.message():displayed.update().title()):"Skyblock is coming soon.";
+        var wrapped=font.wrapLines(UiTypography.text(copy,compact?.65f:.85f,true),Math.max(1,textWidth));
+        for(int i=0;i<Math.min(lines,wrapped.size());i++){
+            if(i==lines-1&&wrapped.size()>lines){
+                // Leave an explicit continuation marker when the smallest layouts cannot fit the title.
+                c.enableScissor(x,titleY+i*lineHeight,Math.max(x,notice.right()-padding-9),titleY+(i+1)*lineHeight);
+                c.drawText(font,wrapped.get(i),x,titleY+i*lineHeight,INK,false);
+                c.disableScissor();
+                label(c,font,"…",notice.right()-padding-8,titleY+i*lineHeight,INK,.7f,8,false);
+            }else c.drawText(font,wrapped.get(i),x,titleY+i*lineHeight,prisons?INK:MUTED,false);
+        }
+        if(!compact&&prisons){
+            String date=displayed.update()!=null&&displayed.update().date()!=null?DATE.format(displayed.update().date()):"Server updates";
+            label(c,font,date,x,notice.bottom()-12,MUTED,.6f,Math.max(1,textWidth-65),false);
+            label(c,font,"Read post →",notice.right()-padding-60,notice.bottom()-12,mixColor(MUTED,INK,updateHover),.65f,60,true);
+        }
+        c.disableScissor();
+        int divider=notice.bottom();c.fill(r.x()+7,divider,r.right()-7,divider+1,DIVIDER);
+        Area join=ServerBoardLayout.join(board);
+        rounded(c,join.x(),join.y(),join.width(),join.height(),mixColor(0xFF30343F,0xFF765393,hover));
+        String action=prisons?"Join Prisons":"Connect to Sky";
+        label(c,font,action,join.x()+7,join.y()+(join.height()-7)/2,INK,.75f,join.width()-22,true);
+        int arrowX=join.right()-13+Math.round(hover*2);
+        c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axial_cosmetics","accounts/next"),arrowX,join.y()+(join.height()-8)/2,8,8,INK);
     }
 
-    /** Bulletin navigation consumes its own clicks; the rest still uses the existing server connection action. */
-    public boolean mouseClicked(Click click,int x,int y,int width,int height) {
+    /** The announcement opens its displayed post; it never falls through to joining the server. */
+    public boolean mouseClicked(Click click,int screenWidth,int screenHeight){
         if(click.button()!=0)return false;
-        Rect board=new Rect(x,y,width,height);
-        if(previous(board).contains(click.x(),click.y()))carousel.step(-1);
-        else if(next(board).contains(click.x(),click.y()))carousel.step(1);
-        else {
-            int selected=-1;
-            for(int i=0;i<3;i++)if(dot(board,i).contains(click.x(),click.y()))selected=i;
-            if(selected<0)return false;
-            carousel.select(selected);
-        }
-        AxialUiTheme.playButtonClickSound();return true;
+        Area notice=ServerBoardLayout.notice(new ServerBoardLayout(screenWidth,screenHeight).prisons);
+        if(!notice.contains(click.x(),click.y()))return false;
+        AxialUiTheme.playButtonClickSound();
+        Util.getOperatingSystem().open(displayed.update()==null?ServerUpdateFeed.FORUM:displayed.update().link());
+        return true;
     }
-
-    static Rect picture(Rect board){return new Rect(board.x()+1,board.y()+1,board.width()-2,board.height()-14);}
-    static Rect previous(Rect board){return new Rect(board.x()+2,board.bottom()-13,10,12);}
-    static Rect next(Rect board){return new Rect(board.right()-13,board.bottom()-13,10,12);}
-    static Rect dot(Rect board,int page){return new Rect(board.right()-12,board.y()+7+page*9,8,8);}
-    static Rect fit(Rect area,int imageWidth) {
-        double scale=Math.min(area.width()/(double)imageWidth,area.height()/941.0);
-        int w=Math.max(1,(int)Math.round(imageWidth*scale)),h=Math.max(1,(int)Math.round(941*scale));
-        return new Rect(area.x()+(area.width()-w)/2,area.y()+(area.height()-h)/2,w,h);
-    }
-    private static void drawImage(DrawContext c,Image image,Rect area,float opacity) {
-        Rect r=fit(area,image.width());
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,image.texture(),r.x(),r.y(),0,0,r.width(),r.height(),image.width(),941,image.width(),941,
-                Math.round(opacity*255)<<24|0xFFFFFF);
-    }
-    private static void arrow(DrawContext c,Rect r,String name,int mx,int my) {
-        c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axial_cosmetics","accounts/"+name),r.x()+1,r.y()+2,8,8,r.contains(mx,my)?INK:MUTED);
-    }
+    private static Rect rect(Area r){return new Rect(r.x(),r.y(),r.width(),r.height());}
 }
