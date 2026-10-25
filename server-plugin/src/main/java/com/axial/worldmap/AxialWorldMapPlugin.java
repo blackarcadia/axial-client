@@ -71,9 +71,13 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         minTps=Math.clamp(getConfig().getDouble("pause-below-tps",18.5),1,20);
         refreshMillis=Math.max(1,getConfig().getLong("refresh-minutes",60))*60_000L;
         generate=getConfig().getBoolean("generate-missing-chunks",true);
-        worlds=new HashSet<>(getConfig().getStringList("worlds"));
+        // Restrict this deployment even when an older config enabled all worlds.
+        worlds=Set.of("prisons");
+        if(!getConfig().getStringList("worlds").equals(List.of("prisons"))){
+            getConfig().set("worlds",List.of("prisons"));saveConfig();
+        }
     }
-    private boolean eligible(World world){return (worlds.isEmpty()||worlds.contains(world.getName()))&&world.getWorldBorder().getSize()<=maxDiameter;}
+    private boolean eligible(World world){return worlds.contains(world.getName())&&world.getWorldBorder().getSize()<=maxDiameter;}
     private MapGeometry geometry(World world){var b=world.getWorldBorder();return MapGeometry.forBorder(b.getCenter().getX(),b.getCenter().getZ(),b.getSize(),resolution);}
     private boolean matches(World world,MapGeometry geometry) {
         try{return eligible(world)&&geometry.equals(geometry(world));}catch(IllegalArgumentException ex){return false;}
@@ -385,7 +389,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
         if(action.equals("render")) {
             World world=args.length>1?Bukkit.getWorld(args[1]):sender instanceof Player p?p.getWorld():null;
             if(world==null){sender.sendMessage("Usage: /axialmap render <loaded-world>");return true;}
-            if(!eligible(world)){sender.sendMessage("World excluded or border too large. Set its border within "+(int)maxDiameter+" blocks, or adjust config.yml.");return true;}
+            if(!eligible(world)){sender.sendMessage("Only prisons is enabled. Its border must be within "+(int)maxDiameter+" blocks, or adjust config.yml.");return true;}
             if(jobs.containsKey(world.getUID())){sender.sendMessage("A render is already queued. /axialmap status");return true;}
             ensure(world,true);sender.sendMessage("Map render queued for "+world.getName()+". /axialmap status");return true;
         }
@@ -394,7 +398,7 @@ public final class AxialWorldMapPlugin extends JavaPlugin implements Listener,Pl
     @Override public List<String> onTabComplete(CommandSender sender,Command command,String alias,String[] args) {
         if(!sender.hasPermission("axialworldmap.admin"))return List.of();
         if(args.length==1)return List.of("status","render","pause","resume","reload").stream().filter(v->v.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
-        if(args.length==2&&args[0].equalsIgnoreCase("render"))return getServer().getWorlds().stream().map(World::getName).filter(v->v.startsWith(args[1])).toList();
+        if(args.length==2&&args[0].equalsIgnoreCase("render"))return getServer().getWorlds().stream().filter(this::eligible).map(World::getName).filter(v->v.startsWith(args[1])).toList();
         return List.of();
     }
     @Override public void onDisable() {

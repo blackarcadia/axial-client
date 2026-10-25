@@ -4,7 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.sound.SoundManager;
 import org.axial.axialutils.client.AxialUiTheme;
@@ -54,7 +54,7 @@ public final class QuickMenuScreen extends Screen {
     }
 
     private void addLink(String label,String icon,int index,URI uri) {
-        var button=add(label,icon,index,()->ConfirmLinkScreen.open(this,uri),uri!=null);
+        var button=add(label,icon,index,()->Util.getOperatingSystem().open(uri),uri!=null);
         if(uri==null)button.setTooltip(Tooltip.of(text(label+" is currently unavailable")));
     }
 

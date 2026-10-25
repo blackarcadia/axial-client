@@ -1,5 +1,5 @@
-# Empty means every loaded world with a border within max-border-diameter.
-worlds: []
+# This deployment only prepares and serves prisons. Older world lists are migrated on load.
+worlds: [prisons]
 auto-render: true
 # Prepare every eligible loaded world on startup, retaining any completed cache while rebuilding.
 refresh-on-startup: true

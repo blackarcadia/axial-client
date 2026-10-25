@@ -9,7 +9,7 @@ import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
@@ -90,7 +90,7 @@ public final class ClientSettingsScreen extends Screen {
                 }),()->{}))),492);
         row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),492);
         var wiki=QuickMenuLinks.get("wiki");
-        var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->ConfirmLinkScreen.open(this,wiki));
+        var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->Util.getOperatingSystem().open(wiki));
         wikiButton.active=wiki!=null;
         row(wikiButton,562);
         scroll=Math.clamp(scroll,0,layout.maxScroll());positionRows();
