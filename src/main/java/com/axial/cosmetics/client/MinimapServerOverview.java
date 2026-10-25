@@ -272,7 +272,7 @@ public final class MinimapServerOverview {
                 int x2=(int)Math.max(left,Math.min(left+size,left+size/2.0+((double)zone.maxX+1-centerX)*pixelsPerBlock));
                 int z1=(int)Math.max(top,Math.min(top+size,top+size/2.0+(zone.minZ-centerZ)*pixelsPerBlock));
                 int z2=(int)Math.max(top,Math.min(top+size,top+size/2.0+((double)zone.maxZ+1-centerZ)*pixelsPerBlock));
-                if(x2>x1&&z2>z1){cZone(context,x1,z1,x2,z2,zone.color);NavigationScreen.line(context,MinecraftClient.getInstance().textRenderer,zone.name,x1+4,z1+4,ModMenuUi.INK,.75f,x2-x1-8,false);}
+                if(x2>x1&&z2>z1){cZone(context,x1,z1,x2,z2,0xFF80FF00);NavigationScreen.line(context,MinecraftClient.getInstance().textRenderer,zone.name,x1+4,z1+4,ModMenuUi.INK,.75f,x2-x1-8,false);}
                 continue;
             }
             MinimapZoneOutline.draw(left,top,size,circular,
@@ -280,11 +280,11 @@ public final class MinimapServerOverview {
                     top+size/2.0+(zone.minZ-centerZ)*pixelsPerBlock,
                     left+size/2.0+((double)zone.maxX+1-centerX)*pixelsPerBlock,
                     top+size/2.0+((double)zone.maxZ+1-centerZ)*pixelsPerBlock,
-                    (x1,y1,x2,y2)->context.fill(x1,y1,x2,y2,zone.color|0xFF000000));
+                    (x1,y1,x2,y2)->context.fill(x1,y1,x2,y2,0xFF80FF00));
             float x = left + size / 2.0f + (float) ((((double)zone.minX + zone.maxX) / 2.0 - centerX) * pixelsPerBlock);
             float z = top + size / 2.0f + (float) ((((double)zone.minZ + zone.maxZ) / 2.0 - centerZ) * pixelsPerBlock);
             if (!inside(left, top, size, x, z, circular)) continue;
-            drawPlus(context, Math.round(x), Math.round(z), zone.color | 0xFF000000);
+            drawPlus(context, Math.round(x), Math.round(z), 0xFF80FF00);
         }
         for (Poi poi : overlay.pois) {
             float x = left + size / 2.0f + (float) ((poi.x - centerX) * pixelsPerBlock);
