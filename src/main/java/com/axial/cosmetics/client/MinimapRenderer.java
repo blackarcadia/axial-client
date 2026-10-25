@@ -123,9 +123,14 @@ public final class MinimapRenderer {
         if(client.world==null||client.player==null)return;
         update(client);fullSpan=view.scale*256;
         c.enableScissor(left,top,left+size,top+size);
+        c.fill(left,top,left+size,top+size,UNKNOWN);
         boolean direct=drawOverview(c,left,top,size,view);
         if(!direct)upload(client,view,true,false);
-        if(!direct&&fullReady)c.drawTexture(RenderPipelines.GUI_TEXTURED,FULL,left,top,0,0,size,size,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS,FULL_PIXELS);
+        if(!direct&&fullReady) {
+            // The worker's pixels describe its captured world bounds, not necessarily
+            // the current view. Move that texture now rather than waiting for a rebuild.
+            drawProjected(c,FULL,MapTextureProjection.raster(view,fullX,fullZ,fullScale,left,top,size));
+        }
         overlays(c,client,view,left,top,size,false,true);
         c.disableScissor();
     }
@@ -226,12 +231,14 @@ public final class MinimapRenderer {
         }
         if(uploadedOverview==null)return false;
         var image=uploadedOverview;
-        double x1=view.pixelX(image.minX,left,size),y1=view.pixelZ(image.minZ,top,size);
-        double x2=view.pixelX(image.minX+(double)image.width*image.step,left,size),y2=view.pixelZ(image.minZ+(double)image.height*image.step,top,size);
-        c.fill(left,top,left+size,top+size,UNKNOWN);
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,OVERVIEW,(int)Math.round(x1),(int)Math.round(y1),0,0,
-                Math.max(1,(int)Math.round(x2)-(int)Math.round(x1)),Math.max(1,(int)Math.round(y2)-(int)Math.round(y1)),image.width,image.height,512,512);
+        drawProjected(c,OVERVIEW,MapTextureProjection.worldRect(view,image.minX,image.minZ,
+                (double)image.width*image.step,(double)image.height*image.step,left,top,size,image.width/512f,image.height/512f));
         return true;
+    }
+
+    private static void drawProjected(DrawContext context,Identifier texture,MapTextureProjection projection) {
+        if(projection!=null)context.drawTexturedQuad(texture,projection.left(),projection.top(),projection.right(),projection.bottom(),
+                projection.u1(),projection.u2(),projection.v1(),projection.v2());
     }
 
     private static void upload(MinecraftClient client,MapViewport view,boolean full,boolean circle) {
