@@ -16,7 +16,7 @@ plugins {
 }
 
 group = 'org.example'
-def axialUpdate = "1.0.0"
+def axialUpdate = "2.0.0"
 
 def gitIdentifier = providers.exec {
     commandLine "git", "rev-parse", "--short=5", "HEAD"
