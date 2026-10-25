@@ -108,6 +108,7 @@
     "PerformanceLiquidsMixin",
     "PerformanceSodiumLiquidsMixin",
     "IrisShadowRuntimeCompatibilityMixin",
+    "ImmediatelyFastMapRuntimeCompatibilityMixin",
     "PerformanceSpawnerMobsMixin",
     "PerformanceParticlesMixin",
     "PerformanceWeatherMixin",

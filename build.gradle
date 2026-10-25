@@ -501,7 +501,7 @@ tasks.register('runtimeImage', Exec) {
             "${buildDir}/runtime"
 }
 
-// Iris accesses HotSpotDiagnosticMXBean only when shader shadows first render.
+// Iris shadow diagnostics and ImmediatelyFast map allocation need HotSpotDiagnosticMXBean.
 // Check the actual trimmed runtime before distributing any platform's launcher.
 tasks.register('compileRuntimeProbe', JavaCompile) {
     source = fileTree('src/testRuntime/java') { include '*.java' }
@@ -511,7 +511,7 @@ tasks.register('compileRuntimeProbe', JavaCompile) {
 
 tasks.register('verifyRuntimeImage', Exec) {
     group = 'verification'
-    description = 'Verify Iris shadow diagnostics in the packaged Java runtime'
+    description = 'Verify HotSpot diagnostics required by shader and map optimizations'
     dependsOn tasks.runtimeImage, tasks.compileRuntimeProbe
     commandLine layout.buildDirectory.file(isWindows ? 'runtime/bin/java.exe' : 'runtime/bin/java').get().asFile.absolutePath,
             '-cp', layout.buildDirectory.dir('runtime-probe').get().asFile.absolutePath,
@@ -823,6 +823,8 @@ echo "Done."
 
 test {
     useJUnitPlatform()
+    dependsOn tasks.compileRuntimeProbe
+    systemProperty 'axial.test.runtimeProbeClasses', layout.buildDirectory.dir('runtime-probe').get().asFile.absolutePath
     dependsOn tasks.remapJar
     systemProperty(
             'axial.test.modJar',
