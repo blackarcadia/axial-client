@@ -6,6 +6,7 @@
   "client": [
     "LivingEntityRenderStateSmartMiningMixin",
     "LivingEntityRendererSmartMiningMixin",
+    "ClientPlayerSmartMiningTargetingMixin",
     "DrawContextContrabandMixin",
     "DrawContextPetCooldownMixin",
     "ItemCooldownManagerAccessor",
