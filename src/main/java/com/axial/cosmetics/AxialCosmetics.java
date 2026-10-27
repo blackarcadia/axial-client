@@ -70,6 +70,7 @@ public class AxialCosmetics implements ClientModInitializer {
 
         com.axial.cosmetics.client.PerformanceConfig.load();
         com.axial.cosmetics.client.KeystrokesConfig.load();
+        com.axial.cosmetics.client.IslandXpHudConfig.load();
         com.axial.cosmetics.client.CooldownsConfig.load();
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.CombatCooldownPayload.ID,com.axial.cosmetics.client.CombatCooldownPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.CombatCooldownPayload.ID,(payload,context)->{

@@ -19,6 +19,7 @@ public final class IslandXpPopup {
 
     public static void render(DrawContext context) {
         if (amount.isEmpty()) return;
+        if (MinecraftClient.getInstance().currentScreen instanceof HudEditorAccess editor && editor.axial$isEditingHud()) return;
         long elapsed = System.currentTimeMillis() - shownAt;
         if (elapsed >= DISPLAY_MILLIS) { amount = ""; return; }
         MinecraftClient client = MinecraftClient.getInstance();
@@ -28,8 +29,24 @@ public final class IslandXpPopup {
         int alpha = (int) (255 * Math.min(fadeIn, fadeOut)) << 24;
         int lift = Math.round(ease(progress) * 12.0f);
         Text text = Text.literal("+" + amount + " XP");
-        context.drawCenteredTextWithShadow(client.textRenderer, text, client.getWindow().getScaledWidth() / 2,
-                client.getWindow().getScaledHeight() / 2 + 18 - lift, alpha | colorFor(amount));
+        var bounds = bounds(client);
+        int left = Math.clamp(bounds.x() + (bounds.width() - client.textRenderer.getWidth(text)) / 2,
+                0, Math.max(0, client.getWindow().getScaledWidth() - client.textRenderer.getWidth(text)));
+        context.drawTextWithShadow(client.textRenderer, text, left, bounds.y() + 12 - lift, alpha | colorFor(amount));
+    }
+
+    public static HudSnap.Box bounds(MinecraftClient client) {
+        int width = Math.min(client.getWindow().getScaledWidth(), Math.max(84, client.textRenderer.getWidth(Text.literal("+" + amount + " XP")) + 8));
+        int height = client.textRenderer.fontHeight + 13;
+        return new HudSnap.Box(IslandXpHudConfig.x(client.getWindow().getScaledWidth(), width),
+                IslandXpHudConfig.y(client.getWindow().getScaledHeight(), height), width, height);
+    }
+
+    public static void preview(DrawContext context, MinecraftClient client) {
+        var bounds = bounds(client);
+        Text text = Text.literal("+1,250 XP");
+        context.drawTextWithShadow(client.textRenderer, text, bounds.x() + (bounds.width() - client.textRenderer.getWidth(text)) / 2,
+                bounds.y() + 6, 0xFFFFAD5C);
     }
 
     private static int colorFor(String amount) {
