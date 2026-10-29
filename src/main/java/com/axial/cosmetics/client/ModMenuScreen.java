@@ -80,7 +80,7 @@ public final class ModMenuScreen extends Screen {
                         else if(tab==3)WardrobeScreen.open(this); },i==0,null);
             if(tab==3) {
                 navButton.active=WardrobeAccess.allowed();
-                navButton.setTooltip(Tooltip.of(text("Wardrobe • Owner account only")));
+                navButton.setTooltip(Tooltip.of(text("Wardrobe • Granted accounts only")));
             }
         }
         var box=layout.search;

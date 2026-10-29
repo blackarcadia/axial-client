@@ -9,6 +9,18 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CreatorCosmeticsTest {
+    @Test void unequippingCustomCapeRestoresOriginalMinecraftCapeAcrossRepeatedToggles() {
+        var original=new SkinTextures(texture("skin"),texture("minecraft_cape"),texture("elytra"),PlayerSkinType.SLIM,true);
+        for(boolean equipped:new boolean[]{false,true,false,true,false}) {
+            var result=CreatorCosmetics.applyCape(CreatorCosmetics.OWNER,original,17,equipped);
+            if(equipped)assertTrue(CreatorCosmetics.hasCreatorCape(result));
+            else assertSame(original,result,"disabled custom cape must retain the complete original skin texture record");
+            assertSame(original.body(),result.body());
+            assertSame(original.elytra(),result.elytra());
+        }
+        var noMojangCape=new SkinTextures(texture("skin"),null,null,PlayerSkinType.WIDE,true);
+        assertNull(CreatorCosmetics.applyCape(CreatorCosmetics.OWNER,noMojangCape,0,false).cape());
+    }
     private static AssetInfo.TextureAsset texture(String name) {
         return new AssetInfo.TextureAssetInfo(Identifier.of("test", name));
     }

@@ -2,7 +2,6 @@ package com.axial.cosmetics.client;
 
 import java.io.IOException;
 import java.util.Locale;
-import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
@@ -25,16 +24,18 @@ import org.joml.Vector3f;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
-/** Owner-only native wardrobe. All rendering uses real bundled cosmetics. */
+/** UUID-granted native wardrobe. All rendering uses real bundled cosmetics. */
 public final class WardrobeScreen extends Screen {
-    private static final String[] CATEGORIES = {"All cosmetics", "Capes", "Headwear", "Outfits", "Backpacks", "Emotes"};
     private final Screen parent;
     private WardrobeLayout layout;
-    private int category = 1;
-    private boolean selectedCape = true, dragging;
+    private WardrobeCategory category = WardrobeCategory.CAPES;
+    private boolean dragging;
+    private WardrobeCape focusedCape;
     private float rotation = 25;
     private String query = "", error = "";
     private TextFieldWidget search;
+    private int scroll;
+    private final java.util.List<CosmeticCard> cards=new java.util.ArrayList<>();
     private WardrobeScreen(Screen parent) { super(text("Wardrobe")); this.parent = parent; }
 
     public static boolean open(Screen parent) {
@@ -43,13 +44,12 @@ public final class WardrobeScreen extends Screen {
         return true;
     }
 
-    public static void applyVisibility(UUID player, PlayerEntityRenderState state) {
-        if (CreatorCosmetics.OWNER.equals(player) && WardrobeAccess.allowed() && !WardrobePreferences.showCape())
-            state.capeVisible = false;
-    }
-
     @Override protected void init() {
         if (!WardrobeAccess.allowed()) return;
+        if(focusedCape==null) {
+            focusedCape=WardrobePreferences.current();
+            if(focusedCape==null)focusedCape=WardrobeCape.defaultFor(client.getSession().getUuidOrNull());
+        }
         layout = new WardrobeLayout(width,height);
         rebuild();
     }
@@ -58,56 +58,61 @@ public final class WardrobeScreen extends Screen {
         boolean focused = search != null && search.isFocused();
         int cursor = search == null ? query.length() : search.getCursor();
         clearChildren();
+        cards.clear();
         button("X", layout.close, this::close);
         button("Done", layout.done, this::close);
-        for (int i=0;i<CATEGORIES.length;i++) {
-            int index=i;
-            button(CATEGORIES[i],layout.category(i),()->{category=index;query="";rebuild();});
+        for (var item:WardrobeCategory.values()) {
+            button(item.label,layout.category(item.ordinal()),()->{category=item;query="";scroll=0;rebuild();});
         }
         Rect s=layout.search;
-        search=new TextFieldWidget(textRenderer,s.x()+7,s.y()+6,Math.max(1,s.width()-14),12,text("Search cosmetics"));
+        search=new TextFieldWidget(textRenderer,s.x()+7,s.y()+6,Math.max(1,s.width()-14),12,text(category.search));
         search.setDrawsBackground(false);
         search.setEditableColor(INK);
-        search.setPlaceholder(text("Search capes..."));
+        search.setPlaceholder(text(category.search));
         search.setMaxLength(64);
         search.addFormatter((value,index)->text(value).asOrderedText());
         search.setText(query);
         search.setCursor(Math.min(cursor,query.length()),false);
-        search.setChangedListener(value->{query=value;rebuild();});
+        search.setChangedListener(value->{query=value;scroll=0;rebuild();});
         addDrawableChild(search);
         if(focused)setFocused(search);
-        if(category<=1) {
+        if(category.includesCapes()) {
+            scroll=Math.clamp(scroll,0,layout.maxScroll(matchingCapes().size()));
             int index=0;
-            if(matches("Gold Owner"))card("Gold Owner",layout.card(index++),true);
-            if(matches("None"))card("None",layout.card(index),false);
+            for(var cape:matchingCapes())card(cape,layout.card(index++,scroll));
         }
-        Rect d=layout.details;
-        int buttonY=d.bottom()-20;
         int arrowY=layout.preview.bottom()-21;
         button("<",new Rect(layout.preview.x()+4,arrowY,20,18),()->rotation-=45);
         button(">",new Rect(layout.preview.right()-24,arrowY,20,18),()->rotation+=45);
-        button(selectedCape?(WardrobePreferences.showCape()?"Unequip":"Equip"):"Remove cape",
-                new Rect(d.x()+4,buttonY,Math.max(28,d.width()-8),18),()->save(selectedCape&&!WardrobePreferences.showCape()));
+
     }
 
     private boolean matches(String name) {return name.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT).trim());}
-    private void save(boolean visible) {
+    private java.util.List<WardrobeCape> matchingCapes() {
+        return category.includesCapes()?WardrobeCape.owned(client.getSession().getUuidOrNull()).stream().filter(cape->matches(cape.label)).toList():java.util.List.of();
+    }
+    private void save(WardrobeCape cape) {
         if (!WardrobeAccess.allowed()) return;
-        try {WardrobePreferences.setShowCape(visible);error="";rebuild();}
+        try {WardrobePreferences.toggle(cape);focusedCape=cape;error="";rebuild();}
         catch(IOException ex) {error="Could not save. Try again.";}
     }
-    private void card(String name,Rect r,boolean cape) {
-        addDrawableChild(new CosmeticCard(name,r,cape));
+    private void card(WardrobeCape cape,Rect r) {
+        var card=new CosmeticCard(cape,r);
+        card.visible=r.bottom()>layout.grid.y()&&r.y()<layout.grid.bottom();
+        cards.add(addSelectableChild(card));
     }
 
     /** Cosmetic tiles draw independently of PressableWidget's generic button skin. */
     private final class CosmeticCard extends ClickableWidget {
-        private final boolean cape;
-        CosmeticCard(String name,Rect r,boolean cape) {
-            super(r.x(),r.y(),r.width(),r.height(),text(name));this.cape=cape;
+        private final WardrobeCape cape;
+        CosmeticCard(WardrobeCape cape,Rect r) {
+            super(r.x(),r.y(),r.width(),r.height(),text(cape.label));this.cape=cape;
         }
-        private void select() {if(WardrobeAccess.allowed()){selectedCape=cape;rebuild();}}
+        private void select() {save(cape);}
         @Override public void onClick(Click click,boolean doubled) {select();}
+        @Override public boolean mouseClicked(Click click,boolean doubled) {
+            return layout.grid.contains(click.x(),click.y())&&super.mouseClicked(click,doubled);
+        }
         @Override public boolean keyPressed(KeyInput input) {
             if(active&&visible&&isFocused()&&(input.key()==257||input.key()==335||input.key()==32)) {
                 playDownSound(client.getSoundManager());select();return true;
@@ -118,15 +123,10 @@ public final class WardrobeScreen extends Screen {
         @Override protected void appendClickableNarrations(NarrationMessageBuilder builder){appendDefaultNarrations(builder);}
         @Override protected void renderWidget(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
-            boolean selected=selectedCape==cape;
+            boolean selected=WardrobePreferences.current()==cape;
             frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,0xEE15191F);
             Rect image=WardrobeLayout.capeImage(r);
-            if(cape)drawCape(c,image.x(),image.y(),image.width(),image.height());
-            else {
-                frame(c,image,LINE,FIELD);
-                // A muted empty slot, distinct from the real cape's artwork.
-                c.fill(image.x()+image.width()/2,image.y()+2,image.x()+image.width()/2+1,image.bottom()-2,MUTED);
-            }
+            drawCape(c,cape,image.x(),image.y(),image.width(),image.height());
             if(r.height()<55) {
                 label(c,textRenderer,getMessage().getString(),image.right()+5,r.y()+(r.height()-9)/2,
                         selected?BRAND:INK,.75f,r.right()-image.right()-9,false);
@@ -134,8 +134,8 @@ public final class WardrobeScreen extends Screen {
             }
             c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,DIVIDER);
             label(c,textRenderer,getMessage().getString(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
-            boolean equipped=cape==WardrobePreferences.showCape();
-            label(c,textRenderer,equipped?"Equipped":cape?"Animated cape":"No cape",r.x()+7,r.bottom()-12,
+            boolean equipped=WardrobePreferences.current()==cape;
+            label(c,textRenderer,equipped?"Equipped":"Click to equip",r.x()+7,r.bottom()-12,
                     equipped?BRAND:MUTED,.7f,r.width()-14,false);
         }
     }
@@ -161,23 +161,33 @@ public final class WardrobeScreen extends Screen {
         rounded(c,preview.x(),preview.y(),preview.width(),preview.height(),0xA0101218);
         drawPlayer(c,delta);
         Rect d=layout.details;
-        label(c,textRenderer,selectedCape?"Gold Owner":"None",d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
+        label(c,textRenderer,focusedCape.label,d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
         if(d.height()>60) {
-            label(c,textRenderer,selectedCape?"OWNER EXCLUSIVE":"No custom cape",d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
+            label(c,textRenderer,focusedCape.badge,d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
             label(c,textRenderer,"Drag to rotate",d.x()+4,d.y()+32,MUTED,.7f,d.width()-8,false);
-            label(c,textRenderer,"Visibility on this client",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
+            label(c,textRenderer,WardrobePreferences.current()==focusedCape?"Click cape to unequip":"Click cape to equip",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
         }
-        if(category>1||(!matches("Gold Owner")&&!matches("None"))) {
+        if(!category.includesCapes()||WardrobeCape.owned(client.getSession().getUuidOrNull()).stream().noneMatch(cape->matches(cape.label))) {
             label(c,textRenderer,"No cosmetics here yet",layout.grid.x()+3,layout.grid.y()+12,MUTED,.8f,layout.grid.width()-6,false);
         }
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
         label(c,textRenderer,error.isEmpty()?"Saves automatically • Local preview":error,p.x()+10,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-82,false);
         super.render(c,mx,my,delta);
+        c.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
+        for(var card:cards)card.render(c,mx,my,delta);
+        c.disableScissor();
+        int maximum=layout.maxScroll(matchingCapes().size());
+        if(maximum>0) {
+            int thumb=Math.max(10,layout.grid.height()*layout.grid.height()/(layout.grid.height()+maximum));
+            int y=layout.grid.y()+(layout.grid.height()-thumb)*scroll/maximum;
+            rounded(c,layout.grid.right()+2,layout.grid.y(),2,layout.grid.height(),DIVIDER);
+            rounded(c,layout.grid.right()+2,y,2,thumb,MUTED);
+        }
     }
 
-    private void drawCape(DrawContext c,int x,int y,int w,int h) {
+    private void drawCape(DrawContext c,WardrobeCape cape,int x,int y,int w,int h) {
         float age=client.player==null?(System.currentTimeMillis()%4000)/50f:client.player.age;
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,CreatorCosmetics.capeTexture(age),x,y,32,32,w,h,320,512,2048,1024);
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,cape.texture(age),x,y,32,32,w,h,320,512,2048,1024);
     }
 
     @SuppressWarnings({"rawtypes","unchecked"})
@@ -185,7 +195,8 @@ public final class WardrobeScreen extends Screen {
         Rect r=layout.preview;
         if(client.player==null) {
             int h=Math.max(12,r.height()-32),w=Math.min(r.width()-14,h*10/16);
-            if(selectedCape)drawCape(c,r.x()+(r.width()-w)/2,r.y()+8,w,h);
+            var equipped=WardrobePreferences.current();
+            if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
             label(c,textRenderer,"Join a world to preview",r.x()+4,r.bottom()-32,MUTED,.65f,r.width()-8,false);
             return;
         }
@@ -199,8 +210,6 @@ public final class WardrobeScreen extends Screen {
         state.equippedHeadStack=ItemStack.EMPTY;state.equippedChestStack=ItemStack.EMPTY;
         state.equippedLegsStack=ItemStack.EMPTY;state.equippedFeetStack=ItemStack.EMPTY;
         state.rightHandItem=ItemStack.EMPTY;state.leftHandItem=ItemStack.EMPTY;
-        state.skinTextures=CreatorCosmetics.applyCape(CreatorCosmetics.OWNER,state.skinTextures,state.age);
-        state.capeVisible=selectedCape;
         state.width/=state.baseScale;state.height/=state.baseScale;state.baseScale=1;
         c.addEntity(state,Math.max(8,(r.height()-25)/2.15f),new Vector3f(0,state.height/2,0),
                 new Quaternionf().rotateZ((float)Math.PI),new Quaternionf(),r.x()+2,r.y()+2,r.right()-2,r.bottom()-24);
@@ -214,6 +223,14 @@ public final class WardrobeScreen extends Screen {
     @Override public boolean mouseDragged(Click click,double dx,double dy) {
         if(dragging){rotation+=(float)dx*1.3f;return true;}return super.mouseDragged(click,dx,dy);
     }
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
+        if(!WardrobeAccess.allowed())return true;
+        if(layout.grid.contains(x,y)) {
+            scroll=Math.clamp(scroll-(int)Math.round(vertical*28),0,layout.maxScroll(matchingCapes().size()));
+            rebuild();return true;
+        }
+        return super.mouseScrolled(x,y,horizontal,vertical);
+    }
     @Override public boolean mouseReleased(Click click) {dragging=false;return super.mouseReleased(click);}
 
     private class WardrobeButton extends ButtonWidget {
@@ -225,7 +242,7 @@ public final class WardrobeScreen extends Screen {
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
-            boolean selected=getMessage().getString().equals(CATEGORIES[category]);
+            boolean selected=getMessage().getString().equals(category.label);
             long now=System.nanoTime();
             hoverProgress=MenuAnimation.hover(hoverProgress,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);
             lastFrame=now;
@@ -235,11 +252,11 @@ public final class WardrobeScreen extends Screen {
                 icon(c,"close",r.x()+(r.width()-10)/2,r.y()+(r.height()-10)/2,10,10,INK);
                 return;
             }
-            int categoryIndex=java.util.Arrays.asList(CATEGORIES).indexOf(title);
+            WardrobeCategory item=null;
+            for(var value:WardrobeCategory.values())if(value.label.equals(title))item=value;
             int textX=r.x()+7;
-            if(categoryIndex>=0&&r.width()>74) {
-                String[] icons={"grid","shirt","account","shirt","backpack","move"};
-                icon(c,icons[categoryIndex],r.x()+8,r.y()+(r.height()-12)/2,12,12,selected?BRAND:MUTED);
+            if(item!=null&&r.width()>74) {
+                icon(c,item.icon,r.x()+8,r.y()+(r.height()-12)/2,12,12,selected?BRAND:MUTED);
                 textX=r.x()+26;
             }
             label(c,textRenderer,title,textX,r.y()+(r.height()-9)/2,active?INK:MUTED,.8f,r.right()-textX-6,false);

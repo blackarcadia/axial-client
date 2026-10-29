@@ -25,7 +25,11 @@ public final class CreatorCosmetics {
     }
 
     public static SkinTextures applyCape(UUID uuid, SkinTextures original, float age) {
-        if (!OWNER.equals(uuid) || original == null) return original;
+        return applyCape(uuid, original, age, true);
+    }
+
+    public static SkinTextures applyCape(UUID uuid, SkinTextures original, float age, boolean equipped) {
+        if (!equipped || !OWNER.equals(uuid) || original == null) return original;
         // Entity textures do not consume atlas .mcmeta animation. Select preloaded frames instead.
         return new SkinTextures(original.body(), FRAMES.get(frameIndex(age)), original.elytra(), original.model(), original.secure());
     }

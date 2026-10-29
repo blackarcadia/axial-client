@@ -60,7 +60,7 @@ public final class ClientSettingsScreen extends Screen {
         addDrawableChild(new SettingsButton("Settings",layout.settings,()->{}));
         var wardrobe=new SettingsButton("Wardrobe",layout.wardrobe,()->WardrobeScreen.open(this));
         wardrobe.active=WardrobeAccess.allowed();
-        wardrobe.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(text("Wardrobe • Owner account only")));
+        wardrobe.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(text("Wardrobe • Granted accounts only")));
         addDrawableChild(wardrobe);
         var hud=new SettingsButton("Edit HUD",layout.editHud,()->change(()->{
             if(parent instanceof ModMenuScreen menu)menu.openHudEditor();

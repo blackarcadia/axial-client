@@ -26,13 +26,20 @@ final class WardrobeLayout {
         columns = centerW >= 150 ? 2 : 1;
     }
     Rect category(int index) {
-        int h = Math.min(27, Math.max(10,categories.height()/6));
+        int h = Math.min(27, Math.max(10,categories.height()/WardrobeCategory.values().length));
         return new Rect(categories.x(),categories.y()+index*h,categories.width(),h-2);
     }
     Rect card(int index) {
+        return card(index,0);
+    }
+    Rect card(int index,int scroll) {
         int gap = 6, w = (grid.width()-(columns-1)*gap)/columns;
         int h = Math.min(118,Math.max(12,(grid.height()-6)/(columns==1?2:1)));
-        return new Rect(grid.x()+index%columns*(w+gap), grid.y()+index/columns*(h+gap), w,h);
+        return new Rect(grid.x()+index%columns*(w+gap), grid.y()+index/columns*(h+gap)-scroll, w,h);
+    }
+    int maxScroll(int count) {
+        if(count==0)return 0;
+        return Math.max(0,((count+columns-1)/columns)*(card(0).height()+6)-6-grid.height());
     }
 
     /** Fit the visible cape face at its native 10:16 ratio, including compact rows. */

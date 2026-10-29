@@ -1,6 +1,5 @@
 package com.axial.cosmetics.mixin;
 
-import com.axial.cosmetics.client.CreatorCosmetics;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.entity.PlayerLikeEntity;
@@ -15,7 +14,6 @@ public abstract class PlayerEntityRendererCreatorMixin {
     private void axial$creatorCape(PlayerLikeEntity player, PlayerEntityRenderState state,
                                    float tickProgress, CallbackInfo ci) {
         // Vanilla still controls cape visibility, movement, armor offsets and elytra suppression.
-        state.skinTextures = CreatorCosmetics.applyCape(player.getUuid(), state.skinTextures, state.age);
-        com.axial.cosmetics.client.WardrobeScreen.applyVisibility(player.getUuid(), state);
+        state.skinTextures = com.axial.cosmetics.client.WardrobePreferences.applyCape(player.getUuid(), state.skinTextures, state.age);
     }
 }

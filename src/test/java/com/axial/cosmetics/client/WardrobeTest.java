@@ -25,11 +25,49 @@ class WardrobeTest {
             var l=new WardrobeLayout(w,h);
             inside(l.panel,new Rect(0,0,w,h));
             for(Rect r:new Rect[]{l.close,l.categories,l.search,l.grid,l.preview,l.details,l.done})inside(r,l.panel);
-            for(int i=0;i<6;i++)inside(l.category(i),l.categories);
+            for(var category:WardrobeCategory.values())inside(l.category(category.ordinal()),l.categories);
             for(int i=0;i<2;i++)inside(l.card(i),l.grid);
             assertTrue(l.search.right()<l.preview.x());
             assertTrue(l.details.bottom()<=l.done.y());
             assertTrue(l.grid.right()<l.preview.x());
+        }
+    }
+    @Test void categoriesHaveTheirOwnSearchPromptAndExcludeTheEmoteWheel() {
+        assertEquals(5,WardrobeCategory.values().length);
+        assertEquals("Search cosmetics...",WardrobeCategory.ALL.search);
+        assertEquals("Search capes...",WardrobeCategory.CAPES.search);
+        assertEquals("Search headwear...",WardrobeCategory.HEADWEAR.search);
+        assertEquals("Search outfits...",WardrobeCategory.OUTFITS.search);
+        assertEquals("Search backpacks...",WardrobeCategory.BACKPACKS.search);
+        for(var category:WardrobeCategory.values())assertFalse(category.label.equalsIgnoreCase("Emotes"));
+    }
+    @Test void capeSelectionNeverMutatesMinecraftCapeVisibilityAndTilesToggleDirectly() throws Exception {
+        var renderer=read("/com/axial/cosmetics/mixin/PlayerEntityRendererCreatorMixin.class");
+        var screen=read("/com/axial/cosmetics/client/WardrobeScreen.class");
+        for(var node:java.util.List.of(renderer,screen))for(var method:node.methods)for(var instruction:method.instructions) {
+            if(instruction instanceof FieldInsnNode field&&field.getOpcode()==Opcodes.PUTFIELD)
+                assertNotEquals("capeVisible",field.name,"custom cape controls must preserve Minecraft visibility");
+            if(instruction instanceof LdcInsnNode value&&value.cst instanceof String label)
+                assertNotEquals("None",label,"no empty cosmetic tile or separate None option");
+        }
+        var tile=read("/com/axial/cosmetics/client/WardrobeScreen$CosmeticCard.class");
+        var select=tile.methods.stream().filter(method->method.name.equals("select")).findFirst().orElseThrow();
+        boolean savesSelection=false;
+        for(var instruction:select.instructions)
+            if(instruction instanceof MethodInsnNode call&&call.name.equals("save"))savesSelection=true;
+        assertTrue(savesSelection,"a tile click must save its cape selection immediately");
+        assertNull(WardrobePreferences.nextSelection(WardrobeCape.ADMIN,WardrobeCape.ADMIN));
+        assertEquals(WardrobeCape.ADMIN,WardrobePreferences.nextSelection(null,WardrobeCape.ADMIN));
+        assertEquals(WardrobeCape.ADMIN,WardrobePreferences.nextSelection(WardrobeCape.GOLD_OWNER,WardrobeCape.ADMIN));
+
+    }
+    @Test void additionalCapesRemainReachableInSmallWindows() {
+        for(int w:new int[]{260,320,427,640,960})for(int h:new int[]{165,210,270,540}) {
+            var l=new WardrobeLayout(w,h);
+            int max=l.maxScroll(3);
+            assertTrue(l.card(2,max).bottom()<=l.grid.bottom());
+            assertTrue(l.card(2,max).y()>=l.grid.y());
+            assertEquals(0,l.maxScroll(0));
         }
     }
     @Test void capeArtworkFitsInsideTheTileWithoutBeingStretched() {
