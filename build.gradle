@@ -823,6 +823,7 @@ echo "Done."
 
 test {
     useJUnitPlatform()
+    doFirst { systemProperty 'axial.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath }
     dependsOn tasks.compileRuntimeProbe
     systemProperty 'axial.test.runtimeProbeClasses', layout.buildDirectory.dir('runtime-probe').get().asFile.absolutePath
     dependsOn tasks.remapJar
