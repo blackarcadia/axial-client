@@ -176,6 +176,18 @@ public abstract class TitleScreenBackgroundMixin {
     }
 
     @Inject(method = "render", at = @At("TAIL"))
+    private void axial_cosmetics$drawClientPresence(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        // The title screen can also be rendered behind Accounts; show this only
+        // when the custom main menu itself is the active screen.
+        if (client.currentScreen != (Object) this) return;
+        var label = net.minecraft.text.Text.literal(com.axial.cosmetics.client.ClientPresence.label())
+                .styled(style -> style.withFont(new net.minecraft.text.StyleSpriteSource.Font(
+                        Identifier.of("axialutils", "ui_clean"))));
+        context.drawTextWithShadow(client.textRenderer, label, 12, 12, 0xFFEEDCF9);
+    }
+
+    @Inject(method = "render", at = @At("TAIL"))
     private void axial_cosmetics$drawAccountsDropdown(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         TitleScreenAccountsDropdown.render(context, (TitleScreen) (Object) this, MinecraftClient.getInstance().textRenderer, mouseX, mouseY);
     }
