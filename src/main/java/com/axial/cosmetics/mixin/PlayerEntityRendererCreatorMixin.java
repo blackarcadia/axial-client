@@ -15,6 +15,6 @@ public abstract class PlayerEntityRendererCreatorMixin {
     private void axial$creatorCape(PlayerLikeEntity player, PlayerEntityRenderState state,
                                    float tickProgress, CallbackInfo ci) {
         // Vanilla still controls cape visibility, movement, armor offsets and elytra suppression.
-        state.skinTextures = CreatorCosmetics.applyCape(player.getUuid(), state.skinTextures);
+        state.skinTextures = CreatorCosmetics.applyCape(player.getUuid(), state.skinTextures, state.age);
     }
 }

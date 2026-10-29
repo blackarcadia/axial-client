@@ -14,7 +14,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 
-/** A small solid ring; no particles, world effects, or visibility through walls. */
+/** A block-built square halo with a cube travelling along its perimeter. */
 public final class CreatorSigilFeatureRenderer extends FeatureRenderer<PlayerEntityRenderState, PlayerEntityModel> {
     private static final Identifier TEXTURE = Identifier.of("axial_cosmetics", "textures/entity/creator_sigil.png");
     private final SigilModel ring = new SigilModel(false);
@@ -37,16 +37,30 @@ public final class CreatorSigilFeatureRenderer extends FeatureRenderer<PlayerEnt
         matrices.push();
         try {
             // Player models use sixteen units per block, with negative Y above the head.
-            matrices.translate(0, -0.78 + Math.sin(state.age * 0.035) * 0.012, 0);
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(14));
+            matrices.translate(0, -0.82 + Math.sin(state.age * 0.035) * 0.018, 0);
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(45));
             commands.submitModel(ring, state, matrices, RenderLayers.entityCutoutNoCull(TEXTURE),
-                    LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0xFFB080D0, null, 0, null);
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotation(state.age * 0.025f));
+                    LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0xFFAD70E0, null, 0, null);
+            float[] position = perimeterPosition(state.age);
+            matrices.translate(position[0] / 16f, -0.035f, position[1] / 16f);
             commands.submitModel(point, state, matrices, RenderLayers.entityCutoutNoCull(TEXTURE),
                     LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0xFFEED5FF, null, 0, null);
         } finally {
             matrices.pop();
         }
+    }
+
+    /** One eight-second lap, with straight edges and exact square corners. Model units. */
+    public static float[] perimeterPosition(float age) {
+        float progress = ((age % 160f) + 160f) % 160f / 40f;
+        int edge = (int) progress;
+        float offset = (progress - edge) * 11f;
+        return switch (edge) {
+            case 0 -> new float[]{-5.5f + offset, -5.5f};
+            case 1 -> new float[]{5.5f, -5.5f + offset};
+            case 2 -> new float[]{5.5f - offset, 5.5f};
+            default -> new float[]{-5.5f, 5.5f - offset};
+        };
     }
 
     private static final class SigilModel extends Model<PlayerEntityRenderState> {
@@ -60,15 +74,16 @@ public final class CreatorSigilFeatureRenderer extends FeatureRenderer<PlayerEnt
             ModelData data = new ModelData();
             if (point) {
                 data.getRoot().addChild("point", ModelPartBuilder.create().uv(0, 0)
-                        .cuboid(4.4f, -0.4f, -0.4f, 0.8f, 0.8f, 0.8f), ModelTransform.NONE);
+                        .cuboid(-0.7f, -0.7f, -0.7f, 1.4f, 1.4f, 1.4f), ModelTransform.NONE);
             } else {
-                int segments = 48;
-                for (int i = 0; i < segments; i++) {
-                    float angle = (float) (i * Math.PI * 2 / segments);
-                    data.getRoot().addChild("arc_" + i, ModelPartBuilder.create().uv(0, 0)
-                                    .cuboid(-0.33f, -0.09f, -0.09f, 0.66f, 0.18f, 0.18f),
-                            ModelTransform.of((float) Math.sin(angle) * 4.8f, 0,
-                                    (float) Math.cos(angle) * 4.8f, 0, angle, 0));
+                data.getRoot().addChild("frame", ModelPartBuilder.create().uv(0, 0)
+                        .cuboid(-6, -0.4f, -6, 12, 0.8f, 1)
+                        .cuboid(-6, -0.4f, 5, 12, 0.8f, 1)
+                        .cuboid(-6, -0.4f, -5, 1, 0.8f, 10)
+                        .cuboid(5, -0.4f, -5, 1, 0.8f, 10), ModelTransform.NONE);
+                for (int x : new int[]{-1, 1}) for (int z : new int[]{-1, 1}) {
+                    data.getRoot().addChild("corner_" + x + "_" + z, ModelPartBuilder.create().uv(0, 0)
+                            .cuboid(x * 5.5f - 0.8f, -0.65f, z * 5.5f - 0.8f, 1.6f, 1.3f, 1.6f), ModelTransform.NONE);
                 }
             }
             return TexturedModelData.of(data, 16, 16);
