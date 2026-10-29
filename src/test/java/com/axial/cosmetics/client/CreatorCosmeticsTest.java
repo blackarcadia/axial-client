@@ -24,7 +24,7 @@ class CreatorCosmeticsTest {
         assertTrue(CreatorCosmetics.hasCreatorCape(result));
     }
 
-    @Test void otherPlayersKeepTheirOwnCosmeticsAndDoNotGetSigil() {
+    @Test void otherPlayersKeepTheirOwnCosmetics() {
         var original = new SkinTextures(texture("skin"), texture("cape"), null, PlayerSkinType.WIDE, false);
         assertSame(original, CreatorCosmetics.applyCape(UUID.fromString("6a9cccc8-8e00-4a73-bd37-1121f81b0675"), original));
         assertFalse(CreatorCosmetics.hasCreatorCape(original));
@@ -54,12 +54,4 @@ class CreatorCosmeticsTest {
         assertEquals(15, CreatorCosmetics.frameIndex(-1));
     }
 
-    @Test void sigilTravelsAlongSquareRatherThanCuttingAcrossCorners() {
-        assertArrayEquals(new float[]{-5.5f, -5.5f}, CreatorSigilFeatureRenderer.perimeterPosition(0));
-        assertArrayEquals(new float[]{0, -5.5f}, CreatorSigilFeatureRenderer.perimeterPosition(20));
-        assertArrayEquals(new float[]{5.5f, -5.5f}, CreatorSigilFeatureRenderer.perimeterPosition(40));
-        assertArrayEquals(new float[]{5.5f, 5.5f}, CreatorSigilFeatureRenderer.perimeterPosition(80));
-        assertArrayEquals(new float[]{-5.5f, 5.5f}, CreatorSigilFeatureRenderer.perimeterPosition(120));
-        assertArrayEquals(CreatorSigilFeatureRenderer.perimeterPosition(0), CreatorSigilFeatureRenderer.perimeterPosition(160));
-    }
 }
