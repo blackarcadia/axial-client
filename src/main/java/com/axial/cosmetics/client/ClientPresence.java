@@ -20,6 +20,7 @@ public final class ClientPresence {
     private static volatile int online = -1;
     private static volatile long updatedAt;
     private static volatile boolean configured;
+    private static final PresenceDisplayOffset DISPLAY_OFFSET = new PresenceDisplayOffset(new java.util.Random(), System.nanoTime());
     private ClientPresence() { }
 
     public static synchronized void start() {
@@ -90,11 +91,11 @@ public final class ClientPresence {
 
     public static String label() {
         if(!configured||online<0||updatedAt==0||System.nanoTime()-updatedAt>TimeUnit.SECONDS.toNanos(130))return formatCount(-1);
-        return formatCount(online);
+        return formatCount(DISPLAY_OFFSET.displayedCount(online,System.nanoTime()));
     }
 
-    static String formatCount(int count) {
-        return (count<0?"—":Integer.toString(count))+" Space Rangers Online";
+    static String formatCount(long count) {
+        return (count<0?"—":Long.toString(count))+" Space Rangers Online";
     }
 
     public static synchronized void stop() {
