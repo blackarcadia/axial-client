@@ -2,8 +2,8 @@
 
 The cape has six independently authored faces:
 
-- `front.png`: the owner's supplied black-and-gold skull design, preserved as received.
-- `back.png`: matching black-and-gold diamond/star reverse, created with built-in image generation using the front as its reference.
+- `front.png`: the matching black-and-gold diamond/star design, facing the player.
+- `back.png`: the owner's supplied black-and-gold skull design, preserved as received, facing outward.
 - `left.png` and `right.png`: gold OWNER block lettering arranged vertically over almost the full 512-pixel edge length.
 - `top.png` and `bottom.png`: black fabric with gold borders and repeating square details.
 
@@ -23,7 +23,9 @@ front/inward `(12,1,10,16)`, back/outward `(1,1,10,16)`,
 sides `(0,1,1,16)` and `(11,1,1,16)`,
 top `(1,0,10,1)`, bottom `(11,0,10,1)`.
 
-## Reverse panel generation prompt
+`cape-preview.png` is an earlier mockup; its FRONT/BACK labels predate the face swap.
+
+## Diamond panel generation prompt
 
 Create only the reverse/back flat texture panel for the Minecraft cape whose
 FRONT is the supplied reference. Portrait rectangle aspect ratio 5:8. Match the
