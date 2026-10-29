@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Keeps an emote's silhouette clear without changing the player's actual
- * equipment. The render state is rebuilt every frame, so equipment returns
+ * equipment. The render state is rebuilt every frame, so equipment and capes return
  * immediately when Emotecraft stops the emote.
  */
 @Mixin(PlayerEntityRenderer.class)
@@ -37,5 +37,6 @@ public abstract class PlayerEntityRendererEmoteEquipmentMixin {
         state.equippedFeetStack = ItemStack.EMPTY;
         state.rightHandItem = ItemStack.EMPTY;
         state.leftHandItem = ItemStack.EMPTY;
+        state.capeVisible = false;
     }
 }

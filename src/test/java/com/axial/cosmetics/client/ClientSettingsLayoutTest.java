@@ -10,13 +10,15 @@ class ClientSettingsLayoutTest {
             var l=new ClientSettingsLayout(width,height);
             assertTrue(l.panel.x()>=0&&l.panel.y()>=0);
             assertTrue(l.panel.right()<=width&&l.panel.bottom()<=height);
-            for(Rect r:new Rect[]{l.controls,l.back,l.settings,l.editHud,l.close,l.reset,l.done,l.scrollbar}) {
+            for(Rect r:new Rect[]{l.controls,l.back,l.settings,l.editHud,l.wardrobe,l.close,l.reset,l.done,l.scrollbar}) {
                 assertTrue(r.x()>=l.panel.x()&&r.right()<=l.panel.right(),r.toString());
                 assertTrue(r.y()>=l.panel.y()&&r.bottom()<=l.panel.bottom(),r.toString());
             }
             assertTrue(l.back.right()<=l.settings.x());
             assertTrue(l.settings.right()<=l.editHud.x());
             assertTrue(l.editHud.right()<l.close.x());
+            assertTrue(l.editHud.right()<=l.wardrobe.x());
+            assertTrue(l.wardrobe.right()<l.close.x());
             assertTrue(l.reset.right()<l.done.x());
             assertTrue(l.controls.bottom()<l.reset.y());
             assertTrue(l.headerBottom<l.controls.y());

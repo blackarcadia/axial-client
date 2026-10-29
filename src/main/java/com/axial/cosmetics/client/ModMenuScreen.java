@@ -69,14 +69,19 @@ public final class ModMenuScreen extends Screen {
         cardButtons.clear();
         add("Close",layout.close,"close",this::close,false,null);
         var nav = layout.navigation;
-        int tabWidth = Math.min(102, nav.width()/3);
-        int navX = nav.x()+(nav.width()-tabWidth*3)/2;
-        String[] tabs = {"Mods","Settings","Edit HUD"}, icons = {"cube","gear","move"};
-        for (int i=0;i<3;i++) {
+        int tabWidth = Math.min(102, nav.width()/4);
+        int navX = nav.x()+(nav.width()-tabWidth*4)/2;
+        String[] tabs = {"Mods","Settings","Edit HUD","Wardrobe"}, icons = {"cube","gear","move","wardrobe"};
+        for (int i=0;i<4;i++) {
             int tab=i;
-            add(tabs[i],new ModMenuLayout.Rect(navX+i*tabWidth,nav.y(),tabWidth,nav.height()),icons[i],
+            var navButton=add(tabs[i],new ModMenuLayout.Rect(navX+i*tabWidth,nav.y(),tabWidth,nav.height()),icons[i],
                     () -> { if(tab==1)client.setScreen(new ClientSettingsScreen(this));
-                        else if(tab==2)run(() -> ModMenuCatalog.openMode(backend,"MOVE")); },i==0,null);
+                        else if(tab==2)run(() -> ModMenuCatalog.openMode(backend,"MOVE"));
+                        else if(tab==3)WardrobeScreen.open(this); },i==0,null);
+            if(tab==3) {
+                navButton.active=WardrobeAccess.allowed();
+                navButton.setTooltip(Tooltip.of(text("Wardrobe • Owner account only")));
+            }
         }
         var box=layout.search;
         search = new TextFieldWidget(textRenderer,box.x()+23,box.y()+(box.height()-9)/2,box.width()-29,12,text("Search mods"));
@@ -283,6 +288,13 @@ public final class ModMenuScreen extends Screen {
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
+            if(icon.equals("wardrobe")) {
+                active=WardrobeAccess.allowed();
+                var r=new ModMenuLayout.Rect(getX(),getY(),width,height);
+                frame(context,r,active&&isHovered()?HOVER_LINE:LINE,SURFACE);
+                label(context,textRenderer,active?"Wardrobe":"Wardrobe [locked]",r.x()+5,r.y()+(r.height()-9)/2,active?INK:MUTED,.8f,r.width()-10,false);
+                return;
+            }
             if(icon.equals("open"))return;
             boolean hover=isHovered()||isFocused();
             long now=System.nanoTime();

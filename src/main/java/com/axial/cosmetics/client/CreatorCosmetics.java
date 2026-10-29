@@ -34,6 +34,10 @@ public final class CreatorCosmetics {
         return Math.floorMod((int) Math.floor(age / 5f), FRAME_COUNT);
     }
 
+    public static Identifier capeTexture(float age) {
+        return FRAMES.get(frameIndex(age)).texturePath();
+    }
+
     public static boolean hasCreatorCape(SkinTextures textures) {
         return textures != null && textures.cape() != null && FRAMES.contains(textures.cape());
     }

@@ -58,6 +58,10 @@ public final class ClientSettingsScreen extends Screen {
         clearChildren();rows.clear();layout=new ClientSettingsLayout(width,height);
         addDrawableChild(new SettingsButton("Mods",layout.back,this::close));
         addDrawableChild(new SettingsButton("Settings",layout.settings,()->{}));
+        var wardrobe=new SettingsButton("Wardrobe",layout.wardrobe,()->WardrobeScreen.open(this));
+        wardrobe.active=WardrobeAccess.allowed();
+        wardrobe.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(text("Wardrobe • Owner account only")));
+        addDrawableChild(wardrobe);
         var hud=new SettingsButton("Edit HUD",layout.editHud,()->change(()->{
             if(parent instanceof ModMenuScreen menu)menu.openHudEditor();
         }));
@@ -203,6 +207,13 @@ public final class ClientSettingsScreen extends Screen {
         }
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
+            if(label.equals("Wardrobe")) {
+                active=WardrobeAccess.allowed();
+                Rect r=new Rect(getX(),getY(),width,height);
+                frame(c,r,active&&isHovered()?HOVER_LINE:LINE,SURFACE);
+                label(c,textRenderer,active?"Wardrobe":"Locked",r.x()+5,r.y()+8,active?INK:MUTED,.8f,r.width()-10,false);
+                return;
+            }
             boolean hover=active&&(isHovered()||isFocused());Rect r=new Rect(getX(),getY(),width,height);
             if(label.equals("Reset"))r=new Rect(r.x()+4,r.y()+8,r.width()-8,20);
             if(label.equals("CLOSE")){icon(c,"close",r.x()+4,r.y()+5,11,11,hover?INK:MUTED);return;}
