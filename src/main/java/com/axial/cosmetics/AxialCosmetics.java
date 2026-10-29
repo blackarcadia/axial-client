@@ -182,6 +182,7 @@ public class AxialCosmetics implements ClientModInitializer {
             LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
                 if (entityRenderer instanceof PlayerEntityRenderer playerRenderer) {
                     registrationHelper.register(new CosmeticFeatureRenderer(playerRenderer, COSMETIC_MANAGER));
+                    registrationHelper.register(new com.axial.cosmetics.client.CreatorSigilFeatureRenderer(playerRenderer));
                 }
             });
         } catch (Throwable t) {

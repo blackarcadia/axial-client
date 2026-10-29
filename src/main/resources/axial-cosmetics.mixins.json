@@ -33,6 +33,7 @@
     "ItemRendererShadowGlintMixin",
     "PlayerEntityRendererEmoteEquipmentMixin",
     "PlayerEntityRendererThirdPersonNameTagMixin",
+    "PlayerEntityRendererCreatorMixin",
     "GeoArmorGlintMixin",
     "ArmorCosmeticGeoRendererMixin",
     "AxialConfigScreenColorPickerMixin",
