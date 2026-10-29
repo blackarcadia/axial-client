@@ -17,6 +17,20 @@ class WardrobeCapeTest {
     private static final UUID STAFF_ONE=UUID.fromString("8ef7a848-7c77-4449-92a9-b2fb30b4cfad");
     private static final UUID STAFF_TWO=UUID.fromString("a0e00d14-fce1-4ed2-9577-d83a3feedfee");
     private static final UUID STAFF_THREE=UUID.fromString("8d79d555-75e5-4456-bbc4-0268e1d21659");
+    @Test void lunarRavenIsExclusiveToItsRecipientAndGrantsWardrobeAccess() {
+        UUID recipient=UUID.fromString("499b254f-45e3-4ad9-b1ed-6a388b56410c");
+        assertEquals(List.of(WardrobeCape.LUNAR_RAVEN),WardrobeCape.owned(recipient));
+        assertTrue(WardrobeAccess.allows(recipient,null));
+        assertTrue(WardrobeAccess.allows(recipient,recipient));
+        assertFalse(WardrobeAccess.allows(recipient,CreatorCosmetics.OWNER));
+        for(UUID other:List.of(CreatorCosmetics.OWNER,STAFF_ONE,STAFF_TWO,STAFF_THREE,new UUID(0,1)))
+            assertFalse(WardrobeCape.LUNAR_RAVEN.ownedBy(other));
+        assertEquals(WardrobeCape.LUNAR_RAVEN,WardrobePreferences.selection(new Properties(),recipient));
+        var values=new Properties();values.setProperty(recipient.toString(),"minecraft");
+        assertNull(WardrobePreferences.selection(values,recipient));
+        values.setProperty(recipient.toString(),"admin");
+        assertEquals(WardrobeCape.LUNAR_RAVEN,WardrobePreferences.selection(values,recipient));
+    }
     @Test void exactlyTheGrantedAccountsOwnAdminAndCanOpenTheirWardrobes() {
         assertEquals(List.of(WardrobeCape.GOLD_OWNER,WardrobeCape.ADMIN,WardrobeCape.STAFF),WardrobeCape.owned(CreatorCosmetics.OWNER));
         for(UUID staff:List.of(STAFF_ONE,STAFF_TWO)) {
