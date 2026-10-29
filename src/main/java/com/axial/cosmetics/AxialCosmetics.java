@@ -163,6 +163,7 @@ public class AxialCosmetics implements ClientModInitializer {
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->MinimapRenderer.refreshWorld(client));
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client,world)->MinimapRenderer.refreshWorld(client));
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->{
+            com.axial.cosmetics.client.IslandXpPopup.clear();
             MinimapExploration.flush();MinimapRenderer.refreshWorld(client);
         });
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client->MinimapExploration.shutdown());
