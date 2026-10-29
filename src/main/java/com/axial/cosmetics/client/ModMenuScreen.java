@@ -71,7 +71,7 @@ public final class ModMenuScreen extends Screen {
         var nav = layout.navigation;
         int tabWidth = Math.min(102, nav.width()/4);
         int navX = nav.x()+(nav.width()-tabWidth*4)/2;
-        String[] tabs = {"Mods","Settings","Edit HUD","Wardrobe"}, icons = {"cube","gear","move","wardrobe"};
+        String[] tabs = {"Mods","Settings","Edit HUD","Wardrobe"}, icons = {"cube","gear","move","shirt"};
         for (int i=0;i<4;i++) {
             int tab=i;
             var navButton=add(tabs[i],new ModMenuLayout.Rect(navX+i*tabWidth,nav.y(),tabWidth,nav.height()),icons[i],
@@ -288,15 +288,9 @@ public final class ModMenuScreen extends Screen {
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
         @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
-            if(icon.equals("wardrobe")) {
-                active=WardrobeAccess.allowed();
-                var r=new ModMenuLayout.Rect(getX(),getY(),width,height);
-                frame(context,r,active&&isHovered()?HOVER_LINE:LINE,SURFACE);
-                label(context,textRenderer,active?"Wardrobe":"Wardrobe [locked]",r.x()+5,r.y()+(r.height()-9)/2,active?INK:MUTED,.8f,r.width()-10,false);
-                return;
-            }
+            if(getMessage().getString().equalsIgnoreCase("Wardrobe"))active=WardrobeAccess.allowed();
             if(icon.equals("open"))return;
-            boolean hover=isHovered()||isFocused();
+            boolean hover=active&&(isHovered()||isFocused());
             long now=System.nanoTime();
             hoverProgress=MenuAnimation.hover(hoverProgress,hover,(now-lastFrame)/1_000_000_000f);
             lastFrame=now;
@@ -326,11 +320,11 @@ public final class ModMenuScreen extends Screen {
             for(var value:ModMenuEntry.Category.values())if(getMessage().getString().equalsIgnoreCase(value.label))categoryButton=true;
             if(categoryButton&&!layout.sidebar){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
             if(!categoryButton && width<85) {
-                label(context,textRenderer,getMessage().getString(),getX()+5,getY()+(height-9)/2,INK,.8f,width-10,false);
+                label(context,textRenderer,getMessage().getString(),getX()+5,getY()+(height-9)/2,active?INK:MUTED,.8f,width-10,false);
                 return;
             }
-            ModMenuUi.icon(context,icon,getX()+8,getY()+(height-13)/2,13,13,INK);
-            label(context,textRenderer,getMessage().getString(),getX()+27,getY()+(height-9)/2,INK,.9f,width-30,false);
+            ModMenuUi.icon(context,icon,getX()+8,getY()+(height-13)/2,13,13,active?INK:MUTED);
+            label(context,textRenderer,getMessage().getString(),getX()+27,getY()+(height-9)/2,active?INK:MUTED,.9f,width-30,false);
         }
     }
 }

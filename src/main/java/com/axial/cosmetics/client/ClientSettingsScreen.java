@@ -207,20 +207,14 @@ public final class ClientSettingsScreen extends Screen {
         }
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
-            if(label.equals("Wardrobe")) {
-                active=WardrobeAccess.allowed();
-                Rect r=new Rect(getX(),getY(),width,height);
-                frame(c,r,active&&isHovered()?HOVER_LINE:LINE,SURFACE);
-                label(c,textRenderer,active?"Wardrobe":"Locked",r.x()+5,r.y()+8,active?INK:MUTED,.8f,r.width()-10,false);
-                return;
-            }
+            if(label.equals("Wardrobe"))active=WardrobeAccess.allowed();
             boolean hover=active&&(isHovered()||isFocused());Rect r=new Rect(getX(),getY(),width,height);
             if(label.equals("Reset"))r=new Rect(r.x()+4,r.y()+8,r.width()-8,20);
             if(label.equals("CLOSE")){icon(c,"close",r.x()+4,r.y()+5,11,11,hover?INK:MUTED);return;}
-            if(label.equals("Mods")||label.equals("Settings")||label.equals("Edit HUD")) {
+            if(label.equals("Mods")||label.equals("Settings")||label.equals("Edit HUD")||label.equals("Wardrobe")) {
                 boolean selected=label.equals("Settings");
                 frame(c,r,selected?SELECTED_LINE:hover?HOVER_LINE:0x00454C53,selected?SELECTED:hover?HOVER:SURFACE);
-                String symbol=label.equals("Mods")?"cube":selected?"gear":"move";
+                String symbol=label.equals("Mods")?"cube":selected?"gear":label.equals("Wardrobe")?"shirt":"move";
                 icon(c,symbol,r.x()+7,r.y()+7,10,10,active?INK:MUTED);
                 label(c,textRenderer,label,r.x()+22,r.y()+8,active?INK:MUTED,.8f,r.width()-25,false);
                 return;
