@@ -34,4 +34,15 @@ final class WardrobeLayout {
         int h = Math.min(118,Math.max(12,(grid.height()-6)/(columns==1?2:1)));
         return new Rect(grid.x()+index%columns*(w+gap), grid.y()+index/columns*(h+gap), w,h);
     }
+
+    /** Fit the visible cape face at its native 10:16 ratio, including compact rows. */
+    static Rect capeImage(Rect card) {
+        boolean compact=card.height()<55;
+        int maxH=Math.max(1,card.height()-(compact?6:39));
+        int maxW=Math.max(1,compact?card.width()/4:card.width()-16);
+        int w=Math.max(1,Math.min(maxW,maxH*10/16));
+        int h=Math.max(1,w*16/10);
+        return new Rect(compact?card.x()+4:card.x()+(card.width()-w)/2,
+                card.y()+3+(maxH-h)/2,w,h);
+    }
 }

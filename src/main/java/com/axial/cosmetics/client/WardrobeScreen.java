@@ -9,6 +9,9 @@ import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
@@ -94,24 +97,47 @@ public final class WardrobeScreen extends Screen {
         catch(IOException ex) {error="Could not save. Try again.";}
     }
     private void card(String name,Rect r,boolean cape) {
-        addDrawableChild(new WardrobeButton(name,r,()->{selectedCape=cape;rebuild();}) {
-            @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
-                boolean selected=selectedCape==cape;
-                frame(c,r,selected?0xFFAE55FF:isHovered()?HOVER_LINE:LINE,SURFACE);
-                if(r.height()<55) {
-                    label(c,textRenderer,name,r.x()+4,r.y()+(r.height()-9)/2,selected?BRAND:INK,.75f,r.width()-8,false);
-                    return;
-                }
-                int imageH=Math.max(8,r.height()-33),imageW=Math.min(r.width()-12,imageH*10/16);
-                if(cape) drawCape(c,r.x()+(r.width()-imageW)/2,r.y()+5,imageW,imageH);
-                else {
-                    frame(c,new Rect(r.x()+(r.width()-imageW)/2,r.y()+5,imageW,imageH),LINE,FIELD);
-                    label(c,textRenderer,"—",r.x()+r.width()/2-4,r.y()+imageH/2,MUTED,1,12,false);
-                }
-                label(c,textRenderer,name,r.x()+6,r.bottom()-24,INK,.85f,r.width()-12,true);
-                if(cape==WardrobePreferences.showCape())label(c,textRenderer,"Equipped",r.x()+6,r.bottom()-12,BRAND,.7f,r.width()-12,false);
+        addDrawableChild(new CosmeticCard(name,r,cape));
+    }
+
+    /** Cosmetic tiles draw independently of PressableWidget's generic button skin. */
+    private final class CosmeticCard extends ClickableWidget {
+        private final boolean cape;
+        CosmeticCard(String name,Rect r,boolean cape) {
+            super(r.x(),r.y(),r.width(),r.height(),text(name));this.cape=cape;
+        }
+        private void select() {if(WardrobeAccess.allowed()){selectedCape=cape;rebuild();}}
+        @Override public void onClick(Click click,boolean doubled) {select();}
+        @Override public boolean keyPressed(KeyInput input) {
+            if(active&&visible&&isFocused()&&(input.key()==257||input.key()==335||input.key()==32)) {
+                playDownSound(client.getSoundManager());select();return true;
             }
-        });
+            return super.keyPressed(input);
+        }
+        @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
+        @Override protected void appendClickableNarrations(NarrationMessageBuilder builder){appendDefaultNarrations(builder);}
+        @Override protected void renderWidget(DrawContext c,int mx,int my,float delta) {
+            Rect r=new Rect(getX(),getY(),width,height);
+            boolean selected=selectedCape==cape;
+            frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,0xEE15191F);
+            Rect image=WardrobeLayout.capeImage(r);
+            if(cape)drawCape(c,image.x(),image.y(),image.width(),image.height());
+            else {
+                frame(c,image,LINE,FIELD);
+                // A muted empty slot, distinct from the real cape's artwork.
+                c.fill(image.x()+image.width()/2,image.y()+2,image.x()+image.width()/2+1,image.bottom()-2,MUTED);
+            }
+            if(r.height()<55) {
+                label(c,textRenderer,getMessage().getString(),image.right()+5,r.y()+(r.height()-9)/2,
+                        selected?BRAND:INK,.75f,r.right()-image.right()-9,false);
+                return;
+            }
+            c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,DIVIDER);
+            label(c,textRenderer,getMessage().getString(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
+            boolean equipped=cape==WardrobePreferences.showCape();
+            label(c,textRenderer,equipped?"Equipped":cape?"Animated cape":"No cape",r.x()+7,r.bottom()-12,
+                    equipped?BRAND:MUTED,.7f,r.width()-14,false);
+        }
     }
 
     private WardrobeButton button(String title,Rect r,Runnable action) {
@@ -191,6 +217,8 @@ public final class WardrobeScreen extends Screen {
     @Override public boolean mouseReleased(Click click) {dragging=false;return super.mouseReleased(click);}
 
     private class WardrobeButton extends ButtonWidget {
+        private float hoverProgress;
+        private long lastFrame=System.nanoTime();
         WardrobeButton(String title,Rect r,Runnable action) {
             super(r.x(),r.y(),r.width(),r.height(),text(title),b->{if(WardrobeAccess.allowed())action.run();},DEFAULT_NARRATION_SUPPLIER);
         }
@@ -198,8 +226,23 @@ public final class WardrobeScreen extends Screen {
         @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
             boolean selected=getMessage().getString().equals(CATEGORIES[category]);
-            frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,selected?0xFF39234F:SURFACE);
-            label(c,textRenderer,getMessage().getString(),r.x()+5,r.y()+(r.height()-9)/2,INK,.8f,r.width()-10,false);
+            long now=System.nanoTime();
+            hoverProgress=MenuAnimation.hover(hoverProgress,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);
+            lastFrame=now;
+            frame(c,r,selected?SELECTED_LINE:mixColor(LINE,HOVER_LINE,hoverProgress),selected?SELECTED:mixColor(FIELD,HOVER,hoverProgress));
+            String title=getMessage().getString();
+            if(title.equals("X")) {
+                icon(c,"close",r.x()+(r.width()-10)/2,r.y()+(r.height()-10)/2,10,10,INK);
+                return;
+            }
+            int categoryIndex=java.util.Arrays.asList(CATEGORIES).indexOf(title);
+            int textX=r.x()+7;
+            if(categoryIndex>=0&&r.width()>74) {
+                String[] icons={"grid","shirt","account","shirt","backpack","move"};
+                icon(c,icons[categoryIndex],r.x()+8,r.y()+(r.height()-12)/2,12,12,selected?BRAND:MUTED);
+                textX=r.x()+26;
+            }
+            label(c,textRenderer,title,textX,r.y()+(r.height()-9)/2,active?INK:MUTED,.8f,r.right()-textX-6,false);
         }
     }
 }
