@@ -1,0 +1,7 @@
+# Inside the existing api.axialclient.com site block, before its PHP handlers:
+@emote_relay path /v1/emotes /v1/emotes/health
+handle @emote_relay {
+    reverse_proxy 127.0.0.1:8765 {
+        header_up X-Real-IP {remote_host}
+    }
+}

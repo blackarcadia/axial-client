@@ -61,6 +61,7 @@ public class AxialCosmetics implements ClientModInitializer {
     public void onInitializeClient() {
         BundledEmoteSynchronizer.synchronize();
         com.axial.cosmetics.client.EmoteMenuTheme.initialize();
+        com.axial.cosmetics.client.EmoteRelay.initialize();
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.GangDirectoryPayload.ID,(payload,context)->{

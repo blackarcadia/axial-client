@@ -16,6 +16,10 @@ public final class EmotePermissionState {
 
     private EmotePermissionState() { }
 
+    public static void reset() {
+        received=false;allowAll=false;allowed=Set.of();
+    }
+
     public static void update(String payload) {
         if ("*".equals(payload)) {
             allowAll = true;

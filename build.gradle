@@ -75,6 +75,7 @@ dependencies {
     modCompileOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
     modRuntimeOnly name: 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159'
     modRuntimeOnly name: 'BendableCuboidsFabric-2.0.1+mc.1.21.11'
+    modCompileOnly name: 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11'
     modRuntimeOnly name: 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11'
 
     testImplementation project(':server-plugin')
@@ -831,4 +832,26 @@ test {
             'axial.test.modJar',
             tasks.remapJar.archiveFile.get().asFile.absolutePath
     )
+}
+
+// Unit tests run outside Fabric, which normally loads this nested Emotecraft library.
+def extractEmoteTestLibraries = tasks.register('extractEmoteTestLibraries', Copy) {
+    from(zipTree('src/main/resources/emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar')) {
+        include 'META-INF/jars/NoteBlockLib-3.2.1.jar'
+        eachFile { path = name }
+        includeEmptyDirs = false
+    }
+    from(zipTree('src/main/resources/PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar')) {
+        include 'META-INF/jars/*.jar'
+        eachFile { path = name }
+        includeEmptyDirs = false
+    }
+    into layout.buildDirectory.dir('emote-test-libraries')
+}
+dependencies {
+    testRuntimeOnly files(
+        layout.buildDirectory.file('emote-test-libraries/NoteBlockLib-3.2.1.jar'),
+        layout.buildDirectory.file('emote-test-libraries/mochafloats-4.1.5.jar'),
+        layout.buildDirectory.file('emote-test-libraries/javassist-3.30.2-GA.jar')
+    ).builtBy(extractEmoteTestLibraries)
 }
