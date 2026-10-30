@@ -2,6 +2,7 @@ package com.axial.cosmetics.client;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerSkinType;
 import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.AssetInfo;
@@ -25,6 +26,16 @@ public final class HalloweenSkins {
         value=(value^(value>>>27))*0x94d049bb133111ebL;
         value^=value>>>31;
         return (int)Math.floorMod(value,3L);
+    }
+    /** Skin-loading player-info entries are also used for NPCs; only the listed roster counts. */
+    public static boolean isActualPlayer(UUID uuid) {
+        if(uuid==null)return false;
+        var client=MinecraftClient.getInstance();
+        if(client.player!=null&&uuid.equals(client.player.getUuid()))return true;
+        var network=client.getNetworkHandler();
+        if(network==null)return false;
+        var entry=network.getPlayerListEntry(uuid);
+        return entry!=null&&network.getListedPlayerListEntries().contains(entry);
     }
     public static SkinTextures apply(UUID uuid,SkinTextures original) {
         if(uuid==null||original==null)return original;

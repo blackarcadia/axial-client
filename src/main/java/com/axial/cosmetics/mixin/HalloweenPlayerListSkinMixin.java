@@ -14,6 +14,7 @@ public abstract class HalloweenPlayerListSkinMixin {
     @Inject(method="getSkinTextures",at=@At("RETURN"),cancellable=true)
     private void axial$halloweenListSkin(CallbackInfoReturnable<SkinTextures> cir) {
         var entry=(PlayerListEntry)(Object)this;
-        cir.setReturnValue(HalloweenSkins.apply(entry.getProfile().id(),cir.getReturnValue()));
+        if(HalloweenSkins.isActualPlayer(entry.getProfile().id()))
+            cir.setReturnValue(HalloweenSkins.apply(entry.getProfile().id(),cir.getReturnValue()));
     }
 }
