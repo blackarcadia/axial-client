@@ -1,0 +1,6 @@
+{
+  "gold_owner": {"name":"Gold Owner","image":"gold_owner.png"},
+  "admin": {"name":"Admin","image":"admin.png"},
+  "staff": {"name":"STAFF","image":"staff.png"},
+  "lunar_raven": {"name":"Lunar Raven","image":"lunar_raven.png"}
+}

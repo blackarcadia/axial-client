@@ -1,0 +1,13 @@
+# Ubuntu 26.04 uses PHP 8.5. Adjust socket if installing another PHP version.
+api.axialclient.com, 37-59-98-176.sslip.io {
+    root * /opt/axial-cosmetics/public
+    encode gzip
+    request_body {
+        max_size 16KB
+    }
+    php_fastcgi unix//run/php/php8.5-fpm.sock
+    file_server
+    log {
+        output file /var/log/caddy/axial-access.log
+    }
+}

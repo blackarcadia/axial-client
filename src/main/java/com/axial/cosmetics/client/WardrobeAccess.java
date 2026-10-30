@@ -3,7 +3,7 @@ package com.axial.cosmetics.client;
 import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
 
-/** Local UUID gate for accounts with bundled wardrobe entitlements. */
+/** Local UUID gate for accounts with cosmetic entitlements. */
 public final class WardrobeAccess {
     private WardrobeAccess() { }
 

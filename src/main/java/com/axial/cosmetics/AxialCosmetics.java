@@ -158,6 +158,8 @@ public class AxialCosmetics implements ClientModInitializer {
         ChunkBordersConfig.load();
         MenuMusicConfig.load();
         com.axial.cosmetics.client.ClientPresence.start();
+        com.axial.cosmetics.client.CosmeticAssignments.start();
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> com.axial.cosmetics.client.CosmeticAssignments.stop());
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> com.axial.cosmetics.client.ClientPresence.stop());
         WaypointWorldRenderer.register();
         net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler,sender,client)->MinimapRenderer.refreshWorld(client));

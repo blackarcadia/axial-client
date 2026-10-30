@@ -33,7 +33,7 @@ enum WardrobeCape {
         frames=IntStream.range(0,16).mapToObj(i->(AssetInfo.TextureAsset)new AssetInfo.TextureAssetInfo(
                 Identifier.of("axial_cosmetics",texture+"_"+i),Identifier.of("axial_cosmetics","textures/entity/"+texture+(i==0?"":"_"+i)+".png"))).toList();
     }
-    boolean ownedBy(UUID uuid) {return uuid!=null&&owners.contains(uuid);}
+    boolean ownedBy(UUID uuid) {return uuid!=null&&CosmeticAssignments.owns(uuid,id,owners.contains(uuid));}
     static List<WardrobeCape> owned(UUID uuid) {return java.util.Arrays.stream(values()).filter(cape->cape.ownedBy(uuid)).toList();}
     static WardrobeCape defaultFor(UUID uuid) {return owned(uuid).stream().findFirst().orElse(null);}
     static WardrobeCape fromId(String id) {return java.util.Arrays.stream(values()).filter(cape->cape.id.equals(id)).findFirst().orElse(null);}

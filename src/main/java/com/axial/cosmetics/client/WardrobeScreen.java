@@ -44,6 +44,13 @@ public final class WardrobeScreen extends Screen {
         return true;
     }
 
+    void refreshCosmetics() {
+        if(!WardrobeAccess.allowed()){close();return;}
+        if(focusedCape==null||!focusedCape.ownedBy(client.getSession().getUuidOrNull()))
+            focusedCape=WardrobeCape.owned(client.getSession().getUuidOrNull()).getFirst();
+        scroll=0;rebuild();
+    }
+
     @Override protected void init() {
         if (!WardrobeAccess.allowed()) return;
         if(focusedCape==null) {
