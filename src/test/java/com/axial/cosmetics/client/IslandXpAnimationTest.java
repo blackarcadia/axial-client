@@ -24,13 +24,41 @@ class IslandXpAnimationTest {
         assertEquals(a.alpha(),b.alpha(),1e-6);assertEquals(a.lift(),b.lift(),1e-5);
         assertEquals(a.scale(),b.scale(),1e-6);assertEquals(a.amount(),b.amount(),.011);
     }
-    @Test void newGainDuringFadeReversesFadeWithoutAnOpacityOrPositionSnap() {
+    @Test void gainsDuringFadeQueueForANewPopupWithoutRevivingTheOldOne() {
         var animation=new IslandXpAnimation();animation.show(50,0);
         var before=animation.frame(1300);assertTrue(before.alpha()<.5);
         animation.show(75,1300);var after=animation.frame(1300);
         assertEquals(before.alpha(),after.alpha(),1e-6);assertEquals(before.lift(),after.lift(),1e-6);
-        assertTrue(animation.frame(1500).alpha()>before.alpha());
-        assertEquals(125,animation.frame(2200).amount(),.01);
+        assertTrue(animation.frame(1500).alpha()<before.alpha());
+        assertEquals(50,animation.frame(1600).amount(),.01);
+        assertFalse(animation.frame(1800).active());
+        assertFalse(animation.frame(1900).active());
+        assertTrue(animation.frame(2000).active());
+        assertEquals(75,animation.frame(2800).amount(),.01);
+    }
+    @Test void uninterruptedXpStillFadesOutAndStartsFreshBoundedTotals() {
+        var animation=new IslandXpAnimation();
+        int gaps=0;boolean wasActive=false;
+        double maximum=0;
+        for(int time=0;time<20_000;time+=10) {
+            if(time%100==0)animation.show(10,time);
+            var frame=animation.frame(time);
+            if(wasActive&&!frame.active())gaps++;
+            wasActive=frame.active();
+            maximum=Math.max(maximum,frame.amount());
+        }
+        assertTrue(gaps>=5,"continuous gains must not stop the popup disappearing");
+        assertTrue(maximum<=240,"the amount must reset between batches, not accumulate indefinitely");
+    }
+    @Test void cooldownGainsArePreservedAndDisconnectClearsTheQueue() {
+        var animation=new IslandXpAnimation();animation.show(10,0);
+        assertFalse(animation.frame(1800).active());
+        animation.show(20,1850);animation.show(30,1900);
+        assertFalse(animation.frame(1950).active());
+        assertTrue(animation.frame(2000).active());
+        assertEquals(50,animation.frame(2800).amount(),.01);
+        animation.show(5,3200);animation.clear();
+        assertFalse(animation.frame(5000).active());
     }
     @Test void completedBurstsResetAndInvalidValuesDoNotCreateNotifications() {
         var animation=new IslandXpAnimation();

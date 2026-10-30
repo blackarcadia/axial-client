@@ -10,7 +10,7 @@ import org.axial.axialutils.client.AxialConfigManager;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
-/** Preview values are illustrative, while visibility, style, colours and scale follow live settings. */
+/** HUD previews reuse in-game rendering; scene illustrations are kept separate. */
 final class ModFeaturePreviews {
     private ModFeaturePreviews() {}
     static void draw(String feature,DrawContext c,Rect area) {
@@ -27,13 +27,10 @@ final class ModFeaturePreviews {
             case "ARMOR HUD" -> armor(c,area);
             case "MINIMAP" -> MinimapRenderer.renderSettingsPreview(c,MinecraftClient.getInstance(),area.x(),area.y(),area.width(),area.height());
             case "COMPASS" -> {
-                float scale=CompassConfig.scale();
-                c.getMatrices().pushMatrix();c.getMatrices().translate(area.x()+area.width()/2f,area.y()+area.height()/2f);c.getMatrices().scale(scale,scale);
-                var renderer=MinecraftClient.getInstance().textRenderer;
-                label(c,renderer,"NW     N     NE",-45,-10,INK,.85f,95,false);
-                label(c,renderer,"|   |   |   |   |",-45,4,MUTED,.85f,95,false);
-                label(c,renderer,"N",-3,18,GREEN,.85f,12,true);c.getMatrices().popMatrix();
-                sample(c,area);
+                var client=MinecraftClient.getInstance();
+                int w=CompassHudRenderer.getWidth(client.getWindow().getScaledWidth()),h=CompassHudRenderer.getHeight();
+                hud(c,area,w,h,CompassConfig.getX(client.getWindow().getScaledWidth(),w),
+                        CompassConfig.getY(client.getWindow().getScaledHeight(),h),()->CompassHudRenderer.renderPreview(c,client));
             }
             case "ITEM SCALER" -> {
                 scaledItem(c,Items.DIAMOND_PICKAXE,area.x()+area.width()/3,area.y()+area.height()/2,ItemScalerConfig.mainHandScale());
@@ -47,19 +44,14 @@ final class ModFeaturePreviews {
                 label(c,MinecraftClient.getInstance().textRenderer,"AXIAL CLIENT",centered?-42:0,-5,INK,1,100,true);c.getMatrices().popMatrix();sample(c,area);
             }
             case "HUD" -> information(c,area);
-            case "SATCHEL HELPER" -> {
-                var config=AxialConfigManager.get();
-                line(c,area,config.satchelHudTitleText,area.y()+32,config.satchelHudTitleColor);
-                line(c,area,"SATCHELS: 3",area.y()+51,config.satchelHudCountColor);
-                line(c,area,"EMPTY: 1",area.y()+67,config.satchelHudEmptyColor);sample(c,area);
-            }
-            case "CPS" -> {
-                var config=AxialConfigManager.get();line(c,area,config.cpsHudTitleText,area.y()+35,config.cpsHudTitleColor);
-                line(c,area,"8 CPS",area.y()+56,config.cpsHudColor);sample(c,area);
-            }
+            case "SATCHEL HELPER" -> nativeHud(c,area,"SATCHEL HELPER");
+            case "CPS" -> nativeHud(c,area,"CPS");
             case "POTIONS HUD" -> {
-                line(c,area,PotionsHudConfig.title(),area.y()+30,PotionsHudConfig.titleColor());
-                line(c,area,"SPEED II   1:42",area.y()+52,INK);line(c,area,"HASTE II   0:58",area.y()+69,INK);sample(c,area);
+                var client=MinecraftClient.getInstance();
+                if(client.player==null){joinWorld(c,area);break;}
+                if(client.player.getStatusEffects().isEmpty()){line(c,area,"No active effects",area.y()+20,MUTED);break;}
+                var b=PotionsHudRenderer.bounds(client,false);
+                hud(c,area,b.width(),b.height(),b.x(),b.y(),()->PotionsHudRenderer.renderPreview(c,client));
             }
             case "CHUNK BORDERS" -> {
                 int color=ChunkBordersConfig.color(),size=Math.min(area.width()-12,area.height()-30),left=area.x()+(area.width()-size)/2,top=area.y()+8;
@@ -73,31 +65,39 @@ final class ModFeaturePreviews {
         CrosshairConfig config=new CrosshairConfig();CrosshairPresets.apply(config,CrosshairConfig.CrosshairStyle.values()[index]);
         CrosshairRenderer.render(c,area.x()+area.width()/2,area.y()+area.height()/2,config,1);
     }
-    private static void armor(DrawContext c,Rect area) {
+    private static void armor(DrawContext c,Rect area) {nativeHud(c,area,"ARMOR HUD");}
+    private static void information(DrawContext c,Rect area) {nativeHud(c,area,"HUD");}
+    private static void joinWorld(DrawContext c,Rect area) {line(c,area,"Join a world to preview",area.y()+20,MUTED);}
+    private static void nativeHud(DrawContext c,Rect area,String feature) {
+        var client=MinecraftClient.getInstance();
+        if(client.player==null){joinWorld(c,area);return;}
         var config=AxialConfigManager.get();
-        Item[] items={Items.DIAMOND_HELMET,Items.DIAMOND_CHESTPLATE,Items.DIAMOND_LEGGINGS,Items.DIAMOND_BOOTS,Items.DIAMOND_PICKAXE};
-        String[] names={"HELMET","CHESTPLATE","LEGGINGS","BOOTS","HELD ITEM"};
-        Boolean[] visible={config.armorHudShowHelmet,config.armorHudShowChestplate,config.armorHudShowLeggings,config.armorHudShowBoots,config.armorHudShowHeldItem};
-        int y=area.y()+3;
-        for(int i=0;i<items.length;i++)if(Boolean.TRUE.equals(visible[i])) {
-            c.drawItem(new ItemStack(items[i]),area.x()+2,y);
-            label(c,MinecraftClient.getInstance().textRenderer,names[i],area.x()+25,y+1,config.armorHudColor,.78f,area.width()-26,false);
-            if(Boolean.TRUE.equals(config.armorHudShowDurability)) label(c,MinecraftClient.getInstance().textRenderer,
-                    Boolean.TRUE.equals(config.armorHudDurabilityPercent)?(100-i*3)+"%":(400-i*20)+" / 400",area.x()+25,y+12,config.armorHudDurabilityColor,.78f,area.width()-26,false);
-            y+=29;
+        switch(feature) {
+            case "ARMOR HUD" -> hud(c,area,org.axial.axialutils.client.ArmorHudRenderer.getWidth(client),
+                    org.axial.axialutils.client.ArmorHudRenderer.getHeight(client),config.armorHudX,config.armorHudY,
+                    ()->org.axial.axialutils.client.ArmorHudRenderer.render(c,client.getRenderTickCounter()));
+            case "HUD" -> hud(c,area,org.axial.axialutils.client.AxialHudRenderer.getWidth(client),
+                    org.axial.axialutils.client.AxialHudRenderer.getHeight(client),config.hudX,config.hudY,
+                    ()->org.axial.axialutils.client.AxialHudRenderer.render(c,client.getRenderTickCounter()));
+            case "CPS" -> hud(c,area,org.axial.axialutils.client.CpsHudRenderer.getWidth(client),
+                    org.axial.axialutils.client.CpsHudRenderer.getHeight(client),config.cpsHudX,config.cpsHudY,
+                    ()->org.axial.axialutils.client.CpsHudRenderer.render(c,client.getRenderTickCounter()));
+            case "SATCHEL HELPER" -> hud(c,area,org.axial.axialutils.client.SatchelHudRenderer.getWidth(client),
+                    org.axial.axialutils.client.SatchelHudRenderer.getHeight(client),config.satchelsHudX,config.satchelsHudY,
+                    ()->org.axial.axialutils.client.SatchelHudRenderer.render(c,client.getRenderTickCounter()));
+            default -> { }
         }
-        sample(c,area);
     }
-    private static void information(DrawContext c,Rect a) {
-        var config=AxialConfigManager.get();int y=a.y()+4;
-        line(c,a,config.informationHudTitleText,y,config.informationHudTitleColor);y+=18;
-        if(InformationHudExtrasConfig.showPing()){line(c,a,"PING: 24 MS",y,InformationHudExtrasConfig.pingColor());y+=16;}
-        if(InformationHudExtrasConfig.showCoordinates()){line(c,a,"XYZ: 120 64 -32",y,InformationHudExtrasConfig.coordinatesColor());y+=16;}
-        if(config.showPickaxeChargePerMinute){line(c,a,"CHARGE / MIN: 420",y,config.informationHudChargeColor);y+=16;}
-        if(config.showMiningXpPerMinute){line(c,a,"XP / MIN: 1,250",y,config.informationHudXpColor);y+=16;}
-        if(InformationHudExtrasConfig.showServer()){line(c,a,"SERVER: EXAMPLE",y,InformationHudExtrasConfig.serverColor());y+=16;}
-        if(InformationHudExtrasConfig.showFacing())line(c,a,"FACING: NORTH",y,InformationHudExtrasConfig.facingColor());
-        sample(c,a);
+    private static void hud(DrawContext c,Rect area,int width,int height,int originX,int originY,Runnable render) {
+        if(width<=0||height<=0)return;
+        c.getMatrices().pushMatrix();
+        try {
+            float fit=Math.min(1,Math.min(area.width()/(float)width,area.height()/(float)height));
+            c.getMatrices().translate(area.x()+(area.width()-width*fit)/2,area.y()+(area.height()-height*fit)/2);
+            c.getMatrices().scale(fit,fit);
+            c.getMatrices().translate(-originX,-originY);
+            render.run();
+        } finally {c.getMatrices().popMatrix();}
     }
     private static void scaledItem(DrawContext c,Item item,int x,int y,float scale) {
         c.getMatrices().pushMatrix();c.getMatrices().translate(x,y);c.getMatrices().scale(scale,scale);
