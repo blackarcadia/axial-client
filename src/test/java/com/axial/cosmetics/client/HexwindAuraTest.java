@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class HexwindAuraTest {
     @Test void geometryIsFiniteBoundedAnimatedAndSeamless() {
         for(float t:new float[]{0,.25f,19,60,119.9f,120,240,-1}) {
-            var mesh=HexwindGeometry.frame(t,true);assertTrue(mesh.size()>150&&mesh.size()<650);
+            var mesh=HexwindGeometry.frame(t,true);assertTrue(mesh.size()>150&&mesh.size()<350);
             for(var quad:mesh)for(var p:List.of(quad.a(),quad.b(),quad.c(),quad.d())) {
                 assertTrue(Float.isFinite(p.x())&&Float.isFinite(p.y())&&Float.isFinite(p.z()));
                 assertTrue(Math.abs(p.x())<1.4&&Math.abs(p.z())<1.4);assertTrue(p.y()>-.1&&p.y()<2.1);

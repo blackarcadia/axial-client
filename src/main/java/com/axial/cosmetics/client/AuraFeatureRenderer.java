@@ -12,7 +12,7 @@ import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
-/** Stepped, pixel-style wind geometry with continuous orbit animation. Rendering only; no particles/entities or server mutations. */
+/** Slender, tapered wind geometry with continuous orbit animation. Rendering only; no particles/entities or server mutations. */
 public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRenderState,PlayerEntityModel> {
     private static final Identifier WHITE=Identifier.of("axial_cosmetics","textures/entity/auras/white.png");
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
