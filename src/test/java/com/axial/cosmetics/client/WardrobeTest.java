@@ -33,9 +33,12 @@ class WardrobeTest {
         }
     }
     @Test void categoriesHaveTheirOwnSearchPromptAndExcludeTheEmoteWheel() {
-        assertEquals(5,WardrobeCategory.values().length);
+        assertEquals(6,WardrobeCategory.values().length);
         assertEquals("Search cosmetics...",WardrobeCategory.ALL.search);
         assertEquals("Search capes...",WardrobeCategory.CAPES.search);
+        assertEquals("Search auras...",WardrobeCategory.AURAS.search);
+        assertTrue(WardrobeCategory.ALL.includesAuras());assertTrue(WardrobeCategory.AURAS.includesAuras());
+        assertFalse(WardrobeCategory.CAPES.includesAuras());
         assertEquals("Search headwear...",WardrobeCategory.HEADWEAR.search);
         assertEquals("Search outfits...",WardrobeCategory.OUTFITS.search);
         assertEquals("Search backpacks...",WardrobeCategory.BACKPACKS.search);

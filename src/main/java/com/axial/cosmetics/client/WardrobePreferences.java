@@ -50,10 +50,36 @@ public final class WardrobePreferences {
         WardrobeCape selected=nextSelection(current(),cape);
         var updated=new Properties();updated.putAll(selections);
         updated.setProperty(account.toString(),selected==null?"minecraft":selected.id);
+        persist(updated);
+    }
+    static WardrobeAura auraSelection(Properties values,UUID uuid) {
+        if(uuid==null)return null;
+        String id=values.getProperty(uuid+".aura");
+        if("none".equals(id))return null;
+        WardrobeAura aura=WardrobeAura.fromId(id);
+        return aura!=null&&aura.ownedBy(uuid)?aura:WardrobeAura.defaultFor(uuid);
+    }
+    static WardrobeAura currentAura() {
+        load();return auraSelection(selections,MinecraftClient.getInstance().getSession().getUuidOrNull());
+    }
+    static void toggle(WardrobeAura aura) throws IOException {
+        if(!WardrobeAccess.allowed())return;
+        UUID account=MinecraftClient.getInstance().getSession().getUuidOrNull();
+        if(!aura.ownedBy(account))return;
+        var updated=new Properties();updated.putAll(selections);
+        updated.setProperty(account+".aura",currentAura()==aura?"none":aura.id);
+        persist(updated);
+    }
+    static WardrobeAura auraFor(UUID player) {
+        UUID account=MinecraftClient.getInstance().getSession().getUuidOrNull();
+        WardrobeAura aura=player.equals(account)?currentAura():EmoteRelay.remoteAura(player,WardrobeAura.defaultFor(player));
+        return aura!=null&&aura.ownedBy(player)?aura:null;
+    }
+    private static void persist(Properties updated) throws IOException {
         var directory=FabricLoader.getInstance().getConfigDir();Files.createDirectories(directory);
         var temporary=Files.createTempFile(directory,"axial-wardrobe-",".tmp");
         try {
-            try(var writer=Files.newBufferedWriter(temporary)){updated.store(writer,"Equipped Axial cape by Minecraft UUID");}
+            try(var writer=Files.newBufferedWriter(temporary)){updated.store(writer,"Equipped Axial cosmetics by Minecraft UUID");}
             Files.move(temporary,directory.resolve("axial-wardrobe.properties"),StandardCopyOption.REPLACE_EXISTING);
             selections.clear();selections.putAll(updated);
         } finally {Files.deleteIfExists(temporary);}

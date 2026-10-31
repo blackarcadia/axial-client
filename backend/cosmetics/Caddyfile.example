@@ -3,7 +3,7 @@ api.axialclient.com, 37-59-98-176.sslip.io {
     root * /opt/axial-cosmetics/public
     encode gzip
     request_body {
-        max_size 16KB
+        max_size 1MB
     }
     php_fastcgi unix//run/php/php8.5-fpm.sock
     file_server

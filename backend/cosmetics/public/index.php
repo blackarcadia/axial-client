@@ -15,6 +15,15 @@ try {
     $db->exec('PRAGMA busy_timeout=5000');
     $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
     $method=$_SERVER['REQUEST_METHOD'];
+    if($path==='/webhooks/paynow') {
+        if($method!=='POST')reply(['error'=>'Method not allowed'],405);
+        require dirname(__DIR__).'/PayNowWebhook.php';
+        $raw=file_get_contents('php://input',false,null,0,1048577);
+        try {
+            $settings=json_decode(file_get_contents(dirname(__DIR__).'/paynow.json'),true,16,JSON_THROW_ON_ERROR);
+            reply(PayNowWebhook::handle($db,$settings,$raw,$_SERVER['HTTP_PAYNOW_TIMESTAMP']??'',$_SERVER['HTTP_PAYNOW_SIGNATURE']??''));
+        } catch(WebhookError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+    }
     if($path==='/health') {if($method!=='GET')reply(['error'=>'Method not allowed'],405);$db->query('SELECT value FROM metadata LIMIT 1');reply(['status'=>'ok']);}
     if($path==='/v1/cosmetics') {
         if($method!=='GET')reply(['error'=>'Method not allowed'],405);
@@ -22,7 +31,7 @@ try {
         $revision=(int)$db->query("SELECT value FROM metadata WHERE name='revision'")->fetchColumn();
         $players=[];
         foreach($db->query('SELECT uuid FROM players ORDER BY uuid') as $row)$players[$row['uuid']]=[];
-        foreach($db->query('SELECT uuid,cape FROM grants ORDER BY uuid,cape') as $row)$players[$row['uuid']][]=$row['cape'];
+        foreach($db->query('SELECT uuid,cape FROM effective_grants ORDER BY uuid,cape') as $row)$players[$row['uuid']][]=$row['cape'];
         $db->commit();
         $etag='"cosmetics-'.$revision.'"';header('ETag: '.$etag);header('Cache-Control: public, max-age=15');
         if(($_SERVER['HTTP_IF_NONE_MATCH']??'')===$etag){http_response_code(304);exit;}
@@ -59,6 +68,15 @@ try {
         } elseif(!empty($_SESSION['admin'])) {
             $_SESSION['last']=time();
             if($action==='logout'){$_SESSION=[];session_destroy();header('Location: /admin',true,303);exit;}
+            if($action==='paynow_secret') {
+                require_once dirname(__DIR__).'/PayNowWebhook.php';
+                $event=$_POST['event_type']??'';$secret=$_POST['signing_secret']??'';
+                if(!is_string($event)||!in_array($event,PayNowWebhook::EVENTS,true)||!is_string($secret)||strlen(trim($secret))<16||strlen($secret)>512)
+                    reply(['error'=>'Choose a supported event and enter its signing secret'],400);
+                $q=$db->prepare('INSERT INTO paynow_secrets VALUES(?,?) ON CONFLICT(event_type) DO UPDATE SET secret=excluded.secret');$q->execute([$event,trim($secret)]);
+                $_SESSION['notice']='Saved PayNow signing secret for '.$event;
+                header('Location: /admin#paynow',true,303);exit;
+            }
             if($action==='save') {
                 $uuid=strtolower(trim(is_string($_POST['uuid']??null)?$_POST['uuid']:''));
                 $capes=$_POST['capes']??[];
@@ -84,6 +102,13 @@ try {
     $owned=[];
     if($logged&&preg_match('/\A[0-9a-f-]{36}\z/',$uuid)){$q=$db->prepare('SELECT cape FROM grants WHERE uuid=?');$q->execute([$uuid]);$owned=$q->fetchAll(PDO::FETCH_COLUMN);}
     $notice=$_SESSION['notice']??'';unset($_SESSION['notice']);
+    $paid=[];
+    if($logged) {
+        $q=$db->prepare('SELECT DISTINCT e.cape FROM effective_grants e WHERE e.uuid=? AND EXISTS (SELECT 1 FROM paynow_purchases p WHERE p.uuid=e.uuid AND p.cape=e.cape)');$q->execute([$uuid]);$paid=$q->fetchAll(PDO::FETCH_COLUMN);
+        $secretEvents=$db->query('SELECT event_type FROM paynow_secrets')->fetchAll(PDO::FETCH_COLUMN);
+        $recentEvents=$db->query('SELECT event_type,received_at FROM paynow_events ORDER BY received_at DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
+        $partialRefunds=(int)$db->query('SELECT COUNT(*) FROM paynow_orders o JOIN (SELECT order_id,SUM(amount) AS refunded FROM paynow_refunds GROUP BY order_id) r USING(order_id) WHERE r.refunded<o.total')->fetchColumn();
+    }
 } catch(Throwable $ex) {
     if(isset($db)&&$db->inTransaction())$db->rollBack();
     error_log('[AxialCosmetics] '.get_class($ex));reply(['error'=>'Service temporarily unavailable'],503);
@@ -98,7 +123,16 @@ try {
 <?php else:?>
 <form method="get" class="lookup"><label>Minecraft UUID<input name="uuid" value="<?=h($uuid)?>" required maxlength="36" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label><button>Load player</button></form>
 <form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="save"><label>Player UUID<input name="uuid" value="<?=h($uuid)?>" required maxlength="36" pattern="[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}" placeholder="Paste the player's Minecraft UUID"></label>
-<div class="catalog"><?php foreach($catalog as $id=>$cape):?><label class="cosmetic"><img src="/assets/<?=h($cape['image'])?>" alt="<?=h($cape['name'])?> cape"><span><input type="checkbox" name="capes[]" value="<?=h($id)?>" <?=in_array($id,$owned,true)?'checked':''?>> <?=h($cape['name'])?></span></label><?php endforeach?></div>
-<p class="hint">Checked capes appear in this player's wardrobe. Uncheck a cape to revoke access. Unchecking all capes removes wardrobe access. Updated clients refresh within one minute.</p><button class="primary">Save cosmetic access</button></form>
-<section><h2>Assigned players</h2><div class="players"><?php foreach($db->query('SELECT p.uuid,COUNT(g.cape) AS total FROM players p LEFT JOIN grants g ON g.uuid=p.uuid GROUP BY p.uuid ORDER BY p.updated_at DESC LIMIT 100') as $row):?><a href="/admin?uuid=<?=h($row['uuid'])?>"><code><?=h($row['uuid'])?></code><span><?=h((string)$row['total'])?> capes →</span></a><?php endforeach?></div></section>
+<?php if($paid):?><p class="notice">Cosmetics with purchase records: <?=h(implode(', ',$paid))?>. The checkboxes below control separate manual grants.</p><?php endif?>
+<div class="catalog"><?php foreach($catalog as $id=>$cape):?><label class="cosmetic"><img src="/assets/<?=h($cape['image'])?>" alt="<?=h($cape['name'])?> cosmetic"><span><input type="checkbox" name="capes[]" value="<?=h($id)?>" <?=in_array($id,$owned,true)?'checked':''?>> <?=h($cape['name'])?></span><small><?=h($cape['category']??'Capes')?></small></label><?php endforeach?></div>
+<p class="hint">Checked cosmetics grant manual access. Unchecking removes that manual grant; active purchases still grant access. Updated clients refresh within one minute.</p><button class="primary">Save cosmetic access</button></form>
+<section><h2>Assigned players</h2><div class="players"><?php foreach($db->query('SELECT p.uuid,COUNT(g.cape) AS total FROM players p LEFT JOIN effective_grants g ON g.uuid=p.uuid GROUP BY p.uuid ORDER BY p.updated_at DESC LIMIT 100') as $row):?><a href="/admin?uuid=<?=h($row['uuid'])?>"><code><?=h($row['uuid'])?></code><span><?=h((string)$row['total'])?> cosmetics →</span></a><?php endforeach?></div></section>
+<section id="paynow"><h2>PayNow connection</h2><p>Store: <code>559186693647761408</code><br>Product: <code>619762575072043008</code> → STAFF cape</p>
+<p>In PayNow → Integrations → Webhooks, create one JSON webhook for each event below, using <code>https://api.axialclient.com/webhooks/paynow</code>. Paste each webhook's signing secret here. Secrets are saved privately and never displayed.</p>
+<ul><?php foreach(['ON_ORDER_COMPLETED','ON_REFUND','ON_CHARGEBACK'] as $event):?><li><?=h($event)?>: <?=in_array($event,$secretEvents,true)?'Secret configured':'Awaiting signing secret'?></li><?php endforeach?></ul>
+<form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="paynow_secret"><label>Webhook event<select name="event_type"><option value="ON_ORDER_COMPLETED">Order Completed</option><option value="ON_REFUND">Refund</option><option value="ON_CHARGEBACK">Chargeback</option></select></label><label>Signing secret<input type="password" name="signing_secret" required minlength="16" maxlength="512" autocomplete="off"></label><button>Save signing secret</button></form>
+<p class="hint">One-time purchases only. Full order refunds and chargebacks remove access from that order. Partial refunds require review so unrelated products in the same order are not removed. Manual grants and other valid purchases remain active. After configuring secrets, run a zero-cost test checkout and verify delivery before selling.</p>
+<?php if($partialRefunds):?><p class="error"><?=h((string)$partialRefunds)?> partially refunded cosmetic order(s) need review.</p><?php endif?>
+<h3>Recent verified events</h3><?php if(!$recentEvents):?><p>No verified PayNow events received yet.</p><?php endif?>
+<ul><?php foreach($recentEvents as $event):?><li><?=h($event['event_type'])?> — <?=h(gmdate('Y-m-d H:i:s',(int)$event['received_at']))?> UTC</li><?php endforeach?></ul></section>
 <?php endif?></main></body></html>

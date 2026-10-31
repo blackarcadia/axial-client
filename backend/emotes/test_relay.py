@@ -27,12 +27,12 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         self.server.close()
         await self.server.wait_closed()
 
-    async def client(self, player, name='Verified'):
+    async def client(self, player, name='Verified', auras=False):
         socket = await connect(self.url, compression=None)
         self.sockets.append(socket)
         challenge = json.loads(await socket.recv())
         self.assertEqual(challenge['type'], 'challenge')
-        await socket.send(json.dumps({'type': 'auth', 'version': 1, 'uuid': player, 'name': name}))
+        await socket.send(json.dumps({'type': 'auth', 'version': 1, 'uuid': player, 'name': name, 'features': ['auras'] if auras else []}))
         if name == 'Verified':
             self.assertEqual(json.loads(await socket.recv())['type'], 'ready')
         return socket
@@ -109,6 +109,31 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await self.recv_type(b, 'request'))['uuid'], A)
         with self.assertRaises(TimeoutError):
             await asyncio.wait_for(b.recv(), .1)
+
+    async def test_aura_equipment_sync_is_authenticated_and_capability_gated(self):
+        a = await self.client(A, auras=True)
+        b = await self.client(B, auras=True)
+        old = await self.client(C)
+        await self.send(a, {'type': 'watch', 'players': [B, C]})
+        await self.send(b, {'type': 'watch', 'players': [A]})
+        await self.recv_type(a, 'request')
+        await self.recv_type(b, 'request')
+        await self.send(old, {'type': 'watch', 'players': [A]})
+        await self.recv_type(a, 'request')
+        await self.recv_type(old, 'request')
+        await self.send(a, {'type': 'appearance', 'uuid': C, 'aura': 'halloween_hexwind'})
+        self.assertEqual(await self.recv_type(b, 'appearance'), {'type': 'appearance', 'uuid': A, 'aura': 'halloween_hexwind'})
+        with self.assertRaises(TimeoutError):
+            await asyncio.wait_for(old.recv(), .1)
+        await self.send(a, {'type': 'appearance', 'aura': None})
+        self.assertIsNone((await self.recv_type(b, 'appearance'))['aura'])
+        # A newly visible updated viewer receives the current off state, not an old equipped state.
+        await old.close()
+        await self.recv_type(a, 'gone')
+        c = await self.client(C, auras=True)
+        await self.send(c, {'type': 'watch', 'players': [A]})
+        await self.recv_type(c, 'request')
+        self.assertIsNone((await self.recv_type(c, 'appearance'))['aura'])
 
     async def test_bad_uuid_packet_bounds_and_rate_limits(self):
         with self.assertRaises(ValueError):

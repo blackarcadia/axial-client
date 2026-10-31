@@ -30,3 +30,7 @@ Health: `https://api.axialclient.com/v1/emotes/health` (also `http://127.0.0.1:8
 Client tests cover relay envelope bounds and the actual Emotecraft start/stop wire format for all six bundled animations. The production WSS handshake and rejection of unauthenticated frames are checked separately. Final visual multiplayer validation requires two updated clients with valid accounts on the same non-Prisons Minecraft server: play/stop an emote, enter view mid-emote, reconnect, change worlds, and verify cape/equipment restoration. Synthetic tests do not establish visual two-account behavior.
 
 Emotecraft's [proxy API](https://github.com/KosmX/emotes-proxy-template) provides server-independent transport. The dedicated relay uses [websockets asyncio](https://websockets.readthedocs.io/en/15.0.1/reference/asyncio/server.html).
+
+## Aura equipment extension
+
+Clients advertise `features: ["auras"]` in their existing version-1 authentication message. Only those clients publish/receive `appearance` envelopes (`aura` is a cosmetic ID or `null`); older emote clients receive no new message types. Identity, mutual visibility and rate limits apply as for emote packets. The relay keeps the current equipment state only in the authenticated peer's memory and provides it to new visible viewers. Receiving clients validate ownership from their cosmetics grant snapshot. Native Minecraft emote networking retains priority while this independent equipment synchronization remains active.

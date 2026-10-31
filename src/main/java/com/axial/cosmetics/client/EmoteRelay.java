@@ -48,6 +48,11 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     private volatile int failures;
     private int ticks;
     private Set<UUID> watched=Set.of();
+    private final java.util.Map<UUID,String> remoteAuras=new java.util.HashMap<>();
+    static WardrobeAura remoteAura(UUID player,WardrobeAura fallback) {
+        String id=INSTANCE.remoteAuras.get(player);
+        return id==null?fallback:WardrobeAura.fromId(id);
+    }
     private EmoteRelay() { }
 
     public static void initialize() {
@@ -69,13 +74,21 @@ public final class EmoteRelay extends AbstractNetworkInstance {
         }
         if(++ticks%20!=0)return;
         Connection live=connection;
-        if(live==null||!live.ready||!fallback())return;
+        if(live==null||!live.ready)return;
         var visible=new HashSet<UUID>();
         client.world.getPlayers().stream().filter(p->p!=client.player).sorted(java.util.Comparator.comparingDouble(p->p.squaredDistanceTo(client.player)))
                 .limit(EmoteRelayProtocol.MAX_WATCH).forEach(p->visible.add(p.getUuid()));
         if(!visible.equals(watched)||!live.watchSent) {
-            watched=Set.copyOf(visible);sendWatch(live);
+            watched=Set.copyOf(visible);remoteAuras.keySet().retainAll(watched);sendWatch(live);
         }
+        sendAppearance(live);
+    }
+    private void sendAppearance(Connection live) {
+        var aura=WardrobePreferences.currentAura();String id=aura==null?"":aura.id;
+        if(id.equals(live.lastAura))return;
+        var message=new JsonObject();message.addProperty("type","appearance");
+        if(aura==null)message.add("aura",com.google.gson.JsonNull.INSTANCE);else message.addProperty("aura",id);
+        live.send(message);live.lastAura=id;
     }
     private static boolean fallback() {
         return !ClientNetwork.INSTANCE.isActive()||ClientPacketManager.isInstanceOutdatedForStreaming(ClientNetwork.INSTANCE);
@@ -85,7 +98,7 @@ public final class EmoteRelay extends AbstractNetworkInstance {
         live.send(message);live.watchSent=true;
     }
     private void reset() {
-        context=null;watched=Set.of();ticks=0;retryAt=0;failures=0;
+        context=null;watched=Set.of();remoteAuras.clear();ticks=0;retryAt=0;failures=0;
         Connection old=connection;connection=null;if(old!=null)old.close();
         clearAnimations();
     }
@@ -148,7 +161,7 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     }
     private final class Connection implements WebSocket.Listener {
         final Context base;final long created=System.nanoTime();final StringBuilder incoming=new StringBuilder();final AtomicInteger pending=new AtomicInteger();
-        volatile WebSocket socket;volatile boolean ready;boolean watchSent;boolean challengeSeen;
+        volatile WebSocket socket;volatile boolean ready;boolean watchSent;boolean challengeSeen;String lastAura;
         CompletableFuture<?> tail=CompletableFuture.completedFuture(null);
         Connection(Context base){this.base=base;}
         @Override public void onOpen(WebSocket socket){this.socket=socket;if(connection!=this||context!=base){failed();return;}socket.request(1);}
@@ -183,18 +196,24 @@ public final class EmoteRelay extends AbstractNetworkInstance {
                         base.service.joinServer(base.session.getUuidOrNull(),base.session.getAccessToken(),serverId);
                         if(connection!=this||context!=base)return;
                         var auth=new JsonObject();auth.addProperty("type","auth");auth.addProperty("version",1);
-                        auth.addProperty("name",base.session.getUsername());auth.addProperty("uuid",base.session.getUuidOrNull().toString());send(auth);
+                        auth.addProperty("name",base.session.getUsername());auth.addProperty("uuid",base.session.getUuidOrNull().toString());
+                        var features=new JsonArray();features.add("auras");auth.add("features",features);send(auth);
                     }catch(Exception ignored){failed();}
                 });return;
             }
             if(type.equals("ready")) {
                 if(!challengeSeen||ready||message.get("version").getAsInt()!=1)throw new IOException("Invalid relay handshake");
                 ready=true;failures=0;
-                MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base){sendWatch(this);repeat(this,null);}});return;
+                MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base){sendWatch(this);sendAppearance(this);repeat(this,null);}});return;
             }
             if(!ready)throw new IOException("Unauthenticated relay message");
             UUID author=EmoteRelayProtocol.uuid(message.get("uuid").getAsString());
             if(author.equals(base.session.getUuidOrNull()))return;
+            if(type.equals("appearance")) {
+                var value=message.get("aura");String id=value==null||value.isJsonNull()?"":value.getAsString();
+                if(id.length()>64||(!id.isEmpty()&&!id.matches("[a-z0-9_]+")))throw new IOException("Invalid aura state");
+                MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base&&watched.contains(author))remoteAuras.put(author,id);});return;
+            }
             if(type.equals("request")){MinecraftClient.getInstance().execute(()->repeat(this,author));return;}
             if(type.equals("gone")) {
                 MinecraftClient.getInstance().execute(()->{

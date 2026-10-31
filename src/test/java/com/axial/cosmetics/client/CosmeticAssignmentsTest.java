@@ -12,6 +12,7 @@ class CosmeticAssignmentsTest {
         assertEquals(java.util.Set.of("staff"),snapshot.get(recipient));
         assertEquals(java.util.Set.of(),CosmeticAssignments.parse("{\"version\":1,\"players\":{\""+recipient+"\":[]}}").get(recipient));
         assertTrue(CosmeticAssignments.parse("{\"version\":1,\"players\":{}}").isEmpty());
+        assertEquals(java.util.Set.of("halloween_hexwind"),CosmeticAssignments.parse("{\"version\":1,\"players\":{\""+recipient+"\":[\"halloween_hexwind\"]}}").get(recipient));
         assertThrows(UnsupportedOperationException.class,()->snapshot.clear());
         assertThrows(UnsupportedOperationException.class,()->snapshot.get(recipient).clear());
     }

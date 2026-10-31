@@ -54,6 +54,9 @@ class Peer:
     socket: object
     uuid: str
     watch: set = field(default_factory=set)
+    aura: str | None = None
+    appearance_received: bool = False
+    supports_auras: bool = False
     queue: asyncio.Queue = field(default_factory=lambda: asyncio.Queue(16))
     queued_bytes: int = 0
     tokens: float = 40
@@ -152,7 +155,10 @@ class Relay:
                 valid = await asyncio.wait_for(self.verifier(name, challenge, player), 8)
             if not valid:
                 raise ValueError("Minecraft authentication failed")
-            peer = Peer(socket, player)
+            features = message.get("features", [])
+            if not isinstance(features, list) or len(features) > 16 or any(not isinstance(f, str) for f in features):
+                raise ValueError("Invalid capabilities")
+            peer = Peer(socket, player, supports_auras="auras" in features)
             old = self.peers.get(player)
             self.peers[player] = peer
             if old:
@@ -197,6 +203,21 @@ class Relay:
                 if other and peer.uuid in other.watch:
                     other.push({"type": "request", "uuid": peer.uuid})
                     peer.push({"type": "request", "uuid": other.uuid})
+                    if other.appearance_received and peer.supports_auras:
+                        peer.push({"type": "appearance", "uuid": other.uuid, "aura": other.aura})
+                    if peer.appearance_received and other.supports_auras:
+                        other.push({"type": "appearance", "uuid": peer.uuid, "aura": peer.aura})
+            return
+        if message.get("type") == "appearance":
+            if not peer.supports_auras:
+                raise ValueError("Aura capability not negotiated")
+            aura = message.get("aura")
+            if aura is not None and (not isinstance(aura, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", aura)):
+                raise ValueError("Invalid aura")
+            peer.aura, peer.appearance_received = aura, True
+            for other in self.peers.values():
+                if other is not peer and other.supports_auras and peer.uuid in other.watch and other.uuid in peer.watch:
+                    other.push({"type": "appearance", "uuid": peer.uuid, "aura": aura})
             return
         if message.get("type") != "packet":
             raise ValueError("Invalid message type")

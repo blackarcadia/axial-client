@@ -30,7 +30,7 @@ public final class WardrobeScreen extends Screen {
     private WardrobeLayout layout;
     private WardrobeCategory category = WardrobeCategory.CAPES;
     private boolean dragging;
-    private WardrobeCape focusedCape;
+    private WardrobeItem focusedItem;
     private float rotation = 25;
     private String query = "", error = "";
     private TextFieldWidget search;
@@ -46,16 +46,17 @@ public final class WardrobeScreen extends Screen {
 
     void refreshCosmetics() {
         if(!WardrobeAccess.allowed()){close();return;}
-        if(focusedCape==null||!focusedCape.ownedBy(client.getSession().getUuidOrNull()))
-            focusedCape=WardrobeCape.owned(client.getSession().getUuidOrNull()).getFirst();
+        if(focusedItem==null||!focusedItem.ownedBy(client.getSession().getUuidOrNull()))
+            focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
         scroll=0;rebuild();
     }
 
     @Override protected void init() {
         if (!WardrobeAccess.allowed()) return;
-        if(focusedCape==null) {
-            focusedCape=WardrobePreferences.current();
-            if(focusedCape==null)focusedCape=WardrobeCape.defaultFor(client.getSession().getUuidOrNull());
+        if(focusedItem==null) {
+            focusedItem=WardrobeItem.of(WardrobePreferences.current());
+            if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
+            if(focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
         }
         layout = new WardrobeLayout(width,height);
         rebuild();
@@ -83,11 +84,11 @@ public final class WardrobeScreen extends Screen {
         search.setChangedListener(value->{query=value;scroll=0;rebuild();});
         addDrawableChild(search);
         if(focused)setFocused(search);
-        if(category.includesCapes()) {
-            scroll=Math.clamp(scroll,0,layout.maxScroll(matchingCapes().size()));
-            int index=0;
-            for(var cape:matchingCapes())card(cape,layout.card(index++,scroll));
-        }
+        var matching=matchingItems();
+        if(!matching.isEmpty()&&!matching.contains(focusedItem))focusedItem=matching.getFirst();
+        scroll=Math.clamp(scroll,0,layout.maxScroll(matching.size()));
+        int index=0;
+        for(var item:matchingItems())card(item,layout.card(index++,scroll));
         int arrowY=layout.preview.bottom()-21;
         button("<",new Rect(layout.preview.x()+4,arrowY,20,18),()->rotation-=45);
         button(">",new Rect(layout.preview.right()-24,arrowY,20,18),()->rotation+=45);
@@ -95,27 +96,27 @@ public final class WardrobeScreen extends Screen {
     }
 
     private boolean matches(String name) {return name.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT).trim());}
-    private java.util.List<WardrobeCape> matchingCapes() {
-        return category.includesCapes()?WardrobeCape.owned(client.getSession().getUuidOrNull()).stream().filter(cape->matches(cape.label)).toList():java.util.List.of();
+    private java.util.List<WardrobeItem> matchingItems() {
+        return WardrobeItem.owned(client.getSession().getUuidOrNull(),category).stream().filter(item->matches(item.label())).toList();
     }
-    private void save(WardrobeCape cape) {
+    private void save(WardrobeItem item) {
         if (!WardrobeAccess.allowed()) return;
-        try {WardrobePreferences.toggle(cape);focusedCape=cape;error="";rebuild();}
+        try {item.toggle();focusedItem=item;error="";rebuild();}
         catch(IOException ex) {error="Could not save. Try again.";}
     }
-    private void card(WardrobeCape cape,Rect r) {
-        var card=new CosmeticCard(cape,r);
+    private void card(WardrobeItem item,Rect r) {
+        var card=new CosmeticCard(item,r);
         card.visible=r.bottom()>layout.grid.y()&&r.y()<layout.grid.bottom();
         cards.add(addSelectableChild(card));
     }
 
     /** Cosmetic tiles draw independently of PressableWidget's generic button skin. */
     private final class CosmeticCard extends ClickableWidget {
-        private final WardrobeCape cape;
-        CosmeticCard(WardrobeCape cape,Rect r) {
-            super(r.x(),r.y(),r.width(),r.height(),text(cape.label));this.cape=cape;
+        private final WardrobeItem item;
+        CosmeticCard(WardrobeItem item,Rect r) {
+            super(r.x(),r.y(),r.width(),r.height(),text(item.label()));this.item=item;
         }
-        private void select() {save(cape);}
+        private void select() {save(item);}
         @Override public void onClick(Click click,boolean doubled) {select();}
         @Override public boolean mouseClicked(Click click,boolean doubled) {
             return layout.grid.contains(click.x(),click.y())&&super.mouseClicked(click,doubled);
@@ -130,10 +131,11 @@ public final class WardrobeScreen extends Screen {
         @Override protected void appendClickableNarrations(NarrationMessageBuilder builder){appendDefaultNarrations(builder);}
         @Override protected void renderWidget(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
-            boolean selected=WardrobePreferences.current()==cape;
+            boolean selected=item.equipped();
             frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,0xEE15191F);
             Rect image=WardrobeLayout.capeImage(r);
-            drawCape(c,cape,image.x(),image.y(),image.width(),image.height());
+            if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
+            else drawAura(c,r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
             if(r.height()<55) {
                 label(c,textRenderer,getMessage().getString(),image.right()+5,r.y()+(r.height()-9)/2,
                         selected?BRAND:INK,.75f,r.right()-image.right()-9,false);
@@ -141,7 +143,7 @@ public final class WardrobeScreen extends Screen {
             }
             c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,DIVIDER);
             label(c,textRenderer,getMessage().getString(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
-            boolean equipped=WardrobePreferences.current()==cape;
+            boolean equipped=item.equipped();
             label(c,textRenderer,equipped?"Equipped":"Click to equip",r.x()+7,r.bottom()-12,
                     equipped?BRAND:MUTED,.7f,r.width()-14,false);
         }
@@ -168,13 +170,13 @@ public final class WardrobeScreen extends Screen {
         rounded(c,preview.x(),preview.y(),preview.width(),preview.height(),0xA0101218);
         drawPlayer(c,delta);
         Rect d=layout.details;
-        label(c,textRenderer,focusedCape.label,d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
+        label(c,textRenderer,focusedItem.label(),d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
         if(d.height()>60) {
-            label(c,textRenderer,focusedCape.badge,d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
+            label(c,textRenderer,focusedItem.badge(),d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
             label(c,textRenderer,"Drag to rotate",d.x()+4,d.y()+32,MUTED,.7f,d.width()-8,false);
-            label(c,textRenderer,WardrobePreferences.current()==focusedCape?"Click cape to unequip":"Click cape to equip",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
+            label(c,textRenderer,focusedItem.equipped()?"Click to unequip":"Click to equip",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
         }
-        if(!category.includesCapes()||WardrobeCape.owned(client.getSession().getUuidOrNull()).stream().noneMatch(cape->matches(cape.label))) {
+        if(matchingItems().isEmpty()) {
             label(c,textRenderer,"No cosmetics here yet",layout.grid.x()+3,layout.grid.y()+12,MUTED,.8f,layout.grid.width()-6,false);
         }
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
@@ -183,7 +185,7 @@ public final class WardrobeScreen extends Screen {
         c.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
         for(var card:cards)card.render(c,mx,my,delta);
         c.disableScissor();
-        int maximum=layout.maxScroll(matchingCapes().size());
+        int maximum=layout.maxScroll(matchingItems().size());
         if(maximum>0) {
             int thumb=Math.max(10,layout.grid.height()*layout.grid.height()/(layout.grid.height()+maximum));
             int y=layout.grid.y()+(layout.grid.height()-thumb)*scroll/maximum;
@@ -197,13 +199,21 @@ public final class WardrobeScreen extends Screen {
         c.drawTexture(RenderPipelines.GUI_TEXTURED,cape.texture(age),x,y,32,32,w,h,320,512,2048,1024);
     }
 
+    private void drawAura(DrawContext c,Rect bounds) {
+        int frame=(int)((System.currentTimeMillis()%6000)*64/6000);
+        int size=Math.max(1,Math.min(bounds.width(),bounds.height()));
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,WardrobeAura.PREVIEW,bounds.x()+(bounds.width()-size)/2,bounds.y()+(bounds.height()-size)/2,
+                (frame%8)*128,(frame/8)*128,size,size,128,128,1024,1024);
+    }
+
     @SuppressWarnings({"rawtypes","unchecked"})
     private void drawPlayer(DrawContext c,float delta) {
         Rect r=layout.preview;
         if(client.player==null) {
             int h=Math.max(12,r.height()-32),w=Math.min(r.width()-14,h*10/16);
             var equipped=WardrobePreferences.current();
-            if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
+            if(focusedItem!=null&&focusedItem.aura()!=null)drawAura(c,new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
+            else if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
             label(c,textRenderer,"Join a world to preview",r.x()+4,r.bottom()-32,MUTED,.65f,r.width()-8,false);
             return;
         }
@@ -233,7 +243,7 @@ public final class WardrobeScreen extends Screen {
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(!WardrobeAccess.allowed())return true;
         if(layout.grid.contains(x,y)) {
-            scroll=Math.clamp(scroll-(int)Math.round(vertical*28),0,layout.maxScroll(matchingCapes().size()));
+            scroll=Math.clamp(scroll-(int)Math.round(vertical*28),0,layout.maxScroll(matchingItems().size()));
             rebuild();return true;
         }
         return super.mouseScrolled(x,y,horizontal,vertical);
