@@ -30,7 +30,7 @@ class HalloweenSkinsTest {
         var original=new SkinTextures(new AssetInfo.TextureAssetInfo(Identifier.of("test","original")),cape,elytra,PlayerSkinType.WIDE,false);
         var assigned=new HashSet<String>();
         for(int n=0;n<100;n++) {
-            UUID id=new UUID(0,n);var skin=HalloweenSkins.apply(id,original);String texture=skin.body().texturePath().getPath();assigned.add(texture);
+            UUID id=new UUID(0x4000L,0x8000000000000000L|n);var skin=HalloweenSkins.apply(id,original);String texture=skin.body().texturePath().getPath();assigned.add(texture);
             assertTrue(texture.startsWith("textures/entity/halloween/skin_"));
             assertEquals(texture.endsWith("skin_3.png")?PlayerSkinType.WIDE:PlayerSkinType.SLIM,skin.model());
             assertSame(cape,skin.cape());assertSame(elytra,skin.elytra());assertFalse(skin.secure());
@@ -38,6 +38,25 @@ class HalloweenSkinsTest {
             assertEquals(skin,HalloweenSkins.apply(id,original));
         }
         assertEquals(3,assigned.size());assertSame(original,HalloweenSkins.apply(null,original));assertNull(HalloweenSkins.apply(UUID.randomUUID(),null));
+    }
+    @Test void remoteOnlineAndOfflinePlayersDoNotDependOnTabListVisibility() {
+        UUID remote=UUID.fromString("8ef7a848-7c77-4449-92a9-b2fb30b4cfad");
+        UUID offline=UUID.nameUUIDFromBytes("OfflinePlayer:RemotePlayer".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var original=new SkinTextures(new AssetInfo.TextureAssetInfo(Identifier.of("test","remote_skin")),null,null,PlayerSkinType.WIDE,true);
+        for(UUID player:java.util.List.of(remote,offline)) {
+            assertTrue(HalloweenSkins.isActualPlayer(player));
+            assertNotEquals(original.body(),HalloweenSkins.apply(player,original).body());
+            assertTrue(HalloweenSkins.apply(player,original).secure());
+        }
+    }
+    @Test void citizensNpcProfilesKeepTheirOriginalTextures() {
+        UUID source=UUID.fromString("8ef7a848-7c77-4449-92a9-b2fb30b4cfad");
+        UUID npc=new UUID((source.getMostSignificantBits()&~0xf000L)|0x2000L,source.getLeastSignificantBits());
+        var original=new SkinTextures(new AssetInfo.TextureAssetInfo(Identifier.of("test","npc_skin")),null,null,PlayerSkinType.SLIM,true);
+        assertEquals(2,npc.version());assertFalse(HalloweenSkins.isActualPlayer(npc));
+        assertSame(original,HalloweenSkins.apply(npc,original));
+        assertFalse(HalloweenSkins.isActualPlayer(null));
+        assertFalse(HalloweenSkins.isActualPlayer(new UUID(0,0)));
     }
     @Test void originalUploadedTexturesArePackagedWithTheirCorrectArmLayouts() throws Exception {
         String[] hashes={"dfa9071b6fc8cf1ce9716ee14e5b8972708462eb6c7d7f89e81fd94c393d5d96", "806fad2ee42278534fd8ec9b67a4bd16e314436edbbb86313953358ebcaa23cf", "dc4440b7f74ec9d763c0e413d3115ca8907270866282b0cd772f55c4e5408ce5"};

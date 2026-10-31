@@ -2,7 +2,6 @@ package com.axial.cosmetics.client;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerSkinType;
 import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.AssetInfo;
@@ -27,18 +26,19 @@ public final class HalloweenSkins {
         value^=value>>>31;
         return (int)Math.floorMod(value,3L);
     }
-    /** Skin-loading player-info entries are also used for NPCs; only the listed roster counts. */
+    /**
+     * Do not use tab-list membership: custom tab plugins can hide real players there.
+     * Online accounts use v4 UUIDs; vanilla offline profiles use v3. Citizens converts
+     * its player NPC UUIDs to v2, so those retain their original skins even while
+     * temporarily present in player-info packets during skin loading.
+     * This is a rendering heuristic, not an account-authentication check.
+     * Citizens reference: CitizensAPI AbstractNPC#getMinecraftUniqueId.
+     */
     public static boolean isActualPlayer(UUID uuid) {
-        if(uuid==null)return false;
-        var client=MinecraftClient.getInstance();
-        if(client.player!=null&&uuid.equals(client.player.getUuid()))return true;
-        var network=client.getNetworkHandler();
-        if(network==null)return false;
-        var entry=network.getPlayerListEntry(uuid);
-        return entry!=null&&network.getListedPlayerListEntries().contains(entry);
+        return uuid!=null&&(uuid.version()==4||uuid.version()==3);
     }
     public static SkinTextures apply(UUID uuid,SkinTextures original) {
-        if(uuid==null||original==null)return original;
+        if(!isActualPlayer(uuid)||original==null)return original;
         int selected=variant(uuid,SESSION_SEED);
         if(SKINS[selected].equals(original.body())&&MODELS[selected]==original.model())return original;
         return new SkinTextures(SKINS[selected],original.cape(),original.elytra(),MODELS[selected],original.secure());
