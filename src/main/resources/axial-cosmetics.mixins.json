@@ -48,6 +48,7 @@
     "AxialConfigScreenCrosshairMixin",
     "AxialConfigScreenChunkBordersMixin",
     "ChunkBorderRendererColorMixin",
+    "WorldBorderOverlayRendererMixin",
     "AxialConfigScreenWaypointsMixin",
     "AxialConfigScreenMixin",
     "AxialConfigScreenModMenuMixin",
