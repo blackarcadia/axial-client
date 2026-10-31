@@ -12,7 +12,7 @@ The authenticated WSS relay synchronizes aura equipment to other updated, visibl
 
 ## Design and rendering
 
-This is an original procedural cosmetic inspired by the broad orbiting ribbons in the supplied Wind Aura reference. No Lunar model, texture or animation files were copied. Three smoky ribbon arcs rotate at different heights, edged with violet and orange; three small angular bats flap around the player, a jack-o'-lantern orbits below the waist, and small ember squares drift nearby. A six-second loop is evaluated continuously from Minecraft's interpolated render age.
+This is an original procedural cosmetic inspired by the broad orbiting ribbons in the supplied Wind Aura reference. No Lunar model, texture or animation files were copied. Three smoky trails rotate at different heights on a 1/16-block grid, with stepped silhouettes and whole violet/orange accent pixels. Three pixel-shaped bats flap around the player, a six-pixel jack-o'-lantern face orbits below the waist, and square embers drift nearby. The geometry uses square edges while the orbit remains continuous. A six-second loop is evaluated continuously from Minecraft's interpolated render age.
 
 `HexwindGeometry.java` is the editable source for the mesh, colours, orbit radii and animation. `AuraFeatureRenderer.java` submits the mesh through Minecraft 1.21.11's entity render command queue, with normal depth testing, no collision or spawned entities, reduced detail past 24 blocks and a 64-block distance cutoff. Invisible/spectator players and Citizens-style NPC UUIDs are excluded. Local first-person hands are not surrounded with an obstructing aura; the local player's aura is visible in third person and the wardrobe's native player preview. Other players' auras are visible normally.
 

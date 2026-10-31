@@ -25,7 +25,7 @@ public class GenerateHexwindPreview {
     static double sy(Point p){return p.y()+depth(p)*.17;}
     static BufferedImage image(int size,float ticks) {
         var image=new BufferedImage(size,size,BufferedImage.TYPE_INT_ARGB);var g=image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_OFF);
         var mesh=new ArrayList<Quad>();
         // A neutral, block-shaped preview mannequin gives scale without borrowing a player skin.
         box(mesh,-.22f,1.48f,-.22f,.44f,.44f,.44f,0xff8b8098);
