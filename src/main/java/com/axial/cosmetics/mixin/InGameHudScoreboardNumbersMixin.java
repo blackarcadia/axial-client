@@ -1,13 +1,13 @@
 package com.axial.cosmetics.mixin;
 
 import com.axial.cosmetics.client.ScoreboardHudConfig;
+import com.axial.cosmetics.client.ScoreboardNumbers;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.scoreboard.number.NumberFormat;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -18,6 +18,6 @@ public abstract class InGameHudScoreboardNumbersMixin {
     @WrapOperation(method="method_55439", at=@At(value="INVOKE",
             target="Lnet/minecraft/scoreboard/ScoreboardEntry;formatted(Lnet/minecraft/scoreboard/number/NumberFormat;)Lnet/minecraft/text/MutableText;"))
     private MutableText axial$sidebarNumber(ScoreboardEntry entry, NumberFormat format, Operation<MutableText> original) {
-        return ScoreboardHudConfig.showNumbers() ? original.call(entry, format) : Text.empty();
+        return ScoreboardNumbers.resolve(original.call(entry, format), entry.value(), ScoreboardHudConfig.showNumbers());
     }
 }

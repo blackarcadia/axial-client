@@ -20,7 +20,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
         var client=MinecraftClient.getInstance();
         if(client.world==null||state.invisible||state.spectator)return;
         var entity=client.world.getEntityById(state.id);
-        if(entity==null||!HalloweenSkins.isActualPlayer(entity.getUuid()))return;
+        if(entity==null||!PlayerProfiles.isActualPlayer(entity.getUuid()))return;
         var aura=WardrobePreferences.auraFor(entity.getUuid());
         if(aura==null)return;
         double distance=client.player==null?0:entity.squaredDistanceTo(client.player);

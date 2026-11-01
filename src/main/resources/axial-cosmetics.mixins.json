@@ -34,8 +34,6 @@
     "PlayerEntityRendererEmoteEquipmentMixin",
     "PlayerEntityRendererThirdPersonNameTagMixin",
     "PlayerEntityRendererCreatorMixin",
-    "HalloweenPlayerSkinMixin",
-    "HalloweenPlayerListSkinMixin",
     "GeoArmorGlintMixin",
     "ArmorCosmeticGeoRendererMixin",
     "AxialConfigScreenColorPickerMixin",
