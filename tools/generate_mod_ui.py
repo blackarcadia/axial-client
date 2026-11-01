@@ -48,6 +48,21 @@ def gear(x, y):
     return max(body, 3.4-radius)
 
 
+# Four independent arrows leave the centre open at small menu sizes.
+MOVE_ARROW = [(12, 1.5), (16.5, 6.5), (13.4, 6.5), (13.4, 9.2),
+              (10.6, 9.2), (10.6, 6.5), (7.5, 6.5)]
+MOVE_ARROWS = [
+    [(12 + (x-12)*math.cos(i*math.pi/2) - (y-12)*math.sin(i*math.pi/2),
+      12 + (x-12)*math.sin(i*math.pi/2) + (y-12)*math.cos(i*math.pi/2))
+     for x, y in MOVE_ARROW]
+    for i in range(4)
+]
+
+
+def move(x, y):
+    return min(filled_polygon(arrow, x, y) for arrow in MOVE_ARROWS)
+
+
 def main():
     masks.DEST = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/axial_cosmetics/textures/gui/sprites/mods'
     masks.DEST.mkdir(parents=True, exist_ok=True)
@@ -68,7 +83,6 @@ def main():
         'potion': combine(lines([(6,1),(10,1),(10,3),(9.5,3),(9.5,6),(13,11),(12,14),(4,14),(3,11),(6.5,6),(6.5,3),(6,3)],True),lines([(4,10),(12,10)])),
         'map': combine(lines([(1.5,3),(6,1.5),(10,3),(14.5,1.5),(14.5,13),(10,14.5),(6,13),(1.5,14.5)],True),lines([(6,1.5),(6,13)]),lines([(10,3),(10,14.5)])),
         'scale': combine(box(1.5,7.5,7,7),box(10,1.5,4.5,4.5),lines([(2,5),(2,2),(7,2)]),lines([(11,14),(14,14),(14,9)])),
-        'move': combine(lines([(8,1),(8,15)]),lines([(1,8),(15,8)]),lines([(5,4),(8,1),(11,4)]),lines([(5,12),(8,15),(11,12)]),lines([(4,5),(1,8),(4,11)]),lines([(12,5),(15,8),(12,11)])),
         'close': combine(lines([(3,3),(13,13)]),lines([(13,3),(3,13)])),
         'search': combine(ring(6.5,6.5,4.5),lines([(10,10),(14,14)])),
         'check': lines([(2,8),(6,12),(14,4)]),
@@ -78,6 +92,7 @@ def main():
         'forums': combine(lines([(1,2),(11,2),(11,9),(6,9),(3,12),(3,9),(1,9)],True),lines([(13,5),(15,5),(15,12),(13,12),(13,15),(10,12),(7,12)])),
     }
     masks.png('gear', 24, gear)
+    masks.png('move', 24, move)
     for name, distance in icons.items():
         masks.png(name,16,distance)
 
