@@ -19,7 +19,10 @@ public final class ScoreboardHudConfig {
         position=new Position();if(!Files.exists(path))return;
         try(var reader=Files.newBufferedReader(path)){
             Position loaded=GSON.fromJson(reader,Position.class);
-            if(loaded!=null&&loaded.x>=0&&loaded.y>=0)position=loaded;
+            if(loaded!=null){
+                position.showNumbers=loaded.showNumbers;
+                if(loaded.x>=0&&loaded.y>=0){position.x=loaded.x;position.y=loaded.y;}
+            }
         }catch(IOException|JsonParseException ex){LoggerFactory.getLogger(ScoreboardHudConfig.class).warn("Could not load scoreboard position",ex);}
     }
     public static void save(){save(path());}
@@ -27,9 +30,11 @@ public final class ScoreboardHudConfig {
         try{Files.createDirectories(path.getParent());try(var writer=Files.newBufferedWriter(path)){GSON.toJson(position,writer);}}
         catch(IOException ex){LoggerFactory.getLogger(ScoreboardHudConfig.class).warn("Could not save scoreboard position",ex);}
     }
+    public static boolean showNumbers(){return position.showNumbers;}
+    public static void setShowNumbers(boolean show){position.showNumbers=show;save();}
     public static void setPosition(int x,int y){position.x=Math.max(0,x);position.y=Math.max(0,y);}
     public static int x(int vanilla,int screenWidth,int width){return position.x<0?vanilla:clamp(position.x,screenWidth,width);}
     public static int y(int vanilla,int screenHeight,int height){return position.y<0?vanilla:clamp(position.y,screenHeight,height);}
     private static int clamp(int value,int screenSize,int size){return Math.clamp(value,0,Math.max(0,screenSize-size));}
-    private static final class Position {int x=-1,y=-1;}
+    private static final class Position {int x=-1,y=-1;boolean showNumbers=false;}
 }

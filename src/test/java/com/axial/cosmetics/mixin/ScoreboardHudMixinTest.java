@@ -42,11 +42,22 @@ class ScoreboardHudMixinTest {
             assertEquals(5,checked);
         }
     }
+    @Test void sidebarNumberHookTargetsFormattingBeforeWidthMeasurement() throws Exception {
+        var hud=read("net/minecraft/client/gui/hud/InGameHud");
+        var method=hud.methods.stream().filter(m->m.name.equals("method_55439")).findFirst().orElseThrow();
+        int formatting=-1,measurement=-1;
+        for(int i=0;i<method.instructions.size();i++)if(method.instructions.get(i) instanceof MethodInsnNode call){
+            if(call.owner.equals("net/minecraft/scoreboard/ScoreboardEntry")&&call.name.equals("formatted")
+                    &&call.desc.equals("(Lnet/minecraft/scoreboard/number/NumberFormat;)Lnet/minecraft/text/MutableText;"))formatting=i;
+            if(call.owner.equals("net/minecraft/client/font/TextRenderer")&&call.name.equals("getWidth"))measurement=i;
+        }
+        assertTrue(formatting>=0&&measurement>formatting);
+    }
     @Test void builtModRegistersAllRequiredScoreboardHooks()throws Exception{
         try(var jar=new JarFile(Path.of(System.getProperty("axial.test.modJar")).toFile())){
             var json=JsonParser.parseString(new String(jar.getInputStream(jar.getJarEntry("axial-cosmetics.mixins.json")).readAllBytes(),java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
             var hooks=new HashSet<String>();json.getAsJsonArray("client").forEach(v->hooks.add(v.getAsString()));
-            for(String hook:List.of("InGameHudScoreboardInvoker","InGameHudScoreboardPositionMixin","AxialConfigScreenScoreboardMoveMixin")){
+            for(String hook:List.of("InGameHudScoreboardInvoker","InGameHudScoreboardPositionMixin","InGameHudScoreboardNumbersMixin","AxialConfigScreenScoreboardMoveMixin")){
                 assertTrue(hooks.contains(hook));assertNotNull(jar.getJarEntry("com/axial/cosmetics/mixin/"+hook+".class"));
             }
         }

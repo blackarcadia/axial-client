@@ -27,6 +27,17 @@ class ScoreboardHudConfigTest {
             assertEquals(480,ScoreboardHudConfig.x(480,640,150));assertEquals(110,ScoreboardHudConfig.y(110,360,100));
         }
     }
+    @Test void numbersDefaultOffAndPersistWithoutMovingTheSidebar() throws Exception {
+        Path file=directory.resolve("numbers.json");
+        ScoreboardHudConfig.load(file);assertFalse(ScoreboardHudConfig.showNumbers());
+        Files.writeString(file,"{\"showNumbers\":true}");
+        ScoreboardHudConfig.load(file);assertTrue(ScoreboardHudConfig.showNumbers());
+        assertEquals(480,ScoreboardHudConfig.x(480,640,150));
+        ScoreboardHudConfig.save(file);ScoreboardHudConfig.load(file);
+        assertTrue(ScoreboardHudConfig.showNumbers());
+        Files.writeString(file,"{\"x\":35,\"y\":62}");ScoreboardHudConfig.load(file);
+        assertFalse(ScoreboardHudConfig.showNumbers());assertEquals(35,ScoreboardHudConfig.x(480,640,150));
+    }
     @Test void dragHitAreaUsesTheEntireMeasuredSidebarWithExclusiveEdges(){
         var bounds=new ScoreboardHud.Bounds(40,60,190,145);
         assertTrue(bounds.contains(40,60));assertTrue(bounds.contains(229.9,204.9));

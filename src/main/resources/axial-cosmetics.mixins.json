@@ -96,6 +96,7 @@
     "InGameButtonSkinMixin",
     "InGameHudScoreboardInvoker",
     "InGameHudScoreboardPositionMixin",
+    "InGameHudScoreboardNumbersMixin",
     "AxialConfigScreenScoreboardMoveMixin",
     "InGameHudCooldownsMixin",
     "AxialConfigScreenCooldownsMoveMixin",

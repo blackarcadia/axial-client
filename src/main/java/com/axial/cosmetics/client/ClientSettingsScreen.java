@@ -72,31 +72,32 @@ public final class ClientSettingsScreen extends Screen {
         addDrawableChild(new SettingsButton("Reset Defaults",layout.reset,()->change(()->{
             AxialConfigManager.get().showPlayerShadows=true;AxialConfigManager.save();
             ThirdPersonNameTagsConfig.setEnabled(false);EnchantGlintConfig.setStrength(1);EnchantGlintConfig.resetColor();
-            PerformanceConfig.reset();strength.refresh();
+            ScoreboardHudConfig.setShowNumbers(false);PerformanceConfig.reset();strength.refresh();
         })));
         row(new ToggleButton("Player Shadows","Show shadows beneath players",()->Boolean.TRUE.equals(AxialConfigManager.get().showPlayerShadows),value->{
             AxialConfigManager.get().showPlayerShadows=value;AxialConfigManager.save();
         }),16);
         row(new ToggleButton("Third Person Name Tags","Show your name in third person",ThirdPersonNameTagsConfig::enabled,ThirdPersonNameTagsConfig::setEnabled),58);
-        row(new ToggleButton("Display FPS","Show the frame rate in the top-left corner",PerformanceConfig::displayFps,PerformanceConfig::setDisplayFps),130);
+        row(new ToggleButton("Scoreboard Numbers","Show numbers beside sidebar scoreboard entries",ScoreboardHudConfig::showNumbers,ScoreboardHudConfig::setShowNumbers),100);
+        row(new ToggleButton("Display FPS","Show the frame rate in the top-left corner",PerformanceConfig::displayFps,PerformanceConfig::setDisplayFps),172);
         row(new SettingsButton("FPS COLOR",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->client.setScreen(
-                new CrosshairColorPickerScreen(this,"FPS DISPLAY",PerformanceConfig.fpsColor(),value->change(()->PerformanceConfig.setFpsColor(value)),()->{}))),172);
-        row(new ToggleButton("Render Dropped Items","Hide dropped items when off; pickups still work",PerformanceConfig::droppedItems,PerformanceConfig::setDroppedItems),214);
-        row(new ToggleButton("Render Liquids","Show water and lava surfaces; rebuilds chunks",PerformanceConfig::liquids,PerformanceConfig::setLiquids),256);
-        row(new ToggleButton("Disable Spawner Mobs","Hide miniature mobs inside regular and trial spawners",PerformanceConfig::disableSpawnerMobs,PerformanceConfig::setDisableSpawnerMobs),298);
-        row(new ToggleButton("Render Particles","Show particles such as smoke, sparks and spell effects",PerformanceConfig::particles,PerformanceConfig::setParticles),340);
-        row(new ToggleButton("Render Weather","Show rain, snow and rain splashes",PerformanceConfig::weather,PerformanceConfig::setWeather),382);
-        strength=new StrengthSlider();row(strength,456);
+                new CrosshairColorPickerScreen(this,"FPS DISPLAY",PerformanceConfig.fpsColor(),value->change(()->PerformanceConfig.setFpsColor(value)),()->{}))),214);
+        row(new ToggleButton("Render Dropped Items","Hide dropped items when off; pickups still work",PerformanceConfig::droppedItems,PerformanceConfig::setDroppedItems),256);
+        row(new ToggleButton("Render Liquids","Show water and lava surfaces; rebuilds chunks",PerformanceConfig::liquids,PerformanceConfig::setLiquids),298);
+        row(new ToggleButton("Disable Spawner Mobs","Hide miniature mobs inside regular and trial spawners",PerformanceConfig::disableSpawnerMobs,PerformanceConfig::setDisableSpawnerMobs),340);
+        row(new ToggleButton("Render Particles","Show particles such as smoke, sparks and spell effects",PerformanceConfig::particles,PerformanceConfig::setParticles),382);
+        row(new ToggleButton("Render Weather","Show rain, snow and rain splashes",PerformanceConfig::weather,PerformanceConfig::setWeather),424);
+        strength=new StrengthSlider();row(strength,498);
         int colorWidth=layout.controls.width()-66;
         row(new SettingsButton("COLOR",new Rect(layout.controls.x(),0,colorWidth,36),()->client.setScreen(
                 new CrosshairColorPickerScreen(this,"ENCHANT GLINT",EnchantGlintConfig.color(),value->change(()->{
                     EnchantGlintConfig.setColor(value);EnchantGlintConfig.save();
-                }),()->{}))),492);
-        row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),492);
+                }),()->{}))),534);
+        row(new SettingsButton("Reset",new Rect(layout.controls.right()-58,0,58,36),()->change(EnchantGlintConfig::resetColor)),534);
         var wiki=QuickMenuLinks.get("wiki");
         var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->Util.getOperatingSystem().open(wiki));
         wikiButton.active=wiki!=null;
-        row(wikiButton,562);
+        row(wikiButton,604);
         scroll=Math.clamp(scroll,0,layout.maxScroll());positionRows();
     }
 
@@ -130,9 +131,9 @@ public final class ClientSettingsScreen extends Screen {
                 label(c,textRenderer,"Performance and appearance",layout.controls.x(),layout.panel.y()+75,MUTED,.85f,layout.controls.width(),false);
             }
             c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
-            section(c,"GENERAL",0);section(c,"PERFORMANCE",112);section(c,"ENCHANT GLINT",438);section(c,"HELP & LINKS",544);
-            frame(c,new Rect(layout.controls.x(),layout.controls.y()+456-scroll,layout.controls.width(),72),LINE,SURFACE);
-            c.fill(layout.controls.x()+1,layout.controls.y()+492-scroll,layout.controls.right()-1,layout.controls.y()+493-scroll,DIVIDER);
+            section(c,"GENERAL",0);section(c,"PERFORMANCE",154);section(c,"ENCHANT GLINT",480);section(c,"HELP & LINKS",586);
+            frame(c,new Rect(layout.controls.x(),layout.controls.y()+498-scroll,layout.controls.width(),72),LINE,SURFACE);
+            c.fill(layout.controls.x()+1,layout.controls.y()+534-scroll,layout.controls.right()-1,layout.controls.y()+535-scroll,DIVIDER);
             for(Row row:rows)if(row.widget().visible)row.widget().render(c,mx,(int)(my-offset),delta);
             c.disableScissor();
             for(var child:children())if(child instanceof SettingsButton button&&rows.stream().noneMatch(row->row.widget()==button))button.render(c,mx,(int)(my-offset),delta);
