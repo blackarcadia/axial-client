@@ -15,12 +15,12 @@ public final class GoldSparkGeometry {
     static {
         var random = new Random(0x601D5A);
         var sparks = new ArrayList<Spark>();
-        for (int i = 0; i < 48; i++) {
-            sparks.add(new Spark(i * 2.5 + random.nextDouble() * 2,
+        for (int i = 0; i < 72; i++) {
+            sparks.add(new Spark(i * (PERIOD / 72.0) + random.nextDouble() * 1.4,
                     12 + random.nextDouble() * 8, random.nextDouble() * Math.PI * 2,
                     .48 + random.nextDouble() * .3, .16 + random.nextDouble() * .65,
-                    .85 + random.nextDouble() * .45, .07 + random.nextDouble() * .18,
-                    .009 + random.nextDouble() * .007, random.nextDouble() * Math.PI * 2));
+                    .85 + random.nextDouble() * .45, .12 + random.nextDouble() * .26,
+                    .018 + random.nextDouble() * .014, random.nextDouble() * Math.PI * 2));
         }
         SPARKS = List.copyOf(sparks);
     }
@@ -42,12 +42,12 @@ public final class GoldSparkGeometry {
             for (int step = 0; step < 5; step++) {
                 double strength = 1 - step / 5.0;
                 panel(mesh, x, y - step * s.length / 5, z, s.width * (.35 + strength * .65),
-                        s.length / 12, color(fade * shimmer * strength * .8, 0xF6B632));
+                        s.length / 12, color(fade * shimmer * strength * .95, 0xF6B632));
             }
             panel(mesh, x, y, z, s.width, s.width, color(fade * shimmer, 0xFFF1A3));
             if (detailed) {
-                panel(mesh, x, y, z, s.width * 2, s.width * 2, color(fade * shimmer * .13, 0xFFCC4A));
-                double flash = Math.pow(Math.max(0, Math.sin(age * .9 + s.phase)), 8);
+                panel(mesh, x, y, z, s.width * 2, s.width * 2, color(fade * shimmer * .22, 0xFFCC4A));
+                double flash = Math.pow(Math.max(0, Math.sin(age * .9 + s.phase)), 6);
                 panel(mesh, x, y, z, s.width * (1 + flash * 2), s.width * .42,
                         color(fade * flash, 0xFFF5C5));
                 panel(mesh, x, y, z, s.width * .42, s.width * (1 + flash * 2),
