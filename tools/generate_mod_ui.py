@@ -1,4 +1,4 @@
-"""Generate antialiased, tintable mod-menu line icons without runtime dependencies."""
+"""Generate antialiased, tintable mod-menu icons without runtime dependencies."""
 import math
 from pathlib import Path
 import generate_account_ui as masks
@@ -19,6 +19,33 @@ def combine(*parts):
 
 def box(x, y, w, h):
     return lines([(x,y),(x+w,y),(x+w,y+h),(x,y+h)], True)
+
+
+def filled_polygon(points, x, y):
+    inside = False
+    distance = float('inf')
+    for a, b in zip(points, points[1:] + points[:1]):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        t = max(0, min(1, ((x-a[0])*dx + (y-a[1])*dy) / (dx*dx + dy*dy)))
+        distance = min(distance, math.hypot(x-a[0]-t*dx, y-a[1]-t*dy))
+        if (a[1] > y) != (b[1] > y) and x < a[0] + (y-a[1])*dx/dy:
+            inside = not inside
+    return -distance if inside else distance
+
+
+# Approved solid gear: broad teeth, heavy body and one small centre opening.
+GEAR_TEETH = [
+    [(12 + math.cos(i*math.pi/4 + angle)*radius,
+      12 + math.sin(i*math.pi/4 + angle)*radius)
+     for radius, angle in ((6.9, -.23), (10.5, -.145), (10.5, .145), (6.9, .23))]
+    for i in range(8)
+]
+
+
+def gear(x, y):
+    radius = math.hypot(x-12, y-12)
+    body = min(radius-7.3, *(filled_polygon(tooth, x, y) for tooth in GEAR_TEETH))
+    return max(body, 3.4-radius)
 
 
 def main():
@@ -42,7 +69,6 @@ def main():
         'map': combine(lines([(1.5,3),(6,1.5),(10,3),(14.5,1.5),(14.5,13),(10,14.5),(6,13),(1.5,14.5)],True),lines([(6,1.5),(6,13)]),lines([(10,3),(10,14.5)])),
         'scale': combine(box(1.5,7.5,7,7),box(10,1.5,4.5,4.5),lines([(2,5),(2,2),(7,2)]),lines([(11,14),(14,14),(14,9)])),
         'move': combine(lines([(8,1),(8,15)]),lines([(1,8),(15,8)]),lines([(5,4),(8,1),(11,4)]),lines([(5,12),(8,15),(11,12)]),lines([(4,5),(1,8),(4,11)]),lines([(12,5),(15,8),(12,11)])),
-        'gear': combine(ring(8,8,2),ring(8,8,5),*[lines([(8+math.cos(a)*5,8+math.sin(a)*5),(8+math.cos(a)*7,8+math.sin(a)*7)]) for a in [i*math.pi/4 for i in range(8)]]),
         'close': combine(lines([(3,3),(13,13)]),lines([(13,3),(3,13)])),
         'search': combine(ring(6.5,6.5,4.5),lines([(10,10),(14,14)])),
         'check': lines([(2,8),(6,12),(14,4)]),
@@ -51,6 +77,7 @@ def main():
         'store': combine(lines([(1,2),(3,2),(5,10),(13,10),(15,4),(4,4)]),ring(6,13.5,1),ring(12,13.5,1)),
         'forums': combine(lines([(1,2),(11,2),(11,9),(6,9),(3,12),(3,9),(1,9)],True),lines([(13,5),(15,5),(15,12),(13,12),(13,15),(10,12),(7,12)])),
     }
+    masks.png('gear', 24, gear)
     for name, distance in icons.items():
         masks.png(name,16,distance)
 
