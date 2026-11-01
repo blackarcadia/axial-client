@@ -12,7 +12,7 @@ import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
-/** Slender, tapered wind geometry with continuous orbit animation. Rendering only; no particles/entities or server mutations. */
+/** Animated cosmetic geometry; no particles, entities or server mutations. */
 public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRenderState,PlayerEntityModel> {
     private static final Identifier WHITE=Identifier.of("axial_cosmetics","textures/entity/auras/white.png");
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
@@ -21,11 +21,15 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
         if(client.world==null||state.invisible||state.spectator)return;
         var entity=client.world.getEntityById(state.id);
         if(entity==null||!HalloweenSkins.isActualPlayer(entity.getUuid()))return;
-        if(WardrobePreferences.auraFor(entity.getUuid())!=WardrobeAura.HEXWIND)return;
+        var aura=WardrobePreferences.auraFor(entity.getUuid());
+        if(aura==null)return;
         double distance=client.player==null?0:entity.squaredDistanceTo(client.player);
         if(distance>64*64)return;
         float time=state.age+(entity.getUuid().hashCode()&127);
-        var mesh=HexwindGeometry.frame(time,distance<24*24);
+        var mesh=switch(aura) {
+            case HEXWIND -> HexwindGeometry.frame(time,distance<24*24);
+            case GOLD_SPARK -> GoldSparkGeometry.frame(time,distance<24*24);
+        };
         commands.submitCustom(matrices,RenderLayers.entityTranslucentEmissiveNoOutline(WHITE),(entry,vertices)->{
             for(var quad:mesh) {
                 vertex(vertices,entry,quad.a(),quad.color());vertex(vertices,entry,quad.b(),quad.color());

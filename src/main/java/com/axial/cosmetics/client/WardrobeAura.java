@@ -6,9 +6,10 @@ import net.minecraft.util.Identifier;
 
 /** Server-granted aura catalogue. There are no implicit owner/admin grants. */
 enum WardrobeAura {
-    HEXWIND("halloween_hexwind","Hexwind","HALLOWEEN AURA");
+    HEXWIND("halloween_hexwind","Hexwind","HALLOWEEN AURA"),
+    GOLD_SPARK("gold_spark","Gold Spark","GOLD AURA");
     final String id,label,badge;
-    static final Identifier PREVIEW=Identifier.of("axial_cosmetics","textures/gui/hexwind_preview.png");
+    Identifier preview(){return Identifier.of("axial_cosmetics","textures/gui/"+(this==GOLD_SPARK?"gold_spark":"hexwind")+"_preview.png");}
     WardrobeAura(String id,String label,String badge){this.id=id;this.label=label;this.badge=badge;}
     boolean ownedBy(UUID uuid){return uuid!=null&&CosmeticAssignments.owns(uuid,id,false);}
     static List<WardrobeAura> owned(UUID uuid){return java.util.Arrays.stream(values()).filter(a->a.ownedBy(uuid)).toList();}

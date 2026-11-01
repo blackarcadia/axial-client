@@ -19,5 +19,10 @@
     "name": "Hexwind",
     "image": "hexwind.gif",
     "category": "Auras"
+  },
+  "gold_spark": {
+    "name": "Gold Spark",
+    "image": "gold_spark.gif",
+    "category": "Auras"
   }
 }

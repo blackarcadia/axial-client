@@ -135,7 +135,7 @@ public final class WardrobeScreen extends Screen {
             frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,0xEE15191F);
             Rect image=WardrobeLayout.capeImage(r);
             if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
-            else drawAura(c,r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
+            else drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
             if(r.height()<55) {
                 label(c,textRenderer,getMessage().getString(),image.right()+5,r.y()+(r.height()-9)/2,
                         selected?BRAND:INK,.75f,r.right()-image.right()-9,false);
@@ -199,10 +199,10 @@ public final class WardrobeScreen extends Screen {
         c.drawTexture(RenderPipelines.GUI_TEXTURED,cape.texture(age),x,y,32,32,w,h,320,512,2048,1024);
     }
 
-    private void drawAura(DrawContext c,Rect bounds) {
+    private void drawAura(DrawContext c,WardrobeAura aura,Rect bounds) {
         int frame=(int)((System.currentTimeMillis()%6000)*64/6000);
         int size=Math.max(1,Math.min(bounds.width(),bounds.height()));
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,WardrobeAura.PREVIEW,bounds.x()+(bounds.width()-size)/2,bounds.y()+(bounds.height()-size)/2,
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,aura.preview(),bounds.x()+(bounds.width()-size)/2,bounds.y()+(bounds.height()-size)/2,
                 (frame%8)*128,(frame/8)*128,size,size,128,128,1024,1024);
     }
 
@@ -212,7 +212,7 @@ public final class WardrobeScreen extends Screen {
         if(client.player==null) {
             int h=Math.max(12,r.height()-32),w=Math.min(r.width()-14,h*10/16);
             var equipped=WardrobePreferences.current();
-            if(focusedItem!=null&&focusedItem.aura()!=null)drawAura(c,new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
+            if(focusedItem!=null&&focusedItem.aura()!=null)drawAura(c,focusedItem.aura(),new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
             else if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
             label(c,textRenderer,"Join a world to preview",r.x()+4,r.bottom()-32,MUTED,.65f,r.width()-8,false);
             return;
