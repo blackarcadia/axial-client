@@ -26,6 +26,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier BROODMOTHER_MODEL = Identifier.of("axial_cosmetics", "broodmother");
     @Unique
+    private static final Identifier REINDEERANTLERS_MODEL = Identifier.of("axial_cosmetics", "reindeerantlers");
+    @Unique
     private static final Identifier KNIGHTSHELMET_MODEL = Identifier.of("axial_cosmetics", "knightshelmet");
     @Unique
     private static final Identifier BONECRUSHER_MODEL = Identifier.of("axial_cosmetics", "bonecrusher");
@@ -103,6 +105,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(281.0F).equals(modelData.getFloat(0))) {
                 return BROODMOTHER_MODEL;
+            }
+            if (modelData != null && Float.valueOf(297.0F).equals(modelData.getFloat(0))) {
+                return REINDEERANTLERS_MODEL;
             }
             if (modelData != null && Float.valueOf(288.0F).equals(modelData.getFloat(0))) {
                 return PUMPKINBOMB_MODEL;

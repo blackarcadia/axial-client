@@ -1,5 +1,5 @@
-[00:20:49] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.19.5
-[00:20:49] [main/INFO] (FabricLoader) Loading 99 mods:
+[00:51:53] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.21.11 with Fabric Loader 0.19.5
+[00:51:53] [main/INFO] (FabricLoader) Loading 104 mods:
 	- axial_cosmetics 1.1.0
 	- axialutils 1.0-SNAPSHOT
 	- bendable_cuboids 2.0.1+mc.1.21.11
@@ -74,6 +74,10 @@
 	- geckolib 5.4.5
 	- immediatelyfast 1.14.3+1.21.11
 	   \-- net_lenni0451_reflect 1.6.2
+	- iris 1.10.8+mc1.21.11
+	   |-- io_github_douira_glsl-transformer 3.0.0-pre3
+	   |-- org_anarres_jcpp 1.4.14
+	   \-- org_antlr_antlr4-runtime 4.13.1
 	- java 25
 	- lithium 0.21.4+mc1.21.11
 	- minecraft 1.21.11
@@ -82,6 +86,7 @@
 	   |-- conditional-mixin 0.6.3
 	   \-- mixinsquared 0.2.0
 	- player_animation_library 1.1.10+mc.1.21.11
+	- sodium 0.8.13+mc1.21.11
 	- text_overflow_scroll 1.4.2
 	   |-- elementa 710
 	   |-- universalcraft 453
@@ -99,52 +104,72 @@
 	   \-- org_quiltmc_parsers_json 0.2.1
 	- zoomify 2.15.2+1.21.11
 	   \-- com_akuleshov7_ktoml-core-jvm 0.7.1
-[00:20:55] [pool-2-thread-4/WARN] (FabricLoader/ModRemap) Cannot remap lambda$updateBlockEntityTicker$9 because it does not exist in any of the targets [net/minecraft/class_2818]
-[00:20:55] [pool-2-thread-4/WARN] (FabricLoader/ModRemap) Cannot remap lambda$updateBlockEntityTicker$9 because it does not exist in any of the targets [net/minecraft/class_2818]
-[00:20:55] [pool-2-thread-10/WARN] (FabricLoader/ModRemap) Cannot remap lambda$loadBlockModels$6 because it does not exist in any of the targets [net/minecraft/class_1092]
-[00:20:55] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap getHeldItem because it does not exist in any of the targets [net/minecraft/class_3727]
-[00:20:55] [pool-2-thread-5/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$5 because it does not exist in any of the targets [net/minecraft/class_4246]
-[00:20:55] [pool-2-thread-5/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4246]
-[00:20:55] [pool-2-thread-10/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$6 because it does not exist in any of the targets [net/minecraft/class_4096]
-[00:20:55] [pool-2-thread-10/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4096]
-[00:20:55] [pool-2-thread-10/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4096]
-[00:20:55] [pool-2-thread-2/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$0 because it does not exist in any of the targets [net/minecraft/class_8236]
-[00:20:55] [pool-2-thread-5/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$2 because it does not exist in any of the targets [net/minecraft/class_7268]
-[00:20:56] [pool-2-thread-2/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$1 because it does not exist in any of the targets [net/minecraft/class_5703]
-[00:21:00] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/blackarcadia/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/5f66cc9f59b8efaa942155a3d5a30599bf6640dd/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
-[00:21:00] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'moreculling.refmap.json' for moreculling.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'moreculling.refmap.json' for moreculling.fabric.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/INFO] (Lithium) Loaded configuration file for Lithium: 171 options available, 0 override(s) found.
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerohud.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerohud.fabric.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerominimap.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'geckolib.refmap.json' for geckolib.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl-fabric.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:00] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerolib.refmap.json' for xaerolib.mixins.json could not be read. If this is a development environment you can ignore this message
-[00:21:01] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/ItemRenderState$LayerRenderState (java.lang.ClassNotFoundException: net/minecraft/ItemRenderState$LayerRenderState)
-[00:21:01] [main/WARN] (FabricLoader/Mixin) @Mixin target net/minecraft/ItemRenderState$LayerRenderState was not found axialutils.client.mixins.json:ItemRenderStateLayerRenderStateMixin from mod axialutils
-[00:21:01] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
-[00:21:02] [Datafixer Bootstrap/INFO] (Minecraft) 287 Datafixer optimizations took 236 milliseconds
-[00:21:05] [Render thread/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[00:21:05] [Render thread/INFO] (Minecraft) Setting user: Player410
-[00:21:05] [Download-2/ERROR] (Minecraft) Failed to fetch user properties
-com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
-	at knot//com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:59)
-	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:150)
-	at knot//net.minecraft.client.MinecraftClient.method_55608(MinecraftClient.java:457)
-	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
-	at java.base/java.lang.Thread.run(Thread.java:1474)
-Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 401
-	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.readInputStream(MinecraftClient.java:103)
-	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:56)
-	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:121)
-	... 5 more
-[00:21:06] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod bendable_cuboids failed bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> net.minecraft.client.render.entity.model.PlayerEntityModel: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on bc$updatePart could not find any targets matching 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/geom/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' or 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/class_630;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' in net/minecraft/client/render/entity/model/PlayerEntityModel. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> Prepare Legacy Injections -> handler$cid001$bendable_cuboids$bc$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on bc$updatePart could not find any targets matching 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/geom/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' or 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/class_630;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' in net/minecraft/client/render/entity/model/PlayerEntityModel. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> Prepare Legacy Injections -> handler$cid001$bendable_cuboids$bc$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addMainPass$1 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addParticlesPass$2 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addParticlesPass$2 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-12/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addSkyPass$8 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-9/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addMainPass$1 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$tick$1 because it does not exist in any of the targets [net/minecraft/class_4897]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap renderSingleBlock(Lnet/minecraft/world/level/block/state/BlockState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/world/level/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;)V because it does not exist in any of the targets [net/minecraft/class_776]
+[00:51:58] [pool-2-thread-14/WARN] (FabricLoader/ModRemap) Cannot remap lambda$updateBlockEntityTicker$9 because it does not exist in any of the targets [net/minecraft/class_2818]
+[00:51:58] [pool-2-thread-14/WARN] (FabricLoader/ModRemap) Cannot remap lambda$updateBlockEntityTicker$9 because it does not exist in any of the targets [net/minecraft/class_2818]
+[00:51:58] [pool-2-thread-12/WARN] (FabricLoader/ModRemap) Cannot remap lambda$loadBlockModels$6 because it does not exist in any of the targets [net/minecraft/class_1092]
+[00:51:58] [pool-2-thread-2/WARN] (FabricLoader/ModRemap) Cannot remap push because it does not exist in any of the targets [net/minecraft/class_287]
+[00:51:58] [pool-2-thread-4/WARN] (FabricLoader/ModRemap) Cannot remap lambda$submit$0 because it does not exist in any of the targets [net/minecraft/class_840]
+[00:51:58] [pool-2-thread-1/WARN] (FabricLoader/ModRemap) Cannot remap getHeldItem because it does not exist in any of the targets [net/minecraft/class_3727]
+[00:51:58] [pool-2-thread-3/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$5 because it does not exist in any of the targets [net/minecraft/class_4246]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addSkyPass$8 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addSkyPass$8 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addCloudsPass$3 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addCloudsPass$3 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-3/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4246]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addMainPass$1 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addWeatherPass$4 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addWeatherPass$4 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addWeatherPass$4 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-13/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addMainPass$1 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-14/WARN] (FabricLoader/ModRemap) Cannot remap lambda$reload$3 because it does not exist in any of the targets [net/minecraft/class_1060]
+[00:51:58] [pool-2-thread-11/WARN] (FabricLoader/ModRemap) Cannot remap iterateVisibleBlockEntities because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-11/WARN] (FabricLoader/ModRemap) Cannot remap lambda$addMainPass$1 because it does not exist in any of the targets [net/minecraft/class_761]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$6 because it does not exist in any of the targets [net/minecraft/class_4096]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4096]
+[00:51:58] [pool-2-thread-7/WARN] (FabricLoader/ModRemap) Cannot remap lambda$create$8 because it does not exist in any of the targets [net/minecraft/class_4096]
+[00:51:59] [pool-2-thread-10/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$0 because it does not exist in any of the targets [net/minecraft/class_8236]
+[00:51:59] [pool-2-thread-11/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$2 because it does not exist in any of the targets [net/minecraft/class_7268]
+[00:51:59] [pool-2-thread-12/WARN] (FabricLoader/ModRemap) Cannot remap lambda$init$2 because it does not exist in any of the targets [net/minecraft/class_429]
+[00:51:59] [pool-2-thread-4/WARN] (FabricLoader/ModRemap) Cannot remap lambda$getTicker$1 because it does not exist in any of the targets [net/minecraft/class_5703]
+[00:51:59] [pool-2-thread-6/WARN] (FabricLoader/ModRemap) Cannot remap sodium$setActive(Z)V because it does not exist in any of the targets [net/minecraft/class_7764]
+[00:52:04] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/Users/blackarcadia/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/5f66cc9f59b8efaa942155a3d5a30599bf6640dd/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
+[00:52:04] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerolib.refmap.json' for xaerolib.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'geckolib.refmap.json' for geckolib.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'yet_another_config_lib_v3.refmap.json' for yacl-fabric.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'moreculling.refmap.json' for moreculling.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'moreculling.refmap.json' for moreculling.fabric.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/INFO] (Lithium) Loaded configuration file for Lithium: 171 options available, 0 override(s) found.
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris-fabric.refmap.json' for mixins.iris.fabric.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.fantastic.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.vertexformat.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.bettermipmaps.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.compat.sodium.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'iris.refmap.json' for mixins.iris.fixes.maxfpscrash.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerohud.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerohud.fabric.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/WARN] (FabricLoader/Mixin) Reference map 'xaerominimap.refmap.json' for xaerominimap.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:52:04] [main/INFO] (Sodium) Loaded configuration file for Sodium: 36 options available, 1 override(s) found
+[00:52:05] [main/WARN] (FabricLoader/Mixin) Error loading class: net/minecraft/ItemRenderState$LayerRenderState (java.lang.ClassNotFoundException: net/minecraft/ItemRenderState$LayerRenderState)
+[00:52:05] [main/WARN] (FabricLoader/Mixin) @Mixin target net/minecraft/ItemRenderState$LayerRenderState was not found axialutils.client.mixins.json:ItemRenderStateLayerRenderStateMixin from mod axialutils
+[00:52:05] [main/WARN] (FabricLoader/Mixin) Error loading class: net/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/BlockOcclusionCache (java.lang.ClassNotFoundException: net/caffeinemc/mods/sodium/client/render/chunk/compile/pipeline/BlockOcclusionCache)
+[00:52:06] [main/WARN] (Sodium) Force-disabling mixin 'features.render.world.sky.LevelRendererMixin' as rule 'mixin.features.render.world.sky' (added by mods [iris]) disables it and children
+[00:52:06] [main/INFO] (Sodium-GraphicsAdapterProbe) Searching for graphics cards...
+[00:52:06] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+[00:52:07] [Datafixer Bootstrap/INFO] (Minecraft) 287 Datafixer optimizations took 181 milliseconds
+[00:52:09] [Render thread/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[00:52:09] [Render thread/INFO] (Minecraft) Setting user: Player195
+[00:52:10] [Render thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod bendable_cuboids failed bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> net.minecraft.client.render.entity.model.PlayerEntityModel: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on bc$updatePart could not find any targets matching 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/geom/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' or 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/class_630;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' in net/minecraft/client/render/entity/model/PlayerEntityModel. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> Prepare Legacy Injections -> handler$cpc001$bendable_cuboids$bc$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on bc$updatePart could not find any targets matching 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/geom/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' or 'pal$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/class_630;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;)V' in net/minecraft/client/render/entity/model/PlayerEntityModel. No refMap loaded. [INJECT_PREPARE_LEGACY Applicator Phase -> bendable_cuboids.mixins.json:playeranim.PlayerModelMixin_playerAnim from mod bendable_cuboids -> Prepare Legacy Injections -> handler$cpc001$bendable_cuboids$bc$updatePart(Lcom/zigythebird/playeranim/animation/AvatarAnimManager;Lnet/minecraft/client/model/ModelPart;Lcom/zigythebird/playeranimcore/bones/PlayerAnimBone;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V -> Parse ->  -> Validate Targets]
 	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:326)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:364)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
@@ -185,27 +210,44 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
-[00:21:06] [Render thread/INFO] (MinimapLogs) No Optifine!
-[00:21:06] [Render thread/INFO] (MinimapLogs) Xaero's Minimap: No Vivecraft!
-[00:21:06] [Render thread/INFO] (HudMod) Registering common data for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (HudMod) Registering client data for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (HudMod) Loading primary common config for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (HudMod) Loading server config profiles for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (HudMod) Loading primary client config for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (HudMod) Loading client config profiles for channel xaerominimap:main!
-[00:21:06] [Render thread/INFO] (XaeroMinimap) Loading Xaero's Minimap - Stage 1/2
-[00:21:06] [Render thread/INFO] (YetAnotherConfigLib) Deserializing YACLConfig from '/Users/blackarcadia/IdeaProjects/AxialClientAlpha/run/config/yacl.json5'
-[00:21:06] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
-[00:21:06] [Render thread/INFO] (XaeroLib) Registering common data for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Registering client data for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading primary common config for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading server config profiles for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading primary client config for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading client config profiles for channel xaerolib:main!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading XaeroLib common 1/2!
-[00:21:06] [Render thread/INFO] (XaeroLib) Loading XaeroLib client 1/2!
-[00:21:06] [Render thread/INFO] (Minecraft) [STDOUT]: [TRender] Initializing Client...
-[00:21:06] [Render thread/WARN] (Minecraft) Failed to get system info for Render Extensions
+[00:52:10] [Render thread/INFO] (XaeroLib) Registering common data for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Registering client data for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading primary common config for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading server config profiles for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading primary client config for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading client config profiles for channel xaerolib:main!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading XaeroLib common 1/2!
+[00:52:10] [Render thread/INFO] (XaeroLib) Loading XaeroLib client 1/2!
+[00:52:10] [Download-2/ERROR] (Minecraft) Failed to fetch user properties
+com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
+	at knot//com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:59)
+	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:150)
+	at knot//net.minecraft.client.MinecraftClient.method_55608(MinecraftClient.java:457)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run$$$capture(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 401
+	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.readInputStream(MinecraftClient.java:103)
+	at knot//com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:56)
+	at knot//com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:121)
+	... 6 more
+[00:52:10] [Render thread/WARN] (XaeroLib) io exception while checking patreon: Online mod data expired! Date: Wed Oct 28 14:27:27 GMT 2026
+[00:52:10] [Render thread/INFO] (YetAnotherConfigLib) Deserializing YACLConfig from '/Users/blackarcadia/IdeaProjects/AxialClientAlpha/run/config/yacl.json5'
+[00:52:10] [Render thread/INFO] (Minecraft) [STDOUT]: [TRender] Initializing Client...
+[00:52:10] [Render thread/INFO] (Indigo) [Indigo] Different rendering plugin detected; not applying Indigo.
+[00:52:10] [Render thread/INFO] (MinimapLogs) No Optifine!
+[00:52:10] [Render thread/INFO] (MinimapLogs) Xaero's Minimap: No Vivecraft!
+[00:52:10] [Render thread/INFO] (MinimapLogs) Xaero's Minimap: Iris found!
+[00:52:10] [Render thread/INFO] (HudMod) Registering common data for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (HudMod) Registering client data for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (HudMod) Loading primary common config for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (HudMod) Loading server config profiles for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (HudMod) Loading primary client config for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (HudMod) Loading client config profiles for channel xaerominimap:main!
+[00:52:10] [Render thread/INFO] (XaeroMinimap) Loading Xaero's Minimap - Stage 1/2
+[00:52:11] [Render thread/WARN] (Minecraft) Failed to get system info for Render Extensions
 java.lang.IllegalStateException: Can't getDevice() before it was initialized
 	at knot//com.mojang.blaze3d.systems.RenderSystem.getDevice(RenderSystem.java:299)
 	at knot//net.minecraft.client.MinecraftClient.method_68671(MinecraftClient.java:2527)

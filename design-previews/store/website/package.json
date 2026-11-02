@@ -1,0 +1,28 @@
+{
+  "name": "axial-client-website",
+  "version": "0.0.1",
+  "description": "The Axial Client homepage",
+  "private": true,
+  "keywords": [
+    ""
+  ],
+  "license": "",
+  "author": "",
+  "scripts": {
+    "start": "webpack serve --open --config webpack.config.dev.js",
+    "build": "webpack --config webpack.config.prod.js",
+    "test:crosshair": "node tests/crosshair-parity.cjs",
+    "test:hud": "node tests/hud-geometry.cjs",
+    "test:mod-menu": "node tests/mod-menu-parity.cjs",
+    "test:store": "node tests/storefront-core.cjs"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^11.0.0",
+    "dompurify": "^3.4.17",
+    "html-webpack-plugin": "^5.6.0",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4",
+    "webpack-merge": "^5.10.0"
+  }
+}

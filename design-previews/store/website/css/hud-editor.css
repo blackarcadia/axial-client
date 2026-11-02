@@ -1,0 +1,60 @@
+/* Actual client screenshots over a fixed Minecraft GUI coordinate space. */
+.hud-panel.active{display:block;min-height:0;padding:28px}
+.hud-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:30px;text-align:left;margin-bottom:23px}
+.hud-panel-heading h3{font-size:25px;line-height:1.2;letter-spacing:-.6px;margin-top:10px}
+.hud-panel-heading>p{max-width:380px;font-size:10px;line-height:1.9;color:#b59bc3}
+.hud-editor{overflow:hidden;border:1px solid #646b73;border-radius:8px;background:#14171b;color:#f0f2f3;text-align:left}
+.hud-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:12px 15px;background:#171b20;border-bottom:1px solid #454c53;flex-wrap:wrap}
+.hud-toolbar>div{display:flex;align-items:center;gap:9px}
+.hud-mode-dot{width:5px;height:5px;background:#c78df5;box-shadow:0 0 9px #c78df555;border-radius:50%}
+.hud-toolbar strong{font-size:10px;font-weight:650;white-space:nowrap}
+.hud-toolbar-hint{font-size:7px;letter-spacing:.6px;color:#87929e;margin-left:7px}
+.hud-toolbar button{display:flex;gap:12px;align-items:center;border:1px solid #454c53;border-radius:5px;background:#202429;color:#e1d4ec;font-size:8px;padding:7px 10px;text-transform:uppercase;min-height:30px;white-space:nowrap}
+.hud-toolbar button:hover{background:#2b323a;border-color:#c78df5}
+.hud-toolbar button span{font-size:13px;line-height:1;color:#c78df5}
+.hud-viewport{position:relative;width:100%;aspect-ratio:957/514;overflow:hidden;background:#101319;isolation:isolate;touch-action:pan-y}
+.hud-scene{position:absolute;left:0;top:0;width:957px;height:514px;transform-origin:0 0;user-select:none;-webkit-user-select:none}
+.hud-backdrop{position:absolute;inset:0;width:957px;height:514px;pointer-events:none;display:block;object-fit:fill}
+.hud-element{position:absolute;padding:0;margin:0;display:block;min-width:0;min-height:0;max-width:none;max-height:none;line-height:0;background:none;border:0;border-radius:0;outline:1px solid transparent;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;z-index:1}
+.hud-element img{display:block;width:100%;height:100%;max-width:none;pointer-events:none;image-rendering:pixelated;user-select:none;-webkit-user-drag:none}
+.hud-element:hover{outline:1px solid #c78df5aa}
+.hud-element.is-selected{outline:1px solid #c78df5;z-index:3}
+.hud-element:focus-visible{outline:2px solid #e7c3ff;outline-offset:2px}
+.hud-element.is-selected:before,.hud-element.is-selected:after{content:'';position:absolute;width:3px;height:3px;box-sizing:border-box;border:1px solid #f1dfff;background:#45334f;left:-2px;top:-2px}
+.hud-element.is-selected:after{left:auto;top:auto;right:-2px;bottom:-2px}
+.hud-element-tag{display:none;position:absolute;left:0;bottom:calc(100% + 4px);font-size:7px;color:#ead5ff;line-height:1.2;white-space:nowrap;background:#14171be6;border:1px solid #c78df560;border-radius:2px;padding:3px 5px;pointer-events:none}
+.hud-element.is-selected .hud-element-tag{display:block}
+.hud-element.is-dragging,.hud-editor.is-dragging .hud-viewport{cursor:grabbing}
+.hud-snap-guide{position:absolute;background:#c78df5;opacity:0;z-index:0;pointer-events:none;box-shadow:0 0 3px #c78df540}
+.hud-snap-x{left:478px;top:0;width:1px;height:514px}
+.hud-snap-y{left:0;top:257px;width:957px;height:1px}
+.hud-scene.is-snapped-x .hud-snap-x,.hud-scene.is-snapped-y .hud-snap-y{opacity:.85}
+.hud-editor-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 15px;border-top:1px solid #353a40;color:#a0a7ae;background:#171b20}
+.hud-editor-footer p{font-size:7px;line-height:1.8;letter-spacing:.3px}
+#hud-save-state{font-size:7px;color:#af95c1;line-height:1.8}
+#hud-preview-dialog{width:min(1600px,96vw);max-width:96vw;max-height:96svh;margin:auto;padding:0;border:1px solid #69727d;border-radius:8px;background:#14171b;overflow:auto;color:#f0f2f3}
+#hud-preview-dialog::backdrop{background:#050309e8;backdrop-filter:blur(8px)}
+#hud-preview-dialog .hud-editor{border:0;border-radius:0}
+#hud-preview-dialog .hud-toolbar{padding:14px 17px}
+@media(min-aspect-ratio:17/10){#hud-preview-dialog{width:min(1600px,calc((96svh - 112px)*957/514))}}
+@media(max-width:700px){
+  .hud-panel.active{padding:20px 10px 10px}
+  .hud-panel-heading{display:block;padding:0 8px;margin-bottom:19px}
+  .hud-panel-heading h3{font-size:22px;margin-top:8px}
+  .hud-panel-heading>p{font-size:10px;max-width:none;margin-top:13px;line-height:1.8}
+  .hud-toolbar{padding:10px;gap:10px}
+  .hud-toolbar-hint{display:none}
+  .hud-toolbar strong{font-size:9px}
+  .hud-toolbar>div{gap:6px}
+  .hud-toolbar button{padding:6px 8px;font-size:7px;gap:7px}
+  .hud-toolbar-actions{margin-left:auto}
+  .hud-editor-footer{padding:9px 10px;gap:4px}
+  .hud-editor-footer p{font-size:6px;letter-spacing:0}
+  #hud-save-state{font-size:6px}
+  #hud-preview-dialog{width:96vw;max-height:96svh}
+  #hud-preview-dialog .hud-toolbar{padding:12px}
+}
+@media(max-width:370px){.hud-toolbar>div:first-child{width:100%}.hud-toolbar-actions{width:100%;justify-content:space-between}.hud-toolbar button{font-size:7px}}
+
+/* Keep small raster HUDs easy to grab on touchscreens without enlarging the artwork. */
+@media(pointer:coarse){.hud-hit-area{position:absolute;left:50%;top:50%;width:max(100%,var(--hud-hit-size));height:max(100%,var(--hud-hit-size));transform:translate(-50%,-50%);background:transparent}}

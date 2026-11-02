@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');
+const core=require('../js/store-core.js');
+assert.equal(core.currency('xxx'),'gbp');
+assert.equal(core.money(660,'gbp'),'£6.60');
+assert.equal(core.money(0,'usd'),'US$0.00');
+assert.throws(()=>core.money(-1,'gbp'));
+assert.throws(()=>core.money('660','gbp'));
+assert.equal(core.image({id:'619762575072043008',image:null}),'../img/store/staff.png');
+assert.equal(core.image({id:'1',image:'javascript:alert(1)'}),'../icon.svg');
+assert.equal(core.image({id:'1',image:'https://media.paynow.gg/cape.png'}),'https://media.paynow.gg/cape.png');
+assert.equal(core.search([{name:'Staff cape',description:'Green'}],'  GREEN ').length,1);
+assert.equal(core.search([{name:'Staff cape',description:'Green'}],'owner').length,0);
+console.log('PASS: storefront formatting, safe images and search');

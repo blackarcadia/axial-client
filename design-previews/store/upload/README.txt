@@ -1,0 +1,1 @@
+Upload these four files to the website root, preserving folder structure. The existing store/store-api.php and PayNow settings must remain in place. No preview catalogue data is included. Back up the corresponding live files before uploading.

@@ -1,0 +1,48 @@
+/* Feature cards and their compact image-and-description dialog. */
+.detail-card { transition: transform 330ms cubic-bezier(.2,.8,.2,1), border-color 220ms ease, box-shadow 330ms ease; transform-origin: center; }
+.detail-card:hover { transform: translateY(-4px); border-color: #929ca6; box-shadow: 0 12px 25px #0003; }
+.detail-card:active { transform: translateY(-1px) scale(.98); transition-duration: 90ms; }
+.detail-card > img { transition: transform 500ms cubic-bezier(.2,.8,.2,1), opacity 250ms ease; }
+.detail-card:hover > img { transform: scale(1.025); }
+.detail-card i { transition: transform 250ms cubic-bezier(.2,.8,.2,1), color 200ms ease; }
+.detail-card:hover i { transform: translate(2px,-2px); color: var(--client-brand); }
+#feature-detail-dialog {
+  width: min(1180px, calc(100vw - 48px));
+  max-width: none;
+  max-height: 90svh;
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--client-border);
+  border-radius: 12px;
+  background: var(--client-panel);
+  color: var(--client-ink);
+  box-shadow: 0 28px 100px #0009;
+}
+#feature-detail-dialog::backdrop { background: #080b10c9; backdrop-filter: blur(9px); animation: detail-backdrop-in 260ms ease-out both; }
+#feature-detail-dialog.is-closing::backdrop { animation: detail-backdrop-out 170ms ease-in both; }
+.detail-layout { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); align-items: stretch; }
+.detail-visual { min-width: 0; min-height: 350px; display: flex; align-items: center; justify-content: center; padding: 20px; background: #101317; border-right: 1px solid var(--client-divider); }
+#detail-image { display: block; width: 100%; height: auto; max-height: min(550px,72svh); object-fit: contain; border: 1px solid #454c5370; border-radius: 5px; }
+.detail-description { padding: 64px 32px 42px; align-self: center; }
+.detail-description h2 { margin: 0 0 19px; font-size: clamp(21px,2vw,27px); font-weight: 650; letter-spacing: -.5px; line-height: 1.25; }
+.detail-description p { margin: 0; color: var(--client-muted); font-size: 11px; line-height: 1.95; }
+.detail-close { position: absolute; z-index: 2; top: 13px; right: 13px; width: 30px; height: 30px; padding: 0; border: 1px solid var(--client-line); border-radius: 5px; background: var(--client-field); color: var(--client-ink); font-size: 23px; line-height: 1; transition: background 180ms ease, border-color 180ms ease; }
+.detail-close:hover { background: var(--client-hover); border-color: #a0a7ae; }
+@keyframes detail-backdrop-in { from { background: #080b1000; backdrop-filter: blur(0); } to { background: #080b10c9; backdrop-filter: blur(9px); } }
+@keyframes detail-backdrop-out { from { background: #080b10c9; backdrop-filter: blur(9px); } to { background: #080b1000; backdrop-filter: blur(0); } }
+@media(max-width:700px) {
+  #feature-detail-dialog { width: calc(100vw - 28px); max-height: 90svh; border-radius: 10px; }
+  .detail-layout { grid-template-columns: 1fr; }
+  .detail-visual { padding: 48px 15px 18px; min-height: 0; border-right: 0; border-bottom: 1px solid var(--client-divider); }
+  #detail-image { width: 100%; max-height: 44svh; }
+  .detail-description { padding: 26px 23px 30px; }
+  .detail-description h2 { font-size: 22px; margin-bottom: 13px; }
+  .detail-description p { font-size: 10px; line-height: 1.95; }
+  .detail-close { width: 32px; height: 32px; top: 10px; right: 10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .detail-card, .detail-card > img, .detail-card i { transition: none; }
+  .detail-card:hover, .detail-card:active, .detail-card:hover > img, .detail-card:hover i { transform: none; }
+  #feature-detail-dialog::backdrop { animation: none; backdrop-filter: none; }
+}

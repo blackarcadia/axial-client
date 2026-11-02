@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AxialClient — Minecraft Client</title>
+  <meta name="theme-color" content="#14171b">
+  <meta name="description" content="AxialClient for Windows and macOS. HUD editing, crosshairs, waypoints, and client mods.">
+  <meta property="og:title" content="AxialClient — Minecraft Client">
+  <meta property="og:description" content="Minecraft client for Windows and macOS.">
+  <meta property="og:image" content="img/axial-background.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="preload" as="image" href="img/axial-background.png" type="image/png" fetchpriority="high">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/refinements.css">
+  <link rel="stylesheet" href="css/crosshair-editor.css">
+  <link rel="stylesheet" href="css/hud-editor.css">
+  <link rel="stylesheet" href="css/client-theme.css">
+  <link rel="stylesheet" href="css/feature-detail.css">
+  <link rel="stylesheet" href="css/mod-menu.css">
+  <link rel="stylesheet" href="css/hero-motion.css">
+  <link rel="stylesheet" href="css/navigation.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-nav"><a class="wordmark" href="#home" aria-label="AxialClient home">AXIAL<span>CLIENT</span><i></i></a><nav id="site-navigation" aria-label="Main navigation"><a href="#features">Features</a><a href="servers/">Our Servers</a><a href="news/">News</a><a href="store/">Store</a><a href="#download">Downloads</a><a href="https://discord.gg/axial" target="_blank" rel="noopener noreferrer">Discord <span aria-hidden="true">↗</span></a></nav><a class="nav-download" href="#download"><span class="nav-download-label">Download</span> <span aria-hidden="true">↓</span></a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" aria-label="Open navigation"><span></span><span></span></button></header>
+  <main id="main-content">
+  <section class="page" id="home" aria-labelledby="hero-title">
+    <div class="hero-particles" aria-hidden="true"></div>
+    <div class="content">
+      <h1 id="hero-title" class="sr-only">AxialClient</h1>
+
+
+
+      <div class="platforms" aria-label="Supported platforms">
+        <div class="platform" title="Windows">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 5.6 10.3 4.6v7H3V5.6Zm8.3-1.1L21 3v8.6h-9.7V4.5ZM3 12.6h7.3v7L3 18.6v-6Zm8.3 0H21V21l-9.7-1.4v-7Z"/>
+          </svg>
+          <span>Windows</span>
+        </div>
+
+        <div class="platform" title="macOS">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17.05 12.54c-.02-2.38 1.94-3.53 2.03-3.59-1.11-1.63-2.84-1.85-3.46-1.87-1.47-.15-2.87.87-3.62.87-.75 0-1.91-.85-3.14-.83-1.62.02-3.11.94-3.94 2.39-1.68 2.92-.43 7.25 1.21 9.62.8 1.16 1.76 2.47 3.02 2.42 1.21-.05 1.67-.78 3.13-.78 1.46 0 1.87.78 3.15.75 1.3-.02 2.13-1.18 2.93-2.35.92-1.35 1.3-2.65 1.32-2.72-.03-.01-2.5-.96-2.53-3.81ZM14.66 5.53c.67-.81 1.12-1.94 1-3.06-.97.04-2.14.65-2.83 1.46-.62.72-1.16 1.87-1.02 2.97 1.08.08 2.18-.55 2.85-1.37Z"/>
+          </svg>
+          <span>macOS</span>
+        </div>
+      </div>
+
+      <div class="hero-actions"><a class="primary-action" href="#download">Download <span aria-hidden="true">↓</span></a>
+      <a class="discord" href="https://discord.gg/axial" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.54 5.34A16.3 16.3 0 0 0 15.44 4c-.18.32-.39.75-.53 1.09a15.2 15.2 0 0 0-4.55 0A11.5 11.5 0 0 0 9.82 4a16.4 16.4 0 0 0-4.11 1.35C3.11 9.2 2.41 12.95 2.76 16.65a16.5 16.5 0 0 0 5.03 2.54c.41-.55.77-1.14 1.08-1.76-.59-.22-1.16-.49-1.7-.81.14-.1.28-.21.41-.32 3.28 1.52 6.84 1.52 10.08 0 .14.11.28.22.41.32-.54.32-1.11.59-1.7.81.31.62.67 1.21 1.08 1.76a16.5 16.5 0 0 0 5.03-2.54c.42-4.29-.72-8-2.94-11.31ZM9.68 14.37c-.98 0-1.79-.91-1.79-2.03 0-1.12.79-2.03 1.79-2.03s1.81.92 1.79 2.03c0 1.12-.79 2.03-1.79 2.03Zm6.64 0c-.98 0-1.79-.91-1.79-2.03 0-1.12.79-2.03 1.79-2.03s1.81.92 1.79 2.03c0 1.12-.79 2.03-1.79 2.03Z"/>
+        </svg>
+        Discord <span aria-hidden="true">↗</span>
+      </a></div>
+    </div>
+    <a class="explore-cue" href="#features"><span></span> FEATURES <span aria-hidden="true">↓</span></a>
+  </section>
+
+
+  <section class="feature-showcase" id="features" aria-labelledby="features-heading">
+    <div class="feature-inner">
+      <h2 class="feature-title" id="features-heading">FEATURES</h2>
+      <p class="features-invitation">DONT TAKE OUR WORD FOR IT TRY IT YOURSELF</p>
+
+      <div class="feature-tabs" role="tablist" aria-label="Client feature previews">
+        <button class="feature-tab active" type="button" role="tab" aria-selected="true" data-panel="features" id="feature-tab-features" aria-controls="feature-panel-features" tabindex="0">FEATURES</button>
+        <button class="feature-tab" type="button" role="tab" aria-selected="false" data-panel="move" id="feature-tab-move" aria-controls="feature-panel-move" tabindex="-1">MOVE ELEMENTS</button>
+        <button class="feature-tab" type="button" role="tab" aria-selected="false" data-panel="performance" id="feature-tab-performance" aria-controls="feature-panel-performance" tabindex="-1">CUSTOMISATION</button>
+        <button class="feature-tab" type="button" role="tab" aria-selected="false" data-panel="mods" id="feature-tab-mods" aria-controls="feature-panel-mods" tabindex="-1">MODS</button>
+        <button class="feature-tab" type="button" role="tab" aria-selected="false" data-panel="crosshair" id="feature-tab-crosshair" aria-controls="feature-panel-crosshair" tabindex="-1">CROSSHAIRS</button>
+      </div>
+
+      <div class="feature-frame">
+        <article class="feature-panel active mod-menu-panel" data-feature-panel="features" id="feature-panel-features" role="tabpanel" aria-labelledby="feature-tab-features">
+          <div id="mod-menu" class="mod-menu">
+            <div class="mm-heading"><img src="img/mod-menu/logo.png" alt="AxialClient" width="240" height="117"><div><span>AXIAL CLIENT</span><h3 id="mm-heading-title">MOD MENU</h3></div><button id="mm-back" type="button" hidden>← MODS</button></div>
+            <div class="mm-navigation" role="group" aria-label="Mod menu navigation"><button id="mm-nav-mods" aria-pressed="true" type="button"><img src="img/mod-menu/cube.png" alt="">MODS</button><button id="mm-nav-settings" aria-pressed="false" type="button"><img src="img/mod-menu/gear.png" alt="">SETTINGS</button><button id="mm-nav-hud" type="button"><img src="img/mod-menu/move.png" alt="">EDIT HUD</button></div>
+            <div id="mm-library" class="mm-library"><div id="mm-categories" class="mm-categories" role="group" aria-label="Mod categories"></div><div class="mm-library-main"><div class="mm-toolbar"><label class="mm-search"><img src="img/mod-menu/search.png" alt=""><input id="mm-search" type="search" placeholder="SEARCH MODS…" aria-label="Search mods" maxlength="64" autocomplete="off"></label><label class="mm-filter"><input id="mm-enabled-filter" type="checkbox">ENABLED ONLY</label></div><div id="mm-grid" class="mm-grid" role="region" aria-label="Mod library" tabindex="0"></div></div></div>
+            <div id="mm-settings" class="mm-settings" hidden><div id="mm-setting-controls" class="mm-setting-controls"></div><div class="mm-preview"><span>LIVE PREVIEW</span><div id="mm-sample" class="mm-sample"></div><small>EXAMPLE</small></div></div>
+            <div class="mm-footer"><span id="mm-count" role="status" aria-live="polite"></span><span id="mm-local-note">BROWSER PREVIEW · SAVED LOCALLY</span><button id="mm-reset" type="button" hidden>RESET DEFAULTS</button></div><span id="mm-status" class="sr-only" role="status"></span>
+          </div>
+        </article>
+        <article class="feature-panel hud-panel" data-feature-panel="move" id="feature-panel-move" role="tabpanel" aria-labelledby="feature-tab-move" hidden>
+          <div class="hud-panel-heading"><div><h3>HUD editor</h3></div><p>Drag the elements to reposition them.</p></div>
+          <div id="hud-editor" class="hud-editor">
+            <div class="hud-toolbar"><div><span class="hud-mode-dot"></span><strong>MOVE HUD</strong></div><div class="hud-toolbar-actions"><button id="hud-reset" type="button">RESET LAYOUT <span aria-hidden="true">↺</span></button><button id="hud-expand" type="button" aria-haspopup="dialog">EXPAND PREVIEW <span aria-hidden="true">⤢</span></button><button id="hud-done" type="button" hidden>CLOSE PREVIEW <span aria-hidden="true">×</span></button></div></div>
+            <div id="hud-viewport" class="hud-viewport" aria-label="AxialClient HUD layout test screen" aria-describedby="hud-help">
+              <div id="hud-scene" class="hud-scene"><img class="hud-backdrop" src="img/hud/background.png" width="1914" height="1028" alt="AxialClient in-game move screen, with center guides and the Axial logo" draggable="false" loading="lazy"><div class="hud-snap-guide hud-snap-x" aria-hidden="true"></div><div class="hud-snap-guide hud-snap-y" aria-hidden="true"></div>
+                <button class="hud-element" data-hud="information" type="button" aria-label="Move Information HUD" aria-describedby="hud-help"><img src="img/hud/information.png" alt="Information HUD: charge per minute, server, facing, coordinates and ping" draggable="false" width="261" height="157"><span class="hud-hit-area" aria-hidden="true"></span><span class="hud-element-tag" aria-hidden="true">INFORMATION HUD</span></button>
+                <button class="hud-element" data-hud="cps" type="button" aria-label="Move CPS HUD" aria-describedby="hud-help"><img src="img/hud/cps.png" alt="CPS HUD showing 12 clicks per second" draggable="false" width="103" height="56"><span class="hud-hit-area" aria-hidden="true"></span><span class="hud-element-tag" aria-hidden="true">CPS HUD</span></button>
+                <button class="hud-element" data-hud="armor" type="button" aria-label="Move Armor HUD" aria-describedby="hud-help"><img src="img/hud/armor.png" alt="Armor HUD showing Space Suit and Space Boots at 100 percent durability" draggable="false" width="258" height="100"><span class="hud-hit-area" aria-hidden="true"></span><span class="hud-element-tag" aria-hidden="true">ARMOR HUD</span></button>
+              </div>
+            </div>
+            <div class="hud-editor-footer"><p id="hud-help">DRAG TO MOVE · ARROW KEYS TO NUDGE · SHIFT FOR LARGER STEPS</p><span id="hud-save-state">LAYOUT SAVED IN THIS BROWSER</span></div><span class="sr-only" id="hud-status" role="status" aria-live="polite"></span>
+          </div>
+          <div id="hud-editor-home"></div>
+        </article>
+        <article class="feature-panel" data-feature-panel="performance" id="feature-panel-performance" role="tabpanel" aria-labelledby="feature-tab-performance" hidden>
+          <div class="feature-caption"><div><h3>Mod settings</h3><p>Adjust colors and display settings with a live preview.</p></div></div>
+          <div class="feature-media"><button class="screenshot-button" type="button" aria-label="Enlarge client screenshot"><img class="feature-image" src="img/client/satchel.png" width="1327" height="637" loading="lazy" alt="AxialClient Satchel Helper showing configurable colors and a live preview"><span class="screenshot-hint">VIEW FULL SCREEN ↗</span></button></div>
+        </article>
+        <article class="feature-panel mods-panel" data-feature-panel="mods" id="feature-panel-mods" role="tabpanel" aria-labelledby="feature-tab-mods" hidden>
+          <div class="mods-content">
+            
+            <h3>Included mods</h3>
+            <div class="mods-grid">
+              <span>HUD DISPLAY</span><span>WAYPOINTS</span><span>FPS BOOST</span><span>ZOOMIFY</span>
+              <span>SATCHEL HELPER HUD</span><span>ARMOR HUD</span><span>CPS</span><span>FULL BRIGHT</span>
+              <span>CONTRABAND HIGHLIGHTS</span><span>SCOREBOARD</span><span>WORLDBORDER</span><span>TITLE OVERLAY</span>
+              <span>ITEM SCALER</span><span>ENCHANT GLINT CHANGER</span><span>CUSTOM CROSSHAIR</span><span>COMPASS</span>
+            </div>
+          </div>
+        </article>
+<article class="feature-panel crosshair-panel" data-feature-panel="crosshair" id="feature-panel-crosshair" role="tabpanel" aria-labelledby="feature-tab-crosshair" hidden>    <div id="crosshair-editor" class="client-editor">
+      <div class="ce-header"><div><span>AXIAL CLIENT</span><h3>CROSSHAIR</h3></div><button id="ce-enabled" aria-pressed="true">Enabled</button></div>
+      <div class="ce-body"><div class="ce-left"><div class="ce-tabs" role="tablist" aria-label="Crosshair editor"><button id="ce-templates-tab" role="tab" aria-selected="true" aria-controls="ce-templates" tabindex="0">Templates</button><button id="ce-customize-tab" role="tab" aria-selected="false" aria-controls="ce-customize" tabindex="-1">Customize</button></div><div id="ce-templates" role="tabpanel" aria-labelledby="ce-templates-tab" class="ce-scroll"><div id="ce-gallery" class="ce-gallery"></div></div><div id="ce-customize" role="tabpanel" aria-labelledby="ce-customize-tab" class="ce-scroll" hidden><p class="ce-caption">BASE SHAPE</p><div id="ce-shapes" class="ce-shapes"></div><p class="ce-caption">GEOMETRY · TYPE A VALUE OR DRAG</p><div id="ce-geometry"></div><p class="ce-caption">APPEARANCE</p><div class="ce-colors"><label>Crosshair Color<input id="ce-color" type="color" aria-label="Crosshair color" value="#ffffff"></label><label>Outline Color<input id="ce-outline-color" type="color" aria-label="Outline color" value="#000000"></label></div><div id="ce-swatches" class="ce-swatches" role="group" aria-label="Quick crosshair colors"></div><div id="ce-opacity"></div><p class="ce-caption">DETAILS</p><div id="ce-toggles"></div><div id="ce-details"></div></div></div>
+      <div class="ce-preview"><div class="ce-preview-header"><span>LIVE PREVIEW</span><button id="ce-zoom" aria-label="Toggle preview zoom">1×</button></div><canvas id="ce-canvas" width="280" height="300" role="img" aria-label="Live crosshair preview"></canvas><p id="ce-preview-note">Actual size · 1× view</p><button id="ce-pulse" disabled>Dynamic: Off</button><div class="ce-backgrounds" role="group" aria-label="Preview background"><button data-ce-background="0" aria-pressed="true">Dark</button><button data-ce-background="1" aria-pressed="false">Light</button><button data-ce-background="2" aria-pressed="false">Terrain</button></div></div></div>
+      <div class="ce-footer"><button id="ce-reset">Reset</button><button id="ce-undo" disabled>Undo</button><span id="ce-save-status" role="status">Saves in this browser automatically</span><span class="ce-browser-note">WEB PREVIEW</span></div>
+    </div></article>
+      </div>
+<div class="detail-gallery"><button class="detail-card" data-detail="map" aria-haspopup="dialog" aria-controls="feature-detail-dialog" aria-label="View map and waypoints" data-screenshot="img/client/map.png" data-alt="AxialClient map and saved waypoints"><img src="img/client/map.png" alt="Map and waypoints in AxialClient" loading="lazy"><span><strong>Map & waypoints</strong><i aria-hidden="true">↗</i></span></button><button class="detail-card" data-detail="accounts" aria-haspopup="dialog" aria-controls="feature-detail-dialog" aria-label="View accounts" data-screenshot="img/client/accounts.png" data-alt="AxialClient account management"><img src="img/client/accounts.png" alt="Saved accounts and player preview in AxialClient" loading="lazy"><span><strong>Accounts</strong><i aria-hidden="true">↗</i></span></button><button class="detail-card" data-detail="waypoint-editor" aria-haspopup="dialog" aria-controls="feature-detail-dialog" aria-label="View waypoint editor" data-screenshot="img/client/waypoint-editor.png" data-alt="AxialClient waypoint editor"><img src="img/client/waypoint-editor.png" alt="Waypoint name, coordinates and color controls" loading="lazy"><span><strong>Waypoint editor</strong><i aria-hidden="true">↗</i></span></button></div><p class="development-note"><span></span> Early development.</p>
+    </div>
+  </section>
+
+
+  <section class="download-section" id="download" aria-labelledby="download-title">
+    <div class="download-inner">
+      <h2 class="download-title" id="download-title">DOWNLOAD</h2>
+      <p class="download-description">
+        Choose your platform.
+      </p>
+
+      <div class="download-options">
+        <a class="download-card" href="https://github.com/blackarcadia/axial-client/releases/latest/download/AxialLauncher.app.zip">
+          <span class="download-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M17.05 12.54c-.02-2.38 1.94-3.53 2.03-3.59-1.11-1.63-2.84-1.85-3.46-1.87-1.47-.15-2.87.87-3.62.87-.75 0-1.91-.85-3.14-.83-1.62.02-3.11.94-3.94 2.39-1.68 2.92-.43 7.25 1.21 9.62.8 1.16 1.76 2.47 3.02 2.42 1.21-.05 1.67-.78 3.13-.78 1.46 0 1.87.78 3.15.75 1.3-.02 2.13-1.18 2.93-2.35.92-1.35 1.3-2.65 1.32-2.72-.03-.01-2.5-.96-2.53-3.81ZM14.66 5.53c.67-.81 1.12-1.94 1-3.06-.97.04-2.14.65-2.83 1.46-.62.72-1.16 1.87-1.02 2.97 1.08.08 2.18-.55 2.85-1.37Z"/>
+            </svg>
+          </span>
+          <span>
+            <span class="download-small">macOS</span>
+            <span class="download-name">Download for Mac</span>
+          </span>
+          <span class="download-arrow" aria-hidden="true">↓</span>
+        </a>
+
+        <a class="download-card"
+           href="https://github.com/blackarcadia/axial-client/releases/latest/download/AxialLauncher-windows.zip">
+          <span class="download-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 5.6 10.3 4.6v7H3V5.6Zm8.3-1.1L21 3v8.6h-9.7V4.5ZM3 12.6h7.3v7L3 18.6v-6Zm8.3 0H21V21l-9.7-1.4v-7Z"/>
+            </svg>
+          </span>
+          <span>
+            <span class="download-small">Windows 64-bit</span>
+            <span class="download-name">Download for Windows</span>
+          </span>
+          <span class="download-arrow" aria-hidden="true">↓</span>
+        </a>
+      </div>
+
+      <p class="download-note download-counter" aria-live="polite" hidden><strong id="download-count">—</strong> TOTAL DOWNLOADS <span class="download-counter-platforms">WINDOWS + MAC</span></p>
+    </div>
+  </section>
+
+  </main>
+  <footer class="site-footer"><a class="wordmark" href="#home">AXIAL<span>CLIENT</span></a><div><a href="#features">Features</a><a href="servers/">Our Servers</a><a href="news/">News</a><a href="store/">Store</a><a href="#download">Downloads</a><a href="https://discord.gg/axial" target="_blank" rel="noopener noreferrer">Discord ↗</a></div><small>© <span id="year">2026</span> AxialClient. Not affiliated with Mojang or Microsoft.</small><a class="back-top" href="#home">BACK TO TOP ↑</a></footer>
+  <dialog id="feature-detail-dialog" aria-labelledby="detail-title" aria-describedby="detail-description">
+    <button class="detail-close" type="button" aria-label="Close feature preview" autofocus>×</button>
+    <div class="detail-layout"><div class="detail-visual"><img id="detail-image" alt="" decoding="async"></div><div class="detail-description"><h2 id="detail-title"></h2><p id="detail-description"></p></div></div>
+  </dialog>
+  <dialog id="hud-preview-dialog" aria-label="Expanded AxialClient HUD layout test screen"></dialog>
+  <dialog id="image-dialog" aria-label="Client screenshot"><button class="dialog-close" type="button" aria-label="Close screenshot">×</button><img id="lightbox-image" alt=""></dialog>
+  <script src="js/app.js" defer></script>
+  <script src="js/hud-core.js" defer></script>
+  <script src="js/hud-editor.js" defer></script>
+  <script src="js/crosshair-core.js" defer></script>
+  <script src="js/crosshair-editor.js" defer></script>
+  <script src="js/mod-menu-core.js" defer></script>
+  <script src="js/mod-menu.js" defer></script>
+  <script src="js/hero-motion.js" defer></script>
+  <script src="js/navigation.js" defer></script>
+</body>
+</html>

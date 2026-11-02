@@ -168,7 +168,7 @@ final class ModMenuCatalog {
     private static String description(String label) {
         return switch (label) {
             case "HUD" -> "On-screen information"; case "SATCHEL HELPER" -> "Ore satchel information";
-            case "FULL BRIGHT" -> "Brighten dark areas"; case "SMART MINING" -> "Mining assistance";
+            case "FULL BRIGHT" -> "Brighten dark areas"; case "SMART MINING" -> "Hide players when mining";
             case "CPS" -> "Clicks per second"; case "ARMOR HUD" -> "Armor and durability";
             case "CONTRABAND" -> "Contraband highlights"; case "SCOREBOARD" -> "Scoreboard display";
             case "WORLD BORDER" -> "World boundary display"; case "CHUNK BORDERS" -> "Show chunk boundaries";

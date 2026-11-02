@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/">
+  <channel>
+    <language>en-US</language>
+    <title>AXIALCLIENT NEWS</title>
+    <description>VIEW ALL UPDATES, RELEASE NEWS AND CLIENT POSTS HERE REGARDING THE AXIALCLIENT</description>
+    <pubDate>Sun, 25 Oct 2026 13:29:52 +0000</pubDate>
+    <lastBuildDate>Sun, 25 Oct 2026 13:29:52 +0000</lastBuildDate>
+    <generator>AxialPrisons Official Forums</generator>
+    <link>https://axialprisons.com/forums/news/</link>
+    <atom:link rel="self" type="application/rss+xml" href="https://axialprisons.com/forums/news/index.rss"/>
+    <item>
+      <title>TEST ARTICLE</title>
+      <pubDate>Sun, 25 Oct 2026 13:28:13 +0000</pubDate>
+      <link>https://axialprisons.com/threads/test-article.37/</link>
+      <guid isPermaLink="false">37</guid>
+      <author>invalid@example.com (Subxil)</author>
+      <category domain="https://axialprisons.com/forums/news/"><![CDATA[AXIALCLIENT NEWS]]></category>
+      <dc:creator>Subxil</dc:creator>
+      <content:encoded><![CDATA[<div class="bbWrapper">NEWS TEST</div>]]></content:encoded>
+      <slash:comments>0</slash:comments>
+    </item>
+  </channel>
+</rss>

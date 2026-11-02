@@ -1,0 +1,17 @@
+/* The artwork remains at its original colour and opacity. */
+.page::before { transform: translate3d(var(--hero-x,0px),var(--hero-y,0px),0) scale(1.04); transform-origin: center; will-change: transform; }
+.page .primary-action,.page .discord { transition: transform 260ms cubic-bezier(.2,.8,.2,1), border-color 200ms ease, background 200ms ease, box-shadow 260ms ease; }
+.page .primary-action:hover,.page .discord:hover { transform: translateY(-3px); border-color: #b0b8c0; box-shadow: 0 8px 20px #0003; }
+.page .primary-action:active,.page .discord:active { transform: translateY(-1px) scale(.97); transition-duration: 90ms; }
+.page .primary-action>span,.page .discord>span { display:inline-block; transition:transform 260ms cubic-bezier(.2,.8,.2,1); }
+.page .primary-action:hover>span { transform: translateY(2px); }
+.page .discord:hover>span { transform: translate(2px,-2px); }
+@media(pointer:coarse) { .page::before { transform: translate3d(0,var(--hero-y,0px),0) scale(1.04); } }
+@media(prefers-reduced-motion:reduce) {
+  .page::before { transform: none; will-change: auto; }
+  .page .primary-action,.page .discord,.page .primary-action>span,.page .discord>span { transition: none; }
+  .page .primary-action:hover,.page .discord:hover,.page .primary-action:active,.page .discord:active,.page .primary-action:hover>span,.page .discord:hover>span { transform: none; }
+}
+/* Keep the embedded skull logo below the header as the background moves. */
+.page::before { background-position: center 42px; }
+@media(max-width:700px) { .page::before { background-position: center 22px; } }
