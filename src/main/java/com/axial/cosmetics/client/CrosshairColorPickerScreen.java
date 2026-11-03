@@ -98,10 +98,10 @@ public final class CrosshairColorPickerScreen extends Screen {
     private void push(){onChange.accept(storedColor());saveAction.save();syncHex();}
     private void syncHex(){if(hex==null)return;syncing=true;try{hex.setText(String.format(Locale.ROOT,"#%06X",storedColor()&0xFFFFFF));}finally{syncing=false;}}
     private PickerButton addButton(String label,Rect r,Runnable action){return addDrawableChild(new PickerButton(label,r,action));}
-    private final class PickerButton extends ButtonWidget {
+    private final class PickerButton extends AnimatedMenuButton {
         PickerButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);}
         @Override public void playDownSound(SoundManager soundManager){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
             boolean hover=isHovered()||isFocused();frame(c,new Rect(getX(),getY(),width,height),hover?HOVER_LINE:LINE,hover?HOVER:FIELD);
             label(c,textRenderer,getMessage().getString(),getX()+7,getY()+6,INK,.8f,width-14,false);
         }

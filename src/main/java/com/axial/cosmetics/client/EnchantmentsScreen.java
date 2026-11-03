@@ -222,11 +222,11 @@ public final class EnchantmentsScreen extends NavigationScreen {
         String trimmed=textRenderer.trimToWidth(UiTypography.text(value,scale,bold),Math.max(0,maxWidth)).getString();
         label(c,textRenderer,trimmed,center-textRenderer.getWidth(UiTypography.text(trimmed,scale,bold))/2,y,color,scale,maxWidth,bold);
     }
-    private class GuideButton extends ButtonWidget {
+    private class GuideButton extends AnimatedMenuButton {
         boolean selected;
         GuideButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),text(label),b->action.run(),DEFAULT_NARRATION_SUPPLIER);}
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float dt){
+        @Override protected void drawContents(DrawContext c,int mx,int my,float dt){
             boolean hover=isHovered()||isFocused();Rect r=new Rect(getX(),getY(),width,height);
             if(getMessage().getString().equals("CLOSE")){icon(c,"close",getX()+4,getY()+5,11,11,hover?INK:MUTED);return;}
             frame(c,r,hover?HOVER_LINE:selected?SELECTED_LINE:LINE,selected?SELECTED:hover?HOVER:FIELD);

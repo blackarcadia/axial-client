@@ -69,7 +69,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
         for(int i=0;i<styles.length;i++){
             var style=styles[i];int index=i;
             var b=new NavButton(styleName(style),new Rect(layout.controls.x()+i%columns*(cell+4),0,cell,30),()->edit(()->config().style=style)){
-                @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+                @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
                     frame(c,new Rect(getX(),getY(),width,height),config().style==style?BRAND:LINE,isHovered()?HOVER:FIELD);
                     var sample=new CrosshairConfig();CrosshairPresets.apply(sample,style);sample.color=config().color;sample.outlineEnabled=false;sample.width=1;
                     CrosshairRenderer.render(c,getX()+width/2,getY()+height/2,sample);
@@ -89,7 +89,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
         int swatch=Math.min(30,(layout.controls.width()-25)/6);
         for(int i=0;i<colors.length;i++){
             int color=colors[i];var b=new NavButton(String.format(Locale.ROOT,"#%06X",color&0xFFFFFF),new Rect(layout.controls.x()+i*(swatch+5),0,swatch,20),()->edit(()->config().color=color)){
-                @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){frame(c,new Rect(getX(),getY(),width,height),config().color==color?BRAND:LINE,color);}
+                @Override protected void drawContents(DrawContext c,int mx,int my,float delta){frame(c,new Rect(getX(),getY(),width,height),config().color==color?BRAND:LINE,color);}
             };b.setTooltip(Tooltip.of(b.getMessage()));track(b,y);
         }
         y+=26;addDimension(Dimension.OPACITY,y);y+=44;
@@ -105,7 +105,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
             history.checkpoint(config());
             client.setScreen(new CrosshairColorPickerScreen(this,label,color,value->{setter.accept(value);save();},()->{}));
         }){
-            @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+            @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
                 super.drawIcon(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,ChromaColor.resolve(label.equals("Crosshair")?config().color:config().outlineColor));
             }
         };track(button,y);
@@ -113,7 +113,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
     private void addToggle(String label,java.util.function.BooleanSupplier state,Runnable action,int y){
         var b=new NavButton(label,new Rect(layout.controls.x(),0,layout.controls.width(),24),()->edit(action)){
             private final ToggleAnimation animation=new ToggleAnimation(state.getAsBoolean());
-            @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+            @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
                 frame(c,new Rect(getX(),getY(),width,height),LINE,FIELD);
                 line(c,label,getX()+9,getY()+8,INK,.85f,width-56,false);
                 ModMenuUi.toggle(c,getRight()-39,getY()+5,30,15,13,animation.value(state.getAsBoolean()),INK);
@@ -211,7 +211,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
     private final class PresetButton extends NavButton {
         private final CrosshairPresets.Template preset;private final CrosshairConfig sample;
         PresetButton(CrosshairPresets.Template preset,Rect r){super(preset.name(),r,()->edit(()->CrosshairPresets.applyTemplate(config(),preset)));this.preset=preset;sample=preset.preview(config());}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
             boolean chosen=CrosshairPresets.matches(config(),preset);Rect r=new Rect(getX(),getY(),width,height);
             frame(c,r,chosen?BRAND:LINE,isHovered()||isFocused()?HOVER:FIELD);
             c.enableScissor(Math.max(layout.controls.x(),r.x()+2),Math.max(layout.controls.y(),r.y()+2),Math.min(layout.controls.right(),r.right()-2),Math.min(layout.controls.bottom(),r.bottom()-2));

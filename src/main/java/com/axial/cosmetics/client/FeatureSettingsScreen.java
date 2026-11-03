@@ -242,7 +242,7 @@ public final class FeatureSettingsScreen extends Screen {
         return super.keyPressed(input);
     }
 
-    private final class SettingButton extends ButtonWidget {
+    private final class SettingButton extends AnimatedMenuButton {
         final boolean toggle;final BooleanSupplier state;final Setting setting;final String label;int crosshairStyle=-1;
         final ToggleAnimation toggleAnimation;
         SettingButton(String label,Rect r,Runnable action,boolean toggle,BooleanSupplier state){this(label,r,action,toggle,state,null);}
@@ -253,7 +253,7 @@ public final class FeatureSettingsScreen extends Screen {
             if(toggleAnimation!=null)toggleAnimation.value(state.getAsBoolean());
         }
         @Override public void playDownSound(SoundManager soundManager){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta) {
             boolean hover=isHovered()||isFocused(),selected=state!=null&&state.getAsBoolean();
             Rect r=new Rect(getX(),getY(),width,height);
             boolean header=r.y()<layout.controls.y();

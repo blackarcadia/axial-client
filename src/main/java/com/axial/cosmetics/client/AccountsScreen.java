@@ -343,7 +343,7 @@ public final class AccountsScreen extends Screen {
     private enum Tone { OUTLINE, PRIMARY, DANGER, CLOSE, MORE, CHECK, CARD, PREVIOUS, NEXT }
 
     /** Keeps native focus, activation, and narration with screen-local rendering. */
-    private final class AccountButton extends ButtonWidget {
+    private final class AccountButton extends AnimatedMenuButton {
         private final Tone tone;
         private final AccountStore.Entry entry;
 
@@ -361,7 +361,7 @@ public final class AccountsScreen extends Screen {
             return super.isMouseOver(mouseX, mouseY);
         }
 
-        @Override protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
+        @Override protected void drawContents(DrawContext context, int mouseX, int mouseY, float delta) {
             int x = getX(), y = getY();
             boolean hovered = active && (isHovered() || isFocused());
             if (tone == Tone.CARD) { drawCard(context, hovered); return; }

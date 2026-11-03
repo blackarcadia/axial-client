@@ -6,13 +6,26 @@ import net.minecraft.client.input.AbstractInput;
 
 /** A short visual press pulse; actions and hit boxes respond immediately. */
 abstract class AnimatedMenuButton extends ButtonWidget {
-    private long pressed;
+    // A screen may rebuild its widgets after changing a setting. Keep the pulse
+    // with the screen so the replacement button can finish the same animation.
+    private static final java.util.Map<net.minecraft.client.gui.screen.Screen,java.util.Map<PressKey,Long>> PRESSES=new java.util.WeakHashMap<>();
+    private record PressKey(Class<?> type,String label,int x,int y) {}
+    private final String pressLabel;
+    private PressKey pressKey(){return new PressKey(getClass(),pressLabel,getX(),getY());}
+    private java.util.Map<PressKey,Long> presses(){
+        return PRESSES.computeIfAbsent(net.minecraft.client.MinecraftClient.getInstance().currentScreen,screen->new java.util.HashMap<>());
+    }
     protected AnimatedMenuButton(int x,int y,int w,int h,net.minecraft.text.Text text,PressAction action,NarrationSupplier narration) {
         super(x,y,w,h,text,action,narration);
+        pressLabel=text.getString();
     }
-    @Override public void onPress(AbstractInput input) {pressed=System.nanoTime();super.onPress(input);}
+    @Override public void onPress(AbstractInput input) {
+        long now=System.nanoTime();var pulses=presses();
+        pulses.values().removeIf(time->now-time>=140_000_000L);
+        pulses.put(pressKey(),now);super.onPress(input);
+    }
     @Override protected final void drawIcon(DrawContext c,int mx,int my,float delta) {
-        double t=(System.nanoTime()-pressed)/140_000_000.0;
+        double t=(System.nanoTime()-presses().getOrDefault(pressKey(),0L))/140_000_000.0;
         float scale=1-(float)(t>=0&&t<1?.035*Math.sin(Math.PI*t):0);
         c.getMatrices().pushMatrix();
         try {

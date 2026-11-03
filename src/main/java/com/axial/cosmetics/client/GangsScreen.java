@@ -179,10 +179,10 @@ public final class GangsScreen extends NavigationScreen {
     @Override public boolean shouldPause(){return false;}
     @Override protected void line(DrawContext c,String value,int x,int y,int color,float scale,int width,boolean bold){label(c,textRenderer,value,x,y,color,scale,width,bold);}
     private void centered(DrawContext c,String value,int center,int y,int color,float scale,int width,boolean bold){String trimmed=textRenderer.trimToWidth(UiTypography.text(value,scale,bold),Math.max(0,width)).getString();label(c,textRenderer,trimmed,center-textRenderer.getWidth(UiTypography.text(trimmed,scale,bold))/2,y,color,scale,width,bold);}
-    private class GuideButton extends ButtonWidget {
+    private class GuideButton extends AnimatedMenuButton {
         GuideButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),text(label),b->action.run(),DEFAULT_NARRATION_SUPPLIER);}
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float dt){boolean hover=isHovered()||isFocused();Rect r=new Rect(getX(),getY(),width,height);if(getMessage().getString().equals("CLOSE")){icon(c,"close",getX()+4,getY()+5,11,11,hover?INK:MUTED);return;}frame(c,r,hover?HOVER_LINE:LINE,hover?HOVER:FIELD);centered(c,getMessage().getString(),r.x()+r.width()/2,r.y()+6,INK,.8f,r.width()-14,false);}
+        @Override protected void drawContents(DrawContext c,int mx,int my,float dt){boolean hover=isHovered()||isFocused();Rect r=new Rect(getX(),getY(),width,height);if(getMessage().getString().equals("CLOSE")){icon(c,"close",getX()+4,getY()+5,11,11,hover?INK:MUTED);return;}frame(c,r,hover?HOVER_LINE:LINE,hover?HOVER:FIELD);centered(c,getMessage().getString(),r.x()+r.width()/2,r.y()+6,INK,.8f,r.width()-14,false);}
     }
     private final class GangButton extends GuideButton {
         final GangDirectory.Gang gang;
