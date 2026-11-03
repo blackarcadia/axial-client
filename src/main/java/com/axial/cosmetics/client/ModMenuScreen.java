@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.sound.SoundManager;
 import org.axial.axialutils.client.AxialUiTheme;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.util.Identifier;
@@ -26,11 +25,14 @@ public final class ModMenuScreen extends Screen {
     private final Screen returnTo;
     private MenuAnimation animation=new MenuAnimation();
     private boolean reopen;
+    private NavigationIndicator navigation;
+    private final UiMotion categoryMarker=new UiMotion(0);
     private final List<ModMenuEntry> entries;
     private ModMenuEntry.Category category = ModMenuEntry.Category.ALL;
     private String query = "", error = "";
     private boolean enabledOnly, draggingScrollbar;
     private int scroll;
+    private final SmoothScroll scrolling=new SmoothScroll();
     private ModMenuLayout layout;
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
@@ -53,6 +55,7 @@ public final class ModMenuScreen extends Screen {
 
     @Override protected void init() {
         if(reopen){animation=new MenuAnimation();reopen=false;}
+        navigation=new NavigationIndicator(0);
         layout = new ModMenuLayout(width,height);
         if(layout.tight) category=ModMenuEntry.Category.ALL;
         rebuild();
@@ -103,6 +106,7 @@ public final class ModMenuScreen extends Screen {
         }
         var matches=filtered();
         scroll=Math.clamp(scroll,0,layout.maxScroll(matches.size()));
+        scrolling.jump(scroll,layout.maxScroll(matches.size()));
         for(int i=0;i<matches.size();i++) {
             var entry=matches.get(i);
             var card=layout.card(i,scroll);
@@ -153,15 +157,17 @@ public final class ModMenuScreen extends Screen {
     }
 
     @Override public void render(DrawContext context,int mouseX,int mouseY,float delta) {
+        updateScroll();
+        frame(context,layout.panel,PANEL_BORDER,PANEL);
+        float previousOpacity=opacity(animation.progress());
         context.getMatrices().pushMatrix();
         context.getMatrices().translate(0,animation.offset());
         try { renderContent(context,mouseX,(int)(mouseY-animation.offset()),delta); }
-        finally { context.getMatrices().popMatrix(); }
+        finally { context.getMatrices().popMatrix();opacity(previousOpacity); }
     }
 
     private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
-        frame(context,panel,PANEL_BORDER,PANEL);
         boolean small = panel.height()<320;
         int logoSize=layout.tight?23:small?29:36;
         context.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
@@ -176,6 +182,16 @@ public final class ModMenuScreen extends Screen {
         icon(context,"search",layout.search.x()+7,layout.search.y()+5,11,11,MUTED);
         if(layout.sidebar) context.fill(layout.categories.right()+4,layout.categories.y(),layout.categories.right()+5,layout.grid.bottom(),DIVIDER);
         super.render(context,mouseX,mouseY,delta);
+        int tabWidth=Math.min(102,layout.navigation.width()/4);
+        navigation.draw(context,layout.navigation.x()+(layout.navigation.width()-tabWidth*4)/2,layout.navigation.bottom()-2,tabWidth);
+        double selectedCategory=categoryMarker.toward(category.ordinal());
+        if(!layout.tight) {
+            var first=layout.category(0);var next=layout.category(1);
+            int markerX=first.x()+(int)Math.round((next.x()-first.x())*selectedCategory);
+            int markerY=first.y()+(int)Math.round((next.y()-first.y())*selectedCategory);
+            if(layout.sidebar)rounded(context,markerX+1,markerY+5,2,Math.max(1,first.height()-10),BRAND);
+            else rounded(context,markerX+5,markerY+first.height()-2,Math.max(1,first.width()-10),2,BRAND);
+        }
         context.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
         var matches=filtered();
         for(int i=0;i<matches.size();i++) {
@@ -216,18 +232,26 @@ public final class ModMenuScreen extends Screen {
         rounded(context,track.x(),y,track.width(),thumb,0xFF8F99A2);
     }
 
-    private void scrollTo(int value) {
-        int next=Math.clamp(value,0,layout.maxScroll(filtered().size()));
-        if(next!=scroll){scroll=next;rebuild();}
+    private void updateScroll() {
+        var matches=filtered();scroll=scrolling.value(layout.maxScroll(matches.size()));
+        for(var button:cardButtons) {
+            int index=matches.indexOf(button.entry);if(index<0)continue;
+            var card=layout.card(index,scroll);
+            var bounds=button.icon.equals("gear")?layout.settings(card):card;
+            button.setPosition(bounds.x(),bounds.y());
+            button.visible=button.icon.equals("gear")?bounds.y()>=layout.grid.y()&&bounds.bottom()<=layout.grid.bottom():card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom();
+        }
     }
+    private void scrollTo(int value) {scrolling.to(value,layout.maxScroll(filtered().size()));}
     private void dragScroll(double mouseY) {
         var track=layout.scrollbar;
-        scrollTo((int)((mouseY-track.y())/track.height()*layout.maxScroll(filtered().size())));
+        scrolling.jump((int)((mouseY-track.y())/track.height()*layout.maxScroll(filtered().size())),layout.maxScroll(filtered().size()));
+        updateScroll();
     }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(animation.closing())return true;
         y-=animation.offset();
-        if(layout.panel.contains(x,y)){scrollTo(scroll-(int)Math.round(vertical*30));return true;}
+        if(layout.panel.contains(x,y)){scrollTo(scrolling.target()-(int)Math.round(vertical*30));return true;}
         return false;
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
@@ -256,8 +280,8 @@ public final class ModMenuScreen extends Screen {
         if(!search.isFocused()&&QuickMenuScreen.isMenuKey(input)){close();return true;}
         if (!search.isFocused()) {
             switch(input.key()) {
-                case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollTo(scroll+layout.grid.height()); return true; }
-                case GLFW.GLFW_KEY_PAGE_UP -> { scrollTo(scroll-layout.grid.height()); return true; }
+                case GLFW.GLFW_KEY_PAGE_DOWN -> { scrollTo(scrolling.target()+layout.grid.height()); return true; }
+                case GLFW.GLFW_KEY_PAGE_UP -> { scrollTo(scrolling.target()-layout.grid.height()); return true; }
                 case GLFW.GLFW_KEY_HOME -> { scrollTo(0); return true; }
                 case GLFW.GLFW_KEY_END -> { scrollTo(layout.maxScroll(filtered().size())); return true; }
                 default -> { }
@@ -266,7 +290,7 @@ public final class ModMenuScreen extends Screen {
         return super.keyPressed(input);
     }
 
-    private final class MenuButton extends ButtonWidget {
+    private final class MenuButton extends AnimatedMenuButton {
         private final String icon;
         private final boolean selected,clipped;
         private final ModMenuEntry entry;
@@ -287,7 +311,7 @@ public final class ModMenuScreen extends Screen {
             if(icon.equals("toggle"))return layout.toggleContains(new ModMenuLayout.Rect(getX(),getY(),width,height),entry.configure()!=null,x,y);
             return (!clipped || layout.grid.contains(x,y)) && super.isMouseOver(x,y);
         }
-        @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
+        @Override protected void drawContents(DrawContext context,int mouseX,int mouseY,float delta) {
             if(getMessage().getString().equalsIgnoreCase("Wardrobe"))active=WardrobeAccess.allowed();
             if(icon.equals("open"))return;
             boolean hover=active&&(isHovered()||isFocused());

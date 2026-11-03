@@ -9,7 +9,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.sound.SoundManager;
 import org.axial.axialutils.client.AxialUiTheme;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
@@ -116,7 +115,7 @@ public final class QuickMenuScreen extends Screen {
         }
     }
 
-    private final class QuickButton extends ButtonWidget {
+    private final class QuickButton extends AnimatedMenuButton {
         private final String icon;
         private float hover;
         private long lastFrame=System.nanoTime();
@@ -136,7 +135,7 @@ public final class QuickMenuScreen extends Screen {
             AxialUiTheme.playButtonClickSound();
         }
 
-        @Override protected void drawIcon(DrawContext context,int mouseX,int mouseY,float delta) {
+        @Override protected void drawContents(DrawContext context,int mouseX,int mouseY,float delta) {
             long now=System.nanoTime();
             hover=MenuAnimation.hover(hover,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);
             lastFrame=now;

@@ -7,7 +7,6 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.input.KeyInput;
@@ -32,6 +31,14 @@ public final class WardrobeScreen extends Screen {
     private boolean dragging;
     private WardrobeItem focusedItem;
     private float rotation = 25;
+    private float shownRotation=25;
+    private final UiMotion previewRotation=new UiMotion(25);
+    private final UiMotion categoryMarker=new UiMotion(0);
+    private final SmoothScroll scrolling=new SmoothScroll();
+    private MenuAnimation animation=new MenuAnimation();
+    private boolean reopen;
+    private final java.util.Map<WardrobeItem,UiMotion> equipmentMotion=new java.util.HashMap<>();
+    private long equippedAt;
     private String query = "", error = "";
     private TextFieldWidget search;
     private int scroll;
@@ -53,6 +60,8 @@ public final class WardrobeScreen extends Screen {
 
     @Override protected void init() {
         if (!WardrobeAccess.allowed()) return;
+        if(reopen){animation=new MenuAnimation();reopen=false;}
+        NavigationIndicator.mark(3);
         if(focusedItem==null) {
             focusedItem=WardrobeItem.of(WardrobePreferences.current());
             if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
@@ -87,6 +96,7 @@ public final class WardrobeScreen extends Screen {
         var matching=matchingItems();
         if(!matching.isEmpty()&&!matching.contains(focusedItem))focusedItem=matching.getFirst();
         scroll=Math.clamp(scroll,0,layout.maxScroll(matching.size()));
+        scrolling.jump(scroll,layout.maxScroll(matching.size()));
         int index=0;
         for(var item:matchingItems())card(item,layout.card(index++,scroll));
         int arrowY=layout.preview.bottom()-21;
@@ -101,7 +111,7 @@ public final class WardrobeScreen extends Screen {
     }
     private void save(WardrobeItem item) {
         if (!WardrobeAccess.allowed()) return;
-        try {item.toggle();focusedItem=item;error="";rebuild();}
+        try {item.toggle();focusedItem=item;equippedAt=System.nanoTime();error="";rebuild();}
         catch(IOException ex) {error="Could not save. Try again.";}
     }
     private void card(WardrobeItem item,Rect r) {
@@ -132,7 +142,8 @@ public final class WardrobeScreen extends Screen {
         @Override protected void renderWidget(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
             boolean selected=item.equipped();
-            frame(c,r,selected?0xFFAE55FF:isHovered()||isFocused()?HOVER_LINE:LINE,0xEE15191F);
+            float equipProgress=(float)equipmentMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(selected?1:0);
+            frame(c,r,mixColor(isHovered()||isFocused()?HOVER_LINE:LINE,0xFFAE55FF,equipProgress),mixColor(0xFF15191F,0xFF282033,equipProgress));
             Rect image=WardrobeLayout.capeImage(r);
             if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
             else drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
@@ -152,14 +163,28 @@ public final class WardrobeScreen extends Screen {
     private WardrobeButton button(String title,Rect r,Runnable action) {
         return addDrawableChild(new WardrobeButton(title,r,action));
     }
-    @Override public void tick() {if(!WardrobeAccess.allowed())close();}
-    @Override public void close() {client.setScreen(parent);}
+    @Override public void tick() {if(!WardrobeAccess.allowed()||animation.finished())client.setScreen(parent);}
+    @Override public void close() {animation.close();}
+    @Override public void removed() {reopen=true;}
     @Override public boolean shouldPause() {return false;}
     @Override public void renderBackground(DrawContext c,int mx,int my,float delta) {renderInGameBackground(c);}
     @Override public void render(DrawContext c,int mx,int my,float delta) {
         if(!WardrobeAccess.allowed()||layout==null)return;
+        scroll=scrolling.value(layout.maxScroll(matchingItems().size()));
+        for(int i=0;i<cards.size();i++) {
+            var r=layout.card(i,scroll);var card=cards.get(i);card.setPosition(r.x(),r.y());
+            card.visible=r.bottom()>layout.grid.y()&&r.y()<layout.grid.bottom();
+        }
+        shownRotation=(float)previewRotation.toward(rotation);
+        frame(c,layout.panel,PANEL_BORDER,PANEL);
+        float previousOpacity=opacity(animation.progress());
+        c.getMatrices().pushMatrix();c.getMatrices().translate(0,animation.offset());
+        try {renderContent(c,mx,(int)(my-animation.offset()),delta);}
+        finally {c.getMatrices().popMatrix();opacity(previousOpacity);}
+    }
+    private void renderContent(DrawContext c,int mx,int my,float delta) {
+        if(!WardrobeAccess.allowed()||layout==null)return;
         Rect p=layout.panel;
-        frame(c,p,PANEL_BORDER,PANEL);
         c.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
                 p.x()+9,p.y()+6,0,0,64,31,240,117,240,117);
         label(c,textRenderer,"Wardrobe",p.x()+81,p.y()+10,INK,1.25f,p.width()-118,true);
@@ -169,6 +194,11 @@ public final class WardrobeScreen extends Screen {
         Rect preview=layout.preview;
         rounded(c,preview.x(),preview.y(),preview.width(),preview.height(),0xA0101218);
         drawPlayer(c,delta);
+        double equipAge=(System.nanoTime()-equippedAt)/220_000_000.0;
+        if(equippedAt!=0&&equipAge<1) {
+            int alpha=(int)(100*(1-equipAge));
+            c.drawStrokedRectangle(preview.x(),preview.y(),preview.width(),preview.height(),(alpha<<24)|(BRAND&0xFFFFFF));
+        }
         Rect d=layout.details;
         label(c,textRenderer,focusedItem.label(),d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
         if(d.height()>60) {
@@ -182,6 +212,10 @@ public final class WardrobeScreen extends Screen {
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
         label(c,textRenderer,error.isEmpty()?"Saves automatically • Local preview":error,p.x()+10,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-82,false);
         super.render(c,mx,my,delta);
+        var categoryStart=layout.category(0);var categoryNext=layout.category(1);
+        int categoryY=categoryStart.y()+(int)Math.round(categoryMarker.toward(category.ordinal())*(categoryNext.y()-categoryStart.y()));
+        rounded(c,categoryStart.x(),categoryY+4,2,Math.max(1,categoryStart.height()-8),BRAND);
+
         c.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
         for(var card:cards)card.render(c,mx,my,delta);
         c.disableScissor();
@@ -220,7 +254,7 @@ public final class WardrobeScreen extends Screen {
         PlayerEntityRenderer renderer=(PlayerEntityRenderer)client.getEntityRenderDispatcher().getRenderer(client.player);
         PlayerEntityRenderState state=renderer.createRenderState();
         renderer.updateRenderState(client.player,state,delta);
-        state.bodyYaw=rotation;state.relativeHeadYaw=0;state.pitch=0;
+        state.bodyYaw=shownRotation;state.relativeHeadYaw=0;state.pitch=0;
         state.pose=EntityPose.STANDING;state.sneaking=false;state.invisible=false;state.spectator=false;
         state.displayName=null;state.outlineColor=0;state.deathTime=0;
         state.limbSwingAmplitude=0;state.limbSwingAnimationProgress=0;
@@ -233,31 +267,32 @@ public final class WardrobeScreen extends Screen {
     }
 
     @Override public boolean mouseClicked(Click click,boolean doubled) {
-        if(!WardrobeAccess.allowed())return true;
+        if(!WardrobeAccess.allowed()||animation.closing())return true;
+        click=new Click(click.x(),click.y()-animation.offset(),click.buttonInfo());
         if(click.button()==0&&layout.preview.contains(click.x(),click.y())&&click.y()<layout.preview.bottom()-24){dragging=true;return true;}
         return super.mouseClicked(click,doubled);
     }
     @Override public boolean mouseDragged(Click click,double dx,double dy) {
-        if(dragging){rotation+=(float)dx*1.3f;return true;}return super.mouseDragged(click,dx,dy);
+        if(dragging){rotation+=(float)dx*1.3f;previewRotation.jump(rotation);return true;}return super.mouseDragged(new Click(click.x(),click.y()-animation.offset(),click.buttonInfo()),dx,dy);
     }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(!WardrobeAccess.allowed())return true;
-        if(layout.grid.contains(x,y)) {
-            scroll=Math.clamp(scroll-(int)Math.round(vertical*28),0,layout.maxScroll(matchingItems().size()));
-            rebuild();return true;
+        if(layout.grid.contains(x,y-animation.offset())) {
+            scrolling.to(scrolling.target()-(int)Math.round(vertical*28),layout.maxScroll(matchingItems().size()));
+            return true;
         }
         return super.mouseScrolled(x,y,horizontal,vertical);
     }
-    @Override public boolean mouseReleased(Click click) {dragging=false;return super.mouseReleased(click);}
+    @Override public boolean mouseReleased(Click click) {dragging=false;return super.mouseReleased(new Click(click.x(),click.y()-animation.offset(),click.buttonInfo()));}
 
-    private class WardrobeButton extends ButtonWidget {
+    private class WardrobeButton extends AnimatedMenuButton {
         private float hoverProgress;
         private long lastFrame=System.nanoTime();
         WardrobeButton(String title,Rect r,Runnable action) {
             super(r.x(),r.y(),r.width(),r.height(),text(title),b->{if(WardrobeAccess.allowed())action.run();},DEFAULT_NARRATION_SUPPLIER);
         }
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
             boolean selected=getMessage().getString().equals(category.label);
             long now=System.nanoTime();

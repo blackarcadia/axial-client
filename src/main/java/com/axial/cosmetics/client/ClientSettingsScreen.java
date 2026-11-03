@@ -10,7 +10,6 @@ import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Util;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.input.KeyInput;
@@ -35,7 +34,9 @@ public final class ClientSettingsScreen extends Screen {
     private ClientSettingsLayout layout;
     private MenuAnimation animation=new MenuAnimation();
     private StrengthSlider strength;
+    private NavigationIndicator navigation;
     private int scroll;
+    private final SmoothScroll scrolling=new SmoothScroll();
     private boolean reopen,draggingScrollbar;
     private String error="";
 
@@ -55,6 +56,7 @@ public final class ClientSettingsScreen extends Screen {
 
     @Override protected void init() {
         if(reopen){animation=new MenuAnimation();reopen=false;}
+        navigation=new NavigationIndicator(1);
         clearChildren();rows.clear();layout=new ClientSettingsLayout(width,height);
         addDrawableChild(new SettingsButton("Mods",layout.back,this::close));
         addDrawableChild(new SettingsButton("Settings",layout.settings,()->{}));
@@ -98,7 +100,7 @@ public final class ClientSettingsScreen extends Screen {
         var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->Util.getOperatingSystem().open(wiki));
         wikiButton.active=wiki!=null;
         row(wikiButton,604);
-        scroll=Math.clamp(scroll,0,layout.maxScroll());positionRows();
+        scroll=Math.clamp(scroll,0,layout.maxScroll());scrolling.jump(scroll,layout.maxScroll());positionRows();
     }
 
     private void row(ClickableWidget widget,int offset){rows.add(new Row(widget,offset));addDrawableChild(widget);}
@@ -115,9 +117,11 @@ public final class ClientSettingsScreen extends Screen {
     }
 
     @Override public void render(DrawContext c,int mx,int my,float delta) {
+        scroll=scrolling.value(layout.maxScroll());positionRows();
+        frame(c,layout.panel,PANEL_BORDER,PANEL);
+        float previousOpacity=opacity(animation.progress());
         float offset=animation.offset();c.getMatrices().pushMatrix();c.getMatrices().translate(0,offset);
         try {
-            frame(c,layout.panel,PANEL_BORDER,PANEL);
             int brandWidth=layout.back.x()-layout.panel.x()-20;
             if(brandWidth>65) {
                 c.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
@@ -137,6 +141,7 @@ public final class ClientSettingsScreen extends Screen {
             for(Row row:rows)if(row.widget().visible)row.widget().render(c,mx,(int)(my-offset),delta);
             c.disableScissor();
             for(var child:children())if(child instanceof SettingsButton button&&rows.stream().noneMatch(row->row.widget()==button))button.render(c,mx,(int)(my-offset),delta);
+            navigation.draw(c,layout.back.x(),layout.back.bottom()-2,layout.back.width());
             c.fill(layout.panel.x()+12,layout.panel.bottom()-33,layout.panel.right()-12,layout.panel.bottom()-32,DIVIDER);
             if(layout.panel.width()>=400)centered(c,error.isEmpty()?"Saves automatically":error,
                     (layout.reset.right()+layout.done.x())/2,layout.done.y()+7,error.isEmpty()?MUTED:RED,.75f,layout.done.x()-layout.reset.right()-12);
@@ -145,7 +150,7 @@ public final class ClientSettingsScreen extends Screen {
                 rounded(c,bar.x(),bar.y(),bar.width(),bar.height(),DIVIDER);
                 rounded(c,bar.x(),bar.y()+(bar.height()-thumb)*scroll/layout.maxScroll(),bar.width(),thumb,MUTED);
             }
-        } finally {c.getMatrices().popMatrix();}
+        } finally {c.getMatrices().popMatrix();opacity(previousOpacity);}
     }
     private void centered(DrawContext c,String value,int center,int y,int color,float scale,int maxWidth) {
         String trimmed=textRenderer.trimToWidth(styled(value,scale,false),Math.max(0,maxWidth)).getString();
@@ -184,16 +189,16 @@ public final class ClientSettingsScreen extends Screen {
     @Override public boolean mouseReleased(Click click){draggingScrollbar=false;return super.mouseReleased(transformed(click));}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(animation.closing())return true;
-        if(layout.controls.contains(x,y-animation.offset())){scrollTo(scroll-(int)Math.round(vertical*30));return true;}
+        if(layout.controls.contains(x,y-animation.offset())){scrollTo(scrolling.target()-(int)Math.round(vertical*30));return true;}
         return false;
     }
-    private void scrollTo(int value){scroll=Math.clamp(value,0,layout.maxScroll());positionRows();}
-    private void dragScroll(double y){scrollTo((int)((y-layout.scrollbar.y())/layout.scrollbar.height()*layout.maxScroll()));}
+    private void scrollTo(int value){scrolling.to(value,layout.maxScroll());}
+    private void dragScroll(double y){scrolling.jump((int)((y-layout.scrollbar.y())/layout.scrollbar.height()*layout.maxScroll()),layout.maxScroll());scroll=scrolling.value(layout.maxScroll());positionRows();}
     @Override public boolean keyPressed(KeyInput input) {
         if(animation.closing())return true;
         switch(input.key()) {
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN -> {scrollTo(scroll+layout.controls.height());return true;}
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP -> {scrollTo(scroll-layout.controls.height());return true;}
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN -> {scrollTo(scrolling.target()+layout.controls.height());return true;}
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP -> {scrollTo(scrolling.target()-layout.controls.height());return true;}
             case org.lwjgl.glfw.GLFW.GLFW_KEY_HOME -> {scrollTo(0);return true;}
             case org.lwjgl.glfw.GLFW.GLFW_KEY_END -> {scrollTo(layout.maxScroll());return true;}
         }
@@ -201,13 +206,13 @@ public final class ClientSettingsScreen extends Screen {
         return super.keyPressed(input);
     }
 
-    private class SettingsButton extends ButtonWidget {
+    private class SettingsButton extends AnimatedMenuButton {
         final String label;
         SettingsButton(String label,Rect r,Runnable action) {
             super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);this.label=label;
         }
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta) {
             if(label.equals("Wardrobe"))active=WardrobeAccess.allowed();
             boolean hover=active&&(isHovered()||isFocused());Rect r=new Rect(getX(),getY(),width,height);
             if(label.equals("Reset"))r=new Rect(r.x()+4,r.y()+8,r.width()-8,20);
@@ -242,7 +247,7 @@ public final class ClientSettingsScreen extends Screen {
             super(label,new Rect(layout.controls.x(),0,layout.controls.width(),38),()->change(()->set.accept(!state.getAsBoolean())));
             this.description=description;this.state=state;motion=new ToggleAnimation(state.getAsBoolean());
         }
-        @Override protected void drawIcon(DrawContext c,int mx,int my,float delta) {
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta) {
             boolean on=state.getAsBoolean();float progress=motion.value(on);
             frame(c,new Rect(getX(),getY(),width,height),LINE,FIELD);
             label(c,textRenderer,label,getX()+13,getY()+8,INK,.95f,width-65,true);

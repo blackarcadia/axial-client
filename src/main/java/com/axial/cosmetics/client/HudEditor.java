@@ -17,6 +17,10 @@ public final class HudEditor {
     private String selected;
     private int offsetX, offsetY;
     private HudSnap.Result alignment;
+    private final UiMotion guideFadeX=new UiMotion(0),guideFadeY=new UiMotion(0);
+    private final java.util.Map<String,UiMotion> selectionMotion=new java.util.HashMap<>();
+    private Integer guideX,guideY;
+    private long snappedAt;
 
     private static List<Element> elements(MinecraftClient client) {
         var result = new ArrayList<Element>();
@@ -88,8 +92,13 @@ public final class HudEditor {
         var peers=new ArrayList<Box>();
         for(var element:elements(client))if(!element.id().equals(dragging.id()))peers.add(element.bounds());
         var b=dragging.bounds();
+        var previousAlignment=alignment;
         alignment=HudSnap.place(new Box((int)x-offsetX,(int)y-offsetY,b.width(),b.height()),peers,
                 client.getWindow().getScaledWidth(),client.getWindow().getScaledHeight(),alt(client));
+        if((alignment.guideX()!=null||alignment.guideY()!=null)
+                &&(previousAlignment==null||!java.util.Objects.equals(previousAlignment.guideX(),alignment.guideX())||!java.util.Objects.equals(previousAlignment.guideY(),alignment.guideY())))snappedAt=System.nanoTime();
+        if(alignment.guideX()!=null)guideX=alignment.guideX();
+        if(alignment.guideY()!=null)guideY=alignment.guideY();
         dragging.move().accept(alignment.x(),alignment.y());
         return true;
     }
@@ -98,15 +107,22 @@ public final class HudEditor {
         dragging.save().run();dragging=null;alignment=null;return true;
     }
     public void borders(DrawContext c,MinecraftClient client,int mouseX,int mouseY) {
-        if(dragging!=null&&alignment!=null&&!alt(client)) {
-            if(alignment.guideX()!=null)c.fill(alignment.guideX(),0,alignment.guideX()+1,c.getScaledWindowHeight(),0x70C78DF5);
-            if(alignment.guideY()!=null)c.fill(0,alignment.guideY(),c.getScaledWindowWidth(),alignment.guideY()+1,0x70C78DF5);
-        }
+        boolean guiding=dragging!=null&&alignment!=null&&!alt(client);
+        int alphaX=(int)(112*guideFadeX.toward(guiding&&alignment.guideX()!=null?1:0));
+        int alphaY=(int)(112*guideFadeY.toward(guiding&&alignment.guideY()!=null?1:0));
+        if(guideX!=null&&alphaX>0)c.fill(guideX,0,guideX+1,c.getScaledWindowHeight(),(alphaX<<24)|0xC78DF5);
+        if(guideY!=null&&alphaY>0)c.fill(0,guideY,c.getScaledWindowWidth(),guideY+1,(alphaY<<24)|0xC78DF5);
+        if(alphaX==0&&!guiding)guideX=null;
+        if(alphaY==0&&!guiding)guideY=null;
         Element hovered=null,selection=null;
         for(var element:elements(client)) {
             var b=element.bounds();boolean picked=element.id().equals(selected);
             boolean hover=b.contains(mouseX,mouseY);
-            int color=picked?0xFFC78DF5:hover?0xFFDED2EA:0xAA8B8195;
+            float emphasis=(float)selectionMotion.computeIfAbsent(element.id(),key->new UiMotion(0)).toward(picked?1:hover?.45:0);
+            int color=ModMenuUi.mixColor(0xFF8B8195,0xFFC78DF5,emphasis);
+            if(emphasis>.01f)c.drawStrokedRectangle(b.x()-2,b.y()-2,b.width()+4,b.height()+4,((int)(48*emphasis)<<24)|0xC78DF5);
+            double snapAge=(System.nanoTime()-snappedAt)/240_000_000.0;
+            if(picked&&snappedAt!=0&&snapAge<1)color=ModMenuUi.mixColor(color,0xFFF0E2FF,(float)(1-snapAge));
             border(c,b,color);
             if(hover)hovered=element;
             if(picked)selection=element;
