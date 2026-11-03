@@ -180,8 +180,7 @@ public final class ModMenuScreen extends Screen {
 
     private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
-        int headerTabWidth=Math.min(102,layout.navigation.width()/4);
-        int headerX=layout.navigation.x()+(layout.navigation.width()-headerTabWidth*4)/2;
+        int headerX=panel.x()+10;
         MenuHeader.draw(context,textRenderer,new ModMenuLayout.Rect(headerX,layout.close.y(),
                 Math.max(1,layout.close.x()-headerX-6),layout.close.height()),"");
         int dividerY=layout.navigation.bottom()+3;
