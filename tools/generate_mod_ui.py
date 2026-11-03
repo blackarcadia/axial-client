@@ -1,5 +1,6 @@
 """Generate antialiased, tintable mod-menu icons without runtime dependencies."""
 import math
+import shutil
 from pathlib import Path
 import generate_account_ui as masks
 
@@ -21,56 +22,11 @@ def box(x, y, w, h):
     return lines([(x,y),(x+w,y),(x+w,y+h),(x,y+h)], True)
 
 
-def filled_polygon(points, x, y):
-    inside = False
-    distance = float('inf')
-    for a, b in zip(points, points[1:] + points[:1]):
-        dx, dy = b[0] - a[0], b[1] - a[1]
-        t = max(0, min(1, ((x-a[0])*dx + (y-a[1])*dy) / (dx*dx + dy*dy)))
-        distance = min(distance, math.hypot(x-a[0]-t*dx, y-a[1]-t*dy))
-        if (a[1] > y) != (b[1] > y) and x < a[0] + (y-a[1])*dx/dy:
-            inside = not inside
-    return -distance if inside else distance
-
-
-# Approved solid gear: broad teeth, heavy body and one small centre opening.
-GEAR_TEETH = [
-    [(12 + math.cos(i*math.pi/4 + angle)*radius,
-      12 + math.sin(i*math.pi/4 + angle)*radius)
-     for radius, angle in ((6.9, -.23), (10.5, -.145), (10.5, .145), (6.9, .23))]
-    for i in range(8)
-]
-
-
-def gear(x, y):
-    radius = math.hypot(x-12, y-12)
-    body = min(radius-7.3, *(filled_polygon(tooth, x, y) for tooth in GEAR_TEETH))
-    return max(body, 3.4-radius)
-
-
-# Four independent arrows leave the centre open at small menu sizes.
-MOVE_ARROW = [(12, 1.5), (16.5, 6.5), (13.4, 6.5), (13.4, 9.2),
-              (10.6, 9.2), (10.6, 6.5), (7.5, 6.5)]
-MOVE_ARROWS = [
-    [(12 + (x-12)*math.cos(i*math.pi/2) - (y-12)*math.sin(i*math.pi/2),
-      12 + (x-12)*math.sin(i*math.pi/2) + (y-12)*math.cos(i*math.pi/2))
-     for x, y in MOVE_ARROW]
-    for i in range(4)
-]
-
-
-def move(x, y):
-    return min(filled_polygon(arrow, x, y) for arrow in MOVE_ARROWS)
-
-
 def main():
     masks.DEST = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/axial_cosmetics/textures/gui/sprites/mods'
     masks.DEST.mkdir(parents=True, exist_ok=True)
     icons = {
         'monitor': combine(box(1.5,2,13,9),lines([(8,11),(8,14)]),lines([(4.5,14),(11.5,14)])),
-        'backpack': combine(box(3,5,10,9),box(6,2,4,3),box(5,9,6,3)),
-        'sun': combine(ring(8,8,3),*[lines([(8+math.cos(a)*5.5,8+math.sin(a)*5.5),(8+math.cos(a)*7,8+math.sin(a)*7)]) for a in [i*math.pi/4 for i in range(8)]]),
-        'pickaxe': combine(lines([(3,14),(11,4)]),lines([(5,2),(9,2),(13,6),(14,10)])),
         'mouse': combine(lines([(4,5),(4,11),(5,14),(11,14),(12,11),(12,5),(11,2),(5,2),(4,5)],True),lines([(4,6),(12,6)]),lines([(8,2),(8,6)])),
         'shirt': lines([(5,2),(2,3),(1,6),(4,7),(4,14),(12,14),(12,7),(15,6),(14,3),(11,2),(10,4),(6,4)],True),
         'cube': combine(lines([(8,1),(14,4.5),(14,11.5),(8,15),(2,11.5),(2,4.5)],True),lines([(2,4.5),(8,8),(14,4.5)]),lines([(8,8),(8,15)])),
@@ -91,8 +47,17 @@ def main():
         'store': combine(lines([(1,2),(3,2),(5,10),(13,10),(15,4),(4,4)]),ring(6,13.5,1),ring(12,13.5,1)),
         'forums': combine(lines([(1,2),(11,2),(11,9),(6,9),(3,12),(3,9),(1,9)],True),lines([(13,5),(15,5),(15,12),(13,12),(13,15),(10,12),(7,12)])),
     }
-    masks.png('gear', 24, gear)
-    masks.png('move', 24, move)
+    # Preserve the user-supplied gear artwork when regenerating procedural icons.
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/gear.png', masks.DEST / 'gear.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/quick_waypoints.png', masks.DEST / 'quick_waypoints.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/quick_accounts.png', masks.DEST / 'quick_accounts.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/quick_store.png', masks.DEST / 'quick_store.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/quick_forums.png', masks.DEST / 'quick_forums.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/move.png', masks.DEST / 'move.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/backpack.png', masks.DEST / 'backpack.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/sun.png', masks.DEST / 'sun.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/pickaxe.png', masks.DEST / 'pickaxe.png')
+    shutil.copyfile(Path(__file__).resolve().parents[1] / 'assets/ui-icons/cps.png', masks.DEST / 'cps.png')
     for name, distance in icons.items():
         masks.png(name,16,distance)
 

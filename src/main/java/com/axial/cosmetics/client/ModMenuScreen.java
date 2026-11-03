@@ -33,6 +33,8 @@ public final class ModMenuScreen extends Screen {
     private boolean enabledOnly, draggingScrollbar;
     private int scroll;
     private final SmoothScroll scrolling=new SmoothScroll();
+    private final FilterGridMotion<ModMenuEntry> filtering=new FilterGridMotion<>();
+    private List<FilterGridMotion.Tile<ModMenuEntry>> filteredTiles=List.of();
     private ModMenuLayout layout;
     private TextFieldWidget search;
     private final List<MenuButton> cardButtons = new ArrayList<>();
@@ -54,7 +56,7 @@ public final class ModMenuScreen extends Screen {
     }
 
     @Override protected void init() {
-        if(reopen){animation=new MenuAnimation();reopen=false;}
+        if(reopen){animation.open();reopen=false;}
         navigation=new NavigationIndicator(0);
         layout = new ModMenuLayout(width,height);
         if(layout.tight) category=ModMenuEntry.Category.ALL;
@@ -65,6 +67,8 @@ public final class ModMenuScreen extends Screen {
         return entries.stream().filter(e -> e.matches(category,query,enabledOnly)).toList();
     }
 
+    private void resetScroll(){filtering.offsetY(-scroll);scroll=0;}
+
     private void rebuild() {
         boolean focus = search != null && search.isFocused();
         int cursor = search == null ? query.length() : search.getCursor();
@@ -74,7 +78,7 @@ public final class ModMenuScreen extends Screen {
         var nav = layout.navigation;
         int tabWidth = Math.min(102, nav.width()/4);
         int navX = nav.x()+(nav.width()-tabWidth*4)/2;
-        String[] tabs = {"Mods","Settings","Edit HUD","Wardrobe"}, icons = {"cube","gear","move","shirt"};
+        String[] tabs = {"Mods","Settings","Edit HUD","Wardrobe"}, icons = {"gear","gear","move","shirt"};
         for (int i=0;i<4;i++) {
             int tab=i;
             var navButton=add(tabs[i],new ModMenuLayout.Rect(navX+i*tabWidth,nav.y(),tabWidth,nav.height()),icons[i],
@@ -96,16 +100,18 @@ public final class ModMenuScreen extends Screen {
         search.addFormatter((value,index)->text(value).asOrderedText());
         search.setText(query);
         search.setCursor(Math.min(cursor,query.length()),false);
-        search.setChangedListener(value -> { query=value; scroll=0; rebuild(); });
+        search.setChangedListener(value -> { query=value; resetScroll(); rebuild(); });
         addDrawableChild(search);
         if(focus) setFocused(search);
-        add("Enabled only",layout.enabledFilter,"filter",()->{enabledOnly=!enabledOnly;scroll=0;rebuild();},enabledOnly,null);
+        add("Enabled only",layout.enabledFilter,"filter",()->{enabledOnly=!enabledOnly;resetScroll();rebuild();},enabledOnly,null);
         for(var item:ModMenuEntry.Category.values()) {
             if(layout.tight) break;
-            add(item.label,layout.category(item.ordinal()),item.icon,()->{category=item;scroll=0;rebuild();},category==item,null);
+            add(item.label,layout.category(item.ordinal()),item.icon,()->{category=item;resetScroll();rebuild();},category==item,null);
         }
         var matches=filtered();
-        scroll=Math.clamp(scroll,0,layout.maxScroll(matches.size()));
+        int nextScroll=Math.clamp(scroll,0,layout.maxScroll(matches.size()));
+        filtering.offsetY(nextScroll-scroll);scroll=nextScroll;
+        filtering.update(matches,index->layout.card(index,0));
         scrolling.jump(scroll,layout.maxScroll(matches.size()));
         for(int i=0;i<matches.size();i++) {
             var entry=matches.get(i);
@@ -116,7 +122,7 @@ public final class ModMenuScreen extends Screen {
                     rebuild();
                 }),false,entry,true);
                 button.visible = card.bottom() > layout.grid.y() && card.y() < layout.grid.bottom();
-                cardButtons.add(addSelectableChild(button));
+                button.active=false;cardButtons.add(addSelectableChild(button));
             }
             if(entry.configure()!=null) {
                 var button = new MenuButton((entry.opensMenu()?"Open ":"Configure ")+entry.title(),entry.opensMenu()?card:layout.settings(card),entry.opensMenu()?"open":"gear",()->run(()->{
@@ -124,7 +130,7 @@ public final class ModMenuScreen extends Screen {
                 }),false,entry,true);
                 button.visible = entry.opensMenu() ? card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom() : button.getY() >= layout.grid.y() && button.getBottom() <= layout.grid.bottom();
                 button.setTooltip(Tooltip.of(text((entry.opensMenu()?"Open ":"Configure ")+entry.title())));
-                cardButtons.add(addSelectableChild(button));
+                button.active=false;cardButtons.add(addSelectableChild(button));
             }
         }
     }
@@ -157,6 +163,12 @@ public final class ModMenuScreen extends Screen {
     }
 
     @Override public void render(DrawContext context,int mouseX,int mouseY,float delta) {
+        if(layout==null)return;
+        PanelResize.push(context,this,layout.panel,width,height);
+        try {renderPanel(context,(int)PanelResize.x(this,layout.panel,mouseX),(int)PanelResize.y(this,layout.panel,mouseY),delta);}
+        finally {context.getMatrices().popMatrix();}
+    }
+    private void renderPanel(DrawContext context,int mouseX,int mouseY,float delta) {
         updateScroll();
         frame(context,layout.panel,PANEL_BORDER,PANEL);
         float previousOpacity=opacity(animation.progress());
@@ -194,27 +206,29 @@ public final class ModMenuScreen extends Screen {
         }
         context.enableScissor(layout.grid.x(),layout.grid.y(),layout.grid.right(),layout.grid.bottom());
         var matches=filtered();
-        for(int i=0;i<matches.size();i++) {
-            var card=layout.card(i,scroll);
-            if(card.bottom()<=layout.grid.y() || card.y()>=layout.grid.bottom()) continue;
-            var entry=matches.get(i);
-            frame(context,card,card.contains(mouseX,mouseY)?HOVER_LINE:LINE,SURFACE);
-            int size=card.height()<55?14:22;
-            icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
-            int titleX=card.x()+size+17;
-            label(context,textRenderer,entry.title(),titleX,card.y()+9,INK,.95f,card.right()-titleX-7,true);
-            if(card.height()>=60) {
-                var lines=textRenderer.wrapLines(UiTypography.text(entry.description(),.78f,false),Math.max(1,card.right()-titleX-8));
-                for(int line=0;line<Math.min(2,lines.size());line++) {
-                    context.drawText(textRenderer,lines.get(line),titleX,card.y()+22+line*9,MUTED,false);
+        for(var tile:filteredTiles) {
+            var bounds=tile.bounds();
+            var card=new ModMenuLayout.Rect(bounds.x(),bounds.y()-scroll,bounds.width(),bounds.height());
+            if(card.bottom()<=layout.grid.y() || card.y()>=layout.grid.bottom())continue;
+            var entry=tile.key();
+            float parentOpacity=opacity(1);opacity(parentOpacity*tile.opacity());
+            try {
+                frame(context,card,card.contains(mouseX,mouseY)?HOVER_LINE:LINE,SURFACE);
+                int size=card.height()<55?14:22;
+                icon(context,entry.icon(),card.x()+9,card.y()+10,size,size,0xFFD6DCE1);
+                int titleX=card.x()+size+17;
+                label(context,textRenderer,entry.title(),titleX,card.y()+9,INK,.95f,card.right()-titleX-7,true);
+                if(card.height()>=60) {
+                    var lines=textRenderer.wrapLines(UiTypography.text(entry.description(),.78f,false),Math.max(1,card.right()-titleX-8));
+                    for(int line=0;line<Math.min(2,lines.size());line++) {
+                        context.drawText(textRenderer,lines.get(line),titleX,card.y()+22+line*9,tint(MUTED),false);
+                    }
                 }
-            }
-            if(entry.toggle()==null) label(context,textRenderer,entry.opensMenu()?"Browse":"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
+                if(entry.toggle()==null) label(context,textRenderer,entry.opensMenu()?"Browse":"Configure",card.x()+9,card.bottom()-17,MUTED,.8f,card.width()-40,false);
+                for(var button:cardButtons)if(button.entry.equals(entry)&&tile.present()&&button.visible)button.render(context,mouseX,mouseY,delta);
+            } finally {opacity(parentOpacity);}
         }
-        if(matches.isEmpty()) label(context,textRenderer,"No matching mods",layout.grid.x()+10,layout.grid.y()+15,MUTED,1f,layout.grid.width()-20,false);
-        for(var button:cardButtons) {
-            if(button.getBottom()>layout.grid.y() && button.getY()<layout.grid.bottom()) button.render(context,mouseX,mouseY,delta);
-        }
+        if(matches.isEmpty()&&filteredTiles.isEmpty())label(context,textRenderer,"No matching mods",layout.grid.x()+10,layout.grid.y()+15,MUTED,1f,layout.grid.width()-20,false);
         context.disableScissor();
         drawScrollbar(context,matches.size());
         context.fill(panel.x()+10,panel.bottom()-17,panel.right()-10,panel.bottom()-16,DIVIDER);
@@ -234,11 +248,14 @@ public final class ModMenuScreen extends Screen {
 
     private void updateScroll() {
         var matches=filtered();scroll=scrolling.value(layout.maxScroll(matches.size()));
+        filtering.update(matches,index->layout.card(index,0));filteredTiles=filtering.frame();
         for(var button:cardButtons) {
-            int index=matches.indexOf(button.entry);if(index<0)continue;
-            var card=layout.card(index,scroll);
+            var tile=filteredTiles.stream().filter(value->value.present()&&value.key().equals(button.entry)).findFirst().orElse(null);
+            if(tile==null){button.visible=false;button.active=false;continue;}
+            var animated=tile.bounds();
+            var card=new ModMenuLayout.Rect(animated.x(),animated.y()-scroll,animated.width(),animated.height());
             var bounds=button.icon.equals("gear")?layout.settings(card):card;
-            button.setPosition(bounds.x(),bounds.y());
+            button.setPosition(bounds.x(),bounds.y());button.active=tile.opacity()>.6f;
             button.visible=button.icon.equals("gear")?bounds.y()>=layout.grid.y()&&bounds.bottom()<=layout.grid.bottom():card.bottom()>layout.grid.y()&&card.y()<layout.grid.bottom();
         }
     }
@@ -250,12 +267,12 @@ public final class ModMenuScreen extends Screen {
     }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(animation.closing())return true;
-        y-=animation.offset();
+        x=PanelResize.x(this,layout.panel,x);y=PanelResize.y(this,layout.panel,y)-animation.offset();
         if(layout.panel.contains(x,y)){scrollTo(scrolling.target()-(int)Math.round(vertical*30));return true;}
         return false;
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
-        if(animation.closing())return true;
+        if(animation.closing())animation.open();
         click=animatedClick(click);
         var track=layout.scrollbar;
         if(click.button()==0 && click.x()>=track.x()-2 && click.x()<track.right()+3 && click.y()>=track.y() && click.y()<track.bottom()) {
@@ -273,10 +290,11 @@ public final class ModMenuScreen extends Screen {
         return super.mouseReleased(animatedClick(click));
     }
 
-    private Click animatedClick(Click click) { return new Click(click.x(),click.y()-animation.offset(),click.buttonInfo()); }
+    private Click animatedClick(Click click) { return new Click(PanelResize.x(this,layout.panel,click.x()),PanelResize.y(this,layout.panel,click.y())-animation.offset(),click.buttonInfo()); }
 
     @Override public boolean keyPressed(KeyInput input) {
-        if(animation.closing())return true;
+        if(animation.closing()&&QuickMenuScreen.isMenuKey(input)){animation.open();return true;}
+        if(animation.closing()&&input.key()!=org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE)animation.open();
         if(!search.isFocused()&&QuickMenuScreen.isMenuKey(input)){close();return true;}
         if (!search.isFocused()) {
             switch(input.key()) {

@@ -18,5 +18,6 @@ final class UiMotion {
         if(Math.abs(value-target)<.01)value=target;
         return value;
     }
+    void shift(double amount) {value+=amount;}
     void jump(double next) {value=next;last=clock.getAsLong();}
 }

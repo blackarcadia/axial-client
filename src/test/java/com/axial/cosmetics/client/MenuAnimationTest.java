@@ -37,6 +37,18 @@ class MenuAnimationTest {
         assertEquals(0,animation.progress());
     }
 
+    @Test void reopeningDuringCloseAndClosingAgainBothPreserveProgress() {
+        var clock=new AtomicLong();var animation=new MenuAnimation(clock::get);
+        clock.set(180_000_000);animation.close();clock.set(220_000_000);
+        float closing=animation.progress();animation.open();
+        assertFalse(animation.closing());assertEquals(closing,animation.progress());
+        clock.set(250_000_000);float reopening=animation.progress();assertTrue(reopening>closing);
+        animation.close();assertEquals(reopening,animation.progress());
+        clock.set(500_000_000);assertTrue(animation.finished());
+        animation.open();assertEquals(0,animation.progress());
+        clock.set(700_000_000);assertEquals(1,animation.progress());assertFalse(animation.finished());
+    }
+
     @Test void hoverSpeedDoesNotDependOnFrameCount() {
         float twoFrames=MenuAnimation.hover(MenuAnimation.hover(0,true,.016f),true,.016f);
         assertEquals(twoFrames,MenuAnimation.hover(0,true,.032f),.00001);

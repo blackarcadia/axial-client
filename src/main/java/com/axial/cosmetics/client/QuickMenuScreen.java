@@ -42,14 +42,15 @@ public final class QuickMenuScreen extends Screen {
     }
 
     @Override protected void init() {
-        if(reopen){animation=new MenuAnimation();reopen=false;}
+        if(reopen){animation.open();reopen=false;}
+        PanelResize.reset();
         layout=new QuickMenuLayout(width,height);
-        add("Accounts","account",0,()->client.setScreen(new AccountsScreen(this)),true);
-        add("Waypoints","pin",1,()->ModFeatureSettings.open("WAYPOINTS",this,backend),true);
+        add("Accounts","quick_accounts",0,()->client.setScreen(new AccountsScreen(this)),true);
+        add("Waypoints","quick_waypoints",1,()->ModFeatureSettings.open("WAYPOINTS",this,backend),true);
         add("Move HUD","move",2,()->client.setScreen(ModMenuCatalog.child(backend,this,"MOVE")),true);
         add("Mods","gear",3,()->client.setScreen(ModMenuCatalog.child(backend,this,"MAIN")),true);
-        addLink("Store","store",4,QuickMenuLinks.get("store"));
-        addLink("Forums","forums",5,QuickMenuLinks.get("forums"));
+        addLink("Store","quick_store",4,QuickMenuLinks.get("store"));
+        addLink("Forums","quick_forums",5,QuickMenuLinks.get("forums"));
     }
 
     private void addLink(String label,String icon,int index,URI uri) {
@@ -79,13 +80,13 @@ public final class QuickMenuScreen extends Screen {
     }
 
     @Override public boolean keyPressed(KeyInput input) {
-        if(animation.closing())return true;
+        if(animation.closing()&&isMenuKey(input)){animation.open();return true;}
         if(isMenuKey(input)){close();return true;}
         return super.keyPressed(input);
     }
 
     @Override public boolean mouseClicked(Click click,boolean doubled) {
-        if(animation.closing())return true;
+        if(animation.closing())animation.open();
         return super.mouseClicked(new Click(click.x(),click.y()-animation.offset(),click.buttonInfo()),doubled);
     }
 

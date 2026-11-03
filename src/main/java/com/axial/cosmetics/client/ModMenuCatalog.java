@@ -156,7 +156,7 @@ final class ModMenuCatalog {
         return switch (label) {
             case "HUD" -> "monitor"; case "SATCHEL HELPER" -> "backpack";
             case "FULL BRIGHT" -> "sun"; case "SMART MINING" -> "pickaxe";
-            case "CPS" -> "mouse"; case "ARMOR HUD" -> "shirt";
+            case "CPS" -> "cps"; case "ARMOR HUD" -> "shirt";
             case "CONTRABAND" -> "cube"; case "SCOREBOARD" -> "chart";
             case "CROSSHAIR" -> "crosshair"; case "COMPASS" -> "compass";
             case "POTIONS HUD" -> "potion"; case "MINIMAP", "WAYPOINTS" -> "map";

@@ -23,6 +23,11 @@ final class MenuAnimation {
         from=progress(); started=clock.getAsLong(); closing=true;
     }
 
+    void open() {
+        float current=progress();
+        from=current;started=clock.getAsLong();closing=false;
+    }
+
     boolean closing() { return closing; }
     boolean finished() { return closing && clock.getAsLong()-started>=140_000_000L; }
     float offset() { return (1-progress())*10; }

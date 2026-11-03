@@ -55,10 +55,10 @@ public final class ClientSettingsScreen extends Screen {
     }
 
     @Override protected void init() {
-        if(reopen){animation=new MenuAnimation();reopen=false;}
+        if(reopen){animation.open();reopen=false;}
         navigation=new NavigationIndicator(1);
         clearChildren();rows.clear();layout=new ClientSettingsLayout(width,height);
-        addDrawableChild(new SettingsButton("Mods",layout.back,this::close));
+        addDrawableChild(new SettingsButton("Mods",layout.back,()->client.setScreen(parent)));
         addDrawableChild(new SettingsButton("Settings",layout.settings,()->{}));
         var wardrobe=new SettingsButton("Wardrobe",layout.wardrobe,()->WardrobeScreen.open(this));
         wardrobe.active=WardrobeAccess.allowed();
@@ -117,6 +117,12 @@ public final class ClientSettingsScreen extends Screen {
     }
 
     @Override public void render(DrawContext c,int mx,int my,float delta) {
+        if(layout==null)return;
+        PanelResize.push(c,this,layout.panel,width,height);
+        try {renderPanel(c,(int)PanelResize.x(this,layout.panel,mx),(int)PanelResize.y(this,layout.panel,my),delta);}
+        finally {c.getMatrices().popMatrix();}
+    }
+    private void renderPanel(DrawContext c,int mx,int my,float delta) {
         scroll=scrolling.value(layout.maxScroll());positionRows();
         frame(c,layout.panel,PANEL_BORDER,PANEL);
         float previousOpacity=opacity(animation.progress());
@@ -173,9 +179,9 @@ public final class ClientSettingsScreen extends Screen {
     @Override public void close(){animation.close();}
     @Override public void removed(){reopen=true;}
     @Override public void tick(){if(animation.finished())client.setScreen(parent);}
-    private Click transformed(Click click){return new Click(click.x(),click.y()-animation.offset(),click.buttonInfo());}
+    private Click transformed(Click click){return new Click(PanelResize.x(this,layout.panel,click.x()),PanelResize.y(this,layout.panel,click.y())-animation.offset(),click.buttonInfo());}
     @Override public boolean mouseClicked(Click click,boolean doubled) {
-        if(animation.closing())return true;
+        if(animation.closing())animation.open();
         click=transformed(click);Rect bar=layout.scrollbar;
         if(click.button()==0&&layout.maxScroll()>0&&click.x()>=bar.x()-2&&click.x()<bar.right()+3&&click.y()>=bar.y()&&click.y()<bar.bottom()) {
             draggingScrollbar=true;dragScroll(click.y());return true;
@@ -183,19 +189,20 @@ public final class ClientSettingsScreen extends Screen {
         return super.mouseClicked(click,doubled);
     }
     @Override public boolean mouseDragged(Click click,double dx,double dy) {
-        if(draggingScrollbar){dragScroll(click.y()-animation.offset());return true;}
+        if(draggingScrollbar){dragScroll(PanelResize.y(this,layout.panel,click.y())-animation.offset());return true;}
         return super.mouseDragged(transformed(click),dx,dy);
     }
     @Override public boolean mouseReleased(Click click){draggingScrollbar=false;return super.mouseReleased(transformed(click));}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(animation.closing())return true;
-        if(layout.controls.contains(x,y-animation.offset())){scrollTo(scrolling.target()-(int)Math.round(vertical*30));return true;}
+        if(layout.controls.contains(PanelResize.x(this,layout.panel,x),PanelResize.y(this,layout.panel,y)-animation.offset())){scrollTo(scrolling.target()-(int)Math.round(vertical*30));return true;}
         return false;
     }
     private void scrollTo(int value){scrolling.to(value,layout.maxScroll());}
     private void dragScroll(double y){scrolling.jump((int)((y-layout.scrollbar.y())/layout.scrollbar.height()*layout.maxScroll()),layout.maxScroll());scroll=scrolling.value(layout.maxScroll());positionRows();}
     @Override public boolean keyPressed(KeyInput input) {
-        if(animation.closing())return true;
+        if(animation.closing()&&QuickMenuScreen.isMenuKey(input)){animation.open();return true;}
+        if(animation.closing()&&input.key()!=org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE)animation.open();
         switch(input.key()) {
             case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN -> {scrollTo(scrolling.target()+layout.controls.height());return true;}
             case org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP -> {scrollTo(scrolling.target()-layout.controls.height());return true;}
@@ -220,7 +227,7 @@ public final class ClientSettingsScreen extends Screen {
             if(label.equals("Mods")||label.equals("Settings")||label.equals("Edit HUD")||label.equals("Wardrobe")) {
                 boolean selected=label.equals("Settings");
                 frame(c,r,selected?SELECTED_LINE:hover?HOVER_LINE:0x00454C53,selected?SELECTED:hover?HOVER:SURFACE);
-                String symbol=label.equals("Mods")?"cube":selected?"gear":label.equals("Wardrobe")?"shirt":"move";
+                String symbol=(label.equals("Mods")||selected)?"gear":label.equals("Wardrobe")?"shirt":"move";
                 icon(c,symbol,r.x()+7,r.y()+7,10,10,active?INK:MUTED);
                 label(c,textRenderer,label,r.x()+22,r.y()+8,active?INK:MUTED,.8f,r.width()-25,false);
                 return;
