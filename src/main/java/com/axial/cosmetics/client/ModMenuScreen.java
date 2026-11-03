@@ -181,8 +181,13 @@ public final class ModMenuScreen extends Screen {
     private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
         int headerX=panel.x()+10;
-        MenuHeader.draw(context,textRenderer,new ModMenuLayout.Rect(headerX,layout.close.y(),
-                Math.max(1,layout.close.x()-headerX-6),layout.close.height()),"");
+        int tabWidthForHeader=Math.min(102,layout.navigation.width()/4);
+        int firstTabX=layout.navigation.x()+(layout.navigation.width()-tabWidthForHeader*4)/2;
+        boolean besideTabs=firstTabX-headerX>=116;
+        int headerY=besideTabs?layout.navigation.y():layout.close.y()+6;
+        int headerWidth=besideTabs?firstTabX-headerX-6:layout.close.x()-headerX-6;
+        MenuHeader.draw(context,textRenderer,new ModMenuLayout.Rect(headerX,headerY,
+                Math.max(1,headerWidth),layout.navigation.height()),"");
         int dividerY=layout.navigation.bottom()+3;
         context.fill(panel.x()+10,dividerY,panel.right()-10,dividerY+1,DIVIDER);
         frame(context,layout.search,search.isFocused()?FOCUS:LINE,FIELD);
