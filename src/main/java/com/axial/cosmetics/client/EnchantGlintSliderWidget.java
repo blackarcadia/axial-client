@@ -19,7 +19,7 @@ public final class EnchantGlintSliderWidget extends SliderWidget {
 
     @Override
     protected void updateMessage() {
-        setMessage(Text.literal("STRENGTH: " + (value == 0.0 ? "DEFAULT"
+        setMessage(ClientMenuText.literal("STRENGTH: " + (value == 0.0 ? "DEFAULT"
                 : String.format(Locale.ROOT, "%.2fx", 1.0 + value * (EnchantGlintConfig.MAX_STRENGTH - 1.0))))
                 .styled(style -> style.withFont(UI_FONT)));
     }

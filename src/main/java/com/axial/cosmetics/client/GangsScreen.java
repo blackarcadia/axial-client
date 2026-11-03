@@ -91,9 +91,8 @@ public final class GangsScreen extends NavigationScreen {
     }
     private void drawContent(DrawContext c,int mx,int my,float delta){
         frame(c,layout.panel,PANEL_BORDER,PANEL);
-        int titleWidth=layout.panel.width()-100,center=layout.panel.x()+65+titleWidth/2;
-        centered(c,"AXIAL CLIENT",center,layout.panel.y()+8,BRAND,.75f,titleWidth,false);
-        centered(c,selected==null?"Gangs":selected.name(),center,layout.panel.y()+21,INK,1,titleWidth,true);
+        int headerLeft=layout.back.right()+6;
+        MenuHeader.draw(c,textRenderer,new Rect(headerLeft,layout.panel.y()+4,Math.max(1,layout.close.x()-headerLeft-6),32),selected==null?"GANGS":selected.name());
         c.fill(layout.panel.x()+12,layout.controls.y()-5,layout.panel.right()-12,layout.controls.y()-4,DIVIDER);
         Text tooltip=null;
         if(selected==null){
@@ -101,7 +100,7 @@ public final class GangsScreen extends NavigationScreen {
             line(c,"GANG TOP",viewport.x()+4,searchBox.bottom()+6,MUTED,.75f,viewport.width()-90,true);
             line(c,"POINTS",viewport.right()-80,searchBox.bottom()+6,MUTED,.75f,76,true);
             c.enableScissor(viewport.x(),viewport.y(),viewport.right(),viewport.bottom());
-            for(var b:buttons){b.drawRow(c,mx,my);if(b.visible&&b.isMouseOver(mx,my))tooltip=Text.literal(b.gang.name()+" · #"+b.gang.rank()+" · Leader: "+b.gang.leaderName());}
+            for(var b:buttons){b.drawRow(c,mx,my);if(b.visible&&b.isMouseOver(mx,my))tooltip=ClientMenuText.literal(b.gang.name()+" · #"+b.gang.rank()+" · Leader: "+b.gang.leaderName());}
             if(rows.isEmpty()){
                 String status=GangDirectoryGuide.catalogue.revision==0?GangDirectoryGuide.status:GangDirectoryGuide.catalogue.gangs.isEmpty()?"No gangs on this server.":"No matching gangs.";
                 int y=viewport.y()+10;for(var value:textRenderer.wrapLines(UiTypography.text(status,.8f,false),Math.max(1,viewport.width()-16))){c.drawText(textRenderer,value,viewport.x()+8,y,MUTED,false);y+=12;}
@@ -124,9 +123,9 @@ public final class GangsScreen extends NavigationScreen {
             frame(c,card,LINE,FIELD);
             line(c,labels[i],card.x()+7,card.y()+7,MUTED,.72f,card.width()-14,true);
             line(c,values[i],card.x()+7,card.y()+23,i==0?BRAND:INK,.9f,card.width()-14,true);
-            if(card.contains(mx,my))tooltip=Text.literal(labels[i]+": "+values[i]+(i==2?" · Combined personal balances of all members":""));
+            if(card.contains(mx,my))tooltip=ClientMenuText.literal(labels[i]+": "+values[i]+(i==2?" · Combined personal balances of all members":""));
         }
-        if(compactDetails&&my>=layout.done.y()&&mx>=layout.controls.x()&&mx<layout.done.x())tooltip=Text.literal("Rank #"+selected.rank()+" · "+numbers.format(selected.points())+" points · Members’ combined money: "+balance);
+        if(compactDetails&&my>=layout.done.y()&&mx>=layout.controls.x()&&mx<layout.done.x())tooltip=ClientMenuText.literal("Rank #"+selected.rank()+" · "+numbers.format(selected.points())+" points · Members’ combined money: "+balance);
         if(wide){
             line(c,"ALL MEMBERS COMBINED",stats.x()+3,stats.y()+183,MUTED,.7f,stats.width()-6,false);
             line(c,selected.members().size()+" MEMBERS",stats.x()+3,stats.y()+198,MUTED,.75f,stats.width()-6,false);
@@ -142,7 +141,7 @@ public final class GangsScreen extends NavigationScreen {
             GangPlayerHeads.draw(c,member.id(),x+5,y+6,24);
             line(c,member.name(),x+35,y+7,INK,.8f,cardWidth-40,true);
             line(c,member.role().replace('_',' '),x+35,y+21,member.id().equals(selected.leader())?BRAND:MUTED,.7f,cardWidth-40,false);
-            if(hover)tooltip=Text.literal(member.name()+" · "+member.role().replace('_',' ')+(member.online()?" · Online":" · Offline"));
+            if(hover)tooltip=ClientMenuText.literal(member.name()+" · "+member.role().replace('_',' ')+(member.online()?" · Online":" · Offline"));
         }
         c.disableScissor();return tooltip;
     }

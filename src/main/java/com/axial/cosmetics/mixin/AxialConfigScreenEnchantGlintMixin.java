@@ -1,7 +1,10 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import com.axial.cosmetics.client.CrosshairColorPickerScreen;
 import com.axial.cosmetics.client.EnchantGlintConfig;
+import com.axial.cosmetics.client.ChromaColor;
 import com.axial.cosmetics.client.EnchantGlintSliderWidget;
 import com.axial.cosmetics.client.ThirdPersonNameTagsConfig;
 import net.minecraft.client.MinecraftClient;
@@ -129,7 +132,7 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
             axial_cosmetics$glintReset.render(context, mouseX, mouseY, delta);
             int x = axial_cosmetics$glintColor.getX() + 8;
             int y = axial_cosmetics$glintColor.getY() + 6;
-            context.fill(x, y, x + 8, y + 8, EnchantGlintConfig.color());
+            context.fill(x, y, x + 8, y + 8, ChromaColor.resolve(EnchantGlintConfig.color()));
         } finally {
             context.disableScissor();
         }
@@ -137,7 +140,7 @@ public abstract class AxialConfigScreenEnchantGlintMixin extends Screen {
 
     @Unique
     private static Text axial_cosmetics$glintText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(AXIAL_GLINT_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(AXIAL_GLINT_FONT));
     }
 
     @Unique

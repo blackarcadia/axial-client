@@ -8,6 +8,6 @@ public final class FpsHud {
     public static void render(DrawContext context){
         var client=MinecraftClient.getInstance();
         if(!PerformanceConfig.displayFps()||client.player==null||client.options.hudHidden)return;
-        context.drawText(client.textRenderer,client.getCurrentFps()+" FPS",8,8,PerformanceConfig.fpsColor(),true);
+        context.drawText(client.textRenderer,client.getCurrentFps()+" FPS",8,8,ChromaColor.resolve(PerformanceConfig.fpsColor()),true);
     }
 }

@@ -26,7 +26,7 @@ final class WaypointStore {
                 if(e==null||e.world()==null||e.dimension()==null)continue;
                 String id=e.id();
                 if(id==null||id.isBlank()||!ids.add(id)){id=UUID.randomUUID().toString();ids.add(id);migrated=true;}
-                clean.add(new WaypointConfig.Entry(id,e.name()==null?"Waypoint":e.name(),e.world(),e.dimension(),e.x(),e.y(),e.z(),e.color()|0xFF000000,e.hidden()));
+                clean.add(new WaypointConfig.Entry(id,e.name()==null?"Waypoint":e.name(),e.world(),e.dimension(),e.x(),e.y(),e.z(),ChromaColor.opaque(e.color()),e.hidden()));
             }
             loaded.waypoints=clean;data=loaded;
             if(migrated)save();

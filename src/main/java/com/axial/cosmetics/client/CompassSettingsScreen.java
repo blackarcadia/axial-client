@@ -22,14 +22,14 @@ public final class CompassSettingsScreen extends Screen {
     @Override protected void init() { layout(); slider = addDrawableChild(new ScaleSlider(x + 18, y + 92, 416)); }
     @Override public void render(DrawContext c, int mx, int my, float d) {
         layout(); slider.setPosition(x + 18, y + 92); c.fill(x,y,x+WIDTH,y+HEIGHT,0xE8101018); c.fill(x+1,y+1,x+WIDTH-1,y+2,0x44FFFFFF); c.drawStrokedRectangle(x,y,WIDTH,HEIGHT,0xD08F5DFF);
-        c.drawCenteredTextWithShadow(textRenderer,title,x+WIDTH/2,y+10,0xFFF7F7FF); ModMenuBackButton.draw(c,x+18,y+6,mx,my);
+        MenuHeader.draw(c,textRenderer,x+50,y+3,WIDTH-68,22,"COMPASS"); ModMenuBackButton.draw(c,x+18,y+6,mx,my);
         boolean enabled=CompassConfig.isEnabled(); AxialUiTheme.drawButton(c,textRenderer,x+18,y+30,416,20,"","",inside(mx,my,x+18,y+30,416,20),false,enabled?AxialUiTheme.TOGGLE_ON:AxialUiTheme.TOGGLE_OFF);
         c.drawCenteredTextWithShadow(textRenderer,text(enabled?"ENABLED":"DISABLED"),x+226,y+35,0xFFF7F7FF);
         Text label=text("SCALE"); c.drawTextWithShadow(textRenderer,label,x+20,y+66,0xFFC6D0F3); c.fill(x+18+textRenderer.getWidth(label)+12,y+71,x+WIDTH-28,y+72,0x998F5DFF);
         drawScaleSlider(c); slider.setAlpha(0.0f); super.render(c,mx,my,d);
     }
     @Override public boolean mouseClicked(Click click, boolean doubled) { if(click.button()==0&&inside(click.x(),click.y(),x+18,y+6,24,18)){close();return true;} if(click.button()==0&&inside(click.x(),click.y(),x+18,y+30,416,20)){CompassConfig.toggle();return true;} return super.mouseClicked(click,doubled); }
-    @Override public void close(){MinecraftClient.getInstance().setScreen(parent);} private void layout(){x=(width-WIDTH)/2;y=Math.max(16,(height-HEIGHT)/2);} private static boolean inside(double mx,double my,int x,int y,int w,int h){return mx>=x&&mx<=x+w&&my>=y&&my<=y+h;} private static Text text(String s){return Text.literal(s).styled(st->st.withFont(FONT));}
+    @Override public void close(){MinecraftClient.getInstance().setScreen(parent);} private void layout(){x=(width-WIDTH)/2;y=Math.max(16,(height-HEIGHT)/2);} private static boolean inside(double mx,double my,int x,int y,int w,int h){return mx>=x&&mx<=x+w&&my>=y&&my<=y+h;} private static Text text(String s){return ClientMenuText.literal(s).styled(st->st.withFont(FONT));}
     private void drawScaleSlider(DrawContext c) {
         int sx=x+18, sy=y+92, w=416, h=20; float progress=(CompassConfig.scale()-.5f)/2.5f; int handle=sx+Math.round(progress*(w-8));
         c.fill(sx,sy,sx+w,sy+h,0xF00E1018); c.fill(sx+1,sy+1,sx+w-1,sy+2,0x66FFFFFF);

@@ -106,7 +106,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
             client.setScreen(new CrosshairColorPickerScreen(this,label,color,value->{setter.accept(value);save();},()->{}));
         }){
             @Override protected void drawIcon(DrawContext c,int mx,int my,float delta){
-                super.drawIcon(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,label.equals("Crosshair")?config().color:config().outlineColor);
+                super.drawIcon(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,ChromaColor.resolve(label.equals("Crosshair")?config().color:config().outlineColor));
             }
         };track(button,y);
     }
@@ -157,9 +157,8 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
     }
     @Override public void render(DrawContext c,int mx,int my,float delta){
         refreshHeader();frame(c,layout.panel,PANEL_BORDER,PANEL);
-        int titleX=layout.back.right()+8,titleWidth=layout.enabled.x()-titleX-6;
-        line(c,"AXIAL CLIENT",titleX,layout.panel.y()+7,BRAND,.75f,titleWidth,false);
-        line(c,"CROSSHAIR",titleX,layout.panel.y()+21,INK,1f,titleWidth,true);
+        int headerLeft=layout.back.right()+6;
+        MenuHeader.draw(c,textRenderer,new Rect(headerLeft,layout.panel.y()+4,Math.max(1,layout.enabled.x()-headerLeft-6),32),"CROSSHAIR");
         c.fill(layout.panel.x()+12,layout.panel.y()+37,layout.panel.right()-12,layout.panel.y()+38,DIVIDER);
         c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
         for(var caption:captions)line(c,caption.label(),layout.controls.x()+1,layout.controls.y()+caption.y()-scrolls[tab]+3,MUTED,.75f,layout.controls.width(),true);

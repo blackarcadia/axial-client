@@ -4,13 +4,12 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.StyleSpriteSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import java.util.Locale;
 
 /** Brand casing and native font sizes; glyphs are never shrunk with a GUI matrix. */
 final class UiTypography {
     private UiTypography() {}
 
-    static String uppercase(String value) { return value.toUpperCase(Locale.ROOT); }
+    static String uppercase(String value) { return ClientMenuText.uppercase(value); }
 
     static int size(float scale) {
         int requested=Math.round(9*scale);

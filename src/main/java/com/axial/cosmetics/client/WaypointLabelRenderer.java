@@ -53,7 +53,7 @@ public final class WaypointLabelRenderer {
             if(labels.stream().anyMatch(r->r.x()<bounds.right()+2&&r.right()+2>bounds.x()&&r.y()<bounds.bottom()+2&&r.bottom()+2>bounds.y()))continue;
             labels.add(bounds);
             ModMenuUi.frame(context,bounds,ModMenuUi.LINE,0xDC14171B);
-            ModMenuUi.circle(context,labelX+5,labelY+6,6,waypoint.color());
+            ModMenuUi.circle(context,labelX+5,labelY+6,6,ChromaColor.resolve(waypoint.color()));
             NavigationScreen.line(context,client.textRenderer,name,labelX+15,labelY+5,ModMenuUi.INK,.85f,nameWidth,true);
             NavigationScreen.line(context,client.textRenderer,distanceText,labelX+nameWidth+21,labelY+6,ModMenuUi.MUTED,.75f,distanceWidth,false);
 

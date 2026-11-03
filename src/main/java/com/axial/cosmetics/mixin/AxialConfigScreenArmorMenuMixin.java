@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -172,7 +174,7 @@ public abstract class AxialConfigScreenArmorMenuMixin extends Screen {
     @Unique private boolean isArmor() { try { return "ARMOR".equals(String.valueOf(field(this, "mode").get(this))); } catch (ReflectiveOperationException e) { return false; } }
     @Unique private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - getInt("panelHeight")); }
     @Unique private static int clamp(int value, int min, int max) { return Math.max(min, Math.min(max, value)); }
-    @Unique private static Text text(String value) { return Text.literal(value).styled(style -> style.withFont(FONT)); }
+    @Unique private static Text text(String value) { return ClientMenuText.literal(value).styled(style -> style.withFont(FONT)); }
     @SuppressWarnings("unchecked") @Unique private List<Object> list(String name) throws ReflectiveOperationException { return (List<Object>) field(this, name).get(this); }
     @Unique private Field field(Object object, String name) throws NoSuchFieldException { Field field = object.getClass().getDeclaredField(name); field.setAccessible(true); return field; }
     @Unique private int getInt(String name) { try { return field(this, name).getInt(this); } catch (ReflectiveOperationException e) { return 0; } }

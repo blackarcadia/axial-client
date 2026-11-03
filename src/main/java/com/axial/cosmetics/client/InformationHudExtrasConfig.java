@@ -43,10 +43,10 @@ public final class InformationHudExtrasConfig {
     public static void setFacing(boolean value) { config.facing = value; save(); }
     public static void setCoordinates(boolean value) { config.coordinates = value; save(); }
     public static void setPing(boolean value) { config.ping = value; save(); }
-    public static void setServerColor(int value) { config.serverColor = value | 0xFF000000; save(); }
-    public static void setFacingColor(int value) { config.facingColor = value | 0xFF000000; save(); }
-    public static void setCoordinatesColor(int value) { config.coordinatesColor = value | 0xFF000000; save(); }
-    public static void setPingColor(int value) { config.pingColor = value | 0xFF000000; save(); }
+    public static void setServerColor(int value) { config.serverColor = ChromaColor.opaque(value); save(); }
+    public static void setFacingColor(int value) { config.facingColor = ChromaColor.opaque(value); save(); }
+    public static void setCoordinatesColor(int value) { config.coordinatesColor = ChromaColor.opaque(value); save(); }
+    public static void setPingColor(int value) { config.pingColor = ChromaColor.opaque(value); save(); }
 
     public static int enabledCount() {
         return (config.server ? 1 : 0) + (config.facing ? 1 : 0) + (config.coordinates ? 1 : 0) + (config.ping ? 1 : 0);

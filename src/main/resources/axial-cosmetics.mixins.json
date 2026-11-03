@@ -102,6 +102,7 @@
     "InGameHudCompassMixin",
     "InGameHudPotionsHudMixin",
     "HudTitleUnderlineMixin",
+    "HudChromaColorMixin",
     "InformationHudExtrasRendererMixin",
     "AxialConfigScreenPotionsHudMixin",
     "AxialConfigScreenMinimapMixin",

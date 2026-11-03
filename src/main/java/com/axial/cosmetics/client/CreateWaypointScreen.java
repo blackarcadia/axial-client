@@ -67,7 +67,7 @@ public final class CreateWaypointScreen extends NavigationScreen {
         inputFrame(c,name,nameBox);inputFrame(c,x,xBox);inputFrame(c,y,yBox);inputFrame(c,z,zBox);
         save.active=!draftName.isBlank()&&position()!=null&&(existing!=null||client.world!=null);
         for(var child:children())if(child instanceof net.minecraft.client.gui.Drawable d)d.render(c,mx,my,dt);
-        rounded(c,colour.getX()+7,colour.getY()+(colour.getHeight()-9)/2,9,9,color);
+        rounded(c,colour.getX()+7,colour.getY()+(colour.getHeight()-9)/2,9,9,ChromaColor.resolve(color));
         if(!compact) {
             line(c,"X",xBox.x(),xBox.y()-10,MUTED,.75f,30,false);line(c,"Y",yBox.x(),yBox.y()-10,MUTED,.75f,30,false);line(c,"Z",zBox.x(),zBox.y()-10,MUTED,.75f,30,false);
         }

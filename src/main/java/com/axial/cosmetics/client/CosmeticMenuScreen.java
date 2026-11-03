@@ -18,7 +18,7 @@ public class CosmeticMenuScreen extends Screen {
     private final List<CheckboxWidget> checkboxes = new ArrayList<>();
 
     public CosmeticMenuScreen(CosmeticManager manager, MinecraftClient client) {
-        super(Text.literal("Cosmetics"));
+        super(ClientMenuText.literal("Cosmetics"));
         this.manager = manager;
         this.clientRef = client;
     }
@@ -34,7 +34,7 @@ public class CosmeticMenuScreen extends Screen {
         for (CosmeticTexture texture : manager.get(clientRef.player.getUuid(), clientRef.player.getName().getString())) {
             String id = texture.definition().id();
             boolean enabled = manager.isEnabled(id);
-            CheckboxWidget box = CheckboxWidget.builder(Text.literal(id), textRenderer)
+            CheckboxWidget box = CheckboxWidget.builder(ClientMenuText.literal(id), textRenderer)
                     .pos(this.width / 2 - 100, y)
                     .checked(enabled)
                     .callback((cb, checked) -> manager.setEnabled(id, checked, client))
@@ -44,7 +44,7 @@ public class CosmeticMenuScreen extends Screen {
             y += 24;
         }
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("Close"), btn -> close())
+        addDrawableChild(ButtonWidget.builder(ClientMenuText.literal("Close"), btn -> close())
                 .dimensions(this.width / 2 - 40, this.height - 40, 80, 20)
                 .build());
     }
@@ -52,7 +52,8 @@ public class CosmeticMenuScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(textRenderer, "Cosmetics", this.width / 2, 15, 0xFFFFFF);
+        int headerWidth=Math.min(400,width-24);
+        MenuHeader.draw(context,textRenderer,(width-headerWidth)/2,4,headerWidth,30,"COSMETICS");
     }
 
     @Override

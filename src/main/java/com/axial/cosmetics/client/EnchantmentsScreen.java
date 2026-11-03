@@ -123,9 +123,8 @@ public final class EnchantmentsScreen extends NavigationScreen {
     }
     private void drawContent(DrawContext c,int mx,int my,float delta){
         frame(c,layout.panel,PANEL_BORDER,PANEL);
-        int titleWidth=layout.panel.width()-100,titleCenter=layout.panel.x()+65+titleWidth/2;
-        centered(c,"AXIAL CLIENT",titleCenter,layout.panel.y()+8,BRAND,.75f,titleWidth,false);
-        centered(c,selected==null?"Enchantments":selected.name(),titleCenter,layout.panel.y()+21,INK,1f,titleWidth,true);
+        int headerLeft=layout.back.right()+6;
+        MenuHeader.draw(c,textRenderer,new Rect(headerLeft,layout.panel.y()+4,Math.max(1,layout.close.x()-headerLeft-6),32),selected==null?"ENCHANTMENTS":selected.name());
         c.fill(layout.panel.x()+12,layout.controls.y()-5,layout.panel.right()-12,layout.controls.y()-4,DIVIDER);
         if(selected==null){
             frame(c,searchBox,search.isFocused()?FOCUS:LINE,FIELD);

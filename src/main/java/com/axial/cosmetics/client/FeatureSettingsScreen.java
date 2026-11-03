@@ -154,10 +154,9 @@ public final class FeatureSettingsScreen extends Screen {
     }
     private void drawContent(DrawContext c,int mx,int my,float delta) {
         frame(c,layout.panel,PANEL_BORDER,PANEL);
-        int titleWidth=layout.panel.width()-(model.enabled()!=null?(layout.panel.width()<400?170:184):100);
-        int titleCenter=layout.panel.x()+65+titleWidth/2;
-        centered(c,"AXIAL CLIENT",titleCenter,layout.panel.y()+8,BRAND,.75f,titleWidth,false);
-        centered(c,model.title(),titleCenter,layout.panel.y()+21,INK,1f,titleWidth,true);
+        int headerLeft=layout.back.right()+6;
+        int headerRight=(model.enabled()!=null?layout.enabled.x():layout.close.x())-6;
+        MenuHeader.draw(c,textRenderer,new Rect(headerLeft,layout.panel.y()+4,Math.max(1,headerRight-headerLeft),32),model.title());
         c.fill(layout.panel.x()+12,layout.controls.y()-5,layout.panel.right()-12,layout.controls.y()-4,DIVIDER);
         c.enableScissor(layout.controls.x(),layout.controls.y(),layout.controls.right(),layout.controls.bottom());
         for(Placement p:placements) {
@@ -269,7 +268,7 @@ public final class FeatureSettingsScreen extends Screen {
             frame(c,r,hover?HOVER_LINE:selected?SELECTED_LINE:LINE,selected?SELECTED:hover?HOVER:FIELD);
             if(crosshairStyle>=0){ModFeaturePreviews.crosshairStyle(c,r,crosshairStyle);return;}
             if(setting instanceof Color color) {
-                int swatch=color.get().getAsInt();
+                int swatch=ChromaColor.resolve(color.get().getAsInt());
                 rounded(c,r.right()-21,r.y()+4,14,14,swatch);
                 label(c,textRenderer,String.format(Locale.ROOT,"#%06X",swatch&0xFFFFFF),r.right()-83,r.y()+7,MUTED,.8f,59,false);
                 label(c,textRenderer,setting.label(),r.x()+7,r.y()+7,INK,.8f,r.width()-94,false);return;

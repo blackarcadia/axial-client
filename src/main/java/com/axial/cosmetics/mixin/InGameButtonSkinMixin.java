@@ -85,7 +85,7 @@ public abstract class InGameButtonSkinMixin {
             context.fill(x, y, x + compactWidth, y + button.getHeight(), hovered ? EmoteMenuTheme.HOVER : EmoteMenuTheme.FIELD);
             context.fill(x + 1, y + 1, x + compactWidth - 1, y + 2, hovered ? EmoteMenuTheme.HOVER_LINE : EmoteMenuTheme.LINE);
             context.drawStrokedRectangle(x, y, compactWidth, button.getHeight(), hovered ? EmoteMenuTheme.HOVER_LINE : EmoteMenuTheme.LINE);
-            Text text = Text.literal(button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
+            Text text = axial_cosmetics$menuLabel(currentScreen,button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
             context.drawCenteredTextWithShadow(client.textRenderer, text, x + compactWidth / 2,
                     y + (button.getHeight() - client.textRenderer.fontHeight) / 2, EmoteMenuTheme.INK);
             ci.cancel();
@@ -119,8 +119,14 @@ public abstract class InGameButtonSkinMixin {
         TextRenderer textRenderer = client.textRenderer;
         int textColor = ColorHelper.getWhite(button.getAlpha());
         int textY = y + (renderedHeight - 8) / 2;
-        Text buttonText = Text.literal(button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
+        Text buttonText = axial_cosmetics$menuLabel(currentScreen,button.getMessage().getString()).styled(style -> style.withFont(UI_FONT));
         context.drawCenteredTextWithShadow(textRenderer, buttonText, x + renderedWidth / 2, textY, textColor);
         ci.cancel();
     }
+    private static net.minecraft.text.MutableText axial_cosmetics$menuLabel(Screen screen,String value) {
+        String type=screen.getClass().getName();
+        return type.startsWith("com.axial.cosmetics.client.")||type.startsWith("org.axial.axialutils.client.")
+                ?com.axial.cosmetics.client.ClientMenuText.literal(value):Text.literal(value);
+    }
+
 }

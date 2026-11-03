@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import com.axial.cosmetics.client.PotionsHudSettingsScreen;
 import net.minecraft.client.MinecraftClient;
@@ -158,7 +160,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
     }
     @Unique private void refreshLayout() { try { Method method = getClass().getDeclaredMethod("rebuildLayout"); method.setAccessible(true); method.invoke(this); } catch (ReflectiveOperationException ignored) { } }
 
-    @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = Text.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
+    @Unique private void divider(DrawContext c, int x, int y, String label) { Text t = ClientMenuText.literal(label).styled(s -> s.withFont(FONT)); var renderer = MinecraftClient.getInstance().textRenderer; c.drawTextWithShadow(renderer, t, x + 2, y, 0xFFC6D0F3); c.fill(x + renderer.getWidth(t) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
     @Unique private void drawScrollBar(DrawContext context, int panelX, int panelY) {
         int maximum = maxScroll();
         if (maximum == 0) return;
@@ -186,7 +188,7 @@ public abstract class AxialConfigScreenInformationHudOptionsMixin {
                     int color = (Integer) getColor.invoke(getter);
                     int x = integer(row, "x"), y = integer(row, "y") + panelY + 6;
                     int width = integer(row, "width");
-                    Text hex = Text.literal(String.format("#%06X", color & 0xFFFFFF)).styled(style -> style.withFont(FONT));
+                    Text hex = ClientMenuText.literal(String.format("#%06X", color & 0xFFFFFF)).styled(style -> style.withFont(FONT));
                     context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, hex,
                             x + width - 30 - MinecraftClient.getInstance().textRenderer.getWidth(hex), y, 0xFFC6D0F3);
                 }

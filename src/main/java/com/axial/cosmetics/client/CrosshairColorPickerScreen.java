@@ -23,23 +23,24 @@ public final class CrosshairColorPickerScreen extends Screen {
     private TextFieldWidget hex;
     private float hue,saturation,brightness;
     private int dragging=-1;
-    private boolean syncing;
+    private boolean syncing,chroma;
+    private PickerButton chromaButton;
+    private ColorPickerLayout layout;
 
     public CrosshairColorPickerScreen(Screen parent,String label,int initialColor,IntConsumer onChange) {
         this(parent,label,initialColor,onChange,CrosshairConfigManager::save);
     }
     public CrosshairColorPickerScreen(Screen parent,String label,int initialColor,IntConsumer onChange,ColorPickerSaveAction saveAction) {
         super(text(label.toUpperCase(Locale.ROOT).endsWith("COLOR")?label:label+" COLOR"));this.parent=parent;this.onChange=onChange;this.saveAction=saveAction;
-        resetColor=HudColorDefaults.forPickerLabel(label,initialColor);setColor(initialColor);
+        resetColor=ChromaColor.solid(HudColorDefaults.forPickerLabel(label,initialColor));setColor(initialColor);
     }
     @Override protected void init() {
-        int w=Math.min(360,width-20),h=Math.min(236,height-20);
-        panel=new Rect((width-w)/2,(height-h)/2,w,h);
-        shade=new Rect(panel.x()+14,panel.y()+43,w-62,Math.max(30,h-111));
-        hueBar=new Rect(panel.right()-32,shade.y(),18,shade.height());
-        addButton("BACK",new Rect(panel.x()+10,panel.y()+10,44,20),this::close);
-        addButton("RESET",new Rect(panel.x()+14,panel.bottom()-28,66,20),()->{setColor(resetColor);push();});
-        addButton("DONE",new Rect(panel.right()-80,panel.bottom()-28,66,20),this::close);
+        layout=new ColorPickerLayout(width,height);panel=layout.panel;shade=layout.shade;hueBar=layout.hue;
+        int w=panel.width();
+        addButton("BACK",layout.back,this::close);
+        addButton("RESET",layout.reset,()->{setColor(resetColor);push();});
+        addButton("DONE",layout.done,this::close);
+        chromaButton=addButton("CHROMA",layout.chroma,()->{chroma=!chroma;push();});
         hex=addDrawableChild(new TextFieldWidget(textRenderer,panel.x()+62,shade.bottom()+14,w-79,14,text("HEX COLOR")));
         hex.setMaxLength(7);hex.setDrawsBackground(false);hex.setTextShadow(false);hex.setEditableColor(INK);
         hex.addFormatter((value,index)->text(value).asOrderedText());syncHex();
@@ -47,13 +48,13 @@ public final class CrosshairColorPickerScreen extends Screen {
             if(syncing)return;
             String digits=value.startsWith("#")?value.substring(1):value;
             if(!digits.matches("[0-9a-fA-F]{6}"))return;
-            setColor(0xFF000000|Integer.parseInt(digits,16));onChange.accept(currentColor());saveAction.save();
+            setColor(0xFF000000|Integer.parseInt(digits,16));onChange.accept(storedColor());saveAction.save();
         });
     }
     @Override public void close(){saveAction.save();client.setScreen(parent);}
     @Override public void render(DrawContext c,int mx,int my,float delta) {
         frame(c,panel,PANEL_BORDER,PANEL);
-        label(c,textRenderer,title.getString(),panel.x()+64,panel.y()+16,INK,.85f,panel.width()-78,true);
+        MenuHeader.draw(c,textRenderer,new Rect(panel.x()+62,panel.y()+3,panel.width()-76,30),title.getString());
         for(int col=0;col<shade.width();col++) {
             int color=Color.HSBtoRGB(hue,col/(float)Math.max(1,shade.width()-1),1);
             c.fillGradient(shade.x()+col,shade.y(),shade.x()+col+1,shade.bottom(),color,0xFF000000);
@@ -67,7 +68,9 @@ public final class CrosshairColorPickerScreen extends Screen {
         c.drawStrokedRectangle(hueBar.x()-1,hy-1,hueBar.width()+2,3,INK);
         frame(c,new Rect(panel.x()+14,shade.bottom()+9,panel.width()-28,22),hex.isFocused()?FOCUS:LINE,FIELD);
         rounded(c,panel.x()+19,shade.bottom()+13,28,14,currentColor());
+        chromaButton.setMessage(text("CHROMA: "+(chroma?"ON":"OFF")));
         super.render(c,mx,my,delta);
+        if(chroma)rounded(c,layout.chroma.right()-24,layout.chroma.y()+5,12,12,currentColor());
     }
     @Override public boolean mouseClicked(Click click,boolean doubled) {
         if(super.mouseClicked(click,doubled))return true;
@@ -83,16 +86,18 @@ public final class CrosshairColorPickerScreen extends Screen {
     }
     @Override public boolean mouseReleased(Click click){dragging=-1;return super.mouseReleased(click);}
     private void update(double x,double y) {
+        chroma=false;
         float vertical=(float)Math.clamp((y-shade.y())/Math.max(1,shade.height()-1),0,1);
         if(dragging==0){saturation=(float)Math.clamp((x-shade.x())/Math.max(1,shade.width()-1),0,1);brightness=1-vertical;}
         else hue=vertical;
         push();
     }
-    private void setColor(int color){float[] hsb=Color.RGBtoHSB((color>>16)&255,(color>>8)&255,color&255,null);hue=hsb[0];saturation=hsb[1];brightness=hsb[2];}
-    private int currentColor(){return Color.HSBtoRGB(hue,saturation,brightness);}
-    private void push(){onChange.accept(currentColor());saveAction.save();syncHex();}
-    private void syncHex(){if(hex==null)return;syncing=true;try{hex.setText(String.format(Locale.ROOT,"#%06X",currentColor()&0xFFFFFF));}finally{syncing=false;}}
-    private void addButton(String label,Rect r,Runnable action){addDrawableChild(new PickerButton(label,r,action));}
+    private void setColor(int color){chroma=ChromaColor.enabled(color);float[] hsb=Color.RGBtoHSB((color>>16)&255,(color>>8)&255,color&255,null);hue=hsb[0];saturation=hsb[1];brightness=hsb[2];}
+    private int storedColor(){return ChromaColor.withChroma(Color.HSBtoRGB(hue,saturation,brightness),chroma);}
+    private int currentColor(){return ChromaColor.resolve(storedColor());}
+    private void push(){onChange.accept(storedColor());saveAction.save();syncHex();}
+    private void syncHex(){if(hex==null)return;syncing=true;try{hex.setText(String.format(Locale.ROOT,"#%06X",storedColor()&0xFFFFFF));}finally{syncing=false;}}
+    private PickerButton addButton(String label,Rect r,Runnable action){return addDrawableChild(new PickerButton(label,r,action));}
     private final class PickerButton extends ButtonWidget {
         PickerButton(String label,Rect r,Runnable action){super(r.x(),r.y(),r.width(),r.height(),text(label),ignored->action.run(),DEFAULT_NARRATION_SUPPLIER);}
         @Override public void playDownSound(SoundManager soundManager){AxialUiTheme.playButtonClickSound();}

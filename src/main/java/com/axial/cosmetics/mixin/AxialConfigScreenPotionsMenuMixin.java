@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import com.axial.cosmetics.client.PotionsHudConfig;
 import com.axial.cosmetics.client.PotionsHudSettingsScreen;
 import net.minecraft.client.gui.Click;
@@ -131,5 +133,5 @@ public abstract class AxialConfigScreenPotionsMenuMixin extends Screen {
     @Unique private void setInt(String name, int value) throws ReflectiveOperationException { field(this, name).setInt(this, value); }
     @Unique private static int integer(Object object, String name) throws ReflectiveOperationException { Field field = object.getClass().getDeclaredField(name); field.setAccessible(true); return field.getInt(object); }
     @Unique private static void setField(Object object, String name, int value) throws ReflectiveOperationException { Field field = object.getClass().getDeclaredField(name); field.setAccessible(true); field.setInt(object, value); }
-    @Unique private static Text text(String value) { return Text.literal(value).styled(style -> style.withFont(FONT)); }
+    @Unique private static Text text(String value) { return ClientMenuText.literal(value).styled(style -> style.withFont(FONT)); }
 }

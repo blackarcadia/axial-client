@@ -25,7 +25,7 @@ public final class CrosshairConfig {
         size=bounded(size,.1f,4,1);length=Math.round(bounded(length,0,32,4));
         width=Math.round(bounded(width,1,12,2));gap=Math.round(bounded(gap,0,20,2));
         opacity=bounded(opacity,.1f,1,1);dotSize=Math.clamp(dotSize,1,8);outlineThickness=Math.clamp(outlineThickness,1,4);
-        color=(color==0?0xFFFFFF:color)|0xFF000000;outlineColor|=0xFF000000;
+        color=ChromaColor.opaque(color==0?0xFFFFFF:color);outlineColor=ChromaColor.opaque(outlineColor);
     }
     private static float bounded(float value,float min,float max,float fallback){return Float.isFinite(value)?Math.clamp(value,min,max):fallback;}
 }

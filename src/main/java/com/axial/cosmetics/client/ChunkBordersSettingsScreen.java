@@ -48,7 +48,7 @@ public final class ChunkBordersSettingsScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         rebuildLayout();
         drawPanel(context);
-        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
+        MenuHeader.draw(context,textRenderer,panelX+50,panelY+3,PANEL_WIDTH-68,22,"CHUNK BORDERS");
         drawBackButton(context, mouseX, mouseY);
         drawToggleButton(context, mouseX, mouseY);
         drawDivider(context, panelY + 66, "KEYBIND");
@@ -170,7 +170,7 @@ public final class ChunkBordersSettingsScreen extends Screen {
         Text hex = uiText(String.format("#%06X", ChunkBordersConfig.color() & 0xFFFFFF));
         context.drawTextWithShadow(textRenderer, hex, swatchX - textRenderer.getWidth(hex) - 10, y + 6, 0xFFC6D0F3);
         boolean hovered = inside(mouseX, mouseY, swatchX, y, 20, 20);
-        context.fill(swatchX, y + 2, swatchX + 16, y + 18, ChunkBordersConfig.color());
+        context.fill(swatchX, y + 2, swatchX + 16, y + 18, ChromaColor.resolve(ChunkBordersConfig.color()));
         context.drawStrokedRectangle(swatchX, y + 2, 16, 16, hovered ? 0xFFFFFFFF : 0xFFB9C5E8);
     }
 
@@ -191,6 +191,6 @@ public final class ChunkBordersSettingsScreen extends Screen {
     }
 
     private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 }

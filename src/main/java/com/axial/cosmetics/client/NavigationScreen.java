@@ -17,7 +17,7 @@ abstract class NavigationScreen extends Screen {
     protected final Screen parent;
     protected String error="";
     NavigationScreen(String title,Screen parent){super(copy(title,1,true));this.parent=parent;}
-    static Text copy(String value,float size,boolean bold){return Text.literal(value).styled(s->s.withFont(new StyleSpriteSource.Font(UiTypography.font(size,bold))));}
+    static Text copy(String value,float size,boolean bold){return ClientMenuText.literal(value).styled(s->s.withFont(new StyleSpriteSource.Font(UiTypography.font(size,bold))));}
     static void line(DrawContext c,TextRenderer font,String value,int x,int y,int color,float size,int width,boolean bold) {
         if(width<=0)return;
         String trimmed=font.trimToWidth(copy(value,size,bold),width).getString();c.drawText(font,copy(trimmed,size,bold),x,y,color,false);
@@ -34,9 +34,8 @@ abstract class NavigationScreen extends Screen {
     protected void attempt(Runnable action){try{action.run();error="";}catch(RuntimeException ex){error=ex.getMessage()==null?"Could not save. Try again.":ex.getMessage();org.slf4j.LoggerFactory.getLogger(getClass()).warn("Navigation action failed",ex);}}
     protected void heading(DrawContext c,Rect panel,String title,String subtitle) {
         frame(c,panel,PANEL_BORDER,PANEL);
-        line(c,"AXIAL CLIENT",panel.x()+16,panel.y()+10,BRAND,.8f,panel.width()-55,true);
-        line(c,title,panel.x()+16,panel.y()+24,INK,1.35f,panel.width()-55,true);
-        if(!subtitle.isEmpty())line(c,subtitle,panel.x()+16,panel.y()+43,MUTED,.8f,panel.width()-32,false);
+        MenuHeader.draw(c,textRenderer,new Rect(panel.x()+12,panel.y()+3,panel.width()-24,panel.height()<230?26:34),title);
+        if(!subtitle.isEmpty()&&panel.height()>=230)line(c,subtitle,panel.x()+16,panel.y()+43,MUTED,.8f,panel.width()-32,false);
     }
     @Override public void close(){client.setScreen(parent);}
     protected class NavButton extends ButtonWidget {

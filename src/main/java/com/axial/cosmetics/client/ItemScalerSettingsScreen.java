@@ -54,8 +54,7 @@ public final class ItemScalerSettingsScreen extends Screen {
         super.render(context, mouseX, mouseY, deltaTicks);
         rebuildLayout();
         drawPanel(context);
-        context.drawCenteredTextWithShadow(textRenderer, title, panelX + PANEL_WIDTH / 2, panelY + 10, 0xFFF7F7FF);
-        context.drawCenteredTextWithShadow(textRenderer, uiText("HELD ITEM RENDER SCALE"), panelX + PANEL_WIDTH / 2, panelY + 23, 0xFFC6D0F3);
+        MenuHeader.draw(context,textRenderer,panelX+50,panelY+3,PANEL_WIDTH-68,30,"ITEM SCALER");
 
         drawBackButton(context, mouseX, mouseY);
         drawSliderLabel(context, "HELD ITEM", mainHandSlider.getX(), mainHandSlider.getY());
@@ -146,7 +145,7 @@ public final class ItemScalerSettingsScreen extends Screen {
     }
 
     private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
     private enum HandTarget {

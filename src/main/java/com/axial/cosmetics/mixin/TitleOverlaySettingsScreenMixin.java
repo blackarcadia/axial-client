@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -246,7 +248,7 @@ public abstract class TitleOverlaySettingsScreenMixin {
     }
 
     private static Text axial_cosmetics$uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
     private static void axial_cosmetics$drawIconButton(DrawContext context, int x, int y, int width, int height, boolean hovered) {

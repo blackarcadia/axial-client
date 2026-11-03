@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -106,7 +108,7 @@ public abstract class AxialConfigScreenCpsMenuMixin extends Screen {
     @Unique private void divider(DrawContext context, int x, int y, String label) { Text text = text(label); context.drawTextWithShadow(textRenderer, text, x + 2, y, 0xFFC6D0F3); context.fill(x + textRenderer.getWidth(text) + 12, y + 5, x + getInt("panelWidth") - 28, y + 6, 0x998F5DFF); }
     @Unique private boolean insideSwatch(Object row, double x, double y, int offset) throws ReflectiveOperationException { int rowX = integer(row, "x"), rowY = integer(row, "y") + offset, width = integer(row, "width"); return x >= rowX + width - 24 && x <= rowX + width + 4 && y >= rowY - 2 && y <= rowY + 22; }
     @Unique private boolean isCps() { try { return "CPS".equals(String.valueOf(field(this, "mode").get(this))); } catch (ReflectiveOperationException e) { return false; } }
-    @Unique private static Text text(String value) { return Text.literal(value).styled(style -> style.withFont(FONT)); }
+    @Unique private static Text text(String value) { return ClientMenuText.literal(value).styled(style -> style.withFont(FONT)); }
     @SuppressWarnings("unchecked") @Unique private List<Object> list(String name) throws ReflectiveOperationException { return (List<Object>) field(this, name).get(this); }
     @Unique private Field field(Object object, String name) throws NoSuchFieldException { Field field = object.getClass().getDeclaredField(name); field.setAccessible(true); return field; }
     @Unique private int getInt(String name) { try { return field(this, name).getInt(this); } catch (ReflectiveOperationException e) { return 0; } }

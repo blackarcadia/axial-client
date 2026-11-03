@@ -128,13 +128,8 @@ public final class ClientSettingsScreen extends Screen {
         float previousOpacity=opacity(animation.progress());
         float offset=animation.offset();c.getMatrices().pushMatrix();c.getMatrices().translate(0,offset);
         try {
-            int brandWidth=layout.back.x()-layout.panel.x()-20;
-            if(brandWidth>65) {
-                c.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
-                        layout.panel.x()+8,layout.panel.y()+5,0,0,64,32,240,117,240,117);
-                if(brandWidth>175)label(c,textRenderer,"AXIAL CLIENT",layout.panel.x()+77,layout.panel.y()+17,
-                        BRAND,1.2f,brandWidth-70,true);
-            }
+            MenuHeader.draw(c,textRenderer,new Rect(layout.panel.x()+8,layout.panel.y()+3,
+                    layout.back.x()-layout.panel.x()-12,34),"");
             c.fill(layout.panel.x()+1,layout.headerBottom,layout.panel.right()-1,layout.headerBottom+1,DIVIDER);
             if(!layout.compact) {
                 label(c,textRenderer,"Settings",layout.controls.x(),layout.panel.y()+54,INK,1.7f,layout.controls.width(),true);
@@ -163,7 +158,7 @@ public final class ClientSettingsScreen extends Screen {
         label(c,textRenderer,trimmed,center-textRenderer.getWidth(styled(trimmed,scale,false))/2,y,color,scale,maxWidth,false);
     }
     private static Text styled(String value,float scale,boolean bold) {
-        return Text.literal(value).styled(style->style.withFont(new StyleSpriteSource.Font(UiTypography.font(scale,bold))));
+        return ClientMenuText.literal(value).styled(style->style.withFont(new StyleSpriteSource.Font(UiTypography.font(scale,bold))));
     }
     private static void label(DrawContext c,TextRenderer renderer,String value,int x,int y,int color,float scale,int maxWidth,boolean bold) {
         if(maxWidth<=0)return;
@@ -237,7 +232,7 @@ public final class ClientSettingsScreen extends Screen {
                     hover?HOVER:label.equals("Done")?0xFFB0B8C9:FIELD);
             if(colorButton) {
                 boolean fps=label.equals("FPS COLOR");
-                int color=fps?PerformanceConfig.fpsColor():EnchantGlintConfig.color();
+                int color=ChromaColor.resolve(fps?PerformanceConfig.fpsColor():EnchantGlintConfig.color());
                 label(c,textRenderer,fps?"FPS Color":"Glint Color",r.x()+13,r.y()+14,INK,.9f,Math.min(100,r.width()/3),true);
                 int fieldX=r.x()+Math.min(123,r.width()/2);
                 rounded(c,fieldX,r.y()+8,20,20,color);
@@ -278,7 +273,7 @@ public final class ClientSettingsScreen extends Screen {
             int y=getY()+17;
             rounded(c,trackX(),y,trackWidth(),4,DIVIDER);
             int filled=(int)Math.round(value*(trackWidth()-10));
-            rounded(c,trackX(),y,Math.max(4,filled+5),4,EnchantGlintConfig.color());
+            rounded(c,trackX(),y,Math.max(4,filled+5),4,ChromaColor.resolve(EnchantGlintConfig.color()));
             circle(c,trackX()+filled,y-3,10,isHovered()||isFocused()?0xFFFFFFFF:INK);
             centered(c,shown(),getRight()-29,getY()+14,MUTED,.9f,48);
 

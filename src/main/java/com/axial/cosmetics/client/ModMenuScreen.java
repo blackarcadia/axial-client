@@ -41,7 +41,7 @@ public final class ModMenuScreen extends Screen {
     private final java.util.Map<ModMenuEntry,ToggleAnimation> toggleAnimations = new java.util.HashMap<>();
 
     private ModMenuScreen(Screen backend, List<ModMenuEntry> entries,Screen returnTo) {
-        super(text("Mod menu"));
+        super(text("AXIALCLIENT"));
         this.backend = backend;
         this.returnTo=returnTo;
         this.entries = entries;
@@ -180,14 +180,8 @@ public final class ModMenuScreen extends Screen {
 
     private void renderContent(DrawContext context,int mouseX,int mouseY,float delta) {
         var panel=layout.panel;
-        boolean small = panel.height()<320;
-        int logoSize=layout.tight?23:small?29:36;
-        context.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
-                panel.x()+10,panel.y()+4,0,0,logoSize*2,logoSize,240,117,240,117);
-        if(!layout.tight) {
-            label(context,textRenderer,"AXIAL CLIENT",panel.x()+logoSize*2+18,panel.y()+9,BRAND,small?1f:1.2f,panel.width()-logoSize*2-55,true);
-            label(context,textRenderer,"Mod menu",panel.x()+logoSize*2+18,panel.y()+25,MUTED,.85f,panel.width()-logoSize*2-55,false);
-        }
+        MenuHeader.draw(context,textRenderer,new ModMenuLayout.Rect(panel.x()+10,panel.y()+3,
+                layout.close.x()-panel.x()-16,layout.navigation.y()-panel.y()-6),"");
         int dividerY=layout.navigation.bottom()+3;
         context.fill(panel.x()+10,dividerY,panel.right()-10,dividerY+1,DIVIDER);
         frame(context,layout.search,search.isFocused()?FOCUS:LINE,FIELD);

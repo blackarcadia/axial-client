@@ -12,7 +12,7 @@ public final class WaypointConfig {
         static final WaypointStore STORE=new WaypointStore(FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-waypoints.json"));
     }
     public static void create(String name,String world,String dimension,BlockPos position,int color) {
-        Holder.STORE.add(new Entry(UUID.randomUUID().toString(),validName(name),world,dimension,position.getX(),position.getY(),position.getZ(),color|0xFF000000,false));
+        Holder.STORE.add(new Entry(UUID.randomUUID().toString(),validName(name),world,dimension,position.getX(),position.getY(),position.getZ(),ChromaColor.opaque(color),false));
     }
     public static List<Entry> waypoints(){return Holder.STORE.entries();}
     public static List<Entry> waypointsFor(MinecraftClient client){String world=worldId(client);return waypoints().stream().filter(e->world.equals(e.world())).toList();}
@@ -30,10 +30,10 @@ public final class WaypointConfig {
     public static void setEnabled(boolean enabled){Holder.STORE.enabled(enabled);}
     public static void rename(Entry old,String name){if(!name.isBlank())update(old,name,old.x(),old.y(),old.z(),old.color());}
     public static void delete(Entry old){Holder.STORE.delete(old.id());}
-    public static Entry setColor(Entry old,int color){return Holder.STORE.update(old.id(),e->new Entry(e.id(),e.name(),e.world(),e.dimension(),e.x(),e.y(),e.z(),color|0xFF000000,e.hidden()));}
+    public static Entry setColor(Entry old,int color){return Holder.STORE.update(old.id(),e->new Entry(e.id(),e.name(),e.world(),e.dimension(),e.x(),e.y(),e.z(),ChromaColor.opaque(color),e.hidden()));}
     public static Entry setHidden(Entry old,boolean hidden){return Holder.STORE.update(old.id(),e->new Entry(e.id(),e.name(),e.world(),e.dimension(),e.x(),e.y(),e.z(),e.color(),hidden));}
     public static Entry update(Entry old,String name,int x,int y,int z,int color) {
-        return Holder.STORE.update(old.id(),e->new Entry(e.id(),validName(name),e.world(),e.dimension(),x,y,z,color|0xFF000000,e.hidden()));
+        return Holder.STORE.update(old.id(),e->new Entry(e.id(),validName(name),e.world(),e.dimension(),x,y,z,ChromaColor.opaque(color),e.hidden()));
     }
     private static String validName(String name){String value=name.strip();if(value.isEmpty())throw new IllegalArgumentException("Enter a waypoint name");return value.substring(0,Math.min(48,value.length()));}
     public record Entry(String id,String name,String world,String dimension,int x,int y,int z,int color,boolean hidden) {

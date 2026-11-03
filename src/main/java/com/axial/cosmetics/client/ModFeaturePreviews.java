@@ -54,7 +54,7 @@ final class ModFeaturePreviews {
                 hud(c,area,b.width(),b.height(),b.x(),b.y(),()->PotionsHudRenderer.renderPreview(c,client));
             }
             case "CHUNK BORDERS" -> {
-                int color=ChunkBordersConfig.color(),size=Math.min(area.width()-12,area.height()-30),left=area.x()+(area.width()-size)/2,top=area.y()+8;
+                int color=ChromaColor.resolve(ChunkBordersConfig.color()),size=Math.min(area.width()-12,area.height()-30),left=area.x()+(area.width()-size)/2,top=area.y()+8;
                 for(int i=0;i<=4;i++){int p=i*size/4;c.fill(left+p,top,left+p+1,top+size,color);c.fill(left,top+p,left+size,top+p+1,color);}
                 sample(c,area);
             }

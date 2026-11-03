@@ -99,7 +99,7 @@ public final class MicrosoftAccountLoginScreen extends Screen {
         int y = height / 2 - 72;
         context.fill(x, y, x + panelWidth, y + 148, 0xED101018);
         context.drawStrokedRectangle(x, y, panelWidth, 148, 0xD08F5DFF);
-        drawCentered(context,title,y+14,0xFFFFFFFF);
+        MenuHeader.draw(context,textRenderer,x+12,y+3,panelWidth-24,30,"MICROSOFT SIGN-IN");
         drawCentered(context,UiTypography.text("Sign in securely with your Microsoft account.",.85f,false),y+38,0xFFC6D0F3);
         String message=textRenderer.trimToWidth(UiTypography.text(status,.85f,false),panelWidth-20).getString();
         drawCentered(context,UiTypography.text(message,.85f,false),y+62,0xFFFFFFFF);

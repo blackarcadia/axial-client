@@ -35,11 +35,11 @@ public final class KeystrokesHud {
         c.getMatrices().pushMatrix();c.getMatrices().translate(x,y);c.getMatrices().scale(KeystrokesConfig.scale(),KeystrokesConfig.scale());
         try{for(var key:keys){
             boolean down=(pressed&(1<<key.bit()))!=0;
-            int color=down?KeystrokesConfig.pressedColor():0xFF171B20;
+            int color=down?ChromaColor.resolve(KeystrokesConfig.pressedColor()):0xFF171B20;
             color=(Math.round(KeystrokesConfig.opacity()*255)<<24)|(color&0xFFFFFF);
             rounded(c,key.x(),key.y(),key.width(),key.height(),color);
             var label=UiTypography.text(key.label(),key.bit()<4?1:.75f,key.bit()<4);
-            c.drawText(font,label,key.x()+(key.width()-font.getWidth(label))/2,key.y()+(key.height()-font.fontHeight)/2,KeystrokesConfig.textColor(key.bit()),false);
+            c.drawText(font,label,key.x()+(key.width()-font.getWidth(label))/2,key.y()+(key.height()-font.fontHeight)/2,ChromaColor.resolve(KeystrokesConfig.textColor(key.bit())),false);
         }}finally{c.getMatrices().popMatrix();}
     }
 }

@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import com.axial.cosmetics.client.HudColorDefaults;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
@@ -150,7 +152,7 @@ public abstract class AxialConfigScreenSatchelMenuMixin extends Screen {
     @Unique private boolean isSatchel() { try { return "SATCHEL".equals(String.valueOf(field(this, "mode").get(this))); } catch (ReflectiveOperationException e) { return false; } }
     @Unique private int maxScroll() { return Math.max(0, CONTENT_HEIGHT - getInt("panelHeight")); }
     @Unique private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }
-    @Unique private static Text label(String s) { return Text.literal(s).styled(style -> style.withFont(FONT)); }
+    @Unique private static Text label(String s) { return ClientMenuText.literal(s).styled(style -> style.withFont(FONT)); }
     @SuppressWarnings("unchecked") @Unique private List<Object> list(String n) throws ReflectiveOperationException { return (List<Object>) field(this, n).get(this); }
     @Unique private Field field(Object o, String n) throws NoSuchFieldException { Field f = o.getClass().getDeclaredField(n); f.setAccessible(true); return f; }
     @Unique private int getInt(String n) { try { return field(this, n).getInt(this); } catch (ReflectiveOperationException e) { return 0; } }

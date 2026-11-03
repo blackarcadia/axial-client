@@ -58,7 +58,7 @@ public final class ChunkBordersConfig {
     }
 
     public static void setColor(int color) {
-        config.color = 0xFF000000 | (color & 0xFFFFFF);
+        config.color = ChromaColor.opaque(color);
         save();
     }
 

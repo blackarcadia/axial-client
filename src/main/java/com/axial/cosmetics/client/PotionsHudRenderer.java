@@ -79,7 +79,7 @@ public final class PotionsHudRenderer {
             context.fill(x, y, x + bounds.width(), y + bounds.height(), BACKGROUND_COLOR);
             context.drawStrokedRectangle(x, y, bounds.width(), bounds.height(), BORDER_COLOR);
         }
-        context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(title(), Math.max(0, bounds.width() - PADDING * 2))), x + PADDING, y + PADDING, PotionsHudConfig.titleColor());
+        context.drawTextWithShadow(client.textRenderer, Language.getInstance().reorder(client.textRenderer.trimToWidth(title(), Math.max(0, bounds.width() - PADDING * 2))), x + PADDING, y + PADDING, ChromaColor.resolve(PotionsHudConfig.titleColor()));
         int rowY = y + HEADER;
         for (var effect : effects) {
             context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, InGameHud.getEffectTexture(effect.getEffectType()), x + PADDING, rowY - 1, ICON_SIZE, ICON_SIZE);

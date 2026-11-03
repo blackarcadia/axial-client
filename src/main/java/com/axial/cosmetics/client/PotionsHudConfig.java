@@ -32,7 +32,7 @@ public final class PotionsHudConfig {
             config = loaded == null ? new Config() : loaded;
             if (config.title == null) config.title = "Potions";
             config.title = config.title.substring(0, Math.min(48, config.title.length()));
-            config.titleColor |= 0xFF000000;
+            config.titleColor=ChromaColor.opaque(config.titleColor);
         } catch (IOException | JsonParseException ex) {
             LOGGER.warn("Could not load Potions HUD settings", ex);
             config = new Config();
@@ -58,7 +58,7 @@ public final class PotionsHudConfig {
     public static String title() { return config.title; }
     public static void setTitle(String title) { config.title = title; }
     public static int titleColor() { return config.titleColor; }
-    public static void setTitleColor(int color) { config.titleColor = color | 0xFF000000; }
+    public static void setTitleColor(int color) { config.titleColor = ChromaColor.opaque(color); }
     public static int getX(int screenWidth, int width) { return clampPosition(config.x, screenWidth, width); }
     public static int getY(int screenHeight, int height) { return clampPosition(config.y, screenHeight, height); }
     static int clampPosition(int position, int screenSize, int size) {

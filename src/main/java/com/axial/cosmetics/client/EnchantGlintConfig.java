@@ -32,7 +32,7 @@ public final class EnchantGlintConfig {
             Config loaded = GSON.fromJson(reader, Config.class);
             config = loaded == null ? new Config() : loaded;
             config.strength = clampStrength(config.strength);
-            config.color |= 0xFF000000;
+            config.color=ChromaColor.opaque(config.color);
         } catch (IOException | JsonParseException ex) {
             config = new Config();
             LOGGER.warn("Could not load enchant glint settings", ex);
@@ -53,6 +53,7 @@ public final class EnchantGlintConfig {
             return playerStrength == 1.0f ? original
                     : new Vector4f(playerStrength, playerStrength, playerStrength, 1.0f);
         }
+        playerColor=ChromaColor.resolve(playerColor);
         // Negative alpha selects recolouring in glint.fsh; it is never used as opacity.
         return new Vector4f(((playerColor >> 16) & 255) / 255.0f * playerStrength,
                 ((playerColor >> 8) & 255) / 255.0f * playerStrength,
@@ -63,7 +64,7 @@ public final class EnchantGlintConfig {
     public static boolean customColor() { return config.customColor; }
     public static void setStrength(float value) { config.strength = clampStrength(value); save(); }
     public static void setColor(int value) {
-        config.color = value | 0xFF000000;
+        config.color = ChromaColor.opaque(value);
         config.customColor = true;
     }
     public static void resetColor() {

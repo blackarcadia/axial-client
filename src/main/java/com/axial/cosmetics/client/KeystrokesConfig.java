@@ -21,10 +21,10 @@ public final class KeystrokesConfig {
         catch(IOException|JsonParseException ex){org.slf4j.LoggerFactory.getLogger(KeystrokesConfig.class).warn("Could not load keystrokes settings",ex);}
         config.scale=Float.isFinite(config.scale)?Math.clamp(config.scale,.5f,3):1;
         config.opacity=Float.isFinite(config.opacity)?Math.clamp(config.opacity,.2f,1):.75f;
-        config.textColor|=0xFF000000;config.pressedColor|=0xFF000000;
+        config.textColor=ChromaColor.opaque(config.textColor);config.pressedColor=ChromaColor.opaque(config.pressedColor);
         config.visibleMask=visibleMask();
         int[] colors=new int[6];java.util.Arrays.fill(colors,config.textColor);
-        if(config.keyColors!=null)for(int i=0;i<Math.min(6,config.keyColors.length);i++)colors[i]=config.keyColors[i]|0xFF000000;
+        if(config.keyColors!=null)for(int i=0;i<Math.min(6,config.keyColors.length);i++)colors[i]=ChromaColor.opaque(config.keyColors[i]);
         config.keyColors=colors;
 
     }
@@ -58,10 +58,10 @@ public final class KeystrokesConfig {
     public static void setTextColor(int bit,int value){
         checkBit(bit);
         if(config.keyColors==null){config.keyColors=new int[6];java.util.Arrays.fill(config.keyColors,config.textColor);}
-        config.keyColors[bit]=value|0xFF000000;save();
+        config.keyColors[bit]=ChromaColor.opaque(value);save();
     }
-    public static void setTextColor(int value){config.textColor=value|0xFF000000;config.keyColors=new int[6];java.util.Arrays.fill(config.keyColors,config.textColor);save();}
-    public static void setPressedColor(int value){config.pressedColor=value|0xFF000000;save();}
+    public static void setTextColor(int value){config.textColor=ChromaColor.opaque(value);config.keyColors=new int[6];java.util.Arrays.fill(config.keyColors,config.textColor);save();}
+    public static void setPressedColor(int value){config.pressedColor=ChromaColor.opaque(value);save();}
     public static int width(){return (int)Math.ceil(layout().width()*config.scale);}
     public static int height(){return (int)Math.ceil(layout().height()*config.scale);}
     public static int x(int screen){return Math.clamp(config.x<0?8:config.x,0,Math.max(0,screen-width()));}

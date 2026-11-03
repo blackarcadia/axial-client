@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ChromaColor;
+
 import com.axial.cosmetics.client.HudColorDefaults;
 import com.axial.cosmetics.client.InformationHudExtrasConfig;
 import net.minecraft.client.MinecraftClient;
@@ -39,7 +41,7 @@ public abstract class InformationHudExtrasRendererMixin {
     }
 
     private static int draw(DrawContext context, MinecraftClient client, int x, int y, String line, int color) {
-        context.drawTextWithShadow(client.textRenderer, Text.literal(line), x + 5, y, color);
+        context.drawTextWithShadow(client.textRenderer, Text.literal(line), x + 5, y, ChromaColor.resolve(color));
         return y + 11;
     }
 

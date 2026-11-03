@@ -51,7 +51,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
         drawPanel(context, layout.wheelPanelX, layout.contentY, layout.wheelPanelWidth, layout.contentHeight, EmoteMenuTheme.PANEL, EmoteMenuTheme.BORDER);
         context.fill(layout.listX, layout.contentY - 14, layout.listX + Math.min(172, layout.listWidth), layout.contentY - 12, EmoteMenuTheme.BRAND);
         context.fill(layout.wheelPanelX + 1, layout.contentY + 1, layout.wheelPanelX + layout.wheelPanelWidth - 1, layout.contentY + 44, EmoteMenuTheme.FIELD);
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("EMOTE LOADOUT"), layout.listX, layout.contentY - 32, EmoteMenuTheme.INK);
+        MenuHeader.draw(context,MinecraftClient.getInstance().textRenderer,layout.listX,layout.contentY-42,layout.listWidth,26,"EMOTE LOADOUT");
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("PLAYER PREVIEW"), layout.previewX + 10, layout.contentY + 10, EmoteMenuTheme.INK);
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, uiText("ASSIGN TO WHEEL"), layout.wheelPanelX + 10, layout.contentY + 10, EmoteMenuTheme.INK);
     }
@@ -89,7 +89,7 @@ public final class AxialEmoteLoadoutScreen extends EmoteMenu {
     }
 
     private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 
     private static final class Layout {

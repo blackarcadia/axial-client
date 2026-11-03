@@ -17,6 +17,16 @@ class UiTypographyTest {
         } finally { Locale.setDefault(previous); }
     }
 
+    @Test void menuHelpersUppercaseDisplayedLabelsWithoutChangingTheirSourceValues() throws Exception {
+        String savedName="My waypoint";
+        assertEquals("MY WAYPOINT",ClientMenuText.literal(savedName).getString());
+        assertEquals("My waypoint",savedName);
+        assertEquals("GLINT STRENGTH",NavigationScreen.copy("Glint Strength",.9f,true).getString());
+        var settings=ClientSettingsScreen.class.getDeclaredMethod("styled",String.class,float.class,boolean.class);
+        settings.setAccessible(true);
+        assertEquals("SHOW SHADOWS BENEATH PLAYERS",((net.minecraft.text.Text)settings.invoke(null,"Show shadows beneath players",.8f,false)).getString());
+    }
+
     @Test void allUsedFontSizesHaveNativeRasterProviders() throws Exception {
         for(float scale:new float[]{.7f,.75f,.78f,.8f,.85f,.9f,.95f,1f,1.1f,1.2f,1.35f,1.8f}) {
             for(boolean bold:new boolean[]{false,true}) {

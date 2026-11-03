@@ -246,9 +246,7 @@ public final class AccountsScreen extends Screen {
     @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         var panel = layout.panel;
         framed(context, panel.x(), panel.y(), panel.width(), panel.height(), PANEL_BORDER, PANEL);
-        if (!layout.tight) text(context, "AXIAL CLIENT", panel.x() + 13, panel.y() + 9, ModMenuUi.BRAND, 0.75f);
-        int titleY = panel.y() + (layout.tight ? 7 : layout.compact ? 20 : 24);
-        text(context, "Accounts", panel.x() + 13, titleY, INK, layout.compact ? 1.35f : 1.8f, panel.width() - 50);
+        MenuHeader.draw(context,textRenderer,panel.x()+10,panel.y()+3,panel.width()-50,layout.tight?20:32,"ACCOUNTS");
         text(context, status.isBlank() ? "Choose who you play as." : status, panel.x() + 13,
                 panel.y() + (layout.tight ? 23 : layout.compact ? 36 : 47), MUTED, layout.compact ? 0.7f : 0.85f, panel.width() - 26);
         framed(context, layout.content.x(), layout.content.y(), layout.content.width(), layout.content.height(), LINE, SURFACE);

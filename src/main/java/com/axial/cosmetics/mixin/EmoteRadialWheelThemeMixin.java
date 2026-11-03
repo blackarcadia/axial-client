@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ClientMenuText;
+
 import io.github.kosmx.emotes.PlatformTools;
 import com.axial.cosmetics.client.EmoteMenuTheme;
 import io.github.kosmx.emotes.arch.screen.widget.AbstractFastChooseWidget;
@@ -110,6 +112,6 @@ public abstract class EmoteRadialWheelThemeMixin {
     }
 
     private static Text uiText(String value) {
-        return Text.literal(value).styled(style -> style.withFont(UI_FONT));
+        return ClientMenuText.literal(value).styled(style -> style.withFont(UI_FONT));
     }
 }

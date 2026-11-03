@@ -14,7 +14,7 @@ public final class CrosshairRenderer {
         var key=CrosshairGeometry.Key.of(config,pulse);
         var shape=CACHE.computeIfAbsent(key,CrosshairGeometry::build);
         int alpha=Math.round(255*Math.clamp(config.opacity,.1f,1));
-        int outline=(alpha<<24)|(config.outlineColor&0xFFFFFF),ink=(alpha<<24)|(config.color&0xFFFFFF);
+        int outline=(alpha<<24)|(ChromaColor.resolve(config.outlineColor)&0xFFFFFF),ink=(alpha<<24)|(ChromaColor.resolve(config.color)&0xFFFFFF);
         for(var r:shape.outline())c.fill(x+r.x(),y+r.y(),x+r.x()+r.width(),y+r.y()+r.height(),outline);
         for(var r:shape.ink())c.fill(x+r.x(),y+r.y(),x+r.x()+r.width(),y+r.y()+r.height(),ink);
     }

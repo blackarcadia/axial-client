@@ -17,7 +17,7 @@ public final class MenuMusicVolumeSliderWidget extends ClickableWidget {
     private double value;
 
     public MenuMusicVolumeSliderWidget(int x, int y, int width, int height, float initialValue) {
-        super(x, y, width, height, Text.literal("Menu Music Volume"));
+        super(x, y, width, height, ClientMenuText.literal("Menu Music Volume"));
         this.value = clamp(initialValue);
         updateMessage();
     }
@@ -81,7 +81,7 @@ public final class MenuMusicVolumeSliderWidget extends ClickableWidget {
     }
 
     private void updateMessage() {
-        this.setMessage(Text.literal("MUSIC " + Math.round(this.value * 100.0) + "%"));
+        this.setMessage(ClientMenuText.literal("MUSIC " + Math.round(this.value * 100.0) + "%"));
     }
 
     private static double clamp(double value) {

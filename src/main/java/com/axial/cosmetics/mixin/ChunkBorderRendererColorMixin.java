@@ -1,5 +1,7 @@
 package com.axial.cosmetics.mixin;
 
+import com.axial.cosmetics.client.ChromaColor;
+
 import com.axial.cosmetics.client.ChunkBordersConfig;
 import net.minecraft.client.render.debug.ChunkBorderDebugRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,16 +13,16 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class ChunkBorderRendererColorMixin {
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/debug/ChunkBorderDebugRenderer;DARK_CYAN:I"))
     private int axial_cosmetics$colorCellBorders() {
-        return ChunkBordersConfig.color();
+        return ChromaColor.resolve(ChunkBordersConfig.color());
     }
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/debug/ChunkBorderDebugRenderer;YELLOW:I"))
     private int axial_cosmetics$colorThinLines() {
-        return ChunkBordersConfig.color();
+        return ChromaColor.resolve(ChunkBordersConfig.color());
     }
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/debug/ChunkBorderDebugRenderer;LIGHT_RED:I"))
     private int axial_cosmetics$colorMajorLines() {
-        return ChunkBordersConfig.color();
+        return ChromaColor.resolve(ChunkBordersConfig.color());
     }
 }

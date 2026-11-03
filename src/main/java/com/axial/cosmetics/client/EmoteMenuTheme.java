@@ -23,7 +23,7 @@ public final class EmoteMenuTheme {
     public static void button(DrawContext context,ClickableWidget button,TextRenderer renderer){
         boolean hover=button.active&&(button.isHovered()||button.isFocused());
         ModMenuUi.frame(context,new ModMenuLayout.Rect(button.getX(),button.getY(),button.getWidth(),button.getHeight()),hover?HOVER_LINE:LINE,hover?HOVER:FIELD);
-        Text text=Text.literal(button.getMessage().getString()).styled(style->style.withFont(UI_FONT));
+        Text text=ClientMenuText.literal(button.getMessage().getString()).styled(style->style.withFont(UI_FONT));
         context.drawCenteredTextWithShadow(renderer,text,button.getX()+button.getWidth()/2,button.getY()+(button.getHeight()-renderer.fontHeight)/2,button.active?INK:MUTED);
     }
 }

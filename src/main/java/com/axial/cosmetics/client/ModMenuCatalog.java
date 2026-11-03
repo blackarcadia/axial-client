@@ -88,16 +88,16 @@ final class ModMenuCatalog {
             entries.add(new ModMenuEntry(title, description(label), category(label), icon(label), enabled, toggle, configure));
         }
         entries.add(new ModMenuEntry("Keystrokes", "Keyboard and mouse inputs",ModMenuEntry.Category.HUD,
-                "mouse",KeystrokesConfig::enabled,KeystrokesConfig::toggle,
+                "keystrokes",KeystrokesConfig::enabled,KeystrokesConfig::toggle,
                 () -> ModFeatureSettings.open("KEYSTROKES",MinecraftClient.getInstance().currentScreen,backend)));
         entries.add(new ModMenuEntry("Cooldowns", "Pet and combat timers", ModMenuEntry.Category.HUD,
-                "compass", CooldownsConfig::enabled, CooldownsConfig::toggle,
+                "cooldowns", CooldownsConfig::enabled, CooldownsConfig::toggle,
                 () -> ModFeatureSettings.open("COOLDOWNS",MinecraftClient.getInstance().currentScreen,backend)));
-        entries.add(new ModMenuEntry("Gangs", "Server gangs and rankings",ModMenuEntry.Category.WORLD,"account",null,null,()->{
+        entries.add(new ModMenuEntry("Gangs", "Server gangs and rankings",ModMenuEntry.Category.WORLD,"gangs",null,null,()->{
             var client=MinecraftClient.getInstance();client.setScreen(new GangsScreen(client.currentScreen));
         }));
         entries.add(new ModMenuEntry("Enchantments", "Server enchantment guide", ModMenuEntry.Category.MINING,
-                "book", null, null, () -> {
+                "enchantments", null, null, () -> {
                     var client=MinecraftClient.getInstance();client.setScreen(new EnchantmentsScreen(client.currentScreen));
                 }));
         return List.copyOf(entries);
@@ -157,10 +157,12 @@ final class ModMenuCatalog {
             case "HUD" -> "monitor"; case "SATCHEL HELPER" -> "backpack";
             case "FULL BRIGHT" -> "sun"; case "SMART MINING" -> "pickaxe";
             case "CPS" -> "cps"; case "ARMOR HUD" -> "shirt";
-            case "CONTRABAND" -> "cube"; case "SCOREBOARD" -> "chart";
+            case "CONTRABAND" -> "contraband"; case "SCOREBOARD" -> "chart";
             case "CROSSHAIR" -> "crosshair"; case "COMPASS" -> "compass";
-            case "POTIONS HUD" -> "potion"; case "MINIMAP", "WAYPOINTS" -> "map";
-            case "ITEM SCALER" -> "scale"; case "TITLE OVERLAY" -> "monitor";
+            case "POTIONS HUD" -> "potion"; case "MINIMAP" -> "map"; case "WAYPOINTS" -> "waypoints";
+            case "ITEM SCALER" -> "scale"; case "TITLE OVERLAY" -> "title_overlay";
+            case "WORLD BORDER" -> "world_border";
+            case "CHUNK BORDERS" -> "chunk_borders";
             default -> "globe";
         };
     }

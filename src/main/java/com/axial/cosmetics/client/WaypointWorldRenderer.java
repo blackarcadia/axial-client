@@ -30,7 +30,7 @@ public final class WaypointWorldRenderer {
         for (WaypointConfig.Entry waypoint : WaypointConfig.visibleFor(client)) {
             if (!dimension.equals(waypoint.dimension())) continue;
             BlockPos position = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
-            drawBeam(client.world, position, waypoint.color());
+            drawBeam(client.world, position, ChromaColor.resolve(waypoint.color()));
         }
     }
 

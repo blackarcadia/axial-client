@@ -70,9 +70,7 @@ public class MinimapFullScreen extends NavigationScreen {
     }
     @Override public void render(DrawContext c,int mx,int my,float dt) {
         frame(c,layout.panel,PANEL_BORDER,PANEL);
-        int headingWidth=layout.panel.width()-260;
-        line(c,"AXIAL CLIENT",layout.panel.x()+16,layout.panel.y()+10,BRAND,.8f,headingWidth,true);
-        line(c,"Map & Waypoints",layout.panel.x()+16,layout.panel.y()+24,INK,1.35f,headingWidth,true);
+        MenuHeader.draw(c,textRenderer,new Rect(layout.panel.x()+12,layout.panel.y()+5,Math.max(1,layout.panel.width()-254),30),"MAP & WAYPOINTS");
         inputFrame(c,search,layout.search);
         frame(c,layout.map,LINE,FIELD);
         if(client.world!=null&&client.player!=null)MinimapRenderer.renderFullMap(c,client,layout.map.x(),layout.map.y(),layout.map.width(),view);

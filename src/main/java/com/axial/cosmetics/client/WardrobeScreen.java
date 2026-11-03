@@ -204,10 +204,7 @@ public final class WardrobeScreen extends Screen {
     private void renderContent(DrawContext c,int mx,int my,float delta) {
         if(!WardrobeAccess.allowed()||layout==null)return;
         Rect p=layout.panel;
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("axialutils","textures/gui/menu_logo.png"),
-                p.x()+9,p.y()+6,0,0,64,31,240,117,240,117);
-        label(c,textRenderer,"Wardrobe",p.x()+81,p.y()+10,INK,1.25f,p.width()-118,true);
-        label(c,textRenderer,"Make it yours",p.x()+81,p.y()+27,MUTED,.8f,p.width()-118,false);
+        MenuHeader.draw(c,textRenderer,new Rect(p.x()+8,p.y()+4,p.width()-46,32),"WARDROBE");
         c.fill(p.x()+1,p.y()+42,p.right()-1,p.y()+43,DIVIDER);
         frame(c,layout.search,search.isFocused()?BRAND:LINE,FIELD);
         Rect preview=layout.preview;
@@ -330,7 +327,7 @@ public final class WardrobeScreen extends Screen {
         @Override public void playDownSound(SoundManager sounds){AxialUiTheme.playButtonClickSound();}
         @Override protected void drawContents(DrawContext c,int mx,int my,float delta) {
             Rect r=new Rect(getX(),getY(),width,height);
-            boolean selected=getMessage().getString().equals(category.label);
+            boolean selected=getMessage().getString().equalsIgnoreCase(category.label);
             long now=System.nanoTime();
             hoverProgress=MenuAnimation.hover(hoverProgress,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);
             lastFrame=now;
@@ -341,7 +338,7 @@ public final class WardrobeScreen extends Screen {
                 return;
             }
             WardrobeCategory item=null;
-            for(var value:WardrobeCategory.values())if(value.label.equals(title))item=value;
+            for(var value:WardrobeCategory.values())if(value.label.equalsIgnoreCase(title))item=value;
             int textX=r.x()+7;
             if(item!=null&&r.width()>74) {
                 icon(c,item.icon,r.x()+8,r.y()+(r.height()-12)/2,12,12,selected?BRAND:MUTED);
