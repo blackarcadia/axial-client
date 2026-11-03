@@ -11,6 +11,7 @@ class MenuHeaderLayoutTest {
     @Test void markKeepsItsAspectAndWordmarkSharesItsVerticalCentre() {
         for(int w:new int[]{60,100,164,240,400,680})for(int h:new int[]{20,26,30,32,34}) {
             var area=new Rect(17,23,w,h);var layout=new MenuHeaderLayout(area);
+            assertTrue(layout.mark.height()<=18);
             assertTrue(layout.mark.x()>=area.x()&&layout.mark.right()<=area.right());
             assertTrue(layout.mark.y()>=area.y()&&layout.mark.bottom()<=area.bottom());
             assertTrue(Math.abs(layout.mark.width()-layout.mark.height()*512.0/302)<2);

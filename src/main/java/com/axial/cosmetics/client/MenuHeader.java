@@ -19,8 +19,8 @@ public final class MenuHeader {
         if(area.width()<12||area.height()<8)return;
         var layout=new MenuHeaderLayout(area);var mark=layout.mark;
         c.drawTexture(RenderPipelines.GUI_TEXTURED,MARK,mark.x(),mark.y(),0,0,mark.width(),mark.height(),512,302,512,302,tint(0xFFFFFFFF));
-        float scale=1.8f;
-        for(float candidate:new float[]{1.8f,1.35f,1f,.8f}){
+        float scale=1f;
+        for(float candidate:new float[]{1f,.8f}){
             scale=candidate;
             if(UiTypography.width(font,BRAND_NAME,candidate,true)<=layout.textWidth&&UiTypography.size(candidate)<=mark.height())break;
         }
