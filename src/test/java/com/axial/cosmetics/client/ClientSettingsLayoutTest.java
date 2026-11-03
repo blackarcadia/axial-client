@@ -32,9 +32,13 @@ class ClientSettingsLayoutTest {
     }
     @Test void normalSizeFitsTheApprovedSingleColumnDesign() {
         var l=new ClientSettingsLayout(960,540);
-        assertEquals(520,l.panel.width());assertEquals(342,l.panel.height());
+        assertEquals(720,l.panel.width());assertEquals(342,l.panel.height());
         assertTrue(l.maxScroll()>0);assertEquals(480,l.controls.width());
         assertFalse(l.compact);
+        var mods=new ModMenuLayout(960,540);
+        assertEquals(mods.panel.width(),l.panel.width());
+        assertEquals(Math.min(102,mods.navigation.width()/4),l.back.width());
+        assertEquals(mods.navigation.height(),l.back.height());
         var small=new ClientSettingsLayout(480,210);
         assertTrue(small.compact);assertTrue(small.maxScroll()>0);
     }

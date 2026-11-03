@@ -223,8 +223,8 @@ public final class ClientSettingsScreen extends Screen {
                 boolean selected=label.equals("Settings");
                 frame(c,r,selected?SELECTED_LINE:hover?HOVER_LINE:0x00454C53,selected?SELECTED:hover?HOVER:SURFACE);
                 String symbol=(label.equals("Mods")||selected)?"gear":label.equals("Wardrobe")?"shirt":"move";
-                icon(c,symbol,r.x()+7,r.y()+7,10,10,active?INK:MUTED);
-                label(c,textRenderer,label,r.x()+22,r.y()+8,active?INK:MUTED,.8f,r.width()-25,false);
+                icon(c,symbol,r.x()+8,r.y()+(r.height()-13)/2,13,13,active?INK:MUTED);
+                label(c,textRenderer,label,r.x()+27,r.y()+(r.height()-9)/2,active?INK:MUTED,.9f,r.width()-30,false);
                 return;
             }
             boolean colorButton=label.equals("COLOR")||label.equals("FPS COLOR");
