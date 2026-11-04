@@ -26,6 +26,14 @@ def main():
     masks.DEST = Path(__file__).resolve().parents[1] / 'src/main/resources/assets/axial_cosmetics/textures/gui/sprites/mods'
     masks.DEST.mkdir(parents=True, exist_ok=True)
     icons = {
+        'profile_folder': combine(lines([(1,4),(6,4),(8,6),(15,6),(15,14),(1,14)],True),lines([(1,4),(1,2),(6,2),(8,4),(14,4),(14,6)])),
+        'profile_save': combine(box(2,1,12,14),box(5,1,6,5),box(5,10,6,5)),
+        'profile_load': combine(lines([(8,1),(8,10),(4,6)]),lines([(8,10),(12,6)]),lines([(2,10),(2,14),(14,14),(14,10)])),
+        'profile_update': combine(lines([(13,6),(11,2),(5,2),(2,5),(2,10),(5,14),(11,14),(14,11)]),lines([(9,6),(13,6),(13,2)])),
+        'profile_rename': combine(lines([(2,11),(10,3),(13,6),(5,14),(2,14),(2,11)],True),lines([(8,5),(11,8)])),
+        'profile_delete': combine(lines([(4,5),(4,14),(12,14),(12,5)]),lines([(2,4),(14,4)]),lines([(6,4),(6,1),(10,1),(10,4)]),lines([(7,7),(7,11)]),lines([(9,7),(9,11)])),
+        'profile_back': combine(lines([(10,3),(5,8),(10,13)]),lines([(5,8),(14,8)])),
+        'profile_next': combine(lines([(6,3),(11,8),(6,13)]),lines([(2,8),(11,8)])),
         'monitor': combine(box(1.5,2,13,9),lines([(8,11),(8,14)]),lines([(4.5,14),(11.5,14)])),
         'mouse': combine(lines([(4,5),(4,11),(5,14),(11,14),(12,11),(12,5),(11,2),(5,2),(4,5)],True),lines([(4,6),(12,6)]),lines([(8,2),(8,6)])),
         'cube': combine(lines([(8,1),(14,4.5),(14,11.5),(8,15),(2,11.5),(2,4.5)],True),lines([(2,4.5),(8,8),(14,4.5)]),lines([(8,8),(8,15)])),
