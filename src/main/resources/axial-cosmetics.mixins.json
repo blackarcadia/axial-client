@@ -11,6 +11,8 @@
     "ClientPlayerSmartMiningTargetingMixin",
     "DrawContextContrabandMixin",
     "DrawContextPetCooldownMixin",
+    "DrawContextMenuTooltipMixin",
+    "OrderedTextTooltipComponentAccessor",
     "ItemCooldownManagerAccessor",
     "ItemCooldownEntryAccessor",
     "AxialColorTileMixin",
