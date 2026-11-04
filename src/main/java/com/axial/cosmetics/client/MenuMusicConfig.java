@@ -43,7 +43,7 @@ public final class MenuMusicConfig {
         save();
     }
 
-    private static void save() {
+    public static void save() {
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
             try (BufferedWriter writer = Files.newBufferedWriter(CONFIG_PATH)) {

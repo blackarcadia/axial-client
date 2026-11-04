@@ -59,6 +59,8 @@ public final class MinimapConfig {
         catch (IOException ignored) { }
     }
 
+    public static void load() { SETTINGS=loadSettings(); }
+
     private static Settings loadSettings() {
         if (!Files.exists(PATH)) return new Settings();
         try {

@@ -20,7 +20,7 @@ public final class PerformanceConfig {
         }catch(IOException|JsonParseException ex){org.slf4j.LoggerFactory.getLogger(PerformanceConfig.class).warn("Could not load performance settings",ex);}
         loaded.fpsColor=ChromaColor.opaque(loaded.fpsColor);config=loaded;
     }
-    private static void save(){save(path());}
+    public static void save(){save(path());}
     static void save(Path path){
         try{Files.createDirectories(path.getParent());try(var writer=Files.newBufferedWriter(path)){GSON.toJson(config,writer);}}
         catch(IOException ex){throw new IllegalStateException("Could not save performance settings",ex);}

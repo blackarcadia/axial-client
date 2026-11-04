@@ -71,6 +71,7 @@ public final class ClientSettingsScreen extends Screen {
         addDrawableChild(hud);
         addDrawableChild(new SettingsButton("CLOSE",layout.close,this::close));
         addDrawableChild(new SettingsButton("Done",layout.done,this::close));
+
         addDrawableChild(new SettingsButton("Reset Defaults",layout.reset,()->change(()->{
             AxialConfigManager.get().showPlayerShadows=true;AxialConfigManager.save();
             ThirdPersonNameTagsConfig.setEnabled(false);EnchantGlintConfig.setStrength(1);EnchantGlintConfig.resetColor();
@@ -100,6 +101,8 @@ public final class ClientSettingsScreen extends Screen {
         var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->Util.getOperatingSystem().open(wiki));
         wikiButton.active=wiki!=null;
         row(wikiButton,604);
+        row(new SettingsButton("Profiles",new Rect(layout.controls.x(),0,layout.controls.width(),36),
+                ()->client.setScreen(new ProfilesScreen(this))),646);
         scroll=Math.clamp(scroll,0,layout.maxScroll());scrolling.jump(scroll,layout.maxScroll());positionRows();
     }
 

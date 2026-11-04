@@ -44,7 +44,7 @@ public final class ThirdPersonNameTagsConfig {
         save();
     }
 
-    private static void save() {
+    public static void save() {
         try {
             Files.createDirectories(PATH.getParent());
             try (var writer = Files.newBufferedWriter(PATH)) {

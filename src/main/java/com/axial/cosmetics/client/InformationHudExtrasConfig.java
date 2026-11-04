@@ -56,7 +56,7 @@ public final class InformationHudExtrasConfig {
         return FabricLoader.getInstance().getConfigDir().resolve("axial-cosmetics-information-hud.json");
     }
 
-    private static void save() {
+    public static void save() {
         try {
             Files.createDirectories(path().getParent());
             try (var writer = Files.newBufferedWriter(path())) {
