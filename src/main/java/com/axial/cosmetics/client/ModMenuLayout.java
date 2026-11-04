@@ -48,8 +48,11 @@ final class ModMenuLayout {
         return grid.contains(x,y)&&card.contains(x,y)&&(!hasConfiguration||!settings(card).contains(x,y));
     }
     Rect settings(Rect card) { return new Rect(card.right()-27, card.bottom()-24, 20, 20); }
+    Rect profiles() {
+        return tight?new Rect(panel.right()-72,panel.bottom()-15,60,12):category(5);
+    }
     Rect category(int index) {
         return sidebar ? new Rect(categories.x(), categories.y()+index*28, categories.width(), 24)
-                : new Rect(categories.x()+index*(categories.width()/5), categories.y(), categories.width()/5-3, 20);
+                : new Rect(categories.x()+index*(categories.width()/6), categories.y(), categories.width()/6-3, 20);
     }
 }

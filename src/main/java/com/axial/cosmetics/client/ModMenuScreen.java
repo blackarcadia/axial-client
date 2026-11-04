@@ -108,6 +108,8 @@ public final class ModMenuScreen extends Screen {
             if(layout.tight) break;
             add(item.label,layout.category(item.ordinal()),item.icon,()->{category=item;resetScroll();rebuild();},category==item,null);
         }
+        var profiles=add("Profiles",layout.profiles(),"profile_folder",()->client.setScreen(new ProfilesScreen(this)),false,null);
+        profiles.setTooltip(Tooltip.of(text("Profiles")));
         var matches=filtered();
         int nextScroll=Math.clamp(scroll,0,layout.maxScroll(matches.size()));
         filtering.offsetY(nextScroll-scroll);scroll=nextScroll;
@@ -234,7 +236,7 @@ public final class ModMenuScreen extends Screen {
         context.fill(panel.x()+10,panel.bottom()-17,panel.right()-10,panel.bottom()-16,DIVIDER);
         String count=error.isBlank()?matches.size()+" of "+entries.size()+" mods":error;
         label(context,textRenderer,count,panel.x()+12,panel.bottom()-12,error.isBlank()?MUTED:RED,.75f,panel.width()-90,false);
-        label(context,textRenderer,"Esc to close",panel.right()-68,panel.bottom()-12,MUTED,.75f,60,false);
+        if(!layout.tight)label(context,textRenderer,"Esc to close",panel.right()-68,panel.bottom()-12,MUTED,.75f,60,false);
     }
 
     private void drawScrollbar(DrawContext context,int count) {
@@ -360,7 +362,7 @@ public final class ModMenuScreen extends Screen {
             }
             boolean categoryButton=false;
             for(var value:ModMenuEntry.Category.values())if(getMessage().getString().equalsIgnoreCase(value.label))categoryButton=true;
-            if(categoryButton&&!layout.sidebar){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
+            if((categoryButton||getMessage().getString().equalsIgnoreCase("Profiles"))&&!layout.sidebar&&!layout.tight){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
             if(!categoryButton && width<85) {
                 label(context,textRenderer,getMessage().getString(),getX()+5,getY()+(height-9)/2,active?INK:MUTED,.8f,width-10,false);
                 return;

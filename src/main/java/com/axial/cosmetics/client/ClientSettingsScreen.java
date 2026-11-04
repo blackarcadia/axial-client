@@ -101,8 +101,6 @@ public final class ClientSettingsScreen extends Screen {
         var wikiButton=new SettingsButton("Open Wiki",new Rect(layout.controls.x(),0,layout.controls.width(),36),()->Util.getOperatingSystem().open(wiki));
         wikiButton.active=wiki!=null;
         row(wikiButton,604);
-        row(new SettingsButton("Profiles",new Rect(layout.controls.x(),0,layout.controls.width(),36),
-                ()->client.setScreen(new ProfilesScreen(this))),646);
         scroll=Math.clamp(scroll,0,layout.maxScroll());scrolling.jump(scroll,layout.maxScroll());positionRows();
     }
 
