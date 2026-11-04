@@ -49,6 +49,7 @@ public final class AccountsScreen extends Screen {
     private AccountsLayout layout;
     private TextFieldWidget search;
     private AccountButton menuButton;
+    private PlayerSkinWidget skinPreview;
     private boolean renderingParent;
     private MenuAnimation animation;
     private boolean reopen = true;
@@ -100,6 +101,7 @@ public final class AccountsScreen extends Screen {
         int cursor = search == null ? query.length() : search.getCursor();
         clearChildren();
         menuButton = null;
+        skinPreview = null;
         button("Close", layout.close, this::close, !busy, Tone.CLOSE);
 
         if (layout.preview != null && selectedEntry() != null) {
@@ -107,7 +109,7 @@ public final class AccountsScreen extends Screen {
                     () -> skinFor(selectedEntry()));
             skin.setPosition(layout.skin.x(), layout.skin.y());
             skin.active = !busy;
-            addDrawableChild(skin);
+            skinPreview = addDrawableChild(skin);
             var entry = selectedEntry();
             button(isActive(entry) ? "Log out" : reconnectAccounts.contains(entry.uuid()) ? "Reconnect" : "Switch account",
                     layout.previewAction, () -> { if (isActive(entry)) logoutActive(); else activate(entry); }, !busy, Tone.OUTLINE);
@@ -307,6 +309,9 @@ public final class AccountsScreen extends Screen {
         if (pages > 1) centeredText(context, (page + 1) + " / " + pages, layout.list.x() + layout.list.width() / 2,
                 layout.list.bottom() - 14, MUTED, 0.8f, layout.list.width() - 80);
         if (!layout.compact) text(context, "Sign in securely with Microsoft.", panel.x() + 16, layout.footerY + 35, MUTED, 0.7f);
+        // Native skin previews use a separate 3D render pass and ignore GUI opacity.
+        // Only submit the model once the panel is settled; remove it as soon as closing starts.
+        if (skinPreview != null) skinPreview.visible = !animation.closing() && animation.progress() >= .999f;
         search.setAlpha(animation.progress());
         super.render(context, mouseX, mouseY, delta);
     }

@@ -51,13 +51,14 @@ public abstract class InGameButtonSkinMixin {
             EmoteMenuTheme.button(context,emoteButton,client.textRenderer);ci.cancel();return;
         }
 
+        // Accounts renders its parent beneath the modal; preserve that parent's custom buttons too.
         // Container controls include icon-only recipe buttons and creative page
         // arrows. Let Minecraft render their own sprites and hover states.
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
                 || currentScreen instanceof MinimapFullScreen || currentScreen instanceof MinimapSettingsScreen || currentScreen instanceof CreateWaypointScreen
                 || currentScreen instanceof ProfilesScreen || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof GangsScreen || currentScreen instanceof ClientSettingsScreen || currentScreen instanceof WardrobeScreen
                 || currentScreen instanceof com.axial.cosmetics.client.CrosshairSettingsScreen || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
-                || currentScreen instanceof AccountsScreen accounts && accounts.renderedTitleScreen() != null) {
+                || currentScreen instanceof AccountsScreen) {
             return;
         }
 
