@@ -24,6 +24,21 @@ class SwimBandsTest {
             var image=ImageIO.read(input);assertEquals(32,image.getWidth());assertEquals(32,image.getHeight());
         }
     }
+    @Test void texturedCosmeticsUseWhiteTintRatherThanOverlayCoordinates() throws Exception {
+        for(String renderer:List.of("SwimBandsFeatureRenderer","CosmeticFeatureRenderer")){
+            try(var input=getClass().getResourceAsStream("/com/axial/cosmetics/client/"+renderer+".class")){
+                var node=new ClassNode();new ClassReader(input).accept(node,0);int calls=0;
+                for(var method:node.methods)for(var instruction:method.instructions){
+                    if(instruction instanceof MethodInsnNode call&&call.owner.equals("net/minecraft/client/render/entity/feature/FeatureRenderer")&&call.name.equals("render")){
+                        assertEquals(Opcodes.ICONST_0,call.getPrevious().getOpcode(),"Default render queue");
+                        assertEquals(Opcodes.ICONST_M1,call.getPrevious().getPrevious().getOpcode(),renderer+" must preserve texture colours with opaque white ARGB");
+                        calls++;
+                    }
+                }
+                assertTrue(calls>0,renderer);
+            }
+        }
+    }
     @Test void bandsAreAssignableAndRequireAnExplicitOwnedSelection() throws Exception {
         UUID uuid=UUID.fromString("12345678-1234-4234-8234-123456789012");
         var snapshot=CosmeticAssignments.parse("{\"version\":1,\"players\":{\""+uuid+"\":[\"swim_bands\"]}}");

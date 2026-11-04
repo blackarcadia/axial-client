@@ -21,7 +21,8 @@ public final class SwimBandsFeatureRenderer extends FeatureRenderer<PlayerEntity
         var player=world.getEntityById(state.id);
         if(player==null||WardrobePreferences.accessoryFor(player.getUuid())!=WardrobeAccessory.SWIM_BANDS)return;
         bands.left.setTransform(getContextModel().leftArm.getTransform());bands.right.setTransform(getContextModel().rightArm.getTransform());
-        FeatureRenderer.render(bands,TEXTURE,matrices,commands,light,state,OverlayTexture.DEFAULT_UV,0);
+        // This argument is the ARGB tint; white preserves the supplied texture colours.
+        FeatureRenderer.render(bands,TEXTURE,matrices,commands,light,state,0xFFFFFFFF,0);
     }
     private static final class BandsModel extends Model<PlayerEntityRenderState> {
         final ModelPart left,right;

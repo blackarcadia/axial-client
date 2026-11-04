@@ -106,7 +106,7 @@ public final class CrosshairSettingsScreen extends NavigationScreen {
             client.setScreen(new CrosshairColorPickerScreen(this,label,color,value->{setter.accept(value);save();},()->{}));
         }){
             @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
-                super.drawIcon(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,ChromaColor.resolve(label.equals("Crosshair")?config().color:config().outlineColor));
+                super.drawContents(c,mx,my,delta);rounded(c,getRight()-17,getY()+8,9,9,ChromaColor.resolve(label.equals("Crosshair")?config().color:config().outlineColor));
             }
         };track(button,y);
     }

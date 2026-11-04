@@ -34,6 +34,14 @@ class CrosshairEditorCompatibilityTest {
             assertTrue(opens);
         }
     }
+    @Test void colorButtonsDrawTheirBaseContentsWithoutReenteringTheAnimationWrapper()throws Exception{
+        var button=resource("com/axial/cosmetics/client/CrosshairSettingsScreen$3");
+        var draw=button.methods.stream().filter(m->m.name.equals("drawContents")).findFirst().orElseThrow();
+        var baseCalls=new ArrayList<MethodInsnNode>();
+        for(var instruction:draw.instructions)if(instruction instanceof MethodInsnNode call&&call.getOpcode()==Opcodes.INVOKESPECIAL)baseCalls.add(call);
+        assertTrue(baseCalls.stream().anyMatch(call->call.name.equals("drawContents")),"Colour buttons must draw the base button contents");
+        assertFalse(baseCalls.stream().anyMatch(call->call.name.equals("drawIcon")),"Calling the animation wrapper from drawContents recurses until the matrix stack is exhausted");
+    }
     private static Object value(AnnotationNode node,String key){int i=node.values.indexOf(key);assertTrue(i>=0,key);return node.values.get(i+1);}
     private static ClassNode resource(String path)throws Exception{try(var in=CrosshairEditorCompatibilityTest.class.getClassLoader().getResourceAsStream(path+".class")){assertNotNull(in,path);var node=new ClassNode();new ClassReader(in).accept(node,0);return node;}}
     private static ClassNode read(JarFile jar,String path)throws Exception{try(var in=jar.getInputStream(jar.getJarEntry(path+".class"))){var node=new ClassNode();new ClassReader(in).accept(node,0);return node;}}

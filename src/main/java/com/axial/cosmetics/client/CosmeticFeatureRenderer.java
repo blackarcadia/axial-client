@@ -11,7 +11,6 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelPartBuilder;
 import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
@@ -58,14 +57,14 @@ public class CosmeticFeatureRenderer extends FeatureRenderer<PlayerEntityRenderS
         for (CosmeticTexture cosmetic : cosmetics) {
             if (cosmetic.definition().modelId() != null && cosmetic.definition().slots().contains(CosmeticSlot.HEAD)) {
                 FeatureRenderer.render(maskModel, cosmetic.texture(), matrices, commands, light, state,
-                        OverlayTexture.DEFAULT_UV, 0);
+                        0xFFFFFFFF, 0);
             } else {
                 setupVisibility(model, cosmetic.definition().slots());
                 FeatureRenderer.render(model, cosmetic.texture(), matrices, commands, light, state,
-                        OverlayTexture.DEFAULT_UV, 0);
+                        0xFFFFFFFF, 0);
                 if (cosmetic.definition().slots().contains(CosmeticSlot.BACKPACK)) {
                     FeatureRenderer.render(backpackModel, cosmetic.texture(), matrices, commands, light, state,
-                            OverlayTexture.DEFAULT_UV, 0);
+                            0xFFFFFFFF, 0);
                 }
             }
         }
