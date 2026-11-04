@@ -5,6 +5,7 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -49,6 +50,8 @@ public final class AccountsScreen extends Screen {
     private TextFieldWidget search;
     private AccountButton menuButton;
     private boolean renderingParent;
+    private MenuAnimation animation;
+    private boolean reopen = true;
 
     public AccountsScreen(Screen parent) {
         this(parent, AccountStore.shared());
@@ -61,6 +64,7 @@ public final class AccountsScreen extends Screen {
     }
 
     @Override protected void init() {
+        if (reopen) { animation = new MenuAnimation(); reopen = false; }
         if (parent != null) {
             if (parent.width != width || parent.height != height) parent.resize(width, height);
             parent.setFocused(null);
@@ -233,6 +237,7 @@ public final class AccountsScreen extends Screen {
     }
 
     @Override public boolean mouseClicked(Click click, boolean doubled) {
+        if (animation.closing() || animation.progress() < .999f) return true;
         if (menuButton != null) {
             if (menuButton.mouseClicked(click, doubled)) return true;
             menuAccount = null;
@@ -241,9 +246,40 @@ public final class AccountsScreen extends Screen {
         return super.mouseClicked(click, doubled);
     }
 
-    @Override public void close() { if (!busy) client.setScreen(parent); }
+    @Override public void close() { if (!busy) animation.close(); }
+
+    @Override public void removed() { reopen = true; }
+
+    @Override public void tick() {
+        super.tick();
+        if (animation.finished()) client.setScreen(parent);
+    }
+
+    @Override public boolean keyPressed(KeyInput input) {
+        if (animation.closing()) return true;
+        return super.keyPressed(input);
+    }
 
     @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        float progress = animation.progress();
+        float previousOpacity = opacity(progress);
+        float scale = .97f + .03f * progress;
+        float centerX = layout.panel.x() + layout.panel.width() / 2f;
+        float centerY = layout.panel.y() + layout.panel.height() / 2f;
+        context.getMatrices().pushMatrix();
+        try {
+            context.getMatrices().translate(centerX, centerY + (1 - progress) * 6);
+            context.getMatrices().scale(scale, scale);
+            context.getMatrices().translate(-centerX, -centerY);
+            renderPanel(context, progress < .999f || animation.closing() ? -1 : mouseX,
+                    progress < .999f || animation.closing() ? -1 : mouseY, delta);
+        } finally {
+            context.getMatrices().popMatrix();
+            opacity(previousOpacity);
+        }
+    }
+
+    private void renderPanel(DrawContext context, int mouseX, int mouseY, float delta) {
         var panel = layout.panel;
         framed(context, panel.x(), panel.y(), panel.width(), panel.height(), PANEL_BORDER, PANEL);
         MenuHeader.draw(context,textRenderer,panel.x()+10,panel.y()+3,panel.width()-50,layout.tight?20:32,"ACCOUNTS");
@@ -251,7 +287,7 @@ public final class AccountsScreen extends Screen {
                 panel.y() + (layout.tight ? 23 : layout.compact ? 36 : 47), MUTED, layout.compact ? 0.7f : 0.85f, panel.width() - 26);
         framed(context, layout.content.x(), layout.content.y(), layout.content.width(), layout.content.height(), LINE, SURFACE);
         if (layout.preview != null) {
-            context.fill(layout.preview.x(), layout.preview.y() + 1, layout.preview.x() + 1, layout.preview.bottom() - 1, DIVIDER);
+            context.fill(layout.preview.x(), layout.preview.y() + 1, layout.preview.x() + 1, layout.preview.bottom() - 1, tint(DIVIDER));
             drawPreviewDetails(context);
         }
         if (!layout.compact) {
@@ -271,6 +307,7 @@ public final class AccountsScreen extends Screen {
         if (pages > 1) centeredText(context, (page + 1) + " / " + pages, layout.list.x() + layout.list.width() / 2,
                 layout.list.bottom() - 14, MUTED, 0.8f, layout.list.width() - 80);
         if (!layout.compact) text(context, "Sign in securely with Microsoft.", panel.x() + 16, layout.footerY + 35, MUTED, 0.7f);
+        search.setAlpha(animation.progress());
         super.render(context, mouseX, mouseY, delta);
     }
 
@@ -305,7 +342,7 @@ public final class AccountsScreen extends Screen {
     private void text(DrawContext context, String value, int x, int y, int color, float scale, int maxWidth) {
         if (maxWidth <= 0) return;
         Text label=displayText(textRenderer.trimToWidth(displayText(value,scale),maxWidth).getString(),scale);
-        context.drawText(textRenderer,label,x,y,color,false);
+        context.drawText(textRenderer,label,x,y,tint(color),false);
     }
 
     private void centeredText(DrawContext context, String value, int center, int y, int color, float scale, int maxWidth) {
@@ -323,7 +360,7 @@ public final class AccountsScreen extends Screen {
     }
 
     private static void icon(DrawContext context, Icon icon, int x, int y, int w, int h, int color) {
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon.sprite, x, y, w, h, color);
+        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, icon.sprite, x, y, w, h, tint(color));
     }
 
     private static void roundedRect(DrawContext context, int x, int y, int w, int h, int color) {
@@ -336,8 +373,8 @@ public final class AccountsScreen extends Screen {
 
     private void drawSkinHead(DrawContext context, AccountStore.Entry entry, int x, int y, int size) {
         var texture = skinFor(entry).body().texturePath();
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 8, 8, size, size, 8, 8, 64, 64);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 40, 8, size, size, 8, 8, 64, 64);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 8, 8, size, size, 8, 8, 64, 64, tint(0xFFFFFFFF));
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, x, y, 40, 8, size, size, 8, 8, 64, 64, tint(0xFFFFFFFF));
     }
 
     private enum Tone { OUTLINE, PRIMARY, DANGER, CLOSE, MORE, CHECK, CARD, PREVIOUS, NEXT }
