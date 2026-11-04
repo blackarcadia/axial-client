@@ -1,10 +1,10 @@
-[02:22:55] [Test worker/WARN]: Could not load scoreboard position
-com.google.gson.JsonSyntaxException: java.io.EOFException: End of input at line 1 column 5 path $.bad
+[13:05:54] [Test worker/WARN]: Could not load crosshair settings
+com.google.gson.JsonSyntaxException: java.io.EOFException: End of input at line 1 column 9 path $.invalid
 	at com.google.gson.Gson.fromJson(Gson.java:1379)
 	at com.google.gson.Gson.fromJson(Gson.java:1259)
 	at com.google.gson.Gson.fromJson(Gson.java:1197)
-	at com.axial.cosmetics.client.ScoreboardHudConfig.load(ScoreboardHudConfig.java:21)
-	at com.axial.cosmetics.client.ScoreboardHudConfigTest.invalidOrPartialSettingsFallBackToVanilla(ScoreboardHudConfigTest.java:26)
+	at com.axial.cosmetics.client.CrosshairConfigManager.load(CrosshairConfigManager.java:17)
+	at com.axial.cosmetics.client.CrosshairEditingTest.malformedAndUnknownConfigurationsRecoverSafely(CrosshairEditingTest.java:21)
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728)
@@ -87,7 +87,7 @@ com.google.gson.JsonSyntaxException: java.io.EOFException: End of input at line 
 	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
 	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
-Caused by: java.io.EOFException: End of input at line 1 column 5 path $.bad
+Caused by: java.io.EOFException: End of input at line 1 column 9 path $.invalid
 	at com.google.gson.stream.JsonReader.nextNonWhitespace(JsonReader.java:1605)
 	at com.google.gson.stream.JsonReader.doPeek(JsonReader.java:648)
 	at com.google.gson.stream.JsonReader.skipValue(JsonReader.java:1396)
