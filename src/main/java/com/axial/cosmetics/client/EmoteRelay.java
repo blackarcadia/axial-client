@@ -49,6 +49,8 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     private int ticks;
     private Set<UUID> watched=Set.of();
     private final java.util.Map<UUID,String> remoteAuras=new java.util.HashMap<>();
+    private final java.util.Map<UUID,String> remoteAccessories=new java.util.HashMap<>();
+    static WardrobeAccessory remoteAccessory(UUID player){return WardrobeAccessory.fromId(INSTANCE.remoteAccessories.get(player));}
     static WardrobeAura remoteAura(UUID player,WardrobeAura fallback) {
         String id=INSTANCE.remoteAuras.get(player);
         return id==null?fallback:WardrobeAura.fromId(id);
@@ -79,16 +81,18 @@ public final class EmoteRelay extends AbstractNetworkInstance {
         client.world.getPlayers().stream().filter(p->p!=client.player).sorted(java.util.Comparator.comparingDouble(p->p.squaredDistanceTo(client.player)))
                 .limit(EmoteRelayProtocol.MAX_WATCH).forEach(p->visible.add(p.getUuid()));
         if(!visible.equals(watched)||!live.watchSent) {
-            watched=Set.copyOf(visible);remoteAuras.keySet().retainAll(watched);sendWatch(live);
+            watched=Set.copyOf(visible);remoteAuras.keySet().retainAll(watched);remoteAccessories.keySet().retainAll(watched);sendWatch(live);
         }
         sendAppearance(live);
     }
     private void sendAppearance(Connection live) {
         var aura=WardrobePreferences.currentAura();String id=aura==null?"":aura.id;
-        if(id.equals(live.lastAura))return;
+        var accessory=WardrobePreferences.currentAccessory();String accessoryId=accessory==null?"":accessory.id;
+        if(id.equals(live.lastAura)&&accessoryId.equals(live.lastAccessory))return;
         var message=new JsonObject();message.addProperty("type","appearance");
         if(aura==null)message.add("aura",com.google.gson.JsonNull.INSTANCE);else message.addProperty("aura",id);
-        live.send(message);live.lastAura=id;
+        if(accessory==null)message.add("accessory",com.google.gson.JsonNull.INSTANCE);else message.addProperty("accessory",accessoryId);
+        live.send(message);live.lastAura=id;live.lastAccessory=accessoryId;
     }
     private static boolean fallback() {
         return !ClientNetwork.INSTANCE.isActive()||ClientPacketManager.isInstanceOutdatedForStreaming(ClientNetwork.INSTANCE);
@@ -98,7 +102,7 @@ public final class EmoteRelay extends AbstractNetworkInstance {
         live.send(message);live.watchSent=true;
     }
     private void reset() {
-        context=null;watched=Set.of();remoteAuras.clear();ticks=0;retryAt=0;failures=0;
+        context=null;watched=Set.of();remoteAuras.clear();remoteAccessories.clear();ticks=0;retryAt=0;failures=0;
         Connection old=connection;connection=null;if(old!=null)old.close();
         clearAnimations();
     }
@@ -161,7 +165,7 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     }
     private final class Connection implements WebSocket.Listener {
         final Context base;final long created=System.nanoTime();final StringBuilder incoming=new StringBuilder();final AtomicInteger pending=new AtomicInteger();
-        volatile WebSocket socket;volatile boolean ready;boolean watchSent;boolean challengeSeen;String lastAura;
+        volatile WebSocket socket;volatile boolean ready;boolean watchSent;boolean challengeSeen;String lastAura,lastAccessory;
         CompletableFuture<?> tail=CompletableFuture.completedFuture(null);
         Connection(Context base){this.base=base;}
         @Override public void onOpen(WebSocket socket){this.socket=socket;if(connection!=this||context!=base){failed();return;}socket.request(1);}
@@ -212,7 +216,11 @@ public final class EmoteRelay extends AbstractNetworkInstance {
             if(type.equals("appearance")) {
                 var value=message.get("aura");String id=value==null||value.isJsonNull()?"":value.getAsString();
                 if(id.length()>64||(!id.isEmpty()&&!id.matches("[a-z0-9_]+")))throw new IOException("Invalid aura state");
-                MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base&&watched.contains(author))remoteAuras.put(author,id);});return;
+                var accessoryValue=message.get("accessory");String accessoryId=accessoryValue==null||accessoryValue.isJsonNull()?"":accessoryValue.getAsString();
+                if(accessoryId.length()>64||(!accessoryId.isEmpty()&&!accessoryId.matches("[a-z0-9_]+")))throw new IOException("Invalid accessory state");
+                MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base&&watched.contains(author)){
+                    remoteAuras.put(author,id);remoteAccessories.put(author,accessoryId);
+                }});return;
             }
             if(type.equals("request")){MinecraftClient.getInstance().execute(()->repeat(this,author));return;}
             if(type.equals("gone")) {

@@ -104,10 +104,13 @@ class WardrobeTest {
         var tile=read("/com/axial/cosmetics/client/WardrobeScreen$CosmeticCard.class");
         assertEquals("net/minecraft/client/gui/widget/ClickableWidget",tile.superName);
         assertTrue(tile.methods.stream().anyMatch(m->m.name.equals("keyPressed")));
-        boolean drawsCape=false;
+        boolean drawsCard=false,drawsCape=false;
         for(var method:tile.methods)for(var instruction:method.instructions)
+            if(instruction instanceof MethodInsnNode call&&call.name.equals("drawCosmeticCard"))drawsCard=true;
+        var screen=read("/com/axial/cosmetics/client/WardrobeScreen.class");
+        for(var method:screen.methods)if(method.name.equals("drawCosmeticCard"))for(var instruction:method.instructions)
             if(instruction instanceof MethodInsnNode call&&call.name.equals("drawCape"))drawsCape=true;
-        assertTrue(drawsCape,"the cosmetic tile must render real cape artwork");
+        assertTrue(drawsCard&&drawsCape,"the cosmetic tile must render real cape artwork through its shared card renderer");
     }
     private static ClassNode read(String resource) throws Exception {
         try(var input=WardrobeTest.class.getResourceAsStream(resource)) {

@@ -48,7 +48,7 @@ public final class CosmeticAssignments {
                     if(!value.isJsonPrimitive()||!value.getAsJsonPrimitive().isString())throw new IllegalArgumentException();
                     String id=value.getAsString();
                     if(id.length()>64)throw new IllegalArgumentException();
-                    if(WardrobeCape.fromId(id)!=null||WardrobeAura.fromId(id)!=null)ids.add(id);
+                    if(WardrobeCape.fromId(id)!=null||WardrobeAura.fromId(id)!=null||WardrobeAccessory.fromId(id)!=null)ids.add(id);
                 }
                 result.put(UUID.fromString(entry.getKey()),Set.copyOf(ids));
             }

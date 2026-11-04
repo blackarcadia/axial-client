@@ -122,7 +122,11 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         await self.recv_type(a, 'request')
         await self.recv_type(old, 'request')
         await self.send(a, {'type': 'appearance', 'uuid': C, 'aura': 'halloween_hexwind'})
-        self.assertEqual(await self.recv_type(b, 'appearance'), {'type': 'appearance', 'uuid': A, 'aura': 'halloween_hexwind'})
+        self.assertEqual(await self.recv_type(b, 'appearance'), {'type': 'appearance', 'uuid': A, 'aura': 'halloween_hexwind', 'accessory': None})
+        await self.send(a, {'type': 'appearance', 'aura': 'halloween_hexwind', 'accessory': 'swim_bands'})
+        equipment = await self.recv_type(b, 'appearance')
+        self.assertEqual(equipment['accessory'], 'swim_bands')
+        self.assertEqual(equipment['aura'], 'halloween_hexwind')
         with self.assertRaises(TimeoutError):
             await asyncio.wait_for(old.recv(), .1)
         await self.send(a, {'type': 'appearance', 'aura': None})

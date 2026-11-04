@@ -192,6 +192,7 @@ public class AxialCosmetics implements ClientModInitializer {
                 if (entityRenderer instanceof PlayerEntityRenderer playerRenderer) {
                     registrationHelper.register(new CosmeticFeatureRenderer(playerRenderer, COSMETIC_MANAGER));
                     registrationHelper.register(new com.axial.cosmetics.client.AuraFeatureRenderer(playerRenderer));
+                    registrationHelper.register(new com.axial.cosmetics.client.SwimBandsFeatureRenderer(playerRenderer));
                 }
             });
         } catch (Throwable t) {

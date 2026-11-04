@@ -24,5 +24,10 @@
     "name": "Gold Spark",
     "image": "gold_spark.gif",
     "category": "Auras"
+  },
+  "swim_bands": {
+    "name": "Swim Bands",
+    "image": "swim_bands.png",
+    "category": "Outfits"
   }
 }

@@ -14,7 +14,7 @@ The admin password is stored privately on the owner's Mac in `/Users/blackarcadi
 2. Check the capes they should own; uncheck anything to revoke it.
 3. Click **Save cosmetic access**.
 
-Saving replaces that player's entire selection of grants. Unchecking every cape removes manual access; active purchases continue to grant their cosmetics. Existing assignments were seeded without changing their original owners. The available designs are Gold Owner, Admin, Staff, Lunar Raven and the Hexwind Halloween and Gold Spark auras. See [Hexwind setup](HEXWIND.md) and [Gold Spark setup](GOLD_SPARK.md). Adding a new cape design still requires a client update.
+Saving replaces that player's entire selection of grants. Unchecking every cape removes manual access; active purchases continue to grant their cosmetics. Existing assignments were seeded without changing their original owners. The available designs are Gold Owner, Admin, Staff, Lunar Raven the Hexwind Halloween and Gold Spark auras, and Swim Bands (Outfits). See [Hexwind setup](HEXWIND.md) and [Gold Spark setup](GOLD_SPARK.md) and [Swim Bands setup](SWIM_BANDS.md). Adding a new cape design still requires a client update.
 
 Updated clients fetch grants on launch and every 60 seconds. Open wardrobes refresh when grants change. All updated clients receive the same ownership list for rendering other players. Equipped choices remain local per account, as before; this does not synchronize a player's chosen cape between machines/viewers. Older client builds keep their bundled assignments until upgraded.
 

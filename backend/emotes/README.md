@@ -34,3 +34,5 @@ Emotecraft's [proxy API](https://github.com/KosmX/emotes-proxy-template) provide
 ## Aura equipment extension
 
 Clients advertise `features: ["auras"]` in their existing version-1 authentication message. Only those clients publish/receive `appearance` envelopes (`aura` is a cosmetic ID or `null`); older emote clients receive no new message types. Identity, mutual visibility and rate limits apply as for emote packets. The relay keeps the current equipment state only in the authenticated peer's memory and provides it to new visible viewers. Receiving clients validate ownership from their cosmetics grant snapshot. Native Minecraft emote networking retains priority while this independent equipment synchronization remains active.
+
+The appearance envelope also carries an optional `accessory` cosmetic ID or `null` for independent outfit equipment such as Swim Bands. Older clients ignore the extra field. New clients require an explicit synchronized selection and a valid cosmetic grant before rendering an accessory.

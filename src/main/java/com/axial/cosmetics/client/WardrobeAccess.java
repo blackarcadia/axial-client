@@ -8,7 +8,7 @@ public final class WardrobeAccess {
     private WardrobeAccess() { }
 
     public static boolean allows(UUID account, UUID player) {
-        return account!=null&&(!WardrobeCape.owned(account).isEmpty()||!WardrobeAura.owned(account).isEmpty())
+        return account!=null&&(!WardrobeCape.owned(account).isEmpty()||!WardrobeAura.owned(account).isEmpty()||!WardrobeAccessory.owned(account).isEmpty())
                 &&(player==null||account.equals(player));
     }
 

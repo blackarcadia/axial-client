@@ -68,6 +68,7 @@ public final class WardrobeScreen extends Screen {
             focusedItem=WardrobeItem.of(WardrobePreferences.current());
             if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
             if(focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
+            if(focusedItem.accessory()!=null)category=WardrobeCategory.OUTFITS;
         }
         layout = new WardrobeLayout(width,height);
         rebuild();
@@ -156,6 +157,7 @@ public final class WardrobeScreen extends Screen {
         frame(c,r,mixColor(hover?HOVER_LINE:LINE,0xFFAE55FF,equipProgress),mixColor(0xFF15191F,0xFF282033,equipProgress));
         Rect image=WardrobeLayout.capeImage(r);
         if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
+        else if(item.accessory()!=null)drawAccessory(c,item.accessory(),image);
         else drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
         if(r.height()<55) {
             label(c,textRenderer,item.label(),image.right()+5,r.y()+(r.height()-9)/2,
@@ -259,6 +261,10 @@ public final class WardrobeScreen extends Screen {
         c.drawTexture(RenderPipelines.GUI_TEXTURED,cape.texture(age),x,y,32,32,w,h,320,512,2048,1024,tint(0xFFFFFFFF));
     }
 
+    private void drawAccessory(DrawContext c,WardrobeAccessory accessory,Rect r){
+        int size=Math.max(1,Math.min(r.width(),r.height()));
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,accessory.preview(),r.x()+(r.width()-size)/2,r.y()+(r.height()-size)/2,0,0,size,size,128,128,128,128,tint(0xFFFFFFFF));
+    }
     private void drawAura(DrawContext c,WardrobeAura aura,Rect bounds) {
         int frame=(int)((System.currentTimeMillis()%6000)*64/6000);
         int size=Math.max(1,Math.min(bounds.width(),bounds.height()));
@@ -273,6 +279,7 @@ public final class WardrobeScreen extends Screen {
             int h=Math.max(12,r.height()-32),w=Math.min(r.width()-14,h*10/16);
             var equipped=WardrobePreferences.current();
             if(focusedItem!=null&&focusedItem.aura()!=null)drawAura(c,focusedItem.aura(),new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
+            else if(focusedItem!=null&&focusedItem.accessory()!=null)drawAccessory(c,focusedItem.accessory(),new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
             else if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
             label(c,textRenderer,"Join a world to preview",r.x()+4,r.bottom()-32,MUTED,.65f,r.width()-8,false);
             return;

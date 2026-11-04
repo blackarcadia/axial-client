@@ -55,6 +55,7 @@ class Peer:
     uuid: str
     watch: set = field(default_factory=set)
     aura: str | None = None
+    accessory: str | None = None
     appearance_received: bool = False
     supports_auras: bool = False
     queue: asyncio.Queue = field(default_factory=lambda: asyncio.Queue(16))
@@ -204,9 +205,9 @@ class Relay:
                     other.push({"type": "request", "uuid": peer.uuid})
                     peer.push({"type": "request", "uuid": other.uuid})
                     if other.appearance_received and peer.supports_auras:
-                        peer.push({"type": "appearance", "uuid": other.uuid, "aura": other.aura})
+                        peer.push({"type": "appearance", "uuid": other.uuid, "aura": other.aura, "accessory": other.accessory})
                     if peer.appearance_received and other.supports_auras:
-                        other.push({"type": "appearance", "uuid": peer.uuid, "aura": peer.aura})
+                        other.push({"type": "appearance", "uuid": peer.uuid, "aura": peer.aura, "accessory": peer.accessory})
             return
         if message.get("type") == "appearance":
             if not peer.supports_auras:
@@ -214,10 +215,14 @@ class Relay:
             aura = message.get("aura")
             if aura is not None and (not isinstance(aura, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", aura)):
                 raise ValueError("Invalid aura")
+            accessory = message.get("accessory")
+            if accessory is not None and (not isinstance(accessory, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", accessory)):
+                raise ValueError("Invalid accessory")
+            peer.accessory = accessory
             peer.aura, peer.appearance_received = aura, True
             for other in self.peers.values():
                 if other is not peer and other.supports_auras and peer.uuid in other.watch and other.uuid in peer.watch:
-                    other.push({"type": "appearance", "uuid": peer.uuid, "aura": aura})
+                    other.push({"type": "appearance", "uuid": peer.uuid, "aura": aura, "accessory": accessory})
             return
         if message.get("type") != "packet":
             raise ValueError("Invalid message type")

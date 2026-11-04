@@ -18,7 +18,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
         var client=MinecraftClient.getInstance();
-        if(client.world==null||state.invisible||state.spectator)return;
+        if(client.world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state))return;
         var entity=client.world.getEntityById(state.id);
         if(entity==null||!PlayerProfiles.isActualPlayer(entity.getUuid()))return;
         var aura=WardrobePreferences.auraFor(entity.getUuid());

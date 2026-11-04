@@ -8,7 +8,7 @@ import java.util.UUID;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 
-/** One equipped Axial cape per account; vanilla cape settings remain untouched. */
+/** Independent cosmetic selections per account; vanilla cape settings remain untouched. */
 public final class WardrobePreferences {
     private static final Properties selections=new Properties();
     private static boolean loaded;
@@ -74,6 +74,23 @@ public final class WardrobePreferences {
         UUID account=MinecraftClient.getInstance().getSession().getUuidOrNull();
         WardrobeAura aura=player.equals(account)?currentAura():EmoteRelay.remoteAura(player,WardrobeAura.defaultFor(player));
         return aura!=null&&aura.ownedBy(player)?aura:null;
+    }
+    static WardrobeAccessory accessorySelection(Properties values,UUID uuid){
+        if(uuid==null)return null;
+        var accessory=WardrobeAccessory.fromId(values.getProperty(uuid+".accessory"));
+        return accessory!=null&&accessory.ownedBy(uuid)?accessory:null;
+    }
+    static WardrobeAccessory currentAccessory(){load();return accessorySelection(selections,MinecraftClient.getInstance().getSession().getUuidOrNull());}
+    static void toggle(WardrobeAccessory accessory)throws IOException{
+        if(!WardrobeAccess.allowed())return;
+        var uuid=MinecraftClient.getInstance().getSession().getUuidOrNull();if(!accessory.ownedBy(uuid))return;
+        var updated=new Properties();updated.putAll(selections);
+        updated.setProperty(uuid+".accessory",currentAccessory()==accessory?"none":accessory.id);persist(updated);
+    }
+    static WardrobeAccessory accessoryFor(UUID uuid){
+        var account=MinecraftClient.getInstance().getSession().getUuidOrNull();
+        var accessory=uuid.equals(account)?currentAccessory():EmoteRelay.remoteAccessory(uuid);
+        return accessory!=null&&accessory.ownedBy(uuid)?accessory:null;
     }
     private static void persist(Properties updated) throws IOException {
         var directory=FabricLoader.getInstance().getConfigDir();Files.createDirectories(directory);
