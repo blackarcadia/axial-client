@@ -1141,13 +1141,19 @@
 	],
 	"display": {
 		"thirdperson_righthand": {
-			"translation": [0, 5.25, 0.5]
+			"translation": [0, 5.25, 0.5],
+			"scale": [0.7, 0.7, 0.7]
+		},
+		"thirdperson_lefthand": {
+			"scale": [0.7, 0.7, 0.7]
 		},
 		"firstperson_righthand": {
-			"translation": [1, 5.5, 0]
+			"translation": [1, 5.5, 0],
+			"scale": [0.7, 0.7, 0.7]
 		},
 		"firstperson_lefthand": {
-			"translation": [3, 5.75, 0]
+			"translation": [3, 5.75, 0],
+			"scale": [0.7, 0.7, 0.7]
 		},
 		"ground": {
 			"translation": [0, 4.75, 0]
