@@ -24,6 +24,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier LABOTOMY_TABLE_MODEL = Identifier.of("axial_cosmetics", "labotomytable");
     @Unique
+    private static final Identifier BOOM_BLOCK_MODEL = Identifier.of("axial_cosmetics", "boomblock");
+    @Unique
     private static final Identifier BROODMOTHER_MODEL = Identifier.of("axial_cosmetics", "broodmother");
     @Unique
     private static final Identifier REINDEERANTLERS_MODEL = Identifier.of("axial_cosmetics", "reindeerantlers");
@@ -120,6 +122,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(290.0F).equals(modelData.getFloat(0))) {
                 return LABOTOMY_TABLE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(299.0F).equals(modelData.getFloat(0))) {
+                return BOOM_BLOCK_MODEL;
             }
             if (modelData != null && Float.valueOf(291.0F).equals(modelData.getFloat(0))) {
                 return TEDDYBEAR_MODEL;

@@ -29,6 +29,8 @@ public final class WeatherDetectorModelRegistry {
             Identifier.of("axial_cosmetics", "block/custom/teddybear");
     private static final Identifier LABOTOMY_TABLE_MODEL_ID =
             Identifier.of("axial_cosmetics", "block/custom/labotomytable");
+    private static final Identifier BOOM_BLOCK_MODEL_ID =
+            Identifier.of("axial_cosmetics", "block/custom/boomblock");
     private static final Identifier BOX_OF_CHOCOLATES_MODEL_ID =
             Identifier.of("axial_cosmetics", "block/custom/lockboxnew");
     private static final Identifier LOCKBOXNEW_MODEL_ID =
@@ -48,6 +50,10 @@ public final class WeatherDetectorModelRegistry {
     private static final net.minecraft.block.BlockState LABOTOMY_TABLE_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
             .with(NoteBlock.NOTE, 16)
+            .with(NoteBlock.POWERED, false);
+    private static final net.minecraft.block.BlockState BOOM_BLOCK_STATE = Blocks.NOTE_BLOCK.getDefaultState()
+            .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
+            .with(NoteBlock.NOTE, 19)
             .with(NoteBlock.POWERED, false);
     private static final net.minecraft.block.BlockState BOX_OF_CHOCOLATES_STATE = Blocks.NOTE_BLOCK.getDefaultState()
             .with(NoteBlock.INSTRUMENT, NoteBlockInstrument.BELL)
@@ -114,6 +120,8 @@ public final class WeatherDetectorModelRegistry {
         context.setModel(TEDDYBEAR_STATE.with(NoteBlock.POWERED, true), model(TEDDYBEAR_MODEL_ID));
         context.setModel(LABOTOMY_TABLE_STATE, model(LABOTOMY_TABLE_MODEL_ID));
         context.setModel(LABOTOMY_TABLE_STATE.with(NoteBlock.POWERED, true), model(LABOTOMY_TABLE_MODEL_ID));
+        context.setModel(BOOM_BLOCK_STATE, model(BOOM_BLOCK_MODEL_ID));
+        context.setModel(BOOM_BLOCK_STATE.with(NoteBlock.POWERED, true), model(BOOM_BLOCK_MODEL_ID));
         context.setModel(BOX_OF_CHOCOLATES_STATE, model(BOX_OF_CHOCOLATES_MODEL_ID));
         context.setModel(BOX_OF_CHOCOLATES_STATE.with(NoteBlock.POWERED, true), model(BOX_OF_CHOCOLATES_MODEL_ID));
         context.setModel(LOCKBOXNEW_STATE, model(LOCKBOXNEW_MODEL_ID));
