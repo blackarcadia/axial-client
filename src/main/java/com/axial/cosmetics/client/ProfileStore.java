@@ -31,10 +31,6 @@ final class ProfileStore {
     void delete(String id) throws IOException {var data=read();find(data,id);data.profiles.removeIf(p->p.id.equals(id));if(id.equals(data.active))data.active=null;write(data);}
     void activate(String id,Runnable reload) throws IOException {
         var data=read();var saved=find(data,id);validateFiles(saved.files);
-        // Preserve the first unsaved setup as a profile before replacing any settings.
-        if(data.active==null){var original=new Saved();original.id=UUID.randomUUID().toString();
-            String name="Previous setup";int n=2;while(hasName(data,name,null))name="Previous setup "+n++;
-            original.name=name;original.files=capture();data.profiles.add(original);}
         var backup=new HashMap<String,String>();
         for(String name:saved.files.keySet()){var path=config.resolve(name);backup.put(name,Files.exists(path)?Files.readString(path):null);}
         try {restore(saved.files);reload.run();data.active=id;write(data);}

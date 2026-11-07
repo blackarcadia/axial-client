@@ -44,12 +44,13 @@ class ProfileStoreTest {
         assertThrows(IOException.class,()->store.activate(entry.id(),()->fail("Must validate before loading")));
         assertTrue(Files.readString(root.resolve("axialutils.json")).contains("1"));
     }
-    @Test void firstLoadKeepsAnUnsavedSetupAsAnotherProfile() throws Exception {
+    @Test void firstLoadDoesNotCreateAnExtraProfile() throws Exception {
         settings("1");var store=new ProfileStore(root);var first=store.create("First");
         // Deleting the current profile keeps the running setup intact.
         settings("2");var second=store.create("Second");store.delete(second.id());settings("3");
         store.activate(first.id(),()->{});
-        assertEquals(2,store.list().size());var backup=store.list().stream().filter(p->p.name().equals("Previous setup")).findFirst().orElseThrow();
-        store.activate(backup.id(),()->{});assertTrue(Files.readString(root.resolve("axialutils.json")).contains("3"));
+        assertEquals(java.util.List.of(first),store.list());
+        assertEquals(first.id(),store.active());
+        assertTrue(Files.readString(root.resolve("axialutils.json")).contains("1"));
     }
 }
