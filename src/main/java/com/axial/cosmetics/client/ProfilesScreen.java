@@ -8,7 +8,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 
-/** Saved client setups, with explicit updates and a second click to confirm removal. */
+/** Saved client setups that switch on click, with a second click to confirm removal. */
 public final class ProfilesScreen extends NavigationScreen {
     private final ProfileStore store=ClientProfiles.store();
     private List<ProfileStore.Entry> profiles=List.of();
@@ -38,24 +38,19 @@ public final class ProfilesScreen extends NavigationScreen {
         int pages=Math.max(1,(profiles.size()+pageSize-1)/pageSize);page=Math.clamp(page,0,pages-1);
         for(int i=page*pageSize;i<Math.min(profiles.size(),(page+1)*pageSize);i++){
             var entry=profiles.get(i);
-            var row=profileRow(entry,new Rect(panel.x()+12,listTop+(i%pageSize)*28,w-24,24),()->{
-                selected=entry.id();pendingDelete=null;status="";rebuild(entry.name());
-            });row.selected=entry.id().equals(selected);
+            var row=profileRow(entry,new Rect(panel.x()+12,listTop+(i%pageSize)*28,w-24,24),()->run(()->{
+                if(!entry.id().equals(active))ClientProfiles.load(entry.id());
+                selected=entry.id();pendingDelete=null;status="PROFILE ACTIVE";rebuild(entry.name());
+            }));row.selected=entry.id().equals(selected);
         }
         int pagerY=panel.bottom()-(compact?61:92);
         button("PREV",new Rect(panel.x()+12,pagerY,48,20),()->{page--;pendingDelete=null;rebuild(name.getText());}).active=page>0;
         button("NEXT",new Rect(panel.right()-60,pagerY,48,20),()->{page++;pendingDelete=null;rebuild(name.getText());}).active=page+1<pages;
-        int actionY=panel.bottom()-(compact?39:65),cell=(w-42)/4;
-        button("LOAD",new Rect(panel.x()+12,actionY,cell,24),()->run(()->{
-            ClientProfiles.load(selected);pendingDelete=null;status="PROFILE LOADED";rebuild(name.getText());
-        })).active=selected!=null;
-        button("UPDATE",new Rect(panel.x()+18+cell,actionY,cell,24),()->run(()->{
-            ClientProfiles.saveCurrent();store.update(selected);pendingDelete=null;status="CURRENT SETUP SAVED";rebuild(name.getText());
-        })).active=selected!=null;
-        button("RENAME",new Rect(panel.x()+24+cell*2,actionY,cell,24),()->run(()->{
+        int actionY=panel.bottom()-(compact?39:65),cell=(w-30)/2;
+        button("RENAME",new Rect(panel.x()+12,actionY,cell,24),()->run(()->{
             store.rename(selected,name.getText());pendingDelete=null;status="PROFILE RENAMED";rebuild(name.getText());
         })).active=selected!=null;
-        var delete=button(selected!=null&&selected.equals(pendingDelete)?"CONFIRM?":"DELETE",new Rect(panel.x()+30+cell*3,actionY,cell,24),()->run(()->{
+        var delete=button(selected!=null&&selected.equals(pendingDelete)?"CONFIRM?":"DELETE",new Rect(panel.x()+18+cell,actionY,cell,24),()->run(()->{
             if(!selected.equals(pendingDelete)){pendingDelete=selected;status="CLICK CONFIRM TO DELETE THIS PROFILE";rebuild(name.getText());return;}
             store.delete(selected);selected=null;pendingDelete=null;status="PROFILE DELETED";rebuild("");
         }));delete.active=selected!=null;delete.danger=true;
@@ -69,12 +64,12 @@ public final class ProfilesScreen extends NavigationScreen {
         return addDrawableChild(button);
     }
     private enum ButtonLook {
-        PROFILE("profile_folder"), SAVE("profile_save"), LOAD("profile_load"), UPDATE("profile_update"),
+        PROFILE("profile_folder"), SAVE("profile_save"),
         RENAME("profile_rename"), DELETE("profile_delete"), BACK("profile_back"), PREV("profile_back"), NEXT("profile_next");
         final String icon;
         ButtonLook(String icon){this.icon=icon;}
         static ButtonLook forLabel(String label){return switch(label){
-            case "SAVE NEW"->SAVE;case "LOAD"->LOAD;case "UPDATE"->UPDATE;case "RENAME"->RENAME;
+            case "SAVE NEW"->SAVE;case "RENAME"->RENAME;
             case "DELETE","CONFIRM?"->DELETE;case "PREV"->PREV;case "NEXT"->NEXT;default->BACK;
         };}
     }
@@ -91,7 +86,7 @@ public final class ProfilesScreen extends NavigationScreen {
             var r=new Rect(getX(),getY(),width,height);
             boolean quiet=look==ButtonLook.BACK||look==ButtonLook.PREV||look==ButtonLook.NEXT;
             boolean destructive=look==ButtonLook.DELETE;
-            boolean emphasis=look==ButtonLook.SAVE||look==ButtonLook.LOAD;
+            boolean emphasis=look==ButtonLook.SAVE;
             int accent=destructive?RED:BRAND;
             int fill=emphasis?mixColor(0xFF30243C,0xFF493354,over):destructive?mixColor(0xFF282125,0xFF432A30,over):mixColor(FIELD,HOVER,over);
             int border=selected||emphasis?accent:mixColor(quiet?SURFACE:LINE,destructive?RED:BRAND,over);
@@ -133,7 +128,7 @@ public final class ProfilesScreen extends NavigationScreen {
         if(profiles.isEmpty())line(c,"SAVE YOUR CURRENT SETUP TO CREATE A PROFILE",panel.x()+15,panel.y()+(compact?63:82),MUTED,.8f,panel.width()-30,false);
         int pages=Math.max(1,(profiles.size()+pageSize-1)/pageSize);
         line(c,"PAGE "+(page+1)+" / "+pages,panel.x()+73,panel.bottom()-(compact?55:86),MUTED,.8f,panel.width()-146,false);
-        if(!compact)line(c,"LOAD REPLACES SETTINGS • UPDATE SAVES CURRENT SETUP",panel.x()+12,panel.bottom()-33,MUTED,.75f,panel.width()-24,false);
+        if(!compact)line(c,"CLICK A PROFILE TO SWITCH",panel.x()+12,panel.bottom()-33,MUTED,.75f,panel.width()-24,false);
         line(c,error.isBlank()?status:error,panel.x()+12,panel.bottom()-(compact?11:18),error.isBlank()?INK:RED,.75f,panel.width()-24,false);
         super.render(c,mx,my,delta);
     }
