@@ -39,10 +39,19 @@ public abstract class AxialConfigScreenSatchelMenuMixin extends Screen {
     @Inject(method = "method_25426", at = @At("TAIL"), remap = false)
     private void initTitleField(CallbackInfo ci) {
         axial_cosmetics$satchelTitle = addSelectableChild(new TextFieldWidget(textRenderer, 0, 0, 370, 20, label("DISPLAY TITLE")));
+        axial_cosmetics$satchelTitle.visible = false;
         axial_cosmetics$satchelTitle.setChangedListener(value -> {
             AxialConfigManager.get().satchelHudTitleText = value.substring(0, Math.min(48, value.length()));
             AxialConfigManager.save();
         });
+    }
+
+    @Inject(method = "method_25394", at = @At("HEAD"), remap = false)
+    private void hideTitleOutsideSettings(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (axial_cosmetics$satchelTitle != null && !isSatchel()) {
+            axial_cosmetics$satchelTitle.visible = false;
+            axial_cosmetics$satchelTitle.setFocused(false);
+        }
     }
 
     @Inject(method = "rebuildLayout", at = @At("HEAD"), remap = false, order = 3000)
