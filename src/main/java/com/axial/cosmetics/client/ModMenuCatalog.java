@@ -100,6 +100,9 @@ final class ModMenuCatalog {
                 "enchantments", null, null, () -> {
                     var client=MinecraftClient.getInstance();client.setScreen(new EnchantmentsScreen(client.currentScreen));
                 }));
+        entries.add(new ModMenuEntry("Litematica", "Load schematics and manage placements", ModMenuEntry.Category.WORLD,
+                "chunk_borders", null, null,
+                () -> LitematicaMenu.open(MinecraftClient.getInstance().currentScreen)));
         entries.add(new ModMenuEntry("Hit Indicators", "Animated red markers for your confirmed hits", ModMenuEntry.Category.VISUALS,
                 "crosshair", HitIndicatorsConfig::enabled, () -> HitIndicatorsConfig.setEnabled(!HitIndicatorsConfig.enabled()), null));
         return List.copyOf(entries);

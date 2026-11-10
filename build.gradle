@@ -125,6 +125,8 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
+        include 'litematica-fabric-1.21.11-0.26.16.jar'
+        include 'malilib-fabric-1.21.11-0.27.20.jar'
     }
 
     into layout.projectDirectory.dir('run/mods')
@@ -376,6 +378,8 @@ tasks.register('releaseFatJar', Jar) {
         include 'moreculling-fabric-1.21.11-1.6.2.jar'
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
+        include 'litematica-fabric-1.21.11-0.26.16.jar'
+        include 'malilib-fabric-1.21.11-0.27.20.jar'
     }
 
     // Keep this compatibility-sensitive library in a launcher-only path so

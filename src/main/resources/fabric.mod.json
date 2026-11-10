@@ -15,7 +15,9 @@
   "depends": {
     "fabricloader": ">=0.16.9",
     "fabric": "*",
-    "minecraft": "1.21.11"
+    "minecraft": "1.21.11",
+    "litematica": ">=0.26.16",
+    "malilib": ">=0.27.20 <0.28.0"
   },
   "contact": {
     "sources": "https://example.com/axial-cosmetics"
