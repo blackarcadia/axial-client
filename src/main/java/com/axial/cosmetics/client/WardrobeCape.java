@@ -22,22 +22,26 @@ enum WardrobeCape {
             "a0e00d14-fce1-4ed2-9577-d83a3feedfee",
             "8d79d555-75e5-4456-bbc4-0268e1d21659"),
     LUNAR_RAVEN("lunar_raven", "Lunar Raven", "EXCLUSIVE CAPE", "lunar_raven_cape",
-            "499b254f-45e3-4ad9-b1ed-6a388b56410c");
+            "499b254f-45e3-4ad9-b1ed-6a388b56410c"),
+    PURRR("purrr", "Purrr", "CAPE", "purrr_cape", 1);
 
     final String id, label, badge;
     private final Set<UUID> owners;
     private final List<AssetInfo.TextureAsset> frames;
     WardrobeCape(String id,String label,String badge,String texture,String... uuids) {
+        this(id,label,badge,texture,16,uuids);
+    }
+    WardrobeCape(String id,String label,String badge,String texture,int frameCount,String... uuids) {
         this.id=id;this.label=label;this.badge=badge;
         owners=java.util.Arrays.stream(uuids).map(UUID::fromString).collect(java.util.stream.Collectors.toUnmodifiableSet());
-        frames=IntStream.range(0,16).mapToObj(i->(AssetInfo.TextureAsset)new AssetInfo.TextureAssetInfo(
+        frames=IntStream.range(0,frameCount).mapToObj(i->(AssetInfo.TextureAsset)new AssetInfo.TextureAssetInfo(
                 Identifier.of("axial_cosmetics",texture+"_"+i),Identifier.of("axial_cosmetics","textures/entity/"+texture+(i==0?"":"_"+i)+".png"))).toList();
     }
     boolean ownedBy(UUID uuid) {return uuid!=null&&CosmeticAssignments.owns(uuid,id,owners.contains(uuid));}
     static List<WardrobeCape> owned(UUID uuid) {return java.util.Arrays.stream(values()).filter(cape->cape.ownedBy(uuid)).toList();}
     static WardrobeCape defaultFor(UUID uuid) {return owned(uuid).stream().findFirst().orElse(null);}
     static WardrobeCape fromId(String id) {return java.util.Arrays.stream(values()).filter(cape->cape.id.equals(id)).findFirst().orElse(null);}
-    AssetInfo.TextureAsset asset(float age) {return frames.get(CreatorCosmetics.frameIndex(age));}
+    AssetInfo.TextureAsset asset(float age) {return frames.get(CreatorCosmetics.frameIndex(age)%frames.size());}
     Identifier texture(float age) {return asset(age).texturePath();}
     boolean hasTexture(SkinTextures textures) {return textures!=null&&textures.cape()!=null&&frames.contains(textures.cape());}
     SkinTextures apply(UUID uuid,SkinTextures original,float age) {

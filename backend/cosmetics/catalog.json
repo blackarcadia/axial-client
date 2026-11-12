@@ -29,5 +29,10 @@
     "name": "Swim Bands",
     "image": "swim_bands.png",
     "category": "Outfits"
+  },
+  "purrr": {
+    "name": "Purrr",
+    "image": "purrr.png",
+    "category": "Capes"
   }
 }
