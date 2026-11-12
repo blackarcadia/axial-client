@@ -196,6 +196,7 @@ public class AxialCosmetics implements ClientModInitializer {
                     registrationHelper.register(new CosmeticFeatureRenderer(playerRenderer, COSMETIC_MANAGER));
                     registrationHelper.register(new com.axial.cosmetics.client.AuraFeatureRenderer(playerRenderer));
                     registrationHelper.register(new com.axial.cosmetics.client.SwimBandsFeatureRenderer(playerRenderer));
+                    registrationHelper.register(new com.axial.cosmetics.client.WhiteKicksFeatureRenderer(playerRenderer));
                 }
             });
         } catch (Throwable t) {

@@ -25,7 +25,7 @@ class SwimBandsTest {
         }
     }
     @Test void texturedCosmeticsUseWhiteTintRatherThanOverlayCoordinates() throws Exception {
-        for(String renderer:List.of("SwimBandsFeatureRenderer","CosmeticFeatureRenderer")){
+        for(String renderer:List.of("SwimBandsFeatureRenderer","WhiteKicksFeatureRenderer","CosmeticFeatureRenderer")){
             try(var input=getClass().getResourceAsStream("/com/axial/cosmetics/client/"+renderer+".class")){
                 var node=new ClassNode();new ClassReader(input).accept(node,0);int calls=0;
                 for(var method:node.methods)for(var instruction:method.instructions){

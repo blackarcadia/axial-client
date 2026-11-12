@@ -9,8 +9,7 @@ The updated client is needed to display/equip the cape; ownership refreshes
 through the existing cosmetics API.
 
 Source faces live in `assets/purrr`: `back.png` (outward), `front.png` (inward),
-`side.png` (both sides), and `top.png` (top and bottom). The supplied attachment
-order is used: plain purple pattern outward, cat/PURRR artwork inward.
+`side.png` (both sides), and `top.png` (top and bottom). The cat/PURRR artwork faces outward; the plain purple pattern faces inward.
 
 Run `java -Djava.awt.headless=true tools/GeneratePurrrCape.java` to pack the
 2048 × 1024 texture and regenerate the admin thumbnail. The code uses the same

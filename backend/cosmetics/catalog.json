@@ -34,5 +34,10 @@
     "name": "Purrr",
     "image": "purrr.png",
     "category": "Capes"
+  },
+  "white_kicks": {
+    "name": "White Kicks",
+    "image": "white_kicks.png",
+    "category": "Outfits"
   }
 }
