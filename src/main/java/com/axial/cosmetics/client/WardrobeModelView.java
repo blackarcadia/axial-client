@@ -5,6 +5,9 @@ import com.axial.cosmetics.client.ModMenuLayout.Rect;
 /** Camera framing is independent of the mannequin and the saved loadout. */
 record WardrobeModelView(float scale,float centerY) {
     static float yaw(WardrobeItem item) {return item.cape()!=null?155:25;}
+    static float cardYaw(WardrobeItem item) {
+        return yaw(item)+(item.cape()!=null||item.accessory()!=null?180:0);
+    }
 
     static WardrobeModelView fit(WardrobeItem item,Rect bounds,boolean card) {
         float height=2.05f,width=1.05f,center=.9f;

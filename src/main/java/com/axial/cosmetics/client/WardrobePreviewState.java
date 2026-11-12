@@ -3,9 +3,16 @@ package com.axial.cosmetics.client;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.entity.player.PlayerSkinType;
+import net.minecraft.util.AssetInfo;
+import net.minecraft.util.Identifier;
 
 /** A detached mannequin. The queued GUI render carries its own cosmetic selection. */
 final class WardrobePreviewState extends PlayerEntityRenderState {
+    static final SkinTextures CARD_SKIN=new SkinTextures(new AssetInfo.TextureAssetInfo(
+            Identifier.of("axial_cosmetics","wardrobe_mannequin"),
+            Identifier.of("axial_cosmetics","textures/entity/wardrobe_mannequin.png")),
+            null,null,PlayerSkinType.WIDE,false);
     final WardrobeAura aura;
     final java.util.List<WardrobeAccessory> accessories;
 

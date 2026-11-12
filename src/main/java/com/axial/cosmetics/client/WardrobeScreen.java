@@ -167,7 +167,7 @@ public final class WardrobeScreen extends Screen {
             rounded(c,stage.x(),stage.y(),stage.width(),stage.height(),hover?0xFF20232F:0xFF191D27);
             int floorY=stage.bottom()-5;
             rounded(c,stage.x()+stage.width()/5,floorY,Math.max(1,stage.width()*3/5),2,selected?0xFF6D448A:0xFF343A48);
-            drawModel(c,item,stage,WardrobeModelView.yaw(item)+(float)cardMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(hover?8:0),true);
+            drawModel(c,item,stage,WardrobeModelView.cardYaw(item)+(float)cardMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(hover?8:0),true);
             if(selected) {
                 rounded(c,r.right()-15,r.y()+7,8,8,BRAND);
                 label(c,textRenderer,"✓",r.right()-14,r.y()+7,INK,.65f,7,false);
@@ -303,7 +303,7 @@ public final class WardrobeScreen extends Screen {
     }
 
     private void drawModel(DrawContext c,WardrobeItem item,Rect bounds,float yaw,boolean card) {
-        var skin=client.player==null?menuSkin:client.player.getSkin();
+        var skin=card?WardrobePreviewState.CARD_SKIN:client.player==null?menuSkin:client.player.getSkin();
         if(skin==null||item==null)return;
         float age=(System.nanoTime()/50_000_000L)%1_000_000;
         var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);

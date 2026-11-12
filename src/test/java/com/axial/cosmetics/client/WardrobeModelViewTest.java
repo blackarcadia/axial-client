@@ -32,6 +32,9 @@ class WardrobeModelViewTest {
         assertTrue(closeup.centerY()<.5f,"shoe card camera centers on the feet");
         assertEquals(155,WardrobeModelView.yaw(WardrobeItem.of(WardrobeCape.PURRR)));
         assertEquals(25,WardrobeModelView.yaw(kicks));
+        assertEquals(335,WardrobeModelView.cardYaw(WardrobeItem.of(WardrobeCape.PURRR)));
+        assertEquals(205,WardrobeModelView.cardYaw(kicks));
+        assertEquals(205,WardrobeModelView.cardYaw(WardrobeItem.of(WardrobeAccessory.SWIM_BANDS)));
         var aura=WardrobeModelView.fit(WardrobeItem.of(WardrobeAura.HEXWIND),bounds,true);
         assertTrue(aura.scale()<full.scale(),"aura needs more space around the mannequin");
         assertEquals(full,WardrobeModelView.fit(null,bounds,false),"empty loadout still shows the player");
