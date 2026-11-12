@@ -39,5 +39,10 @@
     "name": "White Kicks",
     "image": "white_kicks.png",
     "category": "Outfits"
+  },
+  "white_sneakers": {
+    "name": "White Sneakers",
+    "image": "white_sneakers.png",
+    "category": "Outfits"
   }
 }

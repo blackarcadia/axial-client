@@ -7,7 +7,8 @@ import net.minecraft.util.Identifier;
 /** Independently equipped, server-granted model cosmetics. */
 enum WardrobeAccessory {
     SWIM_BANDS("swim_bands","Swim Bands","ARM BANDS",CosmeticSlot.LEFT_ARM,CosmeticSlot.RIGHT_ARM),
-    WHITE_KICKS("white_kicks","White Kicks","SNEAKERS",500,CosmeticSlot.BOOTS);
+    WHITE_KICKS("white_kicks","White Kicks","SNEAKERS",500,CosmeticSlot.BOOTS),
+    WHITE_SNEAKERS("white_sneakers","White Sneakers","SNEAKERS",CosmeticSlot.BOOTS);
     final String id,label,badge;
     final Set<CosmeticSlot> slots;
     final int previewSize;

@@ -1,17 +1,22 @@
 """Copy the supplied preview; --from-model renders a separate geometry diagnostic."""
 from pathlib import Path
-import json, math, sys, shutil
+import json, math, sys, shutil, argparse
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--from-model',action='store_true')
+parser.add_argument('--cosmetic',choices=['white_kicks','white_sneakers'],default='white_kicks')
+args=parser.parse_args()
+cosmetic=args.cosmetic
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/axial_cosmetics'
-if '--from-model' not in sys.argv:
-    source=ROOT/'assets/white_kicks/preview.png'
-    shutil.copy2(source,ASSETS/'textures/gui/white_kicks_preview.png')
-    shutil.copy2(source,ROOT/'backend/cosmetics/public/assets/white_kicks.png')
+if not args.from_model:
+    source=ROOT/f'assets/{cosmetic}/preview.png'
+    shutil.copy2(source,ASSETS/f'textures/gui/{cosmetic}_preview.png')
+    shutil.copy2(source,ROOT/f'backend/cosmetics/public/assets/{cosmetic}.png')
     sys.exit(0)
 import numpy as np
 from PIL import Image
-texture=Image.open(ASSETS/'textures/entity/accessories/white_kicks.png').convert('RGBA')
-geo=json.loads((ASSETS/'geo/white_kicks.geo.json').read_text())['minecraft:geometry'][0]
+texture=Image.open(ASSETS/f'textures/entity/accessories/{cosmetic}.png').convert('RGBA')
+geo=json.loads((ASSETS/f'geo/{cosmetic}.geo.json').read_text())['minecraft:geometry'][0]
 def position(p):return np.array([p[0],24-p[1],p[2]],dtype=float)
 def translate(p):
     matrix=np.eye(4);matrix[:3,3]=p;return matrix
@@ -68,6 +73,6 @@ for face,(u0,v0,u1,v1),shade in faces:
                 if color[3]==0:continue
                 canvas.putpixel((x,y),tuple(round(k*shade) for k in color[:3])+(color[3],));depth[y,x]=z
 image=canvas.resize((128,128),Image.Resampling.LANCZOS)
-output=ROOT/'build/previews/white_kicks_model.png'
+output=ROOT/f'build/previews/{cosmetic}_model.png'
 output.parent.mkdir(parents=True,exist_ok=True)
 image.save(output)

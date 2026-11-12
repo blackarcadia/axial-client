@@ -19,9 +19,10 @@ final class WhiteKicksGeometry {
         if(!object.has(key))return fallback;
         var values=object.getAsJsonArray(key);return new Vec(values.get(0).getAsFloat(),values.get(1).getAsFloat(),values.get(2).getAsFloat());
     }
-    static List<Bone> load(){
-        try(var input=WhiteKicksGeometry.class.getResourceAsStream("/assets/axial_cosmetics/geo/white_kicks.geo.json")){
-            if(input==null)throw new IllegalStateException("White Kicks geometry is missing");
+    static List<Bone> load(){return load("white_kicks");}
+    static List<Bone> load(String id){
+        try(var input=WhiteKicksGeometry.class.getResourceAsStream("/assets/axial_cosmetics/geo/"+id+".geo.json")){
+            if(input==null)throw new IllegalStateException("Missing shoe geometry: "+id);
             var geometry=JsonParser.parseReader(new InputStreamReader(input,StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonArray("minecraft:geometry").get(0).getAsJsonObject();
             var result=new ArrayList<Bone>();
             for(var value:geometry.getAsJsonArray("bones")){
@@ -34,7 +35,7 @@ final class WhiteKicksGeometry {
                 result.add(new Bone(object.get("name").getAsString(),object.has("parent")?object.get("parent").getAsString():null,pivot,vector(object,"rotation",new Vec(0,0,0)),List.copyOf(cubes)));
             }
             return List.copyOf(result);
-        }catch(java.io.IOException ex){throw new IllegalStateException("Could not load White Kicks",ex);}
+        }catch(java.io.IOException ex){throw new IllegalStateException("Could not load shoe geometry: "+id,ex);}
     }
     /** Convert Y-up Bedrock coordinates to the player's Y-down model space. */
     static Vec position(Vec value){return new Vec(value.x,24-value.y,value.z);}
