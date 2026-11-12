@@ -1,10 +1,15 @@
-"""Render the supplied sneaker bones/cube rotations using the same transforms as the client."""
+"""Copy the supplied preview; --from-model renders a separate geometry diagnostic."""
 from pathlib import Path
-import json, math
-import numpy as np
-from PIL import Image
+import json, math, sys, shutil
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/axial_cosmetics'
+if '--from-model' not in sys.argv:
+    source=ROOT/'assets/white_kicks/preview.png'
+    shutil.copy2(source,ASSETS/'textures/gui/white_kicks_preview.png')
+    shutil.copy2(source,ROOT/'backend/cosmetics/public/assets/white_kicks.png')
+    sys.exit(0)
+import numpy as np
+from PIL import Image
 texture=Image.open(ASSETS/'textures/entity/accessories/white_kicks.png').convert('RGBA')
 geo=json.loads((ASSETS/'geo/white_kicks.geo.json').read_text())['minecraft:geometry'][0]
 def position(p):return np.array([p[0],24-p[1],p[2]],dtype=float)
@@ -63,5 +68,6 @@ for face,(u0,v0,u1,v1),shade in faces:
                 if color[3]==0:continue
                 canvas.putpixel((x,y),tuple(round(k*shade) for k in color[:3])+(color[3],));depth[y,x]=z
 image=canvas.resize((128,128),Image.Resampling.LANCZOS)
-image.save(ASSETS/'textures/gui/white_kicks_preview.png')
-image.save(ROOT/'backend/cosmetics/public/assets/white_kicks.png')
+output=ROOT/'build/previews/white_kicks_model.png'
+output.parent.mkdir(parents=True,exist_ok=True)
+image.save(output)

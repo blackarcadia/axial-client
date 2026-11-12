@@ -12,7 +12,7 @@ record WardrobeItem(WardrobeCape cape,WardrobeAura aura,WardrobeAccessory access
     String label(){return cape!=null?cape.label:aura!=null?aura.label:accessory.label;}
     String badge(){return cape!=null?cape.badge:aura!=null?aura.badge:accessory.badge;}
     boolean ownedBy(UUID uuid){return cape!=null?cape.ownedBy(uuid):aura!=null?aura.ownedBy(uuid):accessory.ownedBy(uuid);}
-    boolean equipped(){return cape!=null?WardrobePreferences.current()==cape:aura!=null?WardrobePreferences.currentAura()==aura:WardrobePreferences.currentAccessory()==accessory;}
+    boolean equipped(){return cape!=null?WardrobePreferences.current()==cape:aura!=null?WardrobePreferences.currentAura()==aura:WardrobePreferences.currentAccessories().contains(accessory);}
     void toggle()throws java.io.IOException{if(cape!=null)WardrobePreferences.toggle(cape);else if(aura!=null)WardrobePreferences.toggle(aura);else WardrobePreferences.toggle(accessory);}
     static List<WardrobeItem> owned(UUID uuid,WardrobeCategory category){
         var items=new ArrayList<WardrobeItem>();

@@ -122,7 +122,7 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         await self.recv_type(a, 'request')
         await self.recv_type(old, 'request')
         await self.send(a, {'type': 'appearance', 'uuid': C, 'aura': 'halloween_hexwind'})
-        self.assertEqual(await self.recv_type(b, 'appearance'), {'type': 'appearance', 'uuid': A, 'aura': 'halloween_hexwind', 'accessory': None})
+        self.assertEqual(await self.recv_type(b, 'appearance'), {'type': 'appearance', 'uuid': A, 'aura': 'halloween_hexwind', 'accessory': None, 'accessories': []})
         await self.send(a, {'type': 'appearance', 'aura': 'halloween_hexwind', 'accessory': 'swim_bands'})
         equipment = await self.recv_type(b, 'appearance')
         self.assertEqual(equipment['accessory'], 'swim_bands')
@@ -138,6 +138,37 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         await self.send(c, {'type': 'watch', 'players': [A]})
         await self.recv_type(c, 'request')
         self.assertIsNone((await self.recv_type(c, 'appearance'))['aura'])
+
+    async def test_multiple_equipment_slots_live_late_viewer_and_legacy(self):
+        a, b = await self.client(A, auras=True), await self.client(B, auras=True)
+        await self.send(a, {'type': 'watch', 'players': [B, C]})
+        await self.send(b, {'type': 'watch', 'players': [A]})
+        await self.recv_type(a, 'request')
+        await self.recv_type(b, 'request')
+        await self.send(a, {'type': 'appearance', 'uuid': C, 'aura': None,
+                            'accessory': 'swim_bands', 'accessories': ['swim_bands', 'white_kicks']})
+        equipment = await self.recv_type(b, 'appearance')
+        self.assertEqual(equipment['uuid'], A)
+        self.assertEqual(equipment['accessories'], ['swim_bands', 'white_kicks'])
+        self.assertEqual(equipment['accessory'], 'swim_bands')
+        c = await self.client(C, auras=True)
+        await self.send(c, {'type': 'watch', 'players': [A]})
+        self.assertEqual((await self.recv_type(c, 'appearance'))['accessories'], ['swim_bands', 'white_kicks'])
+        await self.send(a, {'type': 'appearance', 'aura': None, 'accessories': ['white_kicks']})
+        self.assertEqual((await self.recv_type(b, 'appearance'))['accessories'], ['white_kicks'])
+        await self.recv_type(c, 'appearance')
+        await self.send(a, {'type': 'appearance', 'aura': None, 'accessory': 'swim_bands'})
+        self.assertEqual((await self.recv_type(b, 'appearance'))['accessories'], ['swim_bands'])
+        await self.recv_type(c, 'appearance')
+        await self.send(a, {'type': 'appearance', 'aura': None, 'accessories': []})
+        self.assertEqual((await self.recv_type(b, 'appearance'))['accessories'], [])
+
+    async def test_invalid_equipment_lists_never_replace_state(self):
+        for invalid in [['white_kicks'] * 17, ['white_kicks', 'white_kicks'], ['../bad'], [7], None]:
+            peer = Peer(None, A, supports_auras=True)
+            with self.assertRaises(ValueError):
+                self.relay.message(peer, {'type': 'appearance', 'aura': None, 'accessories': invalid})
+            self.assertFalse(peer.appearance_received)
 
     async def test_bad_uuid_packet_bounds_and_rate_limits(self):
         with self.assertRaises(ValueError):

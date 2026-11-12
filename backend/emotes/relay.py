@@ -56,6 +56,7 @@ class Peer:
     watch: set = field(default_factory=set)
     aura: str | None = None
     accessory: str | None = None
+    accessories: tuple[str, ...] = ()
     appearance_received: bool = False
     supports_auras: bool = False
     queue: asyncio.Queue = field(default_factory=lambda: asyncio.Queue(16))
@@ -63,6 +64,10 @@ class Peer:
     tokens: float = 40
     byte_tokens: float = 2 * 1024 * 1024
     budget_at: float = field(default_factory=time.monotonic)
+
+    def appearance(self):
+        return {"type": "appearance", "uuid": self.uuid, "aura": self.aura,
+                "accessory": self.accessory, "accessories": list(self.accessories)}
 
     def push(self, message):
         text = encode(message)
@@ -205,9 +210,9 @@ class Relay:
                     other.push({"type": "request", "uuid": peer.uuid})
                     peer.push({"type": "request", "uuid": other.uuid})
                     if other.appearance_received and peer.supports_auras:
-                        peer.push({"type": "appearance", "uuid": other.uuid, "aura": other.aura, "accessory": other.accessory})
+                        peer.push(other.appearance())
                     if peer.appearance_received and other.supports_auras:
-                        other.push({"type": "appearance", "uuid": peer.uuid, "aura": peer.aura, "accessory": peer.accessory})
+                        other.push(peer.appearance())
             return
         if message.get("type") == "appearance":
             if not peer.supports_auras:
@@ -218,11 +223,19 @@ class Relay:
             accessory = message.get("accessory")
             if accessory is not None and (not isinstance(accessory, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", accessory)):
                 raise ValueError("Invalid accessory")
-            peer.accessory = accessory
+            accessories = message.get("accessories", [accessory] if accessory else [])
+            if not isinstance(accessories, list) or len(accessories) > 16:
+                raise ValueError("Invalid accessories")
+            if any(not isinstance(item, str) or not re.fullmatch(r"[a-z0-9_]{1,64}", item) for item in accessories):
+                raise ValueError("Invalid accessories")
+            if len(set(accessories)) != len(accessories):
+                raise ValueError("Duplicate accessories")
+            peer.accessories = tuple(accessories)
+            peer.accessory = accessories[0] if accessories else None
             peer.aura, peer.appearance_received = aura, True
             for other in self.peers.values():
                 if other is not peer and other.supports_auras and peer.uuid in other.watch and other.uuid in peer.watch:
-                    other.push({"type": "appearance", "uuid": peer.uuid, "aura": aura, "accessory": accessory})
+                    other.push(peer.appearance())
             return
         if message.get("type") != "packet":
             raise ValueError("Invalid message type")

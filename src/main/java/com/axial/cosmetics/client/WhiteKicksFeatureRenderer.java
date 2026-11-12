@@ -18,9 +18,9 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
     public WhiteKicksFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch){
         var world=MinecraftClient.getInstance().world;
-        if(world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state))return;
+        if(world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state,WardrobeAccessory.WHITE_KICKS.slots))return;
         var player=world.getEntityById(state.id);
-        if(player==null||WardrobePreferences.accessoryFor(player.getUuid())!=WardrobeAccessory.WHITE_KICKS)return;
+        if(player==null||!WardrobePreferences.accessoriesFor(player.getUuid()).contains(WardrobeAccessory.WHITE_KICKS))return;
         kicks.left.setTransform(getContextModel().leftLeg.getTransform());kicks.right.setTransform(getContextModel().rightLeg.getTransform());
         FeatureRenderer.render(kicks,TEXTURE,matrices,commands,light,state,0xFFFFFFFF,0);
     }

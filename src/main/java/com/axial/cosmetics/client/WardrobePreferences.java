@@ -75,22 +75,36 @@ public final class WardrobePreferences {
         WardrobeAura aura=player.equals(account)?currentAura():EmoteRelay.remoteAura(player,WardrobeAura.defaultFor(player));
         return aura!=null&&aura.ownedBy(player)?aura:null;
     }
-    static WardrobeAccessory accessorySelection(Properties values,UUID uuid){
-        if(uuid==null)return null;
-        var accessory=WardrobeAccessory.fromId(values.getProperty(uuid+".accessory"));
-        return accessory!=null&&accessory.ownedBy(uuid)?accessory:null;
+    static java.util.List<WardrobeAccessory> accessorySelections(Properties values,UUID uuid){
+        if(uuid==null)return java.util.List.of();
+        String stored=values.getProperty(uuid+".accessories",values.getProperty(uuid+".accessory","none"));
+        return grantedAccessories(java.util.Arrays.asList(stored.split(",",-1)),uuid);
     }
-    static WardrobeAccessory currentAccessory(){load();return accessorySelection(selections,MinecraftClient.getInstance().getSession().getUuidOrNull());}
+    static java.util.List<WardrobeAccessory> grantedAccessories(java.util.List<String> ids,UUID uuid){
+        if(uuid==null||ids.size()>16)return java.util.List.of();
+        var items=ids.stream().map(WardrobeAccessory::fromId).filter(java.util.Objects::nonNull).filter(item->item.ownedBy(uuid)).toList();
+        return CosmeticLoadout.compatible(items,item->item.slots);
+    }
+    static WardrobeAccessory accessorySelection(Properties values,UUID uuid){return accessorySelections(values,uuid).stream().findFirst().orElse(null);}
+    static java.util.List<WardrobeAccessory> currentAccessories(){load();return accessorySelections(selections,MinecraftClient.getInstance().getSession().getUuidOrNull());}
+    static Properties accessoryToggle(Properties values,UUID uuid,WardrobeAccessory accessory){
+        var updated=new Properties();updated.putAll(values);
+        if(uuid==null||!accessory.ownedBy(uuid))return updated;
+        var items=CosmeticLoadout.toggle(accessorySelections(values,uuid),accessory,item->item.slots);
+        updated.setProperty(uuid+".accessories",items.isEmpty()?"none":items.stream().map(item->item.id).collect(java.util.stream.Collectors.joining(",")));
+        // Retain a single-item hint for older versions without letting it override the new loadout.
+        updated.setProperty(uuid+".accessory",items.isEmpty()?"none":items.getFirst().id);
+        return updated;
+    }
     static void toggle(WardrobeAccessory accessory)throws IOException{
         if(!WardrobeAccess.allowed())return;
         var uuid=MinecraftClient.getInstance().getSession().getUuidOrNull();if(!accessory.ownedBy(uuid))return;
-        var updated=new Properties();updated.putAll(selections);
-        updated.setProperty(uuid+".accessory",currentAccessory()==accessory?"none":accessory.id);persist(updated);
+        load();persist(accessoryToggle(selections,uuid,accessory));
     }
-    static WardrobeAccessory accessoryFor(UUID uuid){
+    static java.util.List<WardrobeAccessory> accessoriesFor(UUID uuid){
+        if(uuid==null)return java.util.List.of();
         var account=MinecraftClient.getInstance().getSession().getUuidOrNull();
-        var accessory=uuid.equals(account)?currentAccessory():EmoteRelay.remoteAccessory(uuid);
-        return accessory!=null&&accessory.ownedBy(uuid)?accessory:null;
+        return uuid.equals(account)?currentAccessories():grantedAccessories(EmoteRelay.remoteAccessories(uuid),uuid);
     }
     private static void persist(Properties updated) throws IOException {
         var directory=FabricLoader.getInstance().getConfigDir();Files.createDirectories(directory);

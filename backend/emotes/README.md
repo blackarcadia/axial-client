@@ -36,3 +36,26 @@ Emotecraft's [proxy API](https://github.com/KosmX/emotes-proxy-template) provide
 Clients advertise `features: ["auras"]` in their existing version-1 authentication message. Only those clients publish/receive `appearance` envelopes (`aura` is a cosmetic ID or `null`); older emote clients receive no new message types. Identity, mutual visibility and rate limits apply as for emote packets. The relay keeps the current equipment state only in the authenticated peer's memory and provides it to new visible viewers. Receiving clients validate ownership from their cosmetics grant snapshot. Native Minecraft emote networking retains priority while this independent equipment synchronization remains active.
 
 The appearance envelope also carries an optional `accessory` cosmetic ID or `null` for independent outfit equipment such as Swim Bands. Older clients ignore the extra field. New clients require an explicit synchronized selection and a valid cosmetic grant before rendering an accessory.
+
+## Multiple outfit slots
+
+Updated clients advertise the complete equipped accessory list in `accessories`
+(up to 16 unique bounded IDs), alongside `accessory` containing the first item
+for older clients. The relay retains and forwards the list in live appearance
+updates and late-viewer snapshots, with the existing identity and mutual-watch
+checks. Legacy single-accessory publishers still work; an empty list clears all
+outfits. Older viewers can show only the first item. Both players need updated
+clients to see an entire combined outfit.
+
+Client metadata declares occupied body parts using `CosmeticSlot` (head, chest,
+left/right arms, legs, boots, backpack). Capes and auras remain independent. Swim
+Bands occupies both arms; White Kicks occupies boots. Selecting an item replaces
+only cosmetics with an overlapping slot; clicking an equipped item removes only
+that item. Items spanning several parts reserve all of those parts.
+
+Loadouts persist per Minecraft UUID in `axial-wardrobe.properties` under the
+`.accessories` key. Existing `.accessory` selections are read when no new key is
+present. An explicit empty new loadout overrides the legacy hint. Ownership is
+checked individually on load, rendering and incoming appearance snapshots, so
+revocation removes only the affected item. Existing body-part armour-skin
+conflicts are checked against each accessory's own slots.

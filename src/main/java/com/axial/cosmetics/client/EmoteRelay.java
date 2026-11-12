@@ -49,8 +49,8 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     private int ticks;
     private Set<UUID> watched=Set.of();
     private final java.util.Map<UUID,String> remoteAuras=new java.util.HashMap<>();
-    private final java.util.Map<UUID,String> remoteAccessories=new java.util.HashMap<>();
-    static WardrobeAccessory remoteAccessory(UUID player){return WardrobeAccessory.fromId(INSTANCE.remoteAccessories.get(player));}
+    private final java.util.Map<UUID,java.util.List<String>> remoteAccessories=new java.util.HashMap<>();
+    static java.util.List<String> remoteAccessories(UUID player){return INSTANCE.remoteAccessories.getOrDefault(player,java.util.List.of());}
     static WardrobeAura remoteAura(UUID player,WardrobeAura fallback) {
         String id=INSTANCE.remoteAuras.get(player);
         return id==null?fallback:WardrobeAura.fromId(id);
@@ -87,11 +87,11 @@ public final class EmoteRelay extends AbstractNetworkInstance {
     }
     private void sendAppearance(Connection live) {
         var aura=WardrobePreferences.currentAura();String id=aura==null?"":aura.id;
-        var accessory=WardrobePreferences.currentAccessory();String accessoryId=accessory==null?"":accessory.id;
+        var accessories=WardrobePreferences.currentAccessories();String accessoryId=accessories.stream().map(item->item.id).collect(java.util.stream.Collectors.joining(","));
         if(id.equals(live.lastAura)&&accessoryId.equals(live.lastAccessory))return;
         var message=new JsonObject();message.addProperty("type","appearance");
         if(aura==null)message.add("aura",com.google.gson.JsonNull.INSTANCE);else message.addProperty("aura",id);
-        if(accessory==null)message.add("accessory",com.google.gson.JsonNull.INSTANCE);else message.addProperty("accessory",accessoryId);
+        AccessoryAppearance.write(message,accessories);
         live.send(message);live.lastAura=id;live.lastAccessory=accessoryId;
     }
     private static boolean fallback() {
@@ -216,10 +216,9 @@ public final class EmoteRelay extends AbstractNetworkInstance {
             if(type.equals("appearance")) {
                 var value=message.get("aura");String id=value==null||value.isJsonNull()?"":value.getAsString();
                 if(id.length()>64||(!id.isEmpty()&&!id.matches("[a-z0-9_]+")))throw new IOException("Invalid aura state");
-                var accessoryValue=message.get("accessory");String accessoryId=accessoryValue==null||accessoryValue.isJsonNull()?"":accessoryValue.getAsString();
-                if(accessoryId.length()>64||(!accessoryId.isEmpty()&&!accessoryId.matches("[a-z0-9_]+")))throw new IOException("Invalid accessory state");
+                var accessories=AccessoryAppearance.read(message);
                 MinecraftClient.getInstance().execute(()->{if(connection==this&&context==base&&watched.contains(author)){
-                    remoteAuras.put(author,id);remoteAccessories.put(author,accessoryId);
+                    remoteAuras.put(author,id);remoteAccessories.put(author,accessories);
                 }});return;
             }
             if(type.equals("request")){MinecraftClient.getInstance().execute(()->repeat(this,author));return;}

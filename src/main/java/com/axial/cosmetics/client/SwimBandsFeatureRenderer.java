@@ -17,9 +17,9 @@ public final class SwimBandsFeatureRenderer extends FeatureRenderer<PlayerEntity
     public SwimBandsFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch){
         var world=MinecraftClient.getInstance().world;
-        if(world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state))return;
+        if(world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state,WardrobeAccessory.SWIM_BANDS.slots))return;
         var player=world.getEntityById(state.id);
-        if(player==null||WardrobePreferences.accessoryFor(player.getUuid())!=WardrobeAccessory.SWIM_BANDS)return;
+        if(player==null||!WardrobePreferences.accessoriesFor(player.getUuid()).contains(WardrobeAccessory.SWIM_BANDS))return;
         bands.left.setTransform(getContextModel().leftArm.getTransform());bands.right.setTransform(getContextModel().rightArm.getTransform());
         // This argument is the ARGB tint; white preserves the supplied texture colours.
         FeatureRenderer.render(bands,TEXTURE,matrices,commands,light,state,0xFFFFFFFF,0);

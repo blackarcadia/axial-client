@@ -12,19 +12,19 @@ class WhiteKicksTest {
         var bones=WhiteKicksGeometry.load();assertEquals(6,bones.size());
         assertEquals(8,bones.stream().mapToInt(b->b.cubes().size()).sum());
         var left=bones.stream().filter(b->b.name().equals("bipedLeftLeg")).findFirst().orElseThrow();
-        assertEquals(180,left.rotation().y());
+        assertEquals(0,left.rotation().y());
         var offset=WhiteKicksGeometry.position(left.pivot()).subtract(new WhiteKicksGeometry.Vec(2,12,0));
-        assertEquals(9,offset.y()); // The source left parent pivots at the ankle, not the hip.
-        var boot=bones.stream().filter(b->b.name().equals("armorLeftBoot")).findFirst().orElseThrow();
-        var sole=boot.cubes().get(2);assertEquals(new WhiteKicksGeometry.Vec(5.25f,1.25f,7.125f),sole.size());
-        var tongue=boot.cubes().get(3);assertEquals(-22.5f,tongue.rotation().x());
-        assertEquals((float)Math.toRadians(22.5),WhiteKicksGeometry.rotation(tongue.rotation()).x(),.00001);
+        assertEquals(0,offset.y()); // Updated source pivots both shoes at the native hip.
+        var boot=left;
+        var sole=boot.cubes().get(1);assertEquals(new WhiteKicksGeometry.Vec(5f,1.125f,7.5f),sole.size());
+        var tongue=boot.cubes().get(3);assertEquals(22.5f,tongue.rotation().x());
+        assertEquals((float)Math.toRadians(-22.5),WhiteKicksGeometry.rotation(tongue.rotation()).x(),.00001);
         assertEquals(new WhiteKicksGeometry.Vec(2,12,0),WhiteKicksGeometry.position(new WhiteKicksGeometry.Vec(2,12,0)));
     }
     @Test void textureAndBothThumbnailsArePackagedAtTheirDeclaredSizes() throws Exception {
         for(String path:List.of("textures/entity/accessories/white_kicks.png","textures/gui/white_kicks_preview.png")){
             try(var input=getClass().getResourceAsStream("/assets/axial_cosmetics/"+path)){
-                assertNotNull(input);var image=ImageIO.read(input);int size=path.contains("preview")?128:32;
+                assertNotNull(input);var image=ImageIO.read(input);int size=path.contains("preview")?WardrobeAccessory.WHITE_KICKS.previewSize:32;
                 assertEquals(size,image.getWidth());assertEquals(size,image.getHeight());
                 int opaque=0;for(int y=0;y<size;y++)for(int x=0;x<size;x++)if((image.getRGB(x,y)>>>24)>100)opaque++;
                 assertTrue(opaque>100,"Visible textured content");

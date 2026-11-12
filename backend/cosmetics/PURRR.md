@@ -15,3 +15,7 @@ Run `java -Djava.awt.headless=true tools/GeneratePurrrCape.java` to pack the
 2048 × 1024 texture and regenerate the admin thumbnail. The code uses the same
 vanilla cape UVs as existing capes and copies every source pixel unchanged.
 Purrr has one texture frame; existing animated capes retain their 16-frame loops.
+
+The client wardrobe uses the supplied 601 × 1209 selection image at
+`textures/gui/purrr_preview.png`, fitted without cropping or stretching. This
+preview is independent of the equipped cape atlas and the VPS thumbnail.

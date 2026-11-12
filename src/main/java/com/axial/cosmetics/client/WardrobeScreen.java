@@ -257,13 +257,21 @@ public final class WardrobeScreen extends Screen {
     }
 
     private void drawCape(DrawContext c,WardrobeCape cape,int x,int y,int w,int h) {
+        var preview=cape.preview();
+        if(preview!=null){
+            float scale=Math.min(w/(float)preview.width(),h/(float)preview.height());
+            int imageW=Math.max(1,Math.round(preview.width()*scale)),imageH=Math.max(1,Math.round(preview.height()*scale));
+            c.drawTexture(RenderPipelines.GUI_TEXTURED,preview.texture(),x+(w-imageW)/2,y+(h-imageH)/2,0,0,imageW,imageH,
+                    preview.width(),preview.height(),preview.width(),preview.height(),tint(0xFFFFFFFF));
+            return;
+        }
         float age=client.player==null?(System.currentTimeMillis()%4000)/50f:client.player.age;
         c.drawTexture(RenderPipelines.GUI_TEXTURED,cape.texture(age),x,y,32,32,w,h,320,512,2048,1024,tint(0xFFFFFFFF));
     }
 
     private void drawAccessory(DrawContext c,WardrobeAccessory accessory,Rect r){
         int size=Math.max(1,Math.min(r.width(),r.height()));
-        c.drawTexture(RenderPipelines.GUI_TEXTURED,accessory.preview(),r.x()+(r.width()-size)/2,r.y()+(r.height()-size)/2,0,0,size,size,128,128,128,128,tint(0xFFFFFFFF));
+        c.drawTexture(RenderPipelines.GUI_TEXTURED,accessory.preview(),r.x()+(r.width()-size)/2,r.y()+(r.height()-size)/2,0,0,size,size,accessory.previewSize,accessory.previewSize,accessory.previewSize,accessory.previewSize,tint(0xFFFFFFFF));
     }
     private void drawAura(DrawContext c,WardrobeAura aura,Rect bounds) {
         int frame=(int)((System.currentTimeMillis()%6000)*64/6000);
