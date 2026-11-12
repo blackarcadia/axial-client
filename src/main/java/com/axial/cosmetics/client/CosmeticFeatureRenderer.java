@@ -39,7 +39,7 @@ public class CosmeticFeatureRenderer extends FeatureRenderer<PlayerEntityRenderS
     @Override
     public void render(MatrixStack matrices, OrderedRenderCommandQueue commands, int light, PlayerEntityRenderState state,
                        float limbAngle, float limbDistance) {
-        if(MinecraftClient.getInstance().world==null||ItemSkinConflict.hidesCosmetics(state))return;
+        if(state instanceof WardrobePreviewState||MinecraftClient.getInstance().world==null||ItemSkinConflict.hidesCosmetics(state))return;
         Entity entity = MinecraftClient.getInstance().world.getEntityById(state.id);
         if (entity == null) return;
         List<CosmeticTexture> cosmetics = manager.get(entity.getUuid(), entity.getName().getString());

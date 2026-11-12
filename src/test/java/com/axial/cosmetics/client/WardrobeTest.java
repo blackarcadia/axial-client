@@ -26,7 +26,7 @@ class WardrobeTest {
             inside(l.panel,new Rect(0,0,w,h));
             for(Rect r:new Rect[]{l.close,l.categories,l.search,l.grid,l.preview,l.details,l.done})inside(r,l.panel);
             for(var category:WardrobeCategory.values())inside(l.category(category.ordinal()),l.categories);
-            for(int i=0;i<2;i++)inside(l.card(i),l.grid);
+            for(int i=0;i<l.columns;i++)inside(l.card(i),l.grid);
             assertTrue(l.search.right()<l.preview.x());
             assertTrue(l.details.bottom()<=l.done.y());
             assertTrue(l.grid.right()<l.preview.x());

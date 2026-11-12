@@ -17,15 +17,22 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
     private static final Identifier WHITE=Identifier.of("axial_cosmetics","textures/entity/auras/white.png");
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
-        var client=MinecraftClient.getInstance();
-        if(client.world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state))return;
-        var entity=client.world.getEntityById(state.id);
-        if(entity==null||!PlayerProfiles.isActualPlayer(entity.getUuid()))return;
-        var aura=WardrobePreferences.auraFor(entity.getUuid());
+        WardrobeAura aura;
+        double distance=0;
+        float time=state.age;
+        if(state instanceof WardrobePreviewState preview) {
+            aura=preview.aura;
+        } else {
+            var client=MinecraftClient.getInstance();
+            if(client.world==null||state.invisible||state.spectator||ItemSkinConflict.hidesCosmetics(state))return;
+            var entity=client.world.getEntityById(state.id);
+            if(entity==null||!PlayerProfiles.isActualPlayer(entity.getUuid()))return;
+            aura=WardrobePreferences.auraFor(entity.getUuid());
+            distance=client.player==null?0:entity.squaredDistanceTo(client.player);
+            if(distance>64*64)return;
+            time+=entity.getUuid().hashCode()&127;
+        }
         if(aura==null)return;
-        double distance=client.player==null?0:entity.squaredDistanceTo(client.player);
-        if(distance>64*64)return;
-        float time=state.age+(entity.getUuid().hashCode()&127);
         var mesh=switch(aura) {
             case HEXWIND -> HexwindGeometry.frame(time,distance<24*24);
             case GOLD_SPARK -> GoldSparkGeometry.frame(time,distance<24*24);

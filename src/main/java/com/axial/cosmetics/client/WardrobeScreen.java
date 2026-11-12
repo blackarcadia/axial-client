@@ -11,12 +11,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.sound.SoundManager;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
 import org.axial.axialutils.client.AxialUiTheme;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -30,9 +25,9 @@ public final class WardrobeScreen extends Screen {
     private WardrobeCategory category = WardrobeCategory.CAPES;
     private boolean dragging;
     private WardrobeItem focusedItem;
-    private float rotation = 25;
-    private float shownRotation=25;
-    private final UiMotion previewRotation=new UiMotion(25);
+    private float rotation = 155;
+    private float shownRotation=155;
+    private final UiMotion previewRotation=new UiMotion(155);
     private final UiMotion categoryMarker=new UiMotion(0);
     private final SmoothScroll scrolling=new SmoothScroll();
     private final FilterGridMotion<WardrobeItem> filtering=new FilterGridMotion<>();
@@ -40,10 +35,13 @@ public final class WardrobeScreen extends Screen {
     private MenuAnimation animation=new MenuAnimation();
     private boolean reopen;
     private final java.util.Map<WardrobeItem,UiMotion> equipmentMotion=new java.util.HashMap<>();
+    private final java.util.Map<WardrobeItem,UiMotion> cardMotion=new java.util.HashMap<>();
     private long equippedAt;
     private String query = "", error = "";
     private TextFieldWidget search;
     private int scroll;
+    private net.minecraft.entity.player.SkinTextures menuSkin;
+    private boolean skinRequested;
     private final java.util.List<CosmeticCard> cards=new java.util.ArrayList<>();
     private WardrobeScreen(Screen parent) { super(text("Wardrobe")); this.parent = parent; }
 
@@ -69,6 +67,14 @@ public final class WardrobeScreen extends Screen {
             if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
             if(focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
             if(focusedItem.accessory()!=null)category=WardrobeCategory.OUTFITS;
+            rotation=WardrobeModelView.yaw(focusedItem);previewRotation.jump(rotation);
+        }
+        if(!skinRequested) {
+            skinRequested=true;
+            var uuid=client.getSession().getUuidOrNull();
+            menuSkin=net.minecraft.client.util.DefaultSkinHelper.getSkinTextures(uuid==null?new java.util.UUID(0,0):uuid);
+            if(uuid!=null)client.getSkinProvider().fetchSkinTextures(client.getGameProfile())
+                    .thenAccept(result->client.execute(()->result.ifPresent(skin->menuSkin=skin)));
         }
         layout = new WardrobeLayout(width,height);
         rebuild();
@@ -99,7 +105,7 @@ public final class WardrobeScreen extends Screen {
         addDrawableChild(search);
         if(focused)setFocused(search);
         var matching=matchingItems();
-        if(!matching.isEmpty()&&!matching.contains(focusedItem))focusedItem=matching.getFirst();
+        if(!matching.isEmpty()&&!matching.contains(focusedItem)){focusedItem=matching.getFirst();rotation=WardrobeModelView.yaw(focusedItem);}
         int nextScroll=Math.clamp(scroll,0,layout.maxScroll(matching.size()));
         filtering.offsetY(nextScroll-scroll);scroll=nextScroll;
         filtering.update(matching,index->layout.card(index,0));
@@ -118,7 +124,7 @@ public final class WardrobeScreen extends Screen {
     }
     private void save(WardrobeItem item) {
         if (!WardrobeAccess.allowed()) return;
-        try {item.toggle();focusedItem=item;equippedAt=System.nanoTime();error="";rebuild();}
+        try {item.toggle();focusedItem=item;rotation=WardrobeModelView.yaw(item);equippedAt=System.nanoTime();error="";rebuild();}
         catch(IOException ex) {error="Could not save. Try again.";}
     }
     private void card(WardrobeItem item,Rect r) {
@@ -156,7 +162,17 @@ public final class WardrobeScreen extends Screen {
         float equipProgress=(float)equipmentMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(selected?1:0);
         frame(c,r,mixColor(hover?HOVER_LINE:LINE,0xFFAE55FF,equipProgress),mixColor(0xFF15191F,0xFF282033,equipProgress));
         Rect image=WardrobeLayout.capeImage(r);
-        if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
+        Rect stage=WardrobeLayout.modelStage(r);
+        if(r.height()>=55) {
+            rounded(c,stage.x(),stage.y(),stage.width(),stage.height(),hover?0xFF20232F:0xFF191D27);
+            int floorY=stage.bottom()-5;
+            rounded(c,stage.x()+stage.width()/5,floorY,Math.max(1,stage.width()*3/5),2,selected?0xFF6D448A:0xFF343A48);
+            drawModel(c,item,stage,WardrobeModelView.yaw(item)+(float)cardMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(hover?8:0),true);
+            if(selected) {
+                rounded(c,r.right()-15,r.y()+7,8,8,BRAND);
+                label(c,textRenderer,"✓",r.right()-14,r.y()+7,INK,.65f,7,false);
+            }
+        } else if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
         else if(item.accessory()!=null)drawAccessory(c,item.accessory(),image);
         else drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
         if(r.height()<55) {
@@ -167,7 +183,7 @@ public final class WardrobeScreen extends Screen {
         c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,tint(DIVIDER));
         label(c,textRenderer,item.label(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
         boolean equipped=item.equipped();
-        label(c,textRenderer,equipped?"Equipped":"Click to equip",r.x()+7,r.bottom()-12,
+        label(c,textRenderer,equipped?"EQUIPPED":"CLICK TO EQUIP",r.x()+7,r.bottom()-12,
                 equipped?BRAND:MUTED,.7f,r.width()-14,false);
     }
 
@@ -228,7 +244,7 @@ public final class WardrobeScreen extends Screen {
             label(c,textRenderer,"No cosmetics here yet",layout.grid.x()+3,layout.grid.y()+12,MUTED,.8f,layout.grid.width()-6,false);
         }
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
-        label(c,textRenderer,error.isEmpty()?"Saves automatically • Local preview":error,p.x()+10,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-82,false);
+        label(c,textRenderer,error.isEmpty()?"Your collection • Click a cosmetic to equip":error,p.x()+10,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-82,false);
         super.render(c,mx,my,delta);
         var categoryStart=layout.category(0);var categoryNext=layout.category(1);
         int categoryY=categoryStart.y()+(int)Math.round(categoryMarker.toward(category.ordinal())*(categoryNext.y()-categoryStart.y()));
@@ -280,31 +296,21 @@ public final class WardrobeScreen extends Screen {
                 (frame%8)*128,(frame/8)*128,size,size,128,128,1024,1024,tint(0xFFFFFFFF));
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
     private void drawPlayer(DrawContext c,float delta) {
         Rect r=layout.preview;
-        if(client.player==null) {
-            int h=Math.max(12,r.height()-32),w=Math.min(r.width()-14,h*10/16);
-            var equipped=WardrobePreferences.current();
-            if(focusedItem!=null&&focusedItem.aura()!=null)drawAura(c,focusedItem.aura(),new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
-            else if(focusedItem!=null&&focusedItem.accessory()!=null)drawAccessory(c,focusedItem.accessory(),new Rect(r.x()+5,r.y()+8,r.width()-10,r.height()-38));
-            else if(equipped!=null)drawCape(c,equipped,r.x()+(r.width()-w)/2,r.y()+8,w,h);
-            label(c,textRenderer,"Join a world to preview",r.x()+4,r.bottom()-32,MUTED,.65f,r.width()-8,false);
-            return;
-        }
-        PlayerEntityRenderer renderer=(PlayerEntityRenderer)client.getEntityRenderDispatcher().getRenderer(client.player);
-        PlayerEntityRenderState state=renderer.createRenderState();
-        renderer.updateRenderState(client.player,state,delta);
-        state.bodyYaw=shownRotation;state.relativeHeadYaw=0;state.pitch=0;
-        state.pose=EntityPose.STANDING;state.sneaking=false;state.invisible=false;state.spectator=false;
-        state.displayName=null;state.outlineColor=0;state.deathTime=0;
-        state.limbSwingAmplitude=0;state.limbSwingAnimationProgress=0;
-        state.equippedHeadStack=ItemStack.EMPTY;state.equippedChestStack=ItemStack.EMPTY;
-        state.equippedLegsStack=ItemStack.EMPTY;state.equippedFeetStack=ItemStack.EMPTY;
-        state.rightHandItem=ItemStack.EMPTY;state.leftHandItem=ItemStack.EMPTY;
-        state.width/=state.baseScale;state.height/=state.baseScale;state.baseScale=1;
-        c.addEntity(state,Math.max(8,(r.height()-25)/2.15f),new Vector3f(0,state.height/2,0),
-                new Quaternionf().rotateZ((float)Math.PI),new Quaternionf(),r.x()+2,r.y()+2,r.right()-2,r.bottom()-24);
+        label(c,textRenderer,"YOUR LOADOUT",r.x()+8,r.y()+8,MUTED,.65f,r.width()-16,false);
+        drawModel(c,focusedItem,new Rect(r.x()+3,r.y()+19,Math.max(1,r.width()-6),Math.max(1,r.height()-44)),shownRotation,false);
+    }
+
+    private void drawModel(DrawContext c,WardrobeItem item,Rect bounds,float yaw,boolean card) {
+        var skin=client.player==null?menuSkin:client.player.getSkin();
+        if(skin==null||item==null)return;
+        float age=(System.nanoTime()/50_000_000L)%1_000_000;
+        var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
+        var view=WardrobeModelView.fit(card?item:WardrobeItem.of(state.aura),bounds,card);
+        c.addEntity(state,view.scale(),new Vector3f(0,view.centerY(),0),
+                new Quaternionf().rotateZ((float)Math.PI),new Quaternionf(),
+                bounds.x(),bounds.y(),bounds.right(),bounds.bottom());
     }
 
     @Override public boolean keyPressed(KeyInput input) {
