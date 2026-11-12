@@ -22,6 +22,12 @@ class ModMenuEntryTest {
         assertTrue(entry.opensMenu());assertNull(entry.toggle());assertFalse(entry.isEnabled());assertNotNull(entry.configure());
         assertTrue(entry.matches(ModMenuEntry.Category.ALL,"gang",false));
     }
+    @Test void feedbackIsAnOpenableMenuAction() {
+        var entry=new ModMenuEntry("Feedback","Send ideas and bugs to the development team",ModMenuEntry.Category.WORLD,"quick_forums",null,null,()->{});
+        assertTrue(entry.opensMenu());
+        assertTrue(entry.matches(ModMenuEntry.Category.ALL,"feedback",false));
+        assertNull(entry.toggle());
+    }
     @Test void configurationToolsAreNeverPresentedAsEnabledMods() {
         var entry=new ModMenuEntry("Item Scaler","Held item scale",ModMenuEntry.Category.VISUALS,"scale",null,null,()->{});
         assertTrue(entry.matches(ModMenuEntry.Category.ALL,"item",false));

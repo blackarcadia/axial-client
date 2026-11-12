@@ -1,7 +1,7 @@
 package com.axial.cosmetics.client;
 
 final class QuickMenuLayout {
-    static final int ACTION_COUNT=6;
+    static final int ACTION_COUNT=7;
     final ModMenuLayout.Rect bar,logo;
     final int tileWidth,hintY;
     final boolean labels;

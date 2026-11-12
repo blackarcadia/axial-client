@@ -13,8 +13,23 @@ try {
     $catalog=json_decode(file_get_contents(dirname(__DIR__).'/catalog.json'),true,32,JSON_THROW_ON_ERROR);
     $db=new PDO('sqlite:'.$config['database'],null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
     $db->exec('PRAGMA busy_timeout=5000');
+    require_once dirname(__DIR__).'/Feedback.php';
+    Feedback::migrate($db);
     $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
     $method=$_SERVER['REQUEST_METHOD'];
+    if(str_starts_with($path,'/v1/feedback/')) {
+        header('Cache-Control: no-store');
+        if($method!=='POST')reply(['error'=>'Method not allowed'],405);
+        $raw=file_get_contents('php://input',false,null,0,20001);
+        if(strlen($raw)>20000)reply(['error'=>'Request too large'],413);
+        $body=json_decode($raw,true);
+        if(!is_array($body))reply(['error'=>'Invalid request'],400);
+        $auth=$_SERVER['HTTP_AUTHORIZATION']??'';
+        $token=str_starts_with($auth,'Bearer ')?substr($auth,7):'';
+        $peer=hash_hmac('sha256',$_SERVER['REMOTE_ADDR']??'unknown',$config['rate_secret']);
+        try {reply(Feedback::handle($db,substr($path,13),$body,$token,$peer));}
+        catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+    }
     if($path==='/webhooks/paynow') {
         if($method!=='POST')reply(['error'=>'Method not allowed'],405);
         require dirname(__DIR__).'/PayNowWebhook.php';
@@ -68,6 +83,15 @@ try {
         } elseif(!empty($_SESSION['admin'])) {
             $_SESSION['last']=time();
             if($action==='logout'){$_SESSION=[];session_destroy();header('Location: /admin',true,303);exit;}
+            if($action==='feedback_approve'||$action==='feedback_delete') {
+                $id=filter_var($_POST['feedback_id']??null,FILTER_VALIDATE_INT);
+                $reply=$_POST['reply']??'';
+                if(!$id||!is_string($reply))reply(['error'=>'Invalid feedback action'],400);
+                try {Feedback::moderate($db,$action==='feedback_approve'?'approve':'delete',$id,$reply);}
+                catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+                $_SESSION['notice']=$action==='feedback_approve'?'Feedback approved. The player will be notified on login.':'Feedback deleted. Any pending approval notice is preserved.';
+                header('Location: /admin#feedback',true,303);exit;
+            }
             if($action==='paynow_secret') {
                 require_once dirname(__DIR__).'/PayNowWebhook.php';
                 $event=$_POST['event_type']??'';$secret=$_POST['signing_secret']??'';
@@ -127,6 +151,15 @@ try {
 <div class="catalog"><?php foreach($catalog as $id=>$cape):?><label class="cosmetic"><img src="/assets/<?=h($cape['image'])?>" alt="<?=h($cape['name'])?> cosmetic"><span><input type="checkbox" name="capes[]" value="<?=h($id)?>" <?=in_array($id,$owned,true)?'checked':''?>> <?=h($cape['name'])?></span><small><?=h($cape['category']??'Capes')?></small></label><?php endforeach?></div>
 <p class="hint">Checked cosmetics grant manual access. Unchecking removes that manual grant; active purchases still grant access. Updated clients refresh within one minute.</p><button class="primary">Save cosmetic access</button></form>
 <section><h2>Assigned players</h2><div class="players"><?php foreach($db->query('SELECT p.uuid,COUNT(g.cape) AS total FROM players p LEFT JOIN effective_grants g ON g.uuid=p.uuid GROUP BY p.uuid ORDER BY p.updated_at DESC LIMIT 100') as $row):?><a href="/admin?uuid=<?=h($row['uuid'])?>"><code><?=h($row['uuid'])?></code><span><?=h((string)$row['total'])?> cosmetics →</span></a><?php endforeach?></div></section>
+<section id="feedback"><h2>Player feedback</h2><p>Latest 100 submissions. Approval queues a private notification for the player's next login. Deleting a submission preserves its undelivered approval notice.</p>
+<?php $feedbackRows=$db->query('SELECT * FROM feedback ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC); if(!$feedbackRows):?><p>No feedback yet.</p><?php endif?>
+<?php foreach($feedbackRows as $item):?><article class="feedback-note">
+<h3>#<?=h((string)$item['id'])?> · <?=h($item['username'])?> <span class="feedback-status"><?=h($item['status'])?></span></h3>
+<p><code><?=h($item['uuid'])?></code> · <?=h(gmdate('Y-m-d H:i',(int)$item['created_at']))?> UTC</p>
+<div class="feedback-message"><?=nl2br(h($item['message']))?></div>
+<?php if($item['status']==='pending'):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="feedback_approve"><input type="hidden" name="feedback_id" value="<?=h((string)$item['id'])?>"><label>Optional reply<textarea name="reply" maxlength="2000" rows="2" placeholder="Thank you for the suggestion!"></textarea></label><button class="primary">Approve &amp; notify player</button></form><?php endif?>
+<form method="post" class="feedback-delete"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="feedback_delete"><input type="hidden" name="feedback_id" value="<?=h((string)$item['id'])?>"><button>Delete feedback permanently</button></form>
+</article><?php endforeach?></section>
 <section id="paynow"><h2>PayNow connection</h2><p>Store: <code>559186693647761408</code><br>Product: <code>619762575072043008</code> → STAFF cape</p>
 <p>In PayNow → Integrations → Webhooks, create one JSON webhook for each event below, using <code>https://api.axialclient.com/webhooks/paynow</code>. Paste each webhook's signing secret here. Secrets are saved privately and never displayed.</p>
 <ul><?php foreach(['ON_ORDER_COMPLETED','ON_REFUND','ON_CHARGEBACK'] as $event):?><li><?=h($event)?>: <?=in_array($event,$secretEvents,true)?'Secret configured':'Awaiting signing secret'?></li><?php endforeach?></ul>

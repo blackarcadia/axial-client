@@ -105,6 +105,10 @@ final class ModMenuCatalog {
                 () -> LitematicaMenu.open(MinecraftClient.getInstance().currentScreen)));
         entries.add(new ModMenuEntry("Hit Indicators", "Animated red markers for your confirmed hits", ModMenuEntry.Category.VISUALS,
                 "crosshair", HitIndicatorsConfig::enabled, () -> HitIndicatorsConfig.setEnabled(!HitIndicatorsConfig.enabled()), null));
+        entries.add(new ModMenuEntry("Feedback", "Send ideas and bugs to the development team", ModMenuEntry.Category.WORLD,
+                "quick_forums", null, null, () -> {
+                    var client = MinecraftClient.getInstance();client.setScreen(new FeedbackScreen(client.currentScreen));
+                }));
         return List.copyOf(entries);
     }
 
