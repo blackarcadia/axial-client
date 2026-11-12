@@ -11,6 +11,15 @@ class WhiteSneakersTest {
         var bones=WhiteKicksGeometry.load("white_sneakers");
         assertEquals(6,bones.size());
         assertEquals(8,bones.stream().mapToInt(b->b.cubes().size()).sum());
+        var left=bones.stream().filter(b->b.name().equals("bipedLeftLeg")).findFirst().orElseThrow();
+        assertEquals(new WhiteKicksGeometry.Vec(2,3,0),left.pivot());
+        assertEquals(180,left.rotation().y());
+        var boot=bones.stream().filter(b->b.name().equals("armorLeftBoot")).findFirst().orElseThrow();
+        assertEquals(4,boot.cubes().size());
+        assertEquals(new WhiteKicksGeometry.Vec(5.25f,1.25f,7.125f),boot.cubes().get(2).size());
+        assertEquals(-22.5f,boot.cubes().get(3).rotation().x());
+        var right=bones.stream().filter(b->b.name().equals("armorRightBoot")).findFirst().orElseThrow();
+        assertEquals(new WhiteKicksGeometry.Vec(157.5f,0,-180),right.cubes().getFirst().rotation());
         assertEquals(Set.of(CosmeticSlot.BOOTS),WardrobeAccessory.WHITE_SNEAKERS.slots);
         assertSame(WardrobeAccessory.WHITE_SNEAKERS,WardrobeAccessory.fromId("white_sneakers"));
         assertNotEquals(WardrobeAccessory.WHITE_KICKS.preview(),WardrobeAccessory.WHITE_SNEAKERS.preview());
