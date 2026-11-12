@@ -42,7 +42,7 @@ public final class PollService {
         var client=MinecraftClient.getInstance();
         if(loading||client.player==null||!PollsConfig.enabled())return;
         loading=true;long requestGeneration=generation;var session=client.getSession();var world=client.world;
-        nextRefresh=System.nanoTime()+60_000_000_000L;
+        nextRefresh=System.nanoTime()+30_000_000_000L;
         FeedbackService.authenticatedRequest("polls",new JsonObject()).whenComplete((body,failure)->client.execute(()->{
             if(requestGeneration!=generation||client.getSession()!=session||client.world!=world){if(requestGeneration==generation)reset();return;}
             loading=false;
@@ -64,9 +64,10 @@ public final class PollService {
         FeedbackService.authenticatedRequest("vote",request).whenComplete((body,failure)->client.execute(()->{
             if(current!=generation||client.getSession()!=session){result.completeExceptionally(new IllegalStateException("Your account changed. Please reopen Polls."));return;}
             if(failure==null){
-                int accepted=body.get("optionId").getAsInt();
-                polls=polls.stream().map(p->p.id()==poll.id()?new ClientPoll(p.id(),p.question(),p.options(),accepted,p.deadlineNanos()):p).toList();revision++;
-                result.complete(null);
+                try {
+                    polls=polls.stream().map(p->p.id()==poll.id()?p.recordVote(body):p).toList();revision++;
+                    result.complete(null);
+                }catch(RuntimeException ex){result.completeExceptionally(new java.io.IOException("Could not read the vote receipt. Refresh to check your vote.",ex));}
             }else result.completeExceptionally(failure);
             refresh();
         }));

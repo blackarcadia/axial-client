@@ -18,6 +18,7 @@ public final class PollsScreen extends NavigationScreen {
     private List<OrderedText> question=List.of();
     private final List<OptionButton> options=new ArrayList<>();
     private NavButton submit;
+    private final PollVisuals visuals=new PollVisuals();
     private String status="";
     public PollsScreen(Screen parent){super("Community Polls",parent);PollService.refresh();}
     @Override protected void init(){rebuild();}
@@ -27,9 +28,17 @@ public final class PollsScreen extends NavigationScreen {
         var next=polls.isEmpty()?null:polls.get(index);
         if(poll==null||next==null||poll.id()!=next.id()){selected=0;scroll=0;status="";}
         poll=next;
-        int w=Math.min(440,width-20),h=Math.min(360,height-16);
-        panel=new Rect((width-w)/2,(height-h)/2,w,h);
+        int w=Math.min(384,width-20);
         if(poll!=null)question=textRenderer.wrapLines(copy(poll.question(),.85f,true),w-32);else question=List.of();
+        var rowLines=new ArrayList<List<OrderedText>>();
+        contentHeight=question.size()*11+8;
+        if(poll!=null)for(var option:poll.options()) {
+            var lines=textRenderer.wrapLines(copy(option.label(),.8f,false),w-94);
+            rowLines.add(lines);contentHeight+=Math.max(32,lines.size()*11+19)+5;
+        }
+        if(!rowLines.isEmpty())contentHeight-=5;
+        int h=Math.min(poll==null?168:Math.min(300,contentHeight+116),height-16);
+        panel=new Rect((width-w)/2,(height-h)/2,w,h);
         int top=panel.y()+54;
         viewport=new Rect(panel.x()+16,top,w-32,Math.max(24,panel.bottom()-top-62));
         if(polls.isEmpty())button("Refresh",new Rect(panel.right()-91,panel.y()+29,75,18),PollService::refresh).active=PollsConfig.enabled()&&!PollService.loading();
@@ -37,12 +46,11 @@ public final class PollsScreen extends NavigationScreen {
             button("<",new Rect(panel.right()-70,panel.y()+29,24,18),()->change(-1)).active=!sending;
             button(">",new Rect(panel.right()-42,panel.y()+29,24,18),()->change(1)).active=!sending;
         }
-        contentHeight=question.size()*11+8;
-        if(poll!=null)for(var option:poll.options()){
-            var lines=textRenderer.wrapLines(copy(option.label(),.85f,false),viewport.width()-20);
-            int rowHeight=Math.max(24,lines.size()*11+12);
-            options.add(addDrawableChild(new OptionButton(option,lines,contentHeight,rowHeight)));
-            contentHeight+=rowHeight+5;
+        int offset=question.size()*11+8;
+        if(poll!=null)for(int i=0;i<poll.options().size();i++) {
+            var lines=rowLines.get(i);int rowHeight=Math.max(32,lines.size()*11+19);
+            options.add(addDrawableChild(new OptionButton(poll.options().get(i),lines,offset,rowHeight)));
+            offset+=rowHeight+5;
         }
         scroll=Math.clamp(scroll,0,Math.max(0,contentHeight-viewport.height()));
         button("Back",new Rect(panel.x()+16,panel.bottom()-32,65,22),this::close);
@@ -88,7 +96,7 @@ public final class PollsScreen extends NavigationScreen {
         submit.active=!sending&&poll!=null&&poll.voted()==null&&selected!=0&&poll.remaining(System.nanoTime())>0;
         submit.label(sending?"Voting…":poll!=null&&poll.voted()!=null?"Voted":"Submit Vote");
         positionOptions();
-        String hint=!error.isBlank()?error:!status.isBlank()?status:poll!=null&&poll.voted()!=null?"Your vote is recorded. One vote per account.":"Choose one option, then submit. Votes cannot be changed.";
+        String hint=!error.isBlank()?error:!status.isBlank()?status:poll!=null&&poll.voted()!=null?"Vote recorded · "+PollVisuals.votes(poll):"Choose an option · "+(poll==null?"One vote per account":PollVisuals.votes(poll));
         line(c,hint,panel.x()+16,panel.bottom()-46,!error.isBlank()?RED:poll!=null&&poll.voted()!=null?GREEN:MUTED,.7f,panel.width()-32,false);
         for(var child:children())if(child instanceof net.minecraft.client.gui.Drawable drawable)drawable.render(c,mx,my,dt);
     }
@@ -105,7 +113,10 @@ public final class PollsScreen extends NavigationScreen {
             c.enableScissor(viewport.x(),viewport.y(),viewport.right(),viewport.bottom());
             boolean chosen=poll.voted()!=null?poll.voted()==option.id():PollsScreen.this.selected==option.id();
             frame(c,new Rect(getX(),getY(),getWidth(),getHeight()),chosen?BRAND:isHovered()?HOVER_LINE:LINE,chosen?SELECTED:FIELD);
-            for(int i=0;i<lines.size();i++)c.drawText(textRenderer,lines.get(i),getX()+10,getY()+7+i*11,chosen?BRAND:INK,false);
+            for(int i=0;i<lines.size();i++)c.drawText(textRenderer,lines.get(i),getX()+10,getY()+6+i*11,chosen?BRAND:INK,false);
+            var percent=copy(PollVisuals.percentage(poll,option),.8f,true);
+            c.drawText(textRenderer,percent,getRight()-10-textRenderer.getWidth(percent),getY()+6,INK,false);
+            visuals.bar(c,poll,option,new Rect(getX()+10,getBottom()-9,getWidth()-20,4),chosen);
             c.disableScissor();
         }
     }

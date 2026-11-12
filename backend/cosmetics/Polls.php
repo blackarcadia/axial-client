@@ -5,6 +5,9 @@ declare(strict_types=1);
 final class Polls {
     public static function migrate(PDO $db): void {$db->exec(file_get_contents(__DIR__.'/polls.sql'));}
     private static function query(PDO $db,string $sql,array $args=[]): PDOStatement {$q=$db->prepare($sql);$q->execute($args);return $q;}
+    private static function options(PDO $db,int $id): array {
+        return self::query($db,'SELECT o.option_id AS id,o.label,COUNT(v.uuid) AS votes FROM poll_options o LEFT JOIN poll_votes v ON v.poll_id=o.poll_id AND v.option_id=o.option_id WHERE o.poll_id=? GROUP BY o.option_id,o.label ORDER BY o.option_id',[$id])->fetchAll(PDO::FETCH_ASSOC);
+    }
     private static function text(mixed $value,int $max): string {
         if(!is_string($value)||!preg_match('//u',$value)||trim($value)===''||preg_match_all('/./us',$value)>$max)throw new FeedbackError('Enter a question and 2–6 distinct options within the length limits.',400);
         return trim($value);
@@ -34,7 +37,7 @@ final class Polls {
         $now=time();
         if($action==='polls') {
             $polls=self::query($db,'SELECT p.id,p.question,p.closes_at,(SELECT option_id FROM poll_votes v WHERE v.poll_id=p.id AND v.uuid=?) AS voted FROM polls p WHERE p.closed=0 AND p.closes_at>? ORDER BY p.closes_at,p.id LIMIT 10',[$uuid,$now])->fetchAll(PDO::FETCH_ASSOC);
-            foreach($polls as &$poll)$poll['options']=self::query($db,'SELECT option_id AS id,label FROM poll_options WHERE poll_id=? ORDER BY option_id',[$poll['id']])->fetchAll(PDO::FETCH_ASSOC);
+            foreach($polls as &$poll)$poll['options']=self::options($db,(int)$poll['id']);
             return ['serverTime'=>$now,'polls'=>$polls];
         }
         if($action!=='vote')throw new FeedbackError('Not found',404);
@@ -45,7 +48,7 @@ final class Polls {
         $voted=self::query($db,'SELECT option_id FROM poll_votes WHERE poll_id=? AND uuid=?',[$id,$uuid])->fetchColumn();
         if($voted!==false) {
             if((int)$voted!==$option)throw new FeedbackError('You have already voted in this poll.',409);
-            return ['optionId'=>(int)$voted];
+            return ['optionId'=>(int)$voted,'options'=>self::options($db,$id)];
         }
         $poll=self::query($db,'SELECT closes_at,closed FROM polls WHERE id=?',[$id])->fetch(PDO::FETCH_ASSOC);
         if(!$poll)throw new FeedbackError('This poll no longer exists.',404);
