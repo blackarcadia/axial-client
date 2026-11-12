@@ -18,7 +18,7 @@ class WhiteKicksTest {
         var boot=left;
         var sole=boot.cubes().get(1);assertEquals(new WhiteKicksGeometry.Vec(5f,1.125f,7.5f),sole.size());
         var tongue=boot.cubes().get(3);assertEquals(22.5f,tongue.rotation().x());
-        assertEquals((float)Math.toRadians(-22.5),WhiteKicksGeometry.rotation(tongue.rotation()).x(),.00001);
+        assertEquals((float)Math.toRadians(22.5),WhiteKicksGeometry.rotation(tongue.rotation()).x(),.00001);
         assertEquals(new WhiteKicksGeometry.Vec(2,12,0),WhiteKicksGeometry.position(new WhiteKicksGeometry.Vec(2,12,0)));
     }
     @Test void textureAndBothThumbnailsArePackagedAtTheirDeclaredSizes() throws Exception {

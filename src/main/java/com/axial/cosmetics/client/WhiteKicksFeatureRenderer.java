@@ -43,7 +43,7 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
         @Override public void setAngles(PlayerEntityRenderState state){}
     }
     static ModelPart model(){return model("white_kicks");}
-    private static ModelPart model(String id){
+    static ModelPart model(String id){
         var data=new ModelData();var bones=WhiteKicksGeometry.load(id);
         var parts=new HashMap<String,ModelPartData>();var pivots=new HashMap<String,WhiteKicksGeometry.Vec>();
         for(String side:List.of("left","right")){
@@ -59,10 +59,10 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
             parts.put(bone.name(),part);pivots.put(bone.name(),pivot);
             int index=0;
             for(var cube:bone.cubes()){
-                var local=cube.localOrigin();var size=cube.size();
+                var local=cube.meshOrigin();var size=cube.uvSize();var scale=cube.meshScale();
                 var origin=WhiteKicksGeometry.position(cube.pivot()).subtract(pivot);var angles=WhiteKicksGeometry.rotation(cube.rotation());
                 part.addChild("cube"+index++,ModelPartBuilder.create().uv(cube.u(),cube.v()).cuboid(local.x(),local.y(),local.z(),size.x(),size.y(),size.z()),
-                        ModelTransform.of(origin.x(),origin.y(),origin.z(),angles.x(),angles.y(),angles.z()));
+                        new ModelTransform(origin.x(),origin.y(),origin.z(),angles.x(),angles.y(),angles.z(),scale.x(),scale.y(),scale.z()));
             }
         }
         return TexturedModelData.of(data,32,32).createModel();

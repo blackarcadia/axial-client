@@ -12,6 +12,11 @@ final class WhiteKicksGeometry {
     }
     record Cube(Vec origin,Vec size,Vec pivot,Vec rotation,int u,int v) {
         Vec localOrigin(){return new Vec(origin.x-pivot.x,pivot.y-origin.y-size.y,origin.z-pivot.z);}
+        // Bedrock's box UV layout floors dimensions without rounding the geometry.
+        Vec uvSize(){return new Vec(texels(size.x),texels(size.y),texels(size.z));}
+        Vec meshScale(){var uv=uvSize();return new Vec(size.x/uv.x,size.y/uv.y,size.z/uv.z);}
+        Vec meshOrigin(){var local=localOrigin();var scale=meshScale();return new Vec(local.x/scale.x,local.y/scale.y,local.z/scale.z);}
+        private static float texels(float size){return Math.max(1,(float)Math.floor(size+1e-7));}
     }
     record Bone(String name,String parent,Vec pivot,Vec rotation,List<Cube> cubes) {}
     private WhiteKicksGeometry() {}
@@ -39,5 +44,7 @@ final class WhiteKicksGeometry {
     }
     /** Convert Y-up Bedrock coordinates to the player's Y-down model space. */
     static Vec position(Vec value){return new Vec(value.x,24-value.y,value.z);}
-    static Vec rotation(Vec degrees){return new Vec((float)Math.toRadians(-degrees.x),(float)Math.toRadians(degrees.y),(float)Math.toRadians(-degrees.z));}
+    // Blockbench imports Bedrock rotations as (-X,-Y,+Z) in its X-reflected
+    // space. Turning that space into Java's Y-down space gives (+X,+Y,+Z).
+    static Vec rotation(Vec degrees){return new Vec((float)Math.toRadians(degrees.x),(float)Math.toRadians(degrees.y),(float)Math.toRadians(degrees.z));}
 }

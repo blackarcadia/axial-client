@@ -18,7 +18,17 @@ The supplied files are copied unchanged. The shared shoe renderer preserves the
 eight cubes, bone hierarchy, pivots, UVs, fractional dimensions and rotations,
 including the left leg pivot at [2, 3, 0], its 180° Y rotation and the right
 shoe’s authored cube rotations. Both shoes attach beneath the native animated
-leg roots while retaining these model transforms.
+leg roots while retaining these model transforms. Rotation conversion matches
+Blockbench's Bedrock importer: X/Y are negated in editor space, and the conversion
+to Java's Y-down space results in positive X/Y/Z radians. Box UV spans use floored
+integer dimensions, while per-cube mesh scaling retains the exact fractional
+geometry and leaves pivots unchanged. This keeps the tongues and texture layout
+consistent with the authored model.
+
+`ShoeMeshTest` compares every baked shoe corner to an independent Blockbench-space
+transform reference and checks the sole's UV spans. The reference follows
+[Blockbench's Bedrock parser](https://github.com/JannisX11/blockbench/blob/master/js/formats/bedrock/bedrock.js)
+and [cube UV sizing](https://github.com/JannisX11/blockbench/blob/master/js/outliner/types/cube.js).
 
 To regenerate the model thumbnail:
 

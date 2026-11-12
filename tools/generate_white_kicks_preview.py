@@ -22,7 +22,7 @@ def translate(p):
     matrix=np.eye(4);matrix[:3,3]=p;return matrix
 
 def rotation(p):
-    x,y,z=np.radians([-p[0],p[1],-p[2]])
+    x,y,z=np.radians(p)
     rx=np.array([[1,0,0],[0,math.cos(x),-math.sin(x)],[0,math.sin(x),math.cos(x)]])
     ry=np.array([[math.cos(y),0,math.sin(y)],[0,1,0],[-math.sin(y),0,math.cos(y)]])
     rz=np.array([[math.cos(z),-math.sin(z),0],[math.sin(z),math.cos(z),0],[0,0,1]])
@@ -35,14 +35,16 @@ for bone in geo['bones']:
     for cube in bone.get('cubes',[]):
         cp=cube.get('pivot',bone.get('pivot',[0,0,0]));cm=matrix@translate(position(cp)-pivot)@rotation(cube.get('rotation',[0,0,0]))
         x,y,z=cube['origin'];w,h,d=cube['size'];u,v=cube['uv']
+        # Bedrock box UVs use integer texel spans even for fractional geometry.
+        tw,th,td=[math.floor(value+1e-7) for value in (w,h,d)]
         # Match ModelPart.Cuboid's vertex order and box UV layout. The source
         # coordinates below remain Bedrock Y-up until the bone transforms apply.
-        raw=[([(x,y+h,z+d),(x+w,y+h,z+d),(x+w,y,z+d),(x,y,z+d)],(u+d+w+d,v+d,u+d+w+d+w,v+d+h),.85),
-             ([(x+w,y+h,z),(x,y+h,z),(x,y,z),(x+w,y,z)],(u+d,v+d,u+d+w,v+d+h),1),
-             ([(x+w,y+h,z+d),(x+w,y+h,z),(x+w,y,z),(x+w,y,z+d)],(u+d+w,v+d,u+d+w+d,v+d+h),.9),
-             ([(x,y+h,z),(x,y+h,z+d),(x,y,z+d),(x,y,z)],(u,v+d,u+d,v+d+h),.92),
-             ([(x+w,y+h,z+d),(x,y+h,z+d),(x,y+h,z),(x+w,y+h,z)],(u+d,v,u+d+w,v+d),1),
-             ([(x+w,y,z),(x,y,z),(x,y,z+d),(x+w,y,z+d)],(u+d+w,v+d,u+d+w+w,v),.7)]
+        raw=[([(x,y+h,z+d),(x+w,y+h,z+d),(x+w,y,z+d),(x,y,z+d)],(u+td+tw+td,v+td,u+td+tw+td+tw,v+td+th),.85),
+             ([(x+w,y+h,z),(x,y+h,z),(x,y,z),(x+w,y,z)],(u+td,v+td,u+td+tw,v+td+th),1),
+             ([(x+w,y+h,z+d),(x+w,y+h,z),(x+w,y,z),(x+w,y,z+d)],(u+td+tw,v+td,u+td+tw+td,v+td+th),.9),
+             ([(x,y+h,z),(x,y+h,z+d),(x,y,z+d),(x,y,z)],(u,v+td,u+td,v+td+th),.92),
+             ([(x+w,y+h,z+d),(x,y+h,z+d),(x,y+h,z),(x+w,y+h,z)],(u+td,v,u+td+tw,v+td),1),
+             ([(x+w,y,z),(x,y,z),(x,y,z+d),(x+w,y,z+d)],(u+td+tw,v+td,u+td+tw+tw,v),.7)]
         for points,uv,shade in raw:
             transformed=[]
             for p in points:
