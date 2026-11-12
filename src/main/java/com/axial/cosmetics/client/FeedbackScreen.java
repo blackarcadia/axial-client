@@ -130,8 +130,16 @@ public final class FeedbackScreen extends NavigationScreen {
         }
         float text=FeedbackSendAnimation.text(seconds);
         if(text>0){
-            var label=copy("FEEDBACK SENT",1.25f,true);int x=(width-textRenderer.getWidth(label))/2;
-            c.drawText(textRenderer,label,x,height/2+57,(Math.max(4,Math.round(text*255))<<24)|(BRAND&0xFFFFFF),false);
+            float size=width<260?1.35f:1.65f;
+            var label=copy("FEEDBACK SENT",size,true);
+            int textWidth=textRenderer.getWidth(label),w=Math.min(width-24,textWidth+44);
+            int x=(width-w)/2,y=Math.min(height-52,height/2+46);
+            float old=opacity(text);
+            try{
+                frame(c,new Rect(x,y,w,44),BRAND,0xF5101319);
+                rounded(c,x+(w-28)/2,y+7,28,2,BRAND);
+            }finally{opacity(old);}
+            c.drawTextWithShadow(textRenderer,label,(width-textWidth)/2,y+17,(Math.max(4,Math.round(text*255))<<24)|(INK&0xFFFFFF));
         }
     }
     /** Scan-line triangles keep the envelope a code-native asset with smooth transformed motion. */

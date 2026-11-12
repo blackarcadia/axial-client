@@ -6,15 +6,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class FeedbackSendAnimationTest {
     @Test void formFoldsBeforeEnvelopeSealsAndLaunches(){
         assertEquals(0,FeedbackSendAnimation.fold(0));
-        assertEquals(1,FeedbackSendAnimation.fold(.4));
-        assertEquals(0,FeedbackSendAnimation.seal(.4));
-        assertEquals(1,FeedbackSendAnimation.seal(1.1));
-        assertEquals(0,FeedbackSendAnimation.flight(1.1));
-        assertEquals(1,FeedbackSendAnimation.flight(2));
-        assertTrue(FeedbackSendAnimation.text(1.5)>.99);
-        assertFalse(FeedbackSendAnimation.finished(2.3));
-        assertTrue(FeedbackSendAnimation.finished(2.6));
-        assertEquals(0,FeedbackSendAnimation.text(2.6));
+        assertEquals(1,FeedbackSendAnimation.fold(.23));
+        assertEquals(0,FeedbackSendAnimation.seal(.23));
+        assertEquals(1,FeedbackSendAnimation.seal(.51));
+        assertEquals(0,FeedbackSendAnimation.flight(.51));
+        assertEquals(1,FeedbackSendAnimation.flight(.96));
+        // The faster envelope still leaves the confirmation fully readable for over a second.
+        assertTrue(FeedbackSendAnimation.text(.56)>.99);
+        assertTrue(FeedbackSendAnimation.text(1.64)>.99);
+        assertFalse(FeedbackSendAnimation.finished(1.85));
+        assertTrue(FeedbackSendAnimation.finished(1.91));
+        assertEquals(0,FeedbackSendAnimation.text(1.91));
     }
     @Test void motionIsBoundedAndContinuous(){
         float previous=0;
