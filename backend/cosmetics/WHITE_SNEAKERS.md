@@ -29,7 +29,9 @@ python3 tools/generate_white_kicks_preview.py --from-model --cosmetic white_snea
 Copy `build/previews/white_sneakers_model.png` to
 `assets/white_sneakers/preview.png`, then run
 `python3 tools/generate_white_kicks_preview.py --cosmetic white_sneakers` to
-update the client fallback image and admin thumbnail.
+update the client fallback image and admin thumbnail. The preview renderer
+uses Minecraft’s box-face UV vertex order and a camera above the shoes, so the
+image shows the uppers rather than the undersides.
 
 The VPS update adds only the catalogue entry and public thumbnail; it preserves
 all existing grants, feedback, polls and configuration. The existing appearance
