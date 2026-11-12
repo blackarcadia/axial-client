@@ -44,6 +44,14 @@ public final class FeedbackService {
             }catch(Exception ex){throw new java.util.concurrent.CompletionException(ex);}
         },WORKER);
     }
+    /** Polls share the verified account and serialized network worker with feedback. */
+    static CompletableFuture<JsonObject> authenticatedRequest(String action,JsonObject body) {
+        var client=MinecraftClient.getInstance();var session=client.getSession();var service=client.getApiServices().sessionService();
+        return CompletableFuture.supplyAsync(()->{
+            try {authenticate(session,service);return request(action,body,token);}
+            catch(Exception ex){throw new java.util.concurrent.CompletionException(ex);}
+        },WORKER);
+    }
     private static void authenticate(Session session,com.mojang.authlib.minecraft.MinecraftSessionService service) throws Exception {
         if(authenticated==session&&System.currentTimeMillis()<expires)return;
         token="";authenticated=null;

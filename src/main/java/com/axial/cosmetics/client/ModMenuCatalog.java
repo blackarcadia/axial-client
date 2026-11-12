@@ -109,6 +109,9 @@ final class ModMenuCatalog {
                 "quick_forums", null, null, () -> {
                     var client = MinecraftClient.getInstance();client.setScreen(new FeedbackScreen(client.currentScreen));
                 }));
+        entries.add(new ModMenuEntry("Polls", "Community votes and a movable countdown HUD", ModMenuEntry.Category.HUD,
+                "quick_forums", PollsConfig::enabled, PollsConfig::toggle,
+                () -> {var client=MinecraftClient.getInstance();client.setScreen(new PollsScreen(client.currentScreen));}));
         return List.copyOf(entries);
     }
 

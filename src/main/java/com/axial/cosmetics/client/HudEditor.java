@@ -67,6 +67,10 @@ public final class HudEditor {
             var b=KeystrokesHud.bounds(client);
             add(result,"Keystrokes",b.x(),b.y(),b.width(),b.height(),KeystrokesConfig::setPosition,KeystrokesConfig::save);
         }
+        if(PollsConfig.enabled()) {
+            var b=PollsHud.bounds(client);
+            add(result,"Polls",b.x(),b.y(),b.width(),b.height(),PollsConfig::setPosition,PollsConfig::save);
+        }
         var xp=IslandXpPopup.bounds(client);
         add(result,"AxialSky XP",xp.x(),xp.y(),xp.width(),xp.height(),IslandXpHudConfig::setPosition,IslandXpHudConfig::save);
         return result;

@@ -44,6 +44,7 @@ final class Feedback {
         $session=self::query($db,'SELECT uuid,username FROM feedback_sessions WHERE token=? AND expires_at>=?',[hash('sha256',$token),time()])->fetch(PDO::FETCH_ASSOC);
         if(!$session)throw new FeedbackError('Please verify your Minecraft account again.',401);
         $uuid=$session['uuid'];
+        if($action==='polls'||$action==='vote')return Polls::handle($db,$action,$body,$uuid);
         if($action==='submit') {
             $message=$body['message']??'';$request=$body['requestId']??'';
             if(!is_string($message)||!preg_match('//u',$message)||strlen(trim($message))<10||strlen($message)>8000||!is_string($request)||!preg_match('/\A[a-f0-9-]{36}\z/',$request))throw new FeedbackError('Enter 10–2000 characters of feedback.',400);

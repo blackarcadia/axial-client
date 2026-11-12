@@ -22,7 +22,7 @@ public abstract class AxialConfigScreenHudEditorMixin implements HudEditorAccess
     private void axial$resetEditorFrame(DrawContext context,int x,int y,float delta,CallbackInfo ci){axial$editingHud=false;}
     @Inject(method="renderMoveMode",at=@At("RETURN"))
     private void axial$previewXp(DrawContext context,MinecraftClient client,CallbackInfo ci){
-        axial$editingHud=true;IslandXpPopup.preview(context,client);
+        axial$editingHud=true;IslandXpPopup.preview(context,client);PollsHud.preview(context,client);
     }
     @Inject(method="method_25394",at=@At("RETURN"))
     private void axial$drawEditorBorders(DrawContext context,int x,int y,float delta,CallbackInfo ci){

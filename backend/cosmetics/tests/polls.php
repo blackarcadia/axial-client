@@ -1,0 +1,51 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/Feedback.php';
+require dirname(__DIR__).'/Polls.php';
+$db=new PDO('sqlite::memory:',null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+Feedback::migrate($db);Polls::migrate($db);Polls::migrate($db);
+$checks=0;$uuid='00000000-0000-4000-8000-000000000123';$other='00000000-0000-4000-8000-000000000456';
+function check(bool $ok,string $why):void {global $checks;$checks++;if(!$ok)throw new RuntimeException($why);}
+function rejected(callable $fn,int $status):void {try{$fn();}catch(FeedbackError $ex){check($ex->status===$status,'Correct rejection status: '.$ex->getMessage());return;}throw new RuntimeException('Expected rejection');}
+function countVotes(PDO $db,int $poll):int {$q=$db->prepare('SELECT COUNT(*) FROM poll_votes WHERE poll_id=?');$q->execute([$poll]);return (int)$q->fetchColumn();}
+rejected(fn()=>Polls::create($db,'Question',['Only one'],30,'minutes'),400);
+rejected(fn()=>Polls::create($db,'Question',['Same','same'],30,'minutes'),400);
+rejected(fn()=>Polls::create($db,'Question',['One','Two'],0,'minutes'),400);
+rejected(fn()=>Polls::create($db,'Question',['One','Two'],31,'days'),400);
+rejected(fn()=>Polls::create($db,str_repeat('a',161),['One','Two'],30,'minutes'),400);
+rejected(fn()=>Polls::create($db,'Question',['One',str_repeat('x',81)],30,'minutes'),400);
+$first=Polls::create($db,'Next feature?',['Mining','Building'],30,'minutes');
+$second=Polls::create($db,'Next event?',['Riot','Meteor','Other'],24,'hours');
+$rows=Polls::handle($db,'polls',[],$uuid);
+check(count($rows['polls'])===2,'All active polls returned');
+check((int)$rows['polls'][0]['closes_at']-$rows['serverTime']>=1799,'Thirty minute duration');
+check((int)$rows['polls'][1]['closes_at']-$rows['serverTime']>=86399,'Twenty four hour duration');
+check($rows['polls'][0]['voted']===null,'New player has no vote');
+rejected(fn()=>Feedback::handle($db,'vote',['pollId'=>$first,'optionId'=>1],'invalid-token','test'),401);
+$token=bin2hex(random_bytes(32));$q=$db->prepare('INSERT INTO feedback_sessions VALUES(?,?,?,?,?)');$q->execute([hash('sha256',$token),$uuid,'Tester',time(),time()+3600]);
+Feedback::handle($db,'vote',['pollId'=>$first,'optionId'=>1,'uuid'=>$other],$token,'test');
+check(countVotes($db,$first)===1,'Verified vote saved');
+Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>1],$uuid);
+check(countVotes($db,$first)===1,'Retried vote is idempotent');
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>2],$uuid),409);
+check(countVotes($db,$first)===1,'Changing vote is rejected');
+check((int)Polls::handle($db,'polls',[],$uuid)['polls'][0]['voted']===1,'Account retains its vote');
+check(Polls::handle($db,'polls',[],$other)['polls'][0]['voted']===null,'Supplied UUID cannot impersonate another player');
+Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>2],$other);
+check(countVotes($db,$first)===2,'Separate accounts each get a vote');
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>6],'new'),400);
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>'1'],'new'),400);
+Polls::moderate($db,'close',$first);
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>1],'new'),410);
+check(countVotes($db,$first)===2,'Closing retains results');
+check(count(Polls::handle($db,'polls',[],$uuid)['polls'])===1,'Closed polls disappear');
+$db->exec('UPDATE polls SET closes_at=0 WHERE id='.$second);
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$second,'optionId'=>1],$uuid),410);
+check(Polls::handle($db,'polls',[],$uuid)['polls']===[],'Expired polls disappear');
+Polls::moderate($db,'delete',$first);
+check(countVotes($db,$first)===0,'Deleting removes votes');
+check((int)$db->query('SELECT COUNT(*) FROM poll_options WHERE poll_id='.$first)->fetchColumn()===0,'Deleting removes options');
+rejected(fn()=>Polls::handle($db,'vote',['pollId'=>$first,'optionId'=>1],$uuid),404);
+for($i=0;$i<10;$i++)Polls::create($db,'Poll '.$i,['Yes','No'],1,'days');
+rejected(fn()=>Polls::create($db,'Too many',['Yes','No'],1,'days'),400);
+echo "Polls: $checks checks passed.\n";

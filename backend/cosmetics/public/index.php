@@ -15,6 +15,8 @@ try {
     $db->exec('PRAGMA busy_timeout=5000');
     require_once dirname(__DIR__).'/Feedback.php';
     Feedback::migrate($db);
+    require_once dirname(__DIR__).'/Polls.php';
+    Polls::migrate($db);
     $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
     $method=$_SERVER['REQUEST_METHOD'];
     if(str_starts_with($path,'/v1/feedback/')) {
@@ -83,6 +85,21 @@ try {
         } elseif(!empty($_SESSION['admin'])) {
             $_SESSION['last']=time();
             if($action==='logout'){$_SESSION=[];session_destroy();header('Location: /admin',true,303);exit;}
+            if($action==='poll_create') {
+                $options=$_POST['options']??[];
+                if(is_array($options))$options=array_values(array_filter($options,fn($v)=>!is_string($v)||trim($v)!==''));
+                try {Polls::create($db,$_POST['question']??null,$options,$_POST['duration']??null,$_POST['unit']??null);}
+                catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+                $_SESSION['notice']='Poll published. Updated clients refresh within one minute.';
+                header('Location: /admin#polls',true,303);exit;
+            }
+            if($action==='poll_close'||$action==='poll_delete') {
+                $id=filter_var($_POST['poll_id']??null,FILTER_VALIDATE_INT);
+                if(!$id||$id<1)reply(['error'=>'Invalid poll'],400);
+                Polls::moderate($db,$action==='poll_close'?'close':'delete',$id);
+                $_SESSION['notice']=$action==='poll_close'?'Poll closed. Results retained.':'Poll and votes permanently deleted.';
+                header('Location: /admin#polls',true,303);exit;
+            }
             if($action==='feedback_approve'||$action==='feedback_delete') {
                 $id=filter_var($_POST['feedback_id']??null,FILTER_VALIDATE_INT);
                 $reply=$_POST['reply']??'';
@@ -151,6 +168,17 @@ try {
 <div class="catalog"><?php foreach($catalog as $id=>$cape):?><label class="cosmetic"><img src="/assets/<?=h($cape['image'])?>" alt="<?=h($cape['name'])?> cosmetic"><span><input type="checkbox" name="capes[]" value="<?=h($id)?>" <?=in_array($id,$owned,true)?'checked':''?>> <?=h($cape['name'])?></span><small><?=h($cape['category']??'Capes')?></small></label><?php endforeach?></div>
 <p class="hint">Checked cosmetics grant manual access. Unchecking removes that manual grant; active purchases still grant access. Updated clients refresh within one minute.</p><button class="primary">Save cosmetic access</button></form>
 <section><h2>Assigned players</h2><div class="players"><?php foreach($db->query('SELECT p.uuid,COUNT(g.cape) AS total FROM players p LEFT JOIN effective_grants g ON g.uuid=p.uuid GROUP BY p.uuid ORDER BY p.updated_at DESC LIMIT 100') as $row):?><a href="/admin?uuid=<?=h($row['uuid'])?>"><code><?=h($row['uuid'])?></code><span><?=h((string)$row['total'])?> cosmetics →</span></a><?php endforeach?></div></section>
+<section id="polls"><h2>Client polls</h2><p>Create a question with 2–6 choices. Each verified Minecraft account gets one vote. Results stay here after the poll ends.</p>
+<form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_create">
+<label>Question<input name="question" required maxlength="160" placeholder="What should we work on next?"></label>
+<div class="poll-options"><?php for($i=1;$i<=6;$i++):?><label>Option <?=$i?><?=$i>2?' (optional)':''?><input name="options[]" maxlength="80" <?=$i<=2?'required':''?>></label><?php endfor?></div>
+<div class="lookup"><label>Duration<input name="duration" type="number" min="1" max="43200" value="24" required></label><label>Unit<select name="unit"><option value="minutes">Minutes</option><option value="hours" selected>Hours</option><option value="days">Days</option></select></label></div><p class="hint">From 1 minute to 30 days. For example: 30 minutes or 24 hours. Questions and choices cannot be edited after publishing.</p><button class="primary">Publish poll</button></form>
+<?php foreach($db->query('SELECT * FROM polls ORDER BY id DESC LIMIT 50') as $poll): $active=!(int)$poll['closed']&&(int)$poll['closes_at']>time(); $q=$db->prepare('SELECT o.option_id,o.label,COUNT(v.uuid) AS votes FROM poll_options o LEFT JOIN poll_votes v ON v.poll_id=o.poll_id AND v.option_id=o.option_id WHERE o.poll_id=? GROUP BY o.option_id ORDER BY o.option_id');$q->execute([$poll['id']]);$results=$q->fetchAll(PDO::FETCH_ASSOC);$total=array_sum(array_column($results,'votes'));?>
+<article class="feedback-note"><h3>#<?=h((string)$poll['id'])?> · <?=h($poll['question'])?></h3><p><?=$active?'Open':'Ended'?> · Closes <?=h(gmdate('Y-m-d H:i:s',(int)$poll['closes_at']))?> UTC · <?=h((string)$total)?> vote(s)</p>
+<?php foreach($results as $result):$percent=$total?round((int)$result['votes']*100/$total,1):0;?><div class="poll-result"><span><?=h($result['label'])?></span><strong><?=h((string)$result['votes'])?> · <?=h((string)$percent)?>%</strong><progress value="<?=h((string)$result['votes'])?>" max="<?=max(1,$total)?>"></progress></div><?php endforeach?>
+<?php if($active):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_close"><input type="hidden" name="poll_id" value="<?=h((string)$poll['id'])?>"><button>Close voting now</button></form><?php endif?>
+<form method="post" class="feedback-delete"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_delete"><input type="hidden" name="poll_id" value="<?=h((string)$poll['id'])?>"><button>Delete poll and results permanently</button></form></article>
+<?php endforeach?></section>
 <section id="feedback"><h2>Player feedback</h2><p>Latest 100 submissions. Approval queues a private notification for the player's next login. Deleting a submission preserves its undelivered approval notice.</p>
 <?php $feedbackRows=$db->query('SELECT * FROM feedback ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC); if(!$feedbackRows):?><p>No feedback yet.</p><?php endif?>
 <?php foreach($feedbackRows as $item):?><article class="feedback-note">
