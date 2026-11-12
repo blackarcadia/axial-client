@@ -9,17 +9,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WhiteKicksTest {
     @Test void modelRetainsBothShoesEightCubesFractionalSolesAndAuthoredRotations(){
-        var bones=WhiteKicksGeometry.load();assertEquals(6,bones.size());
+        var bones=BedrockCosmeticGeometry.load("white_kicks");assertEquals(6,bones.size());
         assertEquals(8,bones.stream().mapToInt(b->b.cubes().size()).sum());
         var left=bones.stream().filter(b->b.name().equals("bipedLeftLeg")).findFirst().orElseThrow();
         assertEquals(0,left.rotation().y());
-        var offset=WhiteKicksGeometry.position(left.pivot()).subtract(new WhiteKicksGeometry.Vec(2,12,0));
+        var offset=BedrockCosmeticGeometry.position(left.pivot()).subtract(new BedrockCosmeticGeometry.Vec(2,12,0));
         assertEquals(0,offset.y()); // Updated source pivots both shoes at the native hip.
         var boot=left;
-        var sole=boot.cubes().get(1);assertEquals(new WhiteKicksGeometry.Vec(5f,1.125f,7.5f),sole.size());
+        var sole=boot.cubes().get(1);assertEquals(new BedrockCosmeticGeometry.Vec(5f,1.125f,7.5f),sole.size());
         var tongue=boot.cubes().get(3);assertEquals(22.5f,tongue.rotation().x());
-        assertEquals((float)Math.toRadians(22.5),WhiteKicksGeometry.rotation(tongue.rotation()).x(),.00001);
-        assertEquals(new WhiteKicksGeometry.Vec(2,12,0),WhiteKicksGeometry.position(new WhiteKicksGeometry.Vec(2,12,0)));
+        assertEquals((float)Math.toRadians(22.5),BedrockCosmeticGeometry.rotation(tongue.rotation()).x(),.00001);
+        assertEquals(new BedrockCosmeticGeometry.Vec(2,12,0),BedrockCosmeticGeometry.position(new BedrockCosmeticGeometry.Vec(2,12,0)));
     }
     @Test void textureAndBothThumbnailsArePackagedAtTheirDeclaredSizes() throws Exception {
         for(String path:List.of("textures/entity/accessories/white_kicks.png","textures/gui/white_kicks_preview.png")){

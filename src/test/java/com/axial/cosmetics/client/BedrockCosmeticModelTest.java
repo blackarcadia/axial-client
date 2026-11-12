@@ -8,12 +8,12 @@ import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class ShoeMeshTest {
+class BedrockCosmeticModelTest {
     @Test void bakedShoesMatchBlockbenchCoordinatesForEveryCubeCorner() {
-        for(String id:List.of("white_sneakers","white_kicks")) {
+        for(String id:List.of("white_sneakers","white_kicks","ribcage")) {
             var actual=new ArrayList<Vector3f>();
-            WhiteKicksFeatureRenderer.model(id).collectVertices(new MatrixStack(),p->actual.add(new Vector3f(p)));
-            var expected=blockbenchCorners(WhiteKicksGeometry.load(id));
+            (id.equals("ribcage")?RibcageFeatureRenderer.model():WhiteKicksFeatureRenderer.model(id)).collectVertices(new MatrixStack(),p->actual.add(new Vector3f(p)));
+            var expected=blockbenchCorners(BedrockCosmeticGeometry.load(id));
             for(var point:expected)assertTrue(actual.stream().anyMatch(p->p.distance(point)<.00001f),id+" missing corner "+point);
             for(var point:actual)assertTrue(expected.stream().anyMatch(p->p.distance(point)<.00001f),id+" unexpected corner "+point);
         }
@@ -35,7 +35,7 @@ class ShoeMeshTest {
 
     /** Independent editor-space reference: Bedrock loader mirrors X and negates
      * X/Y Euler angles; a half-turn around Z converts editor space to Java. */
-    private static List<Vector3f> blockbenchCorners(List<WhiteKicksGeometry.Bone> bones) {
+    private static List<Vector3f> blockbenchCorners(List<BedrockCosmeticGeometry.Bone> bones) {
         var matrices=new HashMap<String,Matrix4f>();
         var pivots=new HashMap<String,Vector3f>();
         var result=new ArrayList<Vector3f>();
@@ -51,8 +51,10 @@ class ShoeMeshTest {
                 var transform=new Matrix4f(matrix).translate(new Vector3f(cp).sub(pivot));
                 rotateEditor(transform,cube.rotation());
                 for(int x=0;x<2;x++)for(int y=0;y<2;y++)for(int z=0;z<2;z++) {
-                    var point=new Vector3f(-cube.origin().x()-x*cube.size().x(),
-                            cube.origin().y()+y*cube.size().y(),cube.origin().z()+z*cube.size().z()).sub(cp);
+                    float inflate=cube.inflate();
+                    var point=new Vector3f(-cube.origin().x()+inflate-x*(cube.size().x()+2*inflate),
+                            cube.origin().y()-inflate+y*(cube.size().y()+2*inflate),
+                            cube.origin().z()-inflate+z*(cube.size().z()+2*inflate)).sub(cp);
                     transform.transformPosition(point);
                     result.add(new Vector3f(-point.x,24-point.y,point.z).div(16));
                 }
@@ -60,8 +62,8 @@ class ShoeMeshTest {
         }
         return result;
     }
-    private static Vector3f editor(WhiteKicksGeometry.Vec p){return new Vector3f(-p.x(),p.y(),p.z());}
-    private static void rotateEditor(Matrix4f matrix,WhiteKicksGeometry.Vec r) {
+    private static Vector3f editor(BedrockCosmeticGeometry.Vec p){return new Vector3f(-p.x(),p.y(),p.z());}
+    private static void rotateEditor(Matrix4f matrix,BedrockCosmeticGeometry.Vec r) {
         matrix.rotateZ((float)Math.toRadians(r.z())).rotateY((float)Math.toRadians(-r.y())).rotateX((float)Math.toRadians(-r.x()));
     }
 }

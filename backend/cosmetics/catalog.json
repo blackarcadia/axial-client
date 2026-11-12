@@ -44,5 +44,10 @@
     "name": "White Sneakers",
     "image": "white_sneakers.png",
     "category": "Outfits"
+  },
+  "ribcage": {
+    "name": "Ribcage",
+    "image": "ribcage.png",
+    "category": "Outfits"
   }
 }

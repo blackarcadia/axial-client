@@ -44,27 +44,8 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
     }
     static ModelPart model(){return model("white_kicks");}
     static ModelPart model(String id){
-        var data=new ModelData();var bones=WhiteKicksGeometry.load(id);
-        var parts=new HashMap<String,ModelPartData>();var pivots=new HashMap<String,WhiteKicksGeometry.Vec>();
-        for(String side:List.of("left","right")){
-            float x=side.equals("left")?2:-2;
-            parts.put(side,data.getRoot().addChild(side,ModelPartBuilder.create(),ModelTransform.origin(x,12,0)));
-            pivots.put(side,new WhiteKicksGeometry.Vec(x,12,0));
-        }
-        for(var bone:bones){
-            String parent=bone.parent()==null?(bone.name().equals("bipedLeftLeg")?"left":"right"):bone.parent();
-            var pivot=WhiteKicksGeometry.position(bone.pivot());var offset=pivot.subtract(pivots.get(parent));
-            var rotation=WhiteKicksGeometry.rotation(bone.rotation());
-            var part=parts.get(parent).addChild(bone.name(),ModelPartBuilder.create(),ModelTransform.of(offset.x(),offset.y(),offset.z(),rotation.x(),rotation.y(),rotation.z()));
-            parts.put(bone.name(),part);pivots.put(bone.name(),pivot);
-            int index=0;
-            for(var cube:bone.cubes()){
-                var local=cube.meshOrigin();var size=cube.uvSize();var scale=cube.meshScale();
-                var origin=WhiteKicksGeometry.position(cube.pivot()).subtract(pivot);var angles=WhiteKicksGeometry.rotation(cube.rotation());
-                part.addChild("cube"+index++,ModelPartBuilder.create().uv(cube.u(),cube.v()).cuboid(local.x(),local.y(),local.z(),size.x(),size.y(),size.z()),
-                        new ModelTransform(origin.x(),origin.y(),origin.z(),angles.x(),angles.y(),angles.z(),scale.x(),scale.y(),scale.z()));
-            }
-        }
-        return TexturedModelData.of(data,32,32).createModel();
+        return BedrockCosmeticModel.bake(id,Map.of(
+                "bipedLeftLeg",new BedrockCosmeticModel.Anchor("left",new BedrockCosmeticGeometry.Vec(2,12,0)),
+                "bipedRightLeg",new BedrockCosmeticModel.Anchor("right",new BedrockCosmeticGeometry.Vec(-2,12,0))));
     }
 }

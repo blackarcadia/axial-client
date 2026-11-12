@@ -25,7 +25,7 @@ integer dimensions, while per-cube mesh scaling retains the exact fractional
 geometry and leaves pivots unchanged. This keeps the tongues and texture layout
 consistent with the authored model.
 
-`ShoeMeshTest` compares every baked shoe corner to an independent Blockbench-space
+`BedrockCosmeticModelTest` compares every baked shoe corner to an independent Blockbench-space
 transform reference and checks the sole's UV spans. The reference follows
 [Blockbench's Bedrock parser](https://github.com/JannisX11/blockbench/blob/master/js/formats/bedrock/bedrock.js)
 and [cube UV sizing](https://github.com/JannisX11/blockbench/blob/master/js/outliner/types/cube.js).

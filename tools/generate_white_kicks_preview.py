@@ -3,7 +3,7 @@ from pathlib import Path
 import json, math, sys, shutil, argparse
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--from-model',action='store_true')
-parser.add_argument('--cosmetic',choices=['white_kicks','white_sneakers'],default='white_kicks')
+parser.add_argument('--cosmetic',choices=['white_kicks','white_sneakers','ribcage'],default='white_kicks')
 args=parser.parse_args()
 cosmetic=args.cosmetic
 ROOT=Path(__file__).resolve().parents[1]
@@ -37,6 +37,9 @@ for bone in geo['bones']:
         x,y,z=cube['origin'];w,h,d=cube['size'];u,v=cube['uv']
         # Bedrock box UVs use integer texel spans even for fractional geometry.
         tw,th,td=[math.floor(value+1e-7) for value in (w,h,d)]
+        inflate=cube.get('inflate',bone.get('inflate',0))
+        x-=inflate;y-=inflate;z-=inflate
+        w+=2*inflate;h+=2*inflate;d+=2*inflate
         # Match ModelPart.Cuboid's vertex order and box UV layout. The source
         # coordinates below remain Bedrock Y-up until the bone transforms apply.
         raw=[([(x,y+h,z+d),(x+w,y+h,z+d),(x+w,y,z+d),(x,y,z+d)],(u+td+tw+td,v+td,u+td+tw+td+tw,v+td+th),.85),
@@ -45,13 +48,17 @@ for bone in geo['bones']:
              ([(x,y+h,z),(x,y+h,z+d),(x,y,z+d),(x,y,z)],(u,v+td,u+td,v+td+th),.92),
              ([(x+w,y+h,z+d),(x,y+h,z+d),(x,y+h,z),(x+w,y+h,z)],(u+td,v,u+td+tw,v+td),1),
              ([(x+w,y,z),(x,y,z),(x,y,z+d),(x+w,y,z+d)],(u+td+tw,v+td,u+td+tw+tw,v),.7)]
+        if cube.get('mirror',bone.get('mirror',False)):
+            # Native mirrored box UVs swap east/west and reverse each U span.
+            raw[2],raw[3]=(raw[2][0],raw[3][1],raw[2][2]),(raw[3][0],raw[2][1],raw[3][2])
+            raw=[(points,(uv[2],uv[1],uv[0],uv[3]),shade) for points,uv,shade in raw]
         for points,uv,shade in raw:
             transformed=[]
             for p in points:
                 native=cm@np.array([p[0]-cp[0],cp[1]-p[1],p[2]-cp[2],1])
                 transformed.append(np.array([native[0],24-native[1],native[2]]))
             faces.append((transformed,uv,shade))
-yaw=2.65;pitch=.5
+yaw=2.65;pitch=.22 if cosmetic=='ribcage' else .5
 camera=np.array([[math.cos(yaw),0,math.sin(yaw)],[math.sin(yaw)*math.sin(pitch),math.cos(pitch),-math.cos(yaw)*math.sin(pitch)],[-math.sin(yaw)*math.cos(pitch),math.sin(pitch),math.cos(yaw)*math.cos(pitch)]])
 points=np.array([camera@p for face,_,_ in faces for p in face]);minimum=points.min(axis=0);maximum=points.max(axis=0);center=(minimum+maximum)/2
 scale=min(218/(maximum[0]-minimum[0]),190/(maximum[1]-minimum[1]))
