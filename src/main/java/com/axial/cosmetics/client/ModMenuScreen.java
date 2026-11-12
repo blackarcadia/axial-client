@@ -110,6 +110,7 @@ public final class ModMenuScreen extends Screen {
         }
         var profiles=add("Profiles",layout.profiles(),"profile_folder",()->client.setScreen(new ProfilesScreen(this)),false,null);
         profiles.setTooltip(Tooltip.of(text("Profiles")));
+        add("Feedback",layout.feedback(),"quick_forums",()->client.setScreen(new FeedbackScreen(this)),false,null);
         var matches=filtered();
         int nextScroll=Math.clamp(scroll,0,layout.maxScroll(matches.size()));
         filtering.offsetY(nextScroll-scroll);scroll=nextScroll;
@@ -362,7 +363,7 @@ public final class ModMenuScreen extends Screen {
             }
             boolean categoryButton=false;
             for(var value:ModMenuEntry.Category.values())if(getMessage().getString().equalsIgnoreCase(value.label))categoryButton=true;
-            if((categoryButton||getMessage().getString().equalsIgnoreCase("Profiles"))&&!layout.sidebar&&!layout.tight){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
+            if((categoryButton||getMessage().getString().equalsIgnoreCase("Profiles")||getMessage().getString().equalsIgnoreCase("Feedback"))&&!layout.sidebar&&!layout.tight){ModMenuUi.icon(context,icon,getX()+(width-13)/2,getY()+(height-13)/2,13,13,INK);return;}
             if(!categoryButton && width<85) {
                 label(context,textRenderer,getMessage().getString(),getX()+5,getY()+(height-9)/2,active?INK:MUTED,.8f,width-10,false);
                 return;

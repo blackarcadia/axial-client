@@ -182,7 +182,7 @@ try {
 <section id="feedback"><h2>Player feedback</h2><p>Latest 100 submissions. Approval queues a private notification for the player's next login. Deleting a submission preserves its undelivered approval notice.</p>
 <?php $feedbackRows=$db->query('SELECT * FROM feedback ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC); if(!$feedbackRows):?><p>No feedback yet.</p><?php endif?>
 <?php foreach($feedbackRows as $item):?><article class="feedback-note">
-<h3>#<?=h((string)$item['id'])?> · <?=h($item['username'])?> <span class="feedback-status"><?=h($item['status'])?></span></h3>
+<h3>#<?=h((string)$item['id'])?> · <?=h($item['username'])?> <span class="feedback-status"><?=h(strtoupper($item['category']).' · '.strtoupper($item['kind']).' · '.$item['status'])?></span></h3>
 <p><code><?=h($item['uuid'])?></code> · <?=h(gmdate('Y-m-d H:i',(int)$item['created_at']))?> UTC</p>
 <div class="feedback-message"><?=nl2br(h($item['message']))?></div>
 <?php if($item['status']==='pending'):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="feedback_approve"><input type="hidden" name="feedback_id" value="<?=h((string)$item['id'])?>"><label>Optional reply<textarea name="reply" maxlength="2000" rows="2" placeholder="Thank you for the suggestion!"></textarea></label><button class="primary">Approve &amp; notify player</button></form><?php endif?>

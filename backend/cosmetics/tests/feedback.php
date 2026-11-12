@@ -42,4 +42,20 @@ $challenge=Feedback::handle($db,'challenge',[],'','bad-profile')['challenge'];
 rejected(fn()=>Feedback::handle($db,'authenticate',['username'=>'Tester','challenge'=>$challenge],'','bad-profile',fn()=>['id'=>'00000000000040008000000000000123','name'=>'SomeoneElse']),401);
 for($i=0;$i<20;$i++)Feedback::handle($db,'challenge',[],'','flood');
 rejected(fn()=>Feedback::handle($db,'challenge',[],'','flood'),429);
+$categoryToken=login('Categories','00000000000040008000000000000789','categories');
+$n=10;
+foreach(['prisons','client'] as $category)foreach(['bug','suggestion'] as $kind) {
+    $request=['message'=>'A categorized feedback message','requestId'=>sprintf('00000000-0000-4000-8000-%012d',$n++),'category'=>$category,'type'=>$kind];
+    $id=Feedback::handle($db,'submit',$request,$categoryToken,'categories')['id'];
+    $saved=$db->query('SELECT category,kind FROM feedback WHERE id='.$id)->fetch(PDO::FETCH_ASSOC);
+    check($saved['category']===$category&&$saved['kind']===$kind,'Category and type persist');
+}
+rejected(fn()=>Feedback::handle($db,'submit',['category'=>'other','type'=>'bug'],$categoryToken,'categories'),400);
+rejected(fn()=>Feedback::handle($db,'submit',['category'=>'client','type'=>'other'],$categoryToken,'categories'),400);
+$legacy=new PDO('sqlite::memory:',null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+$legacy->exec(file_get_contents(dirname(__DIR__).'/feedback.sql'));
+$legacy->exec("INSERT INTO feedback(uuid,username,message,request_id,created_at,status) VALUES('legacy','Legacy','Keep this message','old',0,'pending')");
+Feedback::migrate($legacy);Feedback::migrate($legacy);
+$saved=$legacy->query('SELECT message,category,kind FROM feedback')->fetch(PDO::FETCH_ASSOC);
+check($saved['message']==='Keep this message'&&$saved['category']==='client'&&$saved['kind']==='general','Migration preserves existing submissions');
 echo "Feedback: $checks checks passed.\n";

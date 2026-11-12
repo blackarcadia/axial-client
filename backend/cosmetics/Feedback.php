@@ -9,6 +9,17 @@ final class FeedbackError extends RuntimeException {
 final class Feedback {
     public static function migrate(PDO $db): void {
         $db->exec(file_get_contents(__DIR__.'/feedback.sql'));
+        $columns=array_column($db->query('PRAGMA table_info(feedback)')->fetchAll(PDO::FETCH_ASSOC),'name');
+        if(!in_array('category',$columns,true)||!in_array('kind',$columns,true)) {
+            $db->beginTransaction();
+            try {
+                $db->exec('UPDATE feedback SET status=status WHERE id=-1');
+                $columns=array_column($db->query('PRAGMA table_info(feedback)')->fetchAll(PDO::FETCH_ASSOC),'name');
+                if(!in_array('category',$columns,true))$db->exec("ALTER TABLE feedback ADD COLUMN category TEXT NOT NULL DEFAULT 'client'");
+                if(!in_array('kind',$columns,true))$db->exec("ALTER TABLE feedback ADD COLUMN kind TEXT NOT NULL DEFAULT 'general'");
+                $db->commit();
+            }catch(Throwable $ex){$db->rollBack();throw $ex;}
+        }
     }
     private static function query(PDO $db,string $sql,array $args=[]): PDOStatement {
         $q=$db->prepare($sql);$q->execute($args);return $q;
@@ -47,13 +58,15 @@ final class Feedback {
         if($action==='polls'||$action==='vote')return Polls::handle($db,$action,$body,$uuid);
         if($action==='submit') {
             $message=$body['message']??'';$request=$body['requestId']??'';
+            $category=$body['category']??'client';$kind=$body['type']??'general';
+            if(!is_string($category)||!in_array($category,['prisons','client'],true)||!is_string($kind)||!in_array($kind,['bug','suggestion','general'],true))throw new FeedbackError('Choose a valid feedback category and type.',400);
             if(!is_string($message)||!preg_match('//u',$message)||strlen(trim($message))<10||strlen($message)>8000||!is_string($request)||!preg_match('/\A[a-f0-9-]{36}\z/',$request))throw new FeedbackError('Enter 10–2000 characters of feedback.',400);
             if(preg_match_all('/./us',$message)>2000)throw new FeedbackError('Feedback is limited to 2000 characters.',400);
             $old=self::query($db,'SELECT id FROM feedback WHERE uuid=? AND request_id=?',[$uuid,$request])->fetchColumn();
             if($old)return ['id'=>(int)$old];
             self::limit($db,'submit:'.$uuid,5,86400);
             self::limit($db,'submit-peer:'.$peer,50,86400);
-            self::query($db,'INSERT INTO feedback(uuid,username,message,request_id,created_at,status) VALUES(?,?,?,?,?,?)',[$uuid,$session['username'],trim($message),$request,time(),'pending']);
+            self::query($db,'INSERT INTO feedback(uuid,username,message,request_id,created_at,status,category,kind) VALUES(?,?,?,?,?,?,?,?)',[$uuid,$session['username'],trim($message),$request,time(),'pending',$category,$kind]);
             return ['id'=>(int)$db->lastInsertId()];
         }
         if($action==='notifications')return ['notifications'=>self::query($db,'SELECT id,feedback_id,reply FROM feedback_notifications WHERE uuid=? ORDER BY id LIMIT 20',[$uuid])->fetchAll(PDO::FETCH_ASSOC)];

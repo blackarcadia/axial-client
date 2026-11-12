@@ -34,12 +34,12 @@ public final class FeedbackService {
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client->WORKER.shutdownNow());
     }
-    public static CompletableFuture<Integer> submit(String message,UUID requestId) {
+    public static CompletableFuture<Integer> submit(String message,UUID requestId,FeedbackCategory category,FeedbackKind kind) {
         var client=MinecraftClient.getInstance();var session=client.getSession();var service=client.getApiServices().sessionService();
         return CompletableFuture.supplyAsync(()->{
             try {
                 authenticate(session,service);
-                var body=new JsonObject();body.addProperty("message",message);body.addProperty("requestId",requestId.toString());
+                var body=new JsonObject();body.addProperty("message",message);body.addProperty("requestId",requestId.toString());body.addProperty("category",category.id);body.addProperty("type",kind.id);
                 return request("submit",body,token).get("id").getAsInt();
             }catch(Exception ex){throw new java.util.concurrent.CompletionException(ex);}
         },WORKER);

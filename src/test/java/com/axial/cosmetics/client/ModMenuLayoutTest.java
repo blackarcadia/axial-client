@@ -11,7 +11,11 @@ class ModMenuLayoutTest {
                 inside(l.panel,new ModMenuLayout.Rect(0,0,w,h));
                 assertTrue(l.panel.height()<=304);
                 inside(l.search,l.panel);inside(l.enabledFilter,l.panel);
-                inside(l.profiles(),l.panel);
+                inside(l.profiles(),l.panel);inside(l.feedback(),l.panel);
+                assertEquals(l.profiles().x(),l.feedback().x());
+                assertTrue(l.feedback().y()>=l.profiles().bottom());
+                if(!l.sidebar&&!l.tight)assertTrue(l.grid.y()>l.feedback().bottom());
+                if(l.tight)assertTrue(l.grid.bottom()<l.profiles().y());
                 if(!l.tight){assertTrue(l.sidebar?l.profiles().y()>=l.category(4).bottom():l.profiles().x()>=l.category(4).right());}
                 inside(l.close,l.panel);inside(l.navigation,l.panel);inside(l.grid,l.panel);
                 assertTrue(l.search.right()<l.enabledFilter.x());
