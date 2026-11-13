@@ -48,7 +48,7 @@ check((int)$db->query("SELECT COUNT(*) FROM paynow_orders WHERE order_id='140'")
 $o=order('150');$o['lines'][0]['subscription_id']='999';rejected(fn()=>send('ON_ORDER_COMPLETED',$o),400);
 $o=order('160');$o['lines'][]=['id'=>'102','product_id'=>'619762575072043008','quantity'=>1,'gift_to_customer'=>['minecraft'=>['id'=>'not-a-uuid']]];
 rejected(fn()=>send('ON_ORDER_COMPLETED',$o),422);check((int)$db->query("SELECT COUNT(*) FROM paynow_orders WHERE order_id='160'")->fetchColumn()===0,'Bad second line cannot partially fulfill order');
-$newProducts=['624788824383295488'=>'white_sneakers','624789316765229056'=>'swim_bands','624790151096176640'=>'purrr','624789572366114816'=>'ribcage','624807205576642560'=>'ducking_around'];
+$newProducts=['624788824383295488'=>'white_sneakers','624789316765229056'=>'swim_bands','624790151096176640'=>'purrr','624789572366114816'=>'ribcage','624807205576642560'=>'ducking_around','624815138351882240'=>'magenta_city'];
 foreach(array_keys($newProducts) as $i=>$productId){
     $cosmetic=$newProducts[$productId];
     check(($settings['products'][$productId]??null)===$cosmetic,'Product maps to '.$cosmetic);

@@ -54,5 +54,10 @@
     "name": "Ducking Around",
     "image": "ducking_around.png",
     "category": "Capes"
+  },
+  "magenta_city": {
+    "name": "Magenta City",
+    "image": "magenta_city.png",
+    "category": "Capes"
   }
 }

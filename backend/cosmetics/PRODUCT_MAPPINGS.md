@@ -11,6 +11,7 @@ request. Product IDs are strings; preserve all digits when copying them.
 | `624790151096176640` | Purrr Cape | `purrr` |
 | `624789572366114816` | Ribcage | `ribcage` |
 | `624807205576642560` | Ducking Around | `ducking_around` |
+| `624815138351882240` | Magenta City | `magenta_city` |
 
 Use one-time purchases and the `axial-client-cosmetics` tag slug for the website.
 The existing signed order/refund/chargeback webhook integration handles grants;
