@@ -10,7 +10,7 @@ import com.axial.cosmetics.client.ModMenuLayout.Rect;
 import static com.axial.cosmetics.client.ModMenuUi.*;
 
 /** A private code entry followed by a model-card reveal and a green impact stamp. */
-final class CosmeticRedeemScreen extends NavigationScreen {
+public final class CosmeticRedeemScreen extends NavigationScreen {
     private final WardrobeScreen wardrobe;
     private final MenuAnimation opening=new MenuAnimation();
     private UUID requestId=UUID.randomUUID();
@@ -28,10 +28,26 @@ final class CosmeticRedeemScreen extends NavigationScreen {
         input=new Rect(panel.x()+16,panel.y()+64,w-32,27);
         code=field("AXIAL-XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX",draft,input,96);
         code.setChangedListener(value->{if(!draft.equals(value))requestId=UUID.randomUUID();draft=value;error="";});
-        back=button("Back",new Rect(panel.x()+16,panel.bottom()-36,75,23),this::close);
-        submit=button("Redeem",new Rect(panel.right()-120,panel.bottom()-36,104,23),this::redeem);submit.primary=true;
+        back=control("Back",new Rect(panel.x()+16,panel.bottom()-36,75,23),this::close);
+        submit=control("Redeem",new Rect(panel.right()-120,panel.bottom()-36,104,23),this::redeem);submit.primary=true;
         setInitialFocus(code);
         if(unlocked!=null)clearChildren();
+    }
+    private RedeemButton control(String label,Rect bounds,Runnable action){return addDrawableChild(new RedeemButton(label,bounds,action));}
+    private final class RedeemButton extends NavButton {
+        private float hover;
+        private long lastFrame=System.nanoTime();
+        RedeemButton(String label,Rect bounds,Runnable action){super(label,bounds,action);}
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
+            long now=System.nanoTime();
+            hover=MenuAnimation.hover(hover,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);lastFrame=now;
+            int border=active?mixColor(primary?BRAND:LINE,primary?0xFFE3C5FF:BRAND,hover):LINE;
+            int fill=active?mixColor(primary?0xFF30233E:FIELD,primary?0xFF4A305F:HOVER,hover):0xFF202429;
+            frame(c,new Rect(getX(),getY(),getWidth(),getHeight()),border,fill);
+            int textWidth=textRenderer.getWidth(copy(label,.85f,primary));
+            line(c,label,getX()+Math.max(6,(getWidth()-textWidth)/2),getY()+(getHeight()-8)/2,
+                    tint(active?INK:MUTED),.85f,getWidth()-12,primary);
+        }
     }
     private void redeem(){
         if(busy||draft.isBlank()||unlocked!=null)return;

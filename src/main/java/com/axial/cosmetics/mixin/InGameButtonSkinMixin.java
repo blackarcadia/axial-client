@@ -13,6 +13,7 @@ import com.axial.cosmetics.client.EmoteMenuTheme;
 import io.github.kosmx.emotes.arch.screen.EmoteMenu;
 import com.axial.cosmetics.client.ClientSettingsScreen;
 import com.axial.cosmetics.client.WardrobeScreen;
+import com.axial.cosmetics.client.CosmeticRedeemScreen;
 import com.axial.cosmetics.client.MinimapFullScreen;
 import com.axial.cosmetics.client.MinimapSettingsScreen;
 import com.axial.cosmetics.client.CreateWaypointScreen;
@@ -57,7 +58,7 @@ public abstract class InGameButtonSkinMixin {
         // arrows. Let Minecraft render their own sprites and hover states.
         if (currentScreen == null || currentScreen instanceof TitleScreen || currentScreen instanceof ModMenuScreen || currentScreen instanceof QuickMenuScreen
                 || currentScreen instanceof MinimapFullScreen || currentScreen instanceof MinimapSettingsScreen || currentScreen instanceof CreateWaypointScreen
-                || currentScreen instanceof ProfilesScreen || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof FeedbackScreen || currentScreen instanceof GangsScreen || currentScreen instanceof ClientSettingsScreen || currentScreen instanceof WardrobeScreen
+                || currentScreen instanceof ProfilesScreen || currentScreen instanceof FeatureSettingsScreen || currentScreen instanceof EnchantmentsScreen || currentScreen instanceof FeedbackScreen || currentScreen instanceof GangsScreen || currentScreen instanceof ClientSettingsScreen || currentScreen instanceof CosmeticRedeemScreen || currentScreen instanceof WardrobeScreen
                 || currentScreen instanceof com.axial.cosmetics.client.CrosshairSettingsScreen || currentScreen instanceof CrosshairColorPickerScreen || currentScreen instanceof HandledScreen<?>
                 || currentScreen instanceof AccountsScreen) {
             return;
