@@ -20,6 +20,9 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
     public static WhiteKicksFeatureRenderer whiteSneakers(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){
         return new WhiteKicksFeatureRenderer(context,WardrobeAccessory.WHITE_SNEAKERS);
     }
+    public static WhiteKicksFeatureRenderer blackSneakers(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){
+        return new WhiteKicksFeatureRenderer(context,WardrobeAccessory.BLACK_SNEAKERS);
+    }
     private WhiteKicksFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context,WardrobeAccessory accessory){
         super(context);this.accessory=accessory;
         texture=Identifier.of("axial_cosmetics","textures/entity/accessories/"+accessory.id+".png");

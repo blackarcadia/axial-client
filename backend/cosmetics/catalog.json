@@ -59,5 +59,10 @@
     "name": "Magenta City",
     "image": "magenta_city.png",
     "category": "Capes"
+  },
+  "black_sneakers": {
+    "name": "Black Sneakers",
+    "image": "black_sneakers.png",
+    "category": "Outfits"
   }
 }

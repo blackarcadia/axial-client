@@ -10,7 +10,8 @@ final class BedrockCosmeticGeometry {
     record Vec(float x,float y,float z) {
         Vec subtract(Vec other){return new Vec(x-other.x,y-other.y,z-other.z);}
     }
-    record Cube(Vec origin,Vec size,Vec pivot,Vec rotation,int u,int v,float inflate,boolean mirror) {
+    record FaceUv(float u,float v,float width,float height) {}
+    record Cube(Vec origin,Vec size,Vec pivot,Vec rotation,int u,int v,float inflate,boolean mirror,Map<String,FaceUv> faces) {
         Vec localOrigin(){return new Vec(origin.x-pivot.x,pivot.y-origin.y-size.y,origin.z-pivot.z);}
         // Bedrock's box UV layout floors dimensions without rounding the geometry.
         Vec uvSize(){return new Vec(texels(size.x),texels(size.y),texels(size.z));}
@@ -33,10 +34,16 @@ final class BedrockCosmeticGeometry {
                 var object=value.getAsJsonObject();var pivot=vector(object,"pivot",new Vec(0,0,0));
                 var cubes=new ArrayList<Cube>();
                 if(object.has("cubes"))for(var item:object.getAsJsonArray("cubes")){
-                    var cube=item.getAsJsonObject();var uv=cube.getAsJsonArray("uv");
-                    cubes.add(new Cube(vector(cube,"origin",null),vector(cube,"size",null),vector(cube,"pivot",pivot),vector(cube,"rotation",new Vec(0,0,0)),uv.get(0).getAsInt(),uv.get(1).getAsInt(),
+                    var cube=item.getAsJsonObject();var mapping=cube.get("uv");
+                    var uv=mapping.isJsonArray()?mapping.getAsJsonArray():null;
+                    var faces=new HashMap<String,FaceUv>();
+                    if(mapping.isJsonObject())for(var face:mapping.getAsJsonObject().entrySet()){
+                        var definition=face.getValue().getAsJsonObject();var start=definition.getAsJsonArray("uv");var span=definition.getAsJsonArray("uv_size");
+                        faces.put(face.getKey(),new FaceUv(start.get(0).getAsFloat(),start.get(1).getAsFloat(),span.get(0).getAsFloat(),span.get(1).getAsFloat()));
+                    }
+                    cubes.add(new Cube(vector(cube,"origin",null),vector(cube,"size",null),vector(cube,"pivot",pivot),vector(cube,"rotation",new Vec(0,0,0)),uv==null?0:uv.get(0).getAsInt(),uv==null?0:uv.get(1).getAsInt(),
                             cube.has("inflate")?cube.get("inflate").getAsFloat():object.has("inflate")?object.get("inflate").getAsFloat():0,
-                            cube.has("mirror")?cube.get("mirror").getAsBoolean():object.has("mirror")&&object.get("mirror").getAsBoolean()));
+                            cube.has("mirror")?cube.get("mirror").getAsBoolean():object.has("mirror")&&object.get("mirror").getAsBoolean(),Map.copyOf(faces)));
                 }
                 result.add(new Bone(object.get("name").getAsString(),object.has("parent")?object.get("parent").getAsString():null,pivot,vector(object,"rotation",new Vec(0,0,0)),List.copyOf(cubes)));
             }
