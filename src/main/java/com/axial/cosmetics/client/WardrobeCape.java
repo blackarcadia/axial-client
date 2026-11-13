@@ -23,7 +23,8 @@ enum WardrobeCape {
             "8d79d555-75e5-4456-bbc4-0268e1d21659"),
     LUNAR_RAVEN("lunar_raven", "Lunar Raven", "EXCLUSIVE CAPE", "lunar_raven_cape",
             "499b254f-45e3-4ad9-b1ed-6a388b56410c"),
-    PURRR("purrr", "Purrr", "CAPE", "purrr_cape", 1);
+    PURRR("purrr", "Purrr", "CAPE", "purrr_cape", 1),
+    DUCKING_AROUND("ducking_around", "Ducking Around", "CAPE", "ducking_around_cape", 1);
 
     final String id, label, badge;
     private final Set<UUID> owners;

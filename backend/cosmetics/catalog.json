@@ -49,5 +49,10 @@
     "name": "Ribcage",
     "image": "ribcage.png",
     "category": "Outfits"
+  },
+  "ducking_around": {
+    "name": "Ducking Around",
+    "image": "ducking_around.png",
+    "category": "Capes"
   }
 }
