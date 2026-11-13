@@ -9,6 +9,11 @@ record WardrobeItem(WardrobeCape cape,WardrobeAura aura,WardrobeAccessory access
     static WardrobeItem of(WardrobeCape cape){return cape==null?null:new WardrobeItem(cape,null,null);}
     static WardrobeItem of(WardrobeAura aura){return aura==null?null:new WardrobeItem(null,aura,null);}
     static WardrobeItem of(WardrobeAccessory item){return item==null?null:new WardrobeItem(null,null,item);}
+    static WardrobeItem fromId(String id){
+        var cape=WardrobeCape.fromId(id);if(cape!=null)return of(cape);
+        var aura=WardrobeAura.fromId(id);if(aura!=null)return of(aura);
+        return of(WardrobeAccessory.fromId(id));
+    }
     String label(){return cape!=null?cape.label:aura!=null?aura.label:accessory.label;}
     String badge(){return cape!=null?cape.badge:aura!=null?aura.badge:accessory.badge;}
     boolean ownedBy(UUID uuid){return cape!=null?cape.ownedBy(uuid):aura!=null?aura.ownedBy(uuid):accessory.ownedBy(uuid);}

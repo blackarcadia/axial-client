@@ -15,6 +15,7 @@ try {
     $db->exec('PRAGMA busy_timeout=5000');
     require_once dirname(__DIR__).'/Feedback.php';
     Feedback::migrate($db);
+    require_once dirname(__DIR__).'/RedeemCodes.php';
     require_once dirname(__DIR__).'/Polls.php';
     Polls::migrate($db);
     $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
@@ -30,7 +31,10 @@ try {
         $token=str_starts_with($auth,'Bearer ')?substr($auth,7):'';
         $peer=hash_hmac('sha256',$_SERVER['REMOTE_ADDR']??'unknown',$config['rate_secret']);
         try {reply(Feedback::handle($db,substr($path,13),$body,$token,$peer));}
-        catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+        catch(FeedbackError $ex){
+            if($ex->retryAfter>0)header('Retry-After: '.$ex->retryAfter);
+            reply(['error'=>$ex->getMessage(),'retryAfterSeconds'=>$ex->retryAfter],$ex->status);
+        }
     }
     if($path==='/webhooks/paynow') {
         if($method!=='POST')reply(['error'=>'Method not allowed'],405);
@@ -61,6 +65,8 @@ try {
     session_start();
     if(isset($_SESSION['last'])&&time()-(int)$_SESSION['last']>3600)$_SESSION=[];
     $_SESSION['csrf']??=bin2hex(random_bytes(32));
+    require_once dirname(__DIR__).'/AdminDashboard.php';
+    $page=AdminDashboard::page($_GET['page']??(isset($_GET['uuid'])?'cosmetics':'overview'));
     $error='';
     if($method==='POST') {
         if((int)($_SERVER['CONTENT_LENGTH']??0)>16384)reply(['error'=>'Request too large'],413);
@@ -85,20 +91,38 @@ try {
         } elseif(!empty($_SESSION['admin'])) {
             $_SESSION['last']=time();
             if($action==='logout'){$_SESSION=[];session_destroy();header('Location: /admin',true,303);exit;}
+            if($action==='code_create'||$action==='code_disable') {
+                RedeemCodes::migrate($db);
+                try {
+                    if($action==='code_create') {
+                        $maximum=filter_var($_POST['maximum']??1,FILTER_VALIDATE_INT);
+                        $days=filter_var($_POST['days']??0,FILTER_VALIDATE_INT);
+                        if($maximum===false||$days===false||$days<0||$days>3650)throw new FeedbackError('Enter valid code limits.',400);
+                        $issued=RedeemCodes::create($db,$catalog,is_string($_POST['cosmetic']??null)?$_POST['cosmetic']:'',is_string($_POST['label']??null)?$_POST['label']:'',$maximum,$days>0?time()+$days*86400:null);
+                        $_SESSION['issued_code']=$issued['code'];
+                        $_SESSION['notice']='Code created. Copy it now; it will not be shown again.';
+                    } else {
+                        $id=filter_var($_POST['code_id']??null,FILTER_VALIDATE_INT);
+                        if(!$id||$id<1)throw new FeedbackError('Choose a valid code.',400);
+                        RedeemCodes::disable($db,$id);$_SESSION['notice']='Code disabled. Existing unlocks are retained.';
+                    }
+                }catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
+                header('Location: /admin?page=codes',true,303);exit;
+            }
             if($action==='poll_create') {
                 $options=$_POST['options']??[];
                 if(is_array($options))$options=array_values(array_filter($options,fn($v)=>!is_string($v)||trim($v)!==''));
                 try {Polls::create($db,$_POST['question']??null,$options,$_POST['duration']??null,$_POST['unit']??null);}
                 catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
                 $_SESSION['notice']='Poll published. Updated clients refresh within one minute.';
-                header('Location: /admin#polls',true,303);exit;
+                header('Location: /admin?page=polls',true,303);exit;
             }
             if($action==='poll_close'||$action==='poll_delete') {
                 $id=filter_var($_POST['poll_id']??null,FILTER_VALIDATE_INT);
                 if(!$id||$id<1)reply(['error'=>'Invalid poll'],400);
                 Polls::moderate($db,$action==='poll_close'?'close':'delete',$id);
                 $_SESSION['notice']=$action==='poll_close'?'Poll closed. Results retained.':'Poll and votes permanently deleted.';
-                header('Location: /admin#polls',true,303);exit;
+                header('Location: /admin?page=polls',true,303);exit;
             }
             if($action==='feedback_approve'||$action==='feedback_delete') {
                 $id=filter_var($_POST['feedback_id']??null,FILTER_VALIDATE_INT);
@@ -107,7 +131,7 @@ try {
                 try {Feedback::moderate($db,$action==='feedback_approve'?'approve':'delete',$id,$reply);}
                 catch(FeedbackError $ex){reply(['error'=>$ex->getMessage()],$ex->status);}
                 $_SESSION['notice']=$action==='feedback_approve'?'Feedback approved. The player will be notified on login.':'Feedback deleted. Any pending approval notice is preserved.';
-                header('Location: /admin#feedback',true,303);exit;
+                header('Location: /admin?page=feedback',true,303);exit;
             }
             if($action==='paynow_secret') {
                 require_once dirname(__DIR__).'/PayNowWebhook.php';
@@ -116,7 +140,7 @@ try {
                     reply(['error'=>'Choose a supported event and enter its signing secret'],400);
                 $q=$db->prepare('INSERT INTO paynow_secrets VALUES(?,?) ON CONFLICT(event_type) DO UPDATE SET secret=excluded.secret');$q->execute([$event,trim($secret)]);
                 $_SESSION['notice']='Saved PayNow signing secret for '.$event;
-                header('Location: /admin#paynow',true,303);exit;
+                header('Location: /admin?page=payments',true,303);exit;
             }
             if($action==='save') {
                 $uuid=strtolower(trim(is_string($_POST['uuid']??null)?$_POST['uuid']:''));
@@ -132,7 +156,7 @@ try {
                     $q=$db->prepare('INSERT INTO audit(created_at,uuid,action) VALUES(?,?,?)');$q->execute([time(),$uuid,json_encode(array_values(array_unique($capes)))]);
                     $db->exec("UPDATE metadata SET value=value+1 WHERE name='revision'");$db->commit();
                     $_SESSION['notice']='Saved cosmetic access for '.$uuid;
-                    header('Location: /admin?uuid='.rawurlencode($uuid),true,303);exit;
+                    header('Location: /admin?page=cosmetics&uuid='.rawurlencode($uuid),true,303);exit;
                 }
             }
         } else {reply(['error'=>'Login required'],401);}
@@ -143,6 +167,7 @@ try {
     $owned=[];
     if($logged&&preg_match('/\A[0-9a-f-]{36}\z/',$uuid)){$q=$db->prepare('SELECT cape FROM grants WHERE uuid=?');$q->execute([$uuid]);$owned=$q->fetchAll(PDO::FETCH_COLUMN);}
     $notice=$_SESSION['notice']??'';unset($_SESSION['notice']);
+    $dashboard=$logged?AdminDashboard::data($db,$catalog,$page,$_GET):[];
     $paid=[];
     if($logged) {
         $q=$db->prepare('SELECT DISTINCT e.cape FROM effective_grants e WHERE e.uuid=? AND EXISTS (SELECT 1 FROM paynow_purchases p WHERE p.uuid=e.uuid AND p.cape=e.cape)');$q->execute([$uuid]);$paid=$q->fetchAll(PDO::FETCH_COLUMN);
@@ -154,46 +179,4 @@ try {
     if(isset($db)&&$db->inTransaction())$db->rollBack();
     error_log('[AxialCosmetics] '.get_class($ex));reply(['error'=>'Service temporarily unavailable'],503);
 }
-?>
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Axial Cosmetics Admin</title><link rel="stylesheet" href="/admin.css"></head><body><main>
-<header><div><span class="brand">AXIAL CLIENT</span><h1>Cosmetics admin</h1><p>Assign wardrobe access by Minecraft UUID.</p></div><?php if($logged):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="logout"><button>Sign out</button></form><?php endif?></header>
-<?php if($error):?><p class="error" role="alert"><?=h($error)?></p><?php endif?>
-<?php if($notice):?><p class="notice" role="status"><?=h($notice)?></p><?php endif?>
-<?php if(!$logged):?>
-<form method="post" class="login"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="login"><label>Admin password<input type="password" name="password" required autocomplete="current-password"></label><button class="primary">Sign in</button></form>
-<?php else:?>
-<form method="get" class="lookup"><label>Minecraft UUID<input name="uuid" value="<?=h($uuid)?>" required maxlength="36" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label><button>Load player</button></form>
-<form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="save"><label>Player UUID<input name="uuid" value="<?=h($uuid)?>" required maxlength="36" pattern="[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}" placeholder="Paste the player's Minecraft UUID"></label>
-<?php if($paid):?><p class="notice">Cosmetics with purchase records: <?=h(implode(', ',$paid))?>. The checkboxes below control separate manual grants.</p><?php endif?>
-<div class="catalog"><?php foreach($catalog as $id=>$cape):?><label class="cosmetic"><img src="/assets/<?=h($cape['image'])?>" alt="<?=h($cape['name'])?> cosmetic"><span><input type="checkbox" name="capes[]" value="<?=h($id)?>" <?=in_array($id,$owned,true)?'checked':''?>> <?=h($cape['name'])?></span><small><?=h($cape['category']??'Capes')?></small></label><?php endforeach?></div>
-<p class="hint">Checked cosmetics grant manual access. Unchecking removes that manual grant; active purchases still grant access. Updated clients refresh within one minute.</p><button class="primary">Save cosmetic access</button></form>
-<section><h2>Assigned players</h2><div class="players"><?php foreach($db->query('SELECT p.uuid,COUNT(g.cape) AS total FROM players p LEFT JOIN effective_grants g ON g.uuid=p.uuid GROUP BY p.uuid ORDER BY p.updated_at DESC LIMIT 100') as $row):?><a href="/admin?uuid=<?=h($row['uuid'])?>"><code><?=h($row['uuid'])?></code><span><?=h((string)$row['total'])?> cosmetics →</span></a><?php endforeach?></div></section>
-<section id="polls"><h2>Client polls</h2><p>Create a question with 2–6 choices. Each verified Minecraft account gets one vote. Results stay here after the poll ends.</p>
-<form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_create">
-<label>Question<input name="question" required maxlength="160" placeholder="What should we work on next?"></label>
-<div class="poll-options"><?php for($i=1;$i<=6;$i++):?><label>Option <?=$i?><?=$i>2?' (optional)':''?><input name="options[]" maxlength="80" <?=$i<=2?'required':''?>></label><?php endfor?></div>
-<div class="lookup"><label>Duration<input name="duration" type="number" min="1" max="43200" value="24" required></label><label>Unit<select name="unit"><option value="minutes">Minutes</option><option value="hours" selected>Hours</option><option value="days">Days</option></select></label></div><p class="hint">From 1 minute to 30 days. For example: 30 minutes or 24 hours. Questions and choices cannot be edited after publishing.</p><button class="primary">Publish poll</button></form>
-<?php foreach($db->query('SELECT * FROM polls ORDER BY id DESC LIMIT 50') as $poll): $active=!(int)$poll['closed']&&(int)$poll['closes_at']>time(); $q=$db->prepare('SELECT o.option_id,o.label,COUNT(v.uuid) AS votes FROM poll_options o LEFT JOIN poll_votes v ON v.poll_id=o.poll_id AND v.option_id=o.option_id WHERE o.poll_id=? GROUP BY o.option_id ORDER BY o.option_id');$q->execute([$poll['id']]);$results=$q->fetchAll(PDO::FETCH_ASSOC);$total=array_sum(array_column($results,'votes'));?>
-<article class="feedback-note"><h3>#<?=h((string)$poll['id'])?> · <?=h($poll['question'])?></h3><p><?=$active?'Open':'Ended'?> · Closes <?=h(gmdate('Y-m-d H:i:s',(int)$poll['closes_at']))?> UTC · <?=h((string)$total)?> vote(s)</p>
-<?php foreach($results as $result):$percent=$total?round((int)$result['votes']*100/$total,1):0;?><div class="poll-result"><span><?=h($result['label'])?></span><strong><?=h((string)$result['votes'])?> · <?=h((string)$percent)?>%</strong><progress value="<?=h((string)$result['votes'])?>" max="<?=max(1,$total)?>"></progress></div><?php endforeach?>
-<?php if($active):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_close"><input type="hidden" name="poll_id" value="<?=h((string)$poll['id'])?>"><button>Close voting now</button></form><?php endif?>
-<form method="post" class="feedback-delete"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="poll_delete"><input type="hidden" name="poll_id" value="<?=h((string)$poll['id'])?>"><button>Delete poll and results permanently</button></form></article>
-<?php endforeach?></section>
-<section id="feedback"><h2>Player feedback</h2><p>Latest 100 submissions. Approval queues a private notification for the player's next login. Deleting a submission preserves its undelivered approval notice.</p>
-<?php $feedbackRows=$db->query('SELECT * FROM feedback ORDER BY id DESC LIMIT 100')->fetchAll(PDO::FETCH_ASSOC); if(!$feedbackRows):?><p>No feedback yet.</p><?php endif?>
-<?php foreach($feedbackRows as $item):?><article class="feedback-note">
-<h3>#<?=h((string)$item['id'])?> · <?=h($item['username'])?> <span class="feedback-status"><?=h(strtoupper($item['category']).' · '.strtoupper($item['kind']).' · '.$item['status'])?></span></h3>
-<p><code><?=h($item['uuid'])?></code> · <?=h(gmdate('Y-m-d H:i',(int)$item['created_at']))?> UTC</p>
-<div class="feedback-message"><?=nl2br(h($item['message']))?></div>
-<?php if($item['status']==='pending'):?><form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="feedback_approve"><input type="hidden" name="feedback_id" value="<?=h((string)$item['id'])?>"><label>Optional reply<textarea name="reply" maxlength="2000" rows="2" placeholder="Thank you for the suggestion!"></textarea></label><button class="primary">Approve &amp; notify player</button></form><?php endif?>
-<form method="post" class="feedback-delete"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="feedback_delete"><input type="hidden" name="feedback_id" value="<?=h((string)$item['id'])?>"><button>Delete feedback permanently</button></form>
-</article><?php endforeach?></section>
-<section id="paynow"><h2>PayNow connection</h2><p>Store: <code>559186693647761408</code><br>Product: <code>619762575072043008</code> → STAFF cape</p>
-<p>In PayNow → Integrations → Webhooks, create one JSON webhook for each event below, using <code>https://api.axialclient.com/webhooks/paynow</code>. Paste each webhook's signing secret here. Secrets are saved privately and never displayed.</p>
-<ul><?php foreach(['ON_ORDER_COMPLETED','ON_REFUND','ON_CHARGEBACK'] as $event):?><li><?=h($event)?>: <?=in_array($event,$secretEvents,true)?'Secret configured':'Awaiting signing secret'?></li><?php endforeach?></ul>
-<form method="post"><input type="hidden" name="csrf" value="<?=h($_SESSION['csrf'])?>"><input type="hidden" name="action" value="paynow_secret"><label>Webhook event<select name="event_type"><option value="ON_ORDER_COMPLETED">Order Completed</option><option value="ON_REFUND">Refund</option><option value="ON_CHARGEBACK">Chargeback</option></select></label><label>Signing secret<input type="password" name="signing_secret" required minlength="16" maxlength="512" autocomplete="off"></label><button>Save signing secret</button></form>
-<p class="hint">One-time purchases only. Full order refunds and chargebacks remove access from that order. Partial refunds require review so unrelated products in the same order are not removed. Manual grants and other valid purchases remain active. After configuring secrets, run a zero-cost test checkout and verify delivery before selling.</p>
-<?php if($partialRefunds):?><p class="error"><?=h((string)$partialRefunds)?> partially refunded cosmetic order(s) need review.</p><?php endif?>
-<h3>Recent verified events</h3><?php if(!$recentEvents):?><p>No verified PayNow events received yet.</p><?php endif?>
-<ul><?php foreach($recentEvents as $event):?><li><?=h($event['event_type'])?> — <?=h(gmdate('Y-m-d H:i:s',(int)$event['received_at']))?> UTC</li><?php endforeach?></ul></section>
-<?php endif?></main></body></html>
+require dirname(__DIR__).'/views/admin.php';

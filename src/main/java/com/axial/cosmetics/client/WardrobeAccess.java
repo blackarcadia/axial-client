@@ -3,13 +3,12 @@ package com.axial.cosmetics.client;
 import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
 
-/** Local UUID gate for accounts with cosmetic entitlements. */
+/** Open the wardrobe for the signed-in account, including an empty collection. */
 public final class WardrobeAccess {
     private WardrobeAccess() { }
 
     public static boolean allows(UUID account, UUID player) {
-        return account!=null&&(!WardrobeCape.owned(account).isEmpty()||!WardrobeAura.owned(account).isEmpty()||!WardrobeAccessory.owned(account).isEmpty())
-                &&(player==null||account.equals(player));
+        return account!=null&&(player==null||account.equals(player));
     }
 
     public static boolean allowed() {

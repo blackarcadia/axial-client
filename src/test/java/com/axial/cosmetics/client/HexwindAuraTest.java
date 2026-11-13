@@ -42,7 +42,7 @@ class HexwindAuraTest {
             var preferences=new java.util.Properties();preferences.setProperty(owner.toString(),"minecraft");
             assertEquals(WardrobeAura.HEXWIND,WardrobePreferences.auraSelection(preferences,owner));
             preferences.setProperty(owner+".aura","none");assertNull(WardrobePreferences.auraSelection(preferences,owner));
-            field.set(null,java.util.Map.of(owner,java.util.Set.of()));assertFalse(WardrobeAccess.allows(owner,null));
+            field.set(null,java.util.Map.of(owner,java.util.Set.of()));assertTrue(WardrobeAccess.allows(owner,null));
         }finally{field.set(null,previous);}
     }
     @Test void previewFramesAndUtilityTextureAreBundledAndReadable() throws Exception {

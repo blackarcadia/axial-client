@@ -26,6 +26,7 @@ public final class CosmeticAssignments {
     private static volatile Map<UUID,Set<String>> grants;
     private static ScheduledExecutorService worker;
     private static String etag;
+    private static long redeemedAt,minimumRevision;
     private CosmeticAssignments() { }
 
     static boolean owns(UUID uuid,String cape,boolean bundled) {
@@ -65,6 +66,7 @@ public final class CosmeticAssignments {
         worker.scheduleWithFixedDelay(()->{
             HttpURLConnection connection=null;
             try {
+                long requestedAt=System.nanoTime();
                 int status;
                 try {
                     connection=connect(ENDPOINT);status=connection.getResponseCode();
@@ -81,7 +83,8 @@ public final class CosmeticAssignments {
                     json=new String(bytes,StandardCharsets.UTF_8);
                 }
                 var snapshot=parse(json);
-                grants=snapshot;
+                long revision=JsonParser.parseString(json).getAsJsonObject().get("revision").getAsLong();
+                synchronized(CosmeticAssignments.class){if(requestedAt<redeemedAt||revision<minimumRevision)return;grants=snapshot;}
                 client.execute(()->{if(client.currentScreen instanceof WardrobeScreen wardrobe)wardrobe.refreshCosmetics();});
                 Files.createDirectories(cache.getParent());var temporary=Files.createTempFile(cache.getParent(),"axial-grants-",".tmp");
                 try {Files.writeString(temporary,json);Files.move(temporary,cache,StandardCopyOption.REPLACE_EXISTING);}
@@ -91,6 +94,11 @@ public final class CosmeticAssignments {
                 // Retain the last successful snapshot; an outage must not revoke everyone's cosmetics.
             } finally {if(connection!=null)connection.disconnect();}
         },0,60,TimeUnit.SECONDS);
+    }
+    /** Install only the server-verified account grant list, never a local code lookup. */
+    static synchronized void acceptRedemption(UUID uuid,Set<String> owned,long revision) {
+        var updated=new HashMap<UUID,Set<String>>(grants==null?Map.of():grants);
+        updated.put(uuid,Set.copyOf(owned));grants=Map.copyOf(updated);redeemedAt=System.nanoTime();minimumRevision=Math.max(minimumRevision,revision);
     }
     private static HttpURLConnection connect(URI endpoint) throws IOException {
         var connection=(HttpURLConnection)endpoint.toURL().openConnection();

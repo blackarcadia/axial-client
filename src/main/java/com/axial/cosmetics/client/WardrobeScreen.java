@@ -54,7 +54,7 @@ public final class WardrobeScreen extends Screen {
     void refreshCosmetics() {
         if(!WardrobeAccess.allowed()){close();return;}
         if(focusedItem==null||!focusedItem.ownedBy(client.getSession().getUuidOrNull()))
-            focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
+            focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).stream().findFirst().orElse(null);
         resetScroll();rebuild();
     }
 
@@ -64,10 +64,10 @@ public final class WardrobeScreen extends Screen {
         NavigationIndicator.mark(3);
         if(focusedItem==null) {
             focusedItem=WardrobeItem.of(WardrobePreferences.current());
-            if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).getFirst();
-            if(focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
-            if(focusedItem.accessory()!=null)category=WardrobeCategory.OUTFITS;
-            rotation=WardrobeModelView.yaw(focusedItem);previewRotation.jump(rotation);
+            if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).stream().findFirst().orElse(null);
+            if(focusedItem!=null&&focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
+            if(focusedItem!=null&&focusedItem.accessory()!=null)category=WardrobeCategory.OUTFITS;
+            rotation=focusedItem==null?155:WardrobeModelView.yaw(focusedItem);previewRotation.jump(rotation);
         }
         if(!skinRequested) {
             skinRequested=true;
@@ -89,6 +89,7 @@ public final class WardrobeScreen extends Screen {
         cards.clear();
         button("X", layout.close, this::close);
         button("Done", layout.done, this::close);
+        button("Redeem code",new Rect(layout.panel.x()+10,layout.panel.bottom()-26,84,19),()->client.setScreen(new CosmeticRedeemScreen(this)));
         for (var item:WardrobeCategory.values()) {
             button(item.label,layout.category(item.ordinal()),()->{category=item;query="";resetScroll();rebuild();});
         }
@@ -105,7 +106,7 @@ public final class WardrobeScreen extends Screen {
         addDrawableChild(search);
         if(focused)setFocused(search);
         var matching=matchingItems();
-        if(!matching.isEmpty()&&!matching.contains(focusedItem)){focusedItem=matching.getFirst();rotation=WardrobeModelView.yaw(focusedItem);}
+        if(!matching.isEmpty()&&!matching.contains(focusedItem)){focusedItem=matching.stream().findFirst().orElse(null);rotation=WardrobeModelView.yaw(focusedItem);}
         int nextScroll=Math.clamp(scroll,0,layout.maxScroll(matching.size()));
         filtering.offsetY(nextScroll-scroll);scroll=nextScroll;
         filtering.update(matching,index->layout.card(index,0));
@@ -157,8 +158,10 @@ public final class WardrobeScreen extends Screen {
         }
     }
 
-    private void drawCosmeticCard(DrawContext c,WardrobeItem item,Rect r,boolean hover) {
-        boolean selected=item.equipped();
+    void drawRewardCard(DrawContext c,WardrobeItem item,Rect r){drawCosmeticCard(c,item,r,false,true);}
+    private void drawCosmeticCard(DrawContext c,WardrobeItem item,Rect r,boolean hover) {drawCosmeticCard(c,item,r,hover,false);}
+    private void drawCosmeticCard(DrawContext c,WardrobeItem item,Rect r,boolean hover,boolean reward) {
+        boolean selected=!reward&&item.equipped();
         float equipProgress=(float)equipmentMotion.computeIfAbsent(item,key->new UiMotion(0)).toward(selected?1:0);
         frame(c,r,mixColor(hover?HOVER_LINE:LINE,0xFFAE55FF,equipProgress),mixColor(0xFF15191F,0xFF282033,equipProgress));
         Rect image=WardrobeLayout.capeImage(r);
@@ -183,8 +186,8 @@ public final class WardrobeScreen extends Screen {
         c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,tint(DIVIDER));
         label(c,textRenderer,item.label(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
         boolean equipped=item.equipped();
-        label(c,textRenderer,equipped?"EQUIPPED":"CLICK TO EQUIP",r.x()+7,r.bottom()-12,
-                equipped?BRAND:MUTED,.7f,r.width()-14,false);
+        label(c,textRenderer,reward?"ADDED TO YOUR WARDROBE":equipped?"EQUIPPED":"CLICK TO EQUIP",r.x()+7,r.bottom()-12,
+                reward?0xFFB5F5CB:equipped?BRAND:MUTED,.7f,r.width()-14,false);
     }
 
     private WardrobeButton button(String title,Rect r,Runnable action) {
@@ -234,8 +237,8 @@ public final class WardrobeScreen extends Screen {
             c.drawStrokedRectangle(preview.x(),preview.y(),preview.width(),preview.height(),(alpha<<24)|(BRAND&0xFFFFFF));
         }
         Rect d=layout.details;
-        label(c,textRenderer,focusedItem.label(),d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
-        if(d.height()>60) {
+        label(c,textRenderer,focusedItem==null?"Your wardrobe starts here":focusedItem.label(),d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
+        if(d.height()>60&&focusedItem!=null) {
             label(c,textRenderer,focusedItem.badge(),d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
             label(c,textRenderer,"Drag to rotate",d.x()+4,d.y()+32,MUTED,.7f,d.width()-8,false);
             label(c,textRenderer,focusedItem.equipped()?"Click to unequip":"Click to equip",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
@@ -244,7 +247,7 @@ public final class WardrobeScreen extends Screen {
             label(c,textRenderer,"No cosmetics here yet",layout.grid.x()+3,layout.grid.y()+12,MUTED,.8f,layout.grid.width()-6,false);
         }
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
-        label(c,textRenderer,error.isEmpty()?"Your collection • Click a cosmetic to equip":error,p.x()+10,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-82,false);
+        label(c,textRenderer,error.isEmpty()?"Your collection • Click a cosmetic to equip":error,p.x()+101,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-174,false);
         super.render(c,mx,my,delta);
         var categoryStart=layout.category(0);var categoryNext=layout.category(1);
         int categoryY=categoryStart.y()+(int)Math.round(categoryMarker.toward(category.ordinal())*(categoryNext.y()-categoryStart.y()));
@@ -304,7 +307,7 @@ public final class WardrobeScreen extends Screen {
 
     private void drawModel(DrawContext c,WardrobeItem item,Rect bounds,float yaw,boolean card) {
         var skin=card?WardrobePreviewState.CARD_SKIN:client.player==null?menuSkin:client.player.getSkin();
-        if(skin==null||item==null)return;
+        if(skin==null||(card&&item==null))return;
         float age=(System.nanoTime()/50_000_000L)%1_000_000;
         var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
         var view=WardrobeModelView.fit(card?item:WardrobeItem.of(state.aura),bounds,card);

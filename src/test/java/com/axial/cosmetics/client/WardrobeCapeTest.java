@@ -39,7 +39,7 @@ class WardrobeCapeTest {
             assertFalse(WardrobeAccess.allows(staff,CreatorCosmetics.OWNER));
         }
         assertTrue(WardrobeCape.owned(new UUID(0,1)).isEmpty());
-        assertFalse(WardrobeAccess.allows(new UUID(0,1),null));
+        assertTrue(WardrobeAccess.allows(new UUID(0,1),null));
         assertTrue(WardrobeCape.owned(null).isEmpty());
     }
     @Test void staffCapeIsGrantedToAllFourAccountsWithoutGrantingAdminToTheNewStaffMember() {

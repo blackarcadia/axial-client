@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title><?=h($logged?AdminDashboard::PAGES[$page][0].' · Axial Admin':'Sign in · Axial Admin')?></title><link rel="stylesheet" href="/admin.css?v=3"></head>
+<body class="<?=$logged?'dashboard':'auth-page'?>">
+<?php if($logged):?>
+<a class="skip-link" href="#main">Skip to content</a>
+<aside class="sidebar"><a class="brand-lockup" href="/admin"><span class="brand-symbol"><?=admin_icon('spark')?></span><span>AXIAL<span class="brand-sub">CONTROL PANEL</span></span></a><span class="nav-caption">WORKSPACE</span>
+<nav aria-label="Admin navigation"><?php foreach(AdminDashboard::PAGES as $key=>[$label,$description,$icon]):?><a href="<?=h(AdminDashboard::url($key))?>" <?=$page===$key?'aria-current="page"':''?>><?=admin_icon($icon)?><span><?=h($label)?></span><?php if($key==='feedback'&&$dashboard['counts']['feedback']):?><span class="nav-count"><?=h((string)$dashboard['counts']['feedback'])?></span><?php endif?></a><?php endforeach?></nav>
+<div class="sidebar-bottom"><div class="workspace-tag"><span class="status-dot"></span><span>Axial Client<span>Development workspace</span></span></div><form method="post"><?php admin_csrf()?><input type="hidden" name="action" value="logout"><button class="signout"><?=admin_icon('logout')?> Sign out</button></form></div></aside>
+<main id="main" class="main-content"><div class="topline"><span>WORKSPACE <span class="slash">/</span> <?=h(strtoupper(AdminDashboard::PAGES[$page][0]))?></span><span class="admin-tag">Administrator</span></div>
+<header class="page-header"><div><span class="eyebrow">AXIAL CLIENT</span><h1><?=h(AdminDashboard::PAGES[$page][0])?></h1><p><?=h(AdminDashboard::PAGES[$page][1])?></p></div><?php if($page==='overview'):?><a class="button primary" href="<?=h(AdminDashboard::url('feedback'))?>">Review feedback <?=admin_icon('arrow')?></a><?php endif?></header>
+<?php else:?><main id="main" class="auth-card"><a class="brand-lockup" href="/admin"><span class="brand-symbol"><?=admin_icon('spark')?></span><span>AXIAL<span class="brand-sub">CONTROL PANEL</span></span></a><span class="eyebrow">DEVELOPMENT WORKSPACE</span><h1>Welcome back.</h1><p>Sign in to manage your client and community.</p><?php endif?>
+<?php if($error):?><div class="alert error" role="alert"><?=h($error)?></div><?php endif?>
+<?php if($notice):?><div class="alert notice" role="status"><?=admin_icon('check')?> <?=h($notice)?></div><?php endif?>
+<?php if(!$logged):?><form method="post" class="login"><?php admin_csrf()?><input type="hidden" name="action" value="login"><label for="admin-password">Admin password</label><input id="admin-password" type="password" name="password" required autocomplete="current-password" autofocus placeholder="Enter your password"><button class="primary full">Sign in <?=admin_icon('arrow')?></button></form><p class="auth-foot">Private access · Axial development team</p>
+<?php else: require __DIR__.'/'.$page.'.php';?><footer class="page-footer"><span>AXIAL CLIENT <span>Development console</span></span><span>All times shown in UTC</span></footer><?php endif?>
+</main></body></html>

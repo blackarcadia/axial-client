@@ -55,6 +55,7 @@ final class Feedback {
         $session=self::query($db,'SELECT uuid,username FROM feedback_sessions WHERE token=? AND expires_at>=?',[hash('sha256',$token),time()])->fetch(PDO::FETCH_ASSOC);
         if(!$session)throw new FeedbackError('Please verify your Minecraft account again.',401);
         $uuid=$session['uuid'];
+        if($action==='redeem')return RedeemCodes::redeem($db,$body,$uuid,$peer);
         if($action==='polls'||$action==='vote')return Polls::handle($db,$action,$body,$uuid);
         if($action==='submit') {
             $message=$body['message']??'';$request=$body['requestId']??'';
