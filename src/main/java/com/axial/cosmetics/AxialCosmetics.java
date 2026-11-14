@@ -115,6 +115,8 @@ public class AxialCosmetics implements ClientModInitializer {
         applyEmotecraftDefaults();
         EntityRendererRegistry.register(EntityType.HUSK, AlienHuskEntityRenderer::new);
 
+        com.axial.cosmetics.client.CapeObstruction.initialize();
+
         ArmorCosmeticRegistry.register(247, EquipmentSlot.FEET,
                 id("geckolib/models/kroks.geo.json"), id("textures/item/kroks.png"));
 

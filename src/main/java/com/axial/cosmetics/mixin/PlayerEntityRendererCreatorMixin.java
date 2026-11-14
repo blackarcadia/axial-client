@@ -13,7 +13,8 @@ public abstract class PlayerEntityRendererCreatorMixin {
     @Inject(method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V", at = @At("TAIL"))
     private void axial$creatorCape(PlayerLikeEntity player, PlayerEntityRenderState state,
                                    float tickProgress, CallbackInfo ci) {
-        if(com.axial.cosmetics.client.ItemSkinConflict.hidesCosmetics(state))return;
+        // Back-overlapping geometry is handled by CapeFeatureObstructionMixin;
+        // front-only GEO items and shoes must retain the selected client cape.
         // Vanilla still controls cape visibility, movement, armor offsets and elytra suppression.
         state.skinTextures = com.axial.cosmetics.client.WardrobePreferences.applyCape(player.getUuid(), state.skinTextures, state.age);
     }

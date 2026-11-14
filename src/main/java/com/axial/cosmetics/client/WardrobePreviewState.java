@@ -36,7 +36,7 @@ final class WardrobePreviewState extends PlayerEntityRenderState {
         bodyYaw=yaw;
         skinTextures=new SkinTextures(skin.body(),cape==null?null:cape.asset(age),
                 null,skin.model(),skin.secure());
-        capeVisible=cape!=null;
+        capeVisible=cape!=null&&!CapeObstruction.wardrobeBlocks(this.accessories);
         // A little lift keeps the cape face clear of the mannequin's legs.
         field_53536=8;
     }

@@ -36,6 +36,7 @@
     "PlayerEntityRendererEmoteEquipmentMixin",
     "PlayerEntityRendererThirdPersonNameTagMixin",
     "PlayerEntityRendererCreatorMixin",
+    "CapeFeatureObstructionMixin",
     "GeoArmorGlintMixin",
     "ArmorCosmeticGeoRendererMixin",
     "AxialConfigScreenColorPickerMixin",
