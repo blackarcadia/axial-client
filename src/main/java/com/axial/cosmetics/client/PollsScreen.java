@@ -57,6 +57,22 @@ public final class PollsScreen extends NavigationScreen {
         submit=button("Submit Vote",new Rect(panel.right()-132,panel.bottom()-32,116,22),this::vote);submit.primary=true;
         positionOptions();revision=PollService.revision();
     }
+    @Override protected NavButton button(String title,Rect bounds,Runnable action){return addDrawableChild(new PollButton(title,bounds,action));}
+    private final class PollButton extends NavButton {
+        private float hover;
+        private long lastFrame=System.nanoTime();
+        PollButton(String title,Rect bounds,Runnable action){super(title,bounds,action);}
+        @Override protected void drawContents(DrawContext c,int mx,int my,float delta){
+            long now=System.nanoTime();
+            hover=MenuAnimation.hover(hover,active&&(isHovered()||isFocused()),(now-lastFrame)/1_000_000_000f);lastFrame=now;
+            int border=active?mixColor(primary?BRAND:LINE,primary?0xFFE3C5FF:BRAND,hover):LINE;
+            int fill=active?mixColor(primary?0xFF30233E:FIELD,primary?0xFF4A305F:HOVER,hover):0xFF202429;
+            frame(c,new Rect(getX(),getY(),getWidth(),getHeight()),border,fill);
+            int textWidth=textRenderer.getWidth(copy(label,.85f,primary));
+            line(c,label,getX()+Math.max(6,(getWidth()-textWidth)/2),getY()+(getHeight()-8)/2,
+                    tint(active?INK:MUTED),.85f,getWidth()-12,primary);
+        }
+    }
     private void change(int step){int count=PollService.active().size();if(count==0){rebuild();return;}index=Math.floorMod(index+step,count);selected=0;scroll=0;status="";rebuild();}
     private void positionOptions(){
         for(var row:options){row.setY(viewport.y()+row.offset-scroll);row.visible=row.getBottom()>viewport.y()&&row.getY()<viewport.bottom();row.active=!sending&&poll!=null&&poll.voted()==null&&poll.remaining(System.nanoTime())>0;}
@@ -66,8 +82,10 @@ public final class PollsScreen extends NavigationScreen {
         sending=true;error="";status="Recording your vote…";
         PollService.vote(poll,selected).whenComplete((ignored,failure)->{
             sending=false;
-            if(failure==null)status="Thank you! Your vote has been recorded.";
-            else {status="";Throwable cause=failure;while(cause.getCause()!=null)cause=cause.getCause();error=cause instanceof java.io.IOException?cause.getMessage():"Could not vote. Please retry.";}
+            if(client.currentScreen!=this)return;
+            if(failure==null){close();return;}
+            status="";Throwable cause=failure;while(cause.getCause()!=null)cause=cause.getCause();
+            error=cause instanceof java.io.IOException?cause.getMessage():"Could not vote. Please retry.";
             rebuild();
         });
     }
