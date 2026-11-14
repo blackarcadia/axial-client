@@ -69,5 +69,10 @@
     "name": "Pixel Stars",
     "image": "pixel_stars.gif",
     "category": "Auras"
+  },
+  "pixel_snowflakes": {
+    "name": "Pixel Snowflakes",
+    "image": "pixel_snowflakes.gif",
+    "category": "Auras"
   }
 }

@@ -8,7 +8,8 @@ import net.minecraft.util.Identifier;
 enum WardrobeAura {
     HEXWIND("halloween_hexwind","Hexwind","HALLOWEEN AURA"),
     GOLD_SPARK("gold_spark","Gold Spark","GOLD AURA"),
-    PIXEL_STARS("pixel_stars","Pixel Stars","PASTEL STAR TRAIL");
+    PIXEL_STARS("pixel_stars","Pixel Stars","PASTEL STAR TRAIL"),
+    PIXEL_SNOWFLAKES("pixel_snowflakes","Pixel Snowflakes","SNOWFLAKE AURA");
     final String id,label,badge;
     Identifier preview(){return Identifier.of("axial_cosmetics","textures/gui/"+(this==HEXWIND?"hexwind":id)+"_preview.png");}
     WardrobeAura(String id,String label,String badge){this.id=id;this.label=label;this.badge=badge;}

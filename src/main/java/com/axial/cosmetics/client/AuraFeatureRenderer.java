@@ -34,6 +34,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
         if(aura==null)return;
         var mesh=switch(aura) {
             case HEXWIND -> HexwindGeometry.frame(time,distance<24*24);
+            case PIXEL_SNOWFLAKES -> PixelSnowflakesGeometry.frame(time,distance<24*24);
             case GOLD_SPARK -> GoldSparkGeometry.frame(time,distance<24*24);
             case PIXEL_STARS -> trailAccount==null?PixelStarsGeometry.frame(time,true):PixelStarsTrail.frame(trailAccount,state,partial,distance<24*24);
         };
