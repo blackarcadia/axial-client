@@ -1,7 +1,7 @@
 # Pixel Stars
 
 Cosmetic ID: `pixel_stars`. Category: Auras. Display name: Pixel Stars.
-White (#FAFDFF), light blue (#BCE7FF), and light pink (#FFD0EA) pixel stars.
+White (#FAFDFF), light blue (#A8DFFF), and light pink (#FFB8DF) pixel stars.
 
 Movement emits stars around the player's body. Birth positions are kept in world
 space, so stars drift radially outward and upward and form a real fading trail.

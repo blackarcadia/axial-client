@@ -7,7 +7,7 @@ import com.axial.cosmetics.client.HexwindGeometry.Quad;
 /** Crisp pastel pixel stars. World-space births let a moving player leave a real trail. */
 public final class PixelStarsGeometry {
     public static final float PERIOD=120;
-    static final int[] COLORS={0xFAFDFF,0xBCE7FF,0xFFD0EA};
+    static final int[] COLORS={0xFAFDFF,0xA8DFFF,0xFFB8DF};
     public record Star(double x,double y,double z,double vx,double vy,double vz,double born,double life,float size,int color,float angle) {}
     private PixelStarsGeometry() {}
     public static List<Quad> render(List<Star> stars,double tick,double x,double y,double z,float yaw,boolean detailed){
@@ -15,18 +15,18 @@ public final class PixelStarsGeometry {
         for(int i=0;i<stars.size();i++){
             if(!detailed&&i%2!=0)continue;
             var star=stars.get(i);double age=tick-star.born();if(age<0||age>=star.life())continue;
-            double t=age/star.life(),fade=Math.min(1,age/2)*Math.min(1,(1-t)*3);
+            double t=age/star.life(),fade=Math.min(1,age/1.2)*Math.min(1,(1-t)*5);
             double dx=star.x()+star.vx()*age-x,dz=star.z()+star.vz()*age-z;
             double px=cos*dx+sin*dz,pz=sin*dx-cos*dz,py=star.y()+star.vy()*age-y;
-            double size=star.size()*(.75+.25*Math.sin(age*.45+star.angle()))*(1-.25*t);
-            int color=((int)(fade*235)<<24)|star.color();
+            double size=star.size()*1.55*(.93+.07*Math.sin(age*.45+star.angle()))*(1-.10*t);
+            int color=((int)(fade*255)<<24)|star.color();
             for(double plane:new double[]{0,Math.PI/2}){
                 if(detailed){
                     int[] rows={1,1,3,7,3,1,1};double pixel=size/3.5;
                     for(int row=0;row<rows.length;row++)rect(mesh,px,py,pz,-rows[row]*pixel/2,(row-3.5)*pixel,rows[row]*pixel,pixel,plane,star.angle()+age*.015,color);
                     rect(mesh,px,py,pz,-pixel*.4,-pixel*.4,pixel*.8,pixel*.8,plane,star.angle()+age*.015,((int)(fade*255)<<24)|0xFAFDFF);
                     // Faint separated tip pixels add sparkle without a solid square halo.
-                    for(int tip:new int[]{-1,1})rect(mesh,px,py,pz,tip*size*1.15-pixel/2,-pixel/2,pixel,pixel,plane,star.angle()+age*.015,((int)(fade*55)<<24)|star.color());
+                    for(int tip:new int[]{-1,1})rect(mesh,px,py,pz,tip*size*1.15-pixel/2,-pixel/2,pixel,pixel,plane,star.angle()+age*.015,((int)(fade*110)<<24)|star.color());
                 }else{
                     rect(mesh,px,py,pz,-size,-size/5,size*2,size*2/5,plane,star.angle(),color);
                     rect(mesh,px,py,pz,-size/5,-size,size*2/5,size*2,plane,star.angle(),color);

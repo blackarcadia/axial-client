@@ -43,7 +43,7 @@ class PixelStarsAuraTest {
                 assertTrue(Math.abs(p.x())<2&&Math.abs(p.z())<2.5&&p.y()>-.5&&p.y()<2.5);
             }}
         }
-        assertEquals(Set.of(0xFAFDFF,0xBCE7FF,0xFFD0EA),colors);
+        assertEquals(Set.of(0xFAFDFF,0xA8DFFF,0xFFB8DF),colors);
     }
     @Test void playerTranslationIsRemovedFromTheHistoricalStarPosition() {
         var star=new PixelStarsGeometry.Star(4,1,2,0,0,0,0,20,.12f,0xFAFDFF,0);

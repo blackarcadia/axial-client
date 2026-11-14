@@ -2,7 +2,6 @@ package com.axial.cosmetics.client;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
@@ -10,11 +9,9 @@ import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
 
 /** Animated cosmetic geometry; no particles, entities or server mutations. */
 public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRenderState,PlayerEntityModel> {
-    private static final Identifier WHITE=Identifier.of("axial_cosmetics","textures/entity/auras/white.png");
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
         WardrobeAura aura;
@@ -40,7 +37,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
             case GOLD_SPARK -> GoldSparkGeometry.frame(time,distance<24*24);
             case PIXEL_STARS -> trailAccount==null?PixelStarsGeometry.frame(time,true):PixelStarsTrail.frame(trailAccount,state,partial,distance<24*24);
         };
-        commands.submitCustom(matrices,RenderLayers.entityTranslucentEmissiveNoOutline(WHITE),(entry,vertices)->{
+        commands.submitCustom(matrices,AuraRenderLayers.layer(),(entry,vertices)->{
             for(var quad:mesh) {
                 vertex(vertices,entry,quad.a(),quad.color());vertex(vertices,entry,quad.b(),quad.color());
                 vertex(vertices,entry,quad.c(),quad.color());vertex(vertices,entry,quad.d(),quad.color());

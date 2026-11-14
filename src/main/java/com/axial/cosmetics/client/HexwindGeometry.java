@@ -21,12 +21,12 @@ public final class HexwindGeometry {
                 double t=segment/(double)segments,next=(segment+1.0)/segments;
                 double a=start+t*Math.PI*1.4,b=start+next*Math.PI*1.4;
                 double h1=base+Math.sin(a*2+band)*.06,h2=base+Math.sin(b*2+band)*.06;
-                double width1=.006+.105*Math.sin(t*Math.PI)*Math.sin(t*Math.PI),width2=.006+.105*Math.sin(next*Math.PI)*Math.sin(next*Math.PI);
-                int alpha=(int)(155+60*Math.sin(t*Math.PI));
-                mesh.add(new Quad(orbit(a,radius,h1-width1/2),orbit(b,radius,h2-width2/2),orbit(b,radius,h2+width2/2),orbit(a,radius,h1+width1/2),(alpha<<24)|0x171020));
+                double width1=.012+.155*Math.sin(t*Math.PI)*Math.sin(t*Math.PI),width2=.012+.155*Math.sin(next*Math.PI)*Math.sin(next*Math.PI);
+                int alpha=(int)(205+45*Math.sin(t*Math.PI));
+                mesh.add(new Quad(orbit(a,radius,h1-width1/2),orbit(b,radius,h2-width2/2),orbit(b,radius,h2+width2/2),orbit(a,radius,h1+width1/2),(alpha<<24)|0x39204D));
                 // Raised strips follow the smoke's edge, not a full solid neon ring.
-                mesh.add(new Quad(orbit(a,radius+.006,h1+width1*.36),orbit(b,radius+.006,h2+width2*.36),orbit(b,radius+.006,h2+width2*.5),orbit(a,radius+.006,h1+width1*.5),0x947D4BA8));
-                if(segment>segments*2/3)mesh.add(new Quad(orbit(a,radius+.01,h1-width1*.5),orbit(b,radius+.01,h2-width2*.5),orbit(b,radius+.01,h2-width2*.4),orbit(a,radius+.01,h1-width1*.4),0xB5DE8F3F));
+                mesh.add(new Quad(orbit(a,radius+.006,h1+width1*.36),orbit(b,radius+.006,h2+width2*.36),orbit(b,radius+.006,h2+width2*.5),orbit(a,radius+.006,h1+width1*.5),0xE6B276E0));
+                if(segment>segments*2/3)mesh.add(new Quad(orbit(a,radius+.01,h1-width1*.5),orbit(b,radius+.01,h2-width2*.5),orbit(b,radius+.01,h2-width2*.4),orbit(a,radius+.01,h1-width1*.4),0xE6F5A957));
             }
         }
         for(int bat=0;bat<2;bat++) {
@@ -39,13 +39,13 @@ public final class HexwindGeometry {
         for(int i=0;i<motes;i++) {
             double angle=phase*(i%2==0?1:-1)+i*2.39996;
             double height=.14+(i%6)*.31+Math.sin(phase*2+i)*.06;
-            Point center=orbit(angle,.85+(i%3)*.04,height);double size=i%3==0?.022:.012;
+            Point center=orbit(angle,.85+(i%3)*.04,height);double size=i%3==0?.038:.023;
             square(mesh,center,size,i%3==0?0xD9EBA14A:0xA68E63B7);
         }
         return List.copyOf(mesh);
     }
     private static void pumpkin(List<Quad> mesh,double angle,double radius,double y) {
-        Point center=orbit(angle,radius,y);double axis=angle+Math.PI/2,r=.075;
+        Point center=orbit(angle,radius,y);double axis=angle+Math.PI/2,r=.095;
         cube(mesh,center,axis,r,r,r,0xFFE17B25);
         cube(mesh,local(center,axis,0,r+.024,0),axis,.018,.025,.018,0xFF77813F);
         for(int side:new int[]{-1,1}) {
@@ -74,12 +74,12 @@ public final class HexwindGeometry {
         double wing=.12+Math.cos(flap)*.025;
         // Bat wings are angular panels with notched lower edges and a gently changing pitch.
         Point bodyLow=local(center,tangent,-.025,-.05,0),bodyHigh=local(center,tangent,.025,.05,0);
-        mesh.add(new Quad(bodyLow,local(center,tangent,.025,-.05,0),bodyHigh,local(center,tangent,-.025,.05,0),0xFF25172D));
+        mesh.add(new Quad(bodyLow,local(center,tangent,.025,-.05,0),bodyHigh,local(center,tangent,-.025,.05,0),0xFF51305F));
         for(int side:new int[]{-1,1}) {
             Point root=local(center,tangent,side*.025,.025,0),tip=local(center,tangent,side*wing,.065+flap*.045,Math.sin(flap)*.09);
             Point notch=local(center,tangent,side*.085,-.012,Math.sin(flap)*.045),lower=local(center,tangent,side*.04,-.035,0);
-            mesh.add(new Quad(root,tip,notch,lower,0xF535203F));
-            mesh.add(new Quad(root,tip,local(center,tangent,side*(wing-.025),.058+flap*.045,Math.sin(flap)*.09),local(center,tangent,side*.04,.018,0),0xB98954AD));
+            mesh.add(new Quad(root,tip,notch,lower,0xFF714286));
+            mesh.add(new Quad(root,tip,local(center,tangent,side*(wing-.025),.058+flap*.045,Math.sin(flap)*.09),local(center,tangent,side*.04,.018,0),0xE6B47BDC));
         }
         for(int side:new int[]{-1,1}) {
             Point eye=local(center,tangent,side*.012,.015,-.004);

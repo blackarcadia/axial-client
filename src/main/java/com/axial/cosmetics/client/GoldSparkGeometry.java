@@ -19,8 +19,8 @@ public final class GoldSparkGeometry {
             sparks.add(new Spark(i * (PERIOD / 72.0) + random.nextDouble() * 1.4,
                     12 + random.nextDouble() * 8, random.nextDouble() * Math.PI * 2,
                     .48 + random.nextDouble() * .3, .16 + random.nextDouble() * .65,
-                    .85 + random.nextDouble() * .45, .12 + random.nextDouble() * .26,
-                    .018 + random.nextDouble() * .014, random.nextDouble() * Math.PI * 2));
+                    .85 + random.nextDouble() * .45, .16 + random.nextDouble() * .32,
+                    .032 + random.nextDouble() * .020, random.nextDouble() * Math.PI * 2));
         }
         SPARKS = List.copyOf(sparks);
     }
@@ -34,8 +34,8 @@ public final class GoldSparkGeometry {
             double age = (time - s.birth + PERIOD) % PERIOD;
             if (age >= s.life) continue;
             double t = age / s.life;
-            double fade = Math.min(1, t * 7) * Math.min(1, (1 - t) * 5);
-            double shimmer = .7 + .3 * Math.pow(Math.sin(age * 1.25 + s.phase), 2);
+            double fade = Math.min(1, t * 10) * Math.min(1, (1 - t) * 6);
+            double shimmer = .9 + .1 * Math.pow(Math.sin(age * 1.25 + s.phase), 2);
             double x = Math.cos(s.angle) * s.radius, z = Math.sin(s.angle) * s.radius;
             double y = s.base + s.rise * t;
             // Short separated steps keep trails crisp, with a brighter leading tip.
@@ -57,7 +57,7 @@ public final class GoldSparkGeometry {
         return List.copyOf(mesh);
     }
     private static int color(double alpha, int rgb) {
-        return ((int)(Math.max(0, Math.min(1, alpha)) * 255) << 24) | rgb;
+        return ((int)(Math.pow(Math.max(0, Math.min(1, alpha)),.65) * 255) << 24) | rgb;
     }
     private static Point p(double x, double y, double z) { return new Point((float)x, (float)y, (float)z); }
     private static void panel(List<Quad> mesh, double x, double y, double z, double w, double h, int color) {
