@@ -14,7 +14,7 @@ class PixelSnowflakesAuraTest {
                 assertEquals(0xFFFFFF,quad.color()&0xffffff);if((quad.color()>>>24)==255)opaque++;
                 for(var p:List.of(quad.a(),quad.b(),quad.c(),quad.d())){
                     assertTrue(Float.isFinite(p.x())&&Float.isFinite(p.y())&&Float.isFinite(p.z()));
-                    assertTrue(Math.abs(p.x())<1.3&&Math.abs(p.z())<1.3&&p.y()>-.5&&p.y()<2.6);
+                    assertTrue(Math.abs(p.x())<1.7&&Math.abs(p.z())<1.7&&p.y()>-.5&&p.y()<2.6);
                 }
             }
             assertTrue(opaque>mesh.size()/2,"Most of each snowflake's lifetime should be fully visible");

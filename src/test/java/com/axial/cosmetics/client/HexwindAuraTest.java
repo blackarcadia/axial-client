@@ -12,7 +12,7 @@ class HexwindAuraTest {
             var mesh=HexwindGeometry.frame(t,true);assertTrue(mesh.size()>150&&mesh.size()<350);
             for(var quad:mesh)for(var p:List.of(quad.a(),quad.b(),quad.c(),quad.d())) {
                 assertTrue(Float.isFinite(p.x())&&Float.isFinite(p.y())&&Float.isFinite(p.z()));
-                assertTrue(Math.abs(p.x())<1.4&&Math.abs(p.z())<1.4);assertTrue(p.y()>-.1&&p.y()<2.1);
+                assertTrue(Math.abs(p.x())<1.8&&Math.abs(p.z())<1.8);assertTrue(p.y()>-.1&&p.y()<2.1);
             }
         }
         assertEquals(HexwindGeometry.frame(0,true),HexwindGeometry.frame(HexwindGeometry.PERIOD,true));

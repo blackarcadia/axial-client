@@ -36,9 +36,9 @@ public class GenerateHexwindPreview {
         box(mesh,.02f,0,-.12f,.2f,.74f,.24f,0xff3e3448);
         mesh.addAll(HexwindGeometry.frame(ticks,true));
         mesh.sort(Comparator.comparingDouble((Quad q)->(depth(q.a())+depth(q.b())+depth(q.c())+depth(q.d()))/4).reversed());
-        double scale=size*.42;
+        double scale=size*.28;
         for(Quad q:mesh) {
-            Polygon polygon=new Polygon();for(Point v:List.of(q.a(),q.b(),q.c(),q.d()))polygon.addPoint((int)Math.round(size*.5+sx(v)*scale),(int)Math.round(size*.91-sy(v)*scale));
+            Polygon polygon=new Polygon();for(Point v:List.of(q.a(),q.b(),q.c(),q.d()))polygon.addPoint((int)Math.round(size*.5+sx(v)*scale),(int)Math.round(size*.82-sy(v)*scale));
             g.setColor(new Color(q.color(),true));g.fillPolygon(polygon);
         }
         g.dispose();return image;

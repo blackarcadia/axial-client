@@ -47,7 +47,7 @@ public final class PixelStarsGeometry {
         double time=ticks-Math.floor(ticks/PERIOD)*PERIOD;var stars=new ArrayList<Star>();var random=new Random(0x57A25);
         for(int i=0;i<72;i++){
             double birth=i*PERIOD/72.0,life=17+random.nextDouble()*8,age=(time-birth+PERIOD)%PERIOD;
-            double angle=random.nextDouble()*Math.PI*2,radius=.28+random.nextDouble()*.12;
+            double angle=random.nextDouble()*Math.PI*2,radius=.82+random.nextDouble()*.16;
             stars.add(new Star(Math.cos(angle)*radius,.15+random.nextDouble()*1.65,Math.sin(angle)*radius+age*.035,
                     Math.cos(angle)*.019,.009+random.nextDouble()*.012,Math.sin(angle)*.019,time-age,life,.10f+random.nextFloat()*.045f,COLORS[i%3],random.nextFloat()*.7f));
         }

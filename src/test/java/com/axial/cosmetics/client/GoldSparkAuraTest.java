@@ -12,7 +12,7 @@ class GoldSparkAuraTest {
             assertTrue(mesh.size() < 400);
             for (var quad : mesh) for (var p : List.of(quad.a(), quad.b(), quad.c(), quad.d())) {
                 assertTrue(Float.isFinite(p.x()) && Float.isFinite(p.y()) && Float.isFinite(p.z()));
-                assertTrue(Math.abs(p.x()) < 1.1 && Math.abs(p.z()) < 1.1);
+                assertTrue(Math.abs(p.x()) < 1.6 && Math.abs(p.z()) < 1.6);
                 assertTrue(p.y() > -.2 && p.y() < 2.3);
             }
         }

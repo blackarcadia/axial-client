@@ -11,7 +11,7 @@ record WardrobeModelView(float scale,float centerY) {
 
     static WardrobeModelView fit(WardrobeItem item,Rect bounds,boolean card) {
         float height=2.05f,width=1.05f,center=.9f;
-        if(item!=null&&item.aura()!=null) {height=2.9f;width=2.6f;center=.95f;}
+        if(item!=null&&item.aura()!=null) {height=2.9f;width=item.aura()==WardrobeAura.PIXEL_STARS?4.6f:3.7f;center=.95f;}
         else if(card&&item!=null&&(item.accessory()==WardrobeAccessory.WHITE_KICKS||item.accessory()==WardrobeAccessory.WHITE_SNEAKERS||item.accessory()==WardrobeAccessory.BLACK_SNEAKERS)) {
             height=.95f;width=1.05f;center=.38f;
         } else if(card&&item!=null&&(item.accessory()==WardrobeAccessory.SWIM_BANDS||item.accessory()==WardrobeAccessory.RIBCAGE)) {

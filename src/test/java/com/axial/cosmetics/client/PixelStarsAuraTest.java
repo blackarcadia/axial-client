@@ -20,7 +20,7 @@ class PixelStarsAuraTest {
         e.tick(1,1000000.2,64,-1000000);var first=e.stars().getFirst();
         for(int t=2;t<12;t++)e.tick(t,1000000+t*.2,64,-1000000);
         assertEquals(first,e.stars().getFirst(),"New player positions must not drag old stars along");
-        assertTrue(first.x()<1000001);
+        assertTrue(Math.abs(first.x()-1000000)<1.3);
         e.tick(12,2000000,70,2000000);assertTrue(e.stars().isEmpty());
         e.tick(13,2000000.2,70,2000000);assertFalse(e.stars().isEmpty());
         e.tick(20,2000000.4,70,2000000);assertTrue(e.stars().isEmpty(),"A gap in tracking cannot create a long bridge");
@@ -40,7 +40,7 @@ class PixelStarsAuraTest {
             assertTrue(PixelStarsGeometry.frame(t,false).size()<mesh.size());
             for(var q:mesh){colors.add(q.color()&0xffffff);for(var p:List.of(q.a(),q.b(),q.c(),q.d())){
                 assertTrue(Float.isFinite(p.x())&&Float.isFinite(p.y())&&Float.isFinite(p.z()));
-                assertTrue(Math.abs(p.x())<2&&Math.abs(p.z())<2.5&&p.y()>-.5&&p.y()<2.5);
+                assertTrue(Math.abs(p.x())<2.3&&Math.abs(p.z())<3&&p.y()>-.5&&p.y()<2.5);
             }}
         }
         assertEquals(Set.of(0xFAFDFF,0xA8DFFF,0xFFB8DF),colors);

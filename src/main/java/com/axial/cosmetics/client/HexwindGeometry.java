@@ -16,7 +16,7 @@ public final class HexwindGeometry {
         var mesh=new ArrayList<Quad>();int segments=detailed?32:16;
         for(int band=0;band<3;band++) {
             double start=phase*(band==1?-1:1)+band*2.15;
-            double radius=.75+band*.045,base=.32+band*.59;
+            double radius=1.15+band*.045,base=.32+band*.59;
             for(int segment=0;segment<segments;segment++) {
                 double t=segment/(double)segments,next=(segment+1.0)/segments;
                 double a=start+t*Math.PI*1.4,b=start+next*Math.PI*1.4;
@@ -31,15 +31,15 @@ public final class HexwindGeometry {
         }
         for(int bat=0;bat<2;bat++) {
             double angle=phase+bat*Math.PI,flap=Math.sin(phase*6+bat)*.75;
-            double radius=.91,height=.72+bat*.52+Math.sin(phase*2+bat)*.08;
+            double radius=1.37,height=.72+bat*.52+Math.sin(phase*2+bat)*.08;
             bat(mesh,angle,radius,height,flap);
         }
-        pumpkin(mesh,phase+.8,.94,.78+Math.sin(phase*2)*.1);
+        pumpkin(mesh,phase+.8,1.40,.78+Math.sin(phase*2)*.1);
         int motes=detailed?8:4;
         for(int i=0;i<motes;i++) {
             double angle=phase*(i%2==0?1:-1)+i*2.39996;
             double height=.14+(i%6)*.31+Math.sin(phase*2+i)*.06;
-            Point center=orbit(angle,.85+(i%3)*.04,height);double size=i%3==0?.038:.023;
+            Point center=orbit(angle,1.25+(i%3)*.04,height);double size=i%3==0?.038:.023;
             square(mesh,center,size,i%3==0?0xD9EBA14A:0xA68E63B7);
         }
         return List.copyOf(mesh);

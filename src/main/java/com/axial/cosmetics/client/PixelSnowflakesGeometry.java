@@ -15,7 +15,7 @@ public final class PixelSnowflakesGeometry {
     private static final List<Run> SHAPE;
     static {
         var random=new Random(0x5A0F1A);var flakes=new ArrayList<Flake>();
-        for(int i=0;i<28;i++)flakes.add(new Flake((i+random.nextDouble()*.65)/28,random.nextDouble()*Math.PI*2,.57+random.nextDouble()*.30,
+        for(int i=0;i<28;i++)flakes.add(new Flake((i+random.nextDouble()*.65)/28,random.nextDouble()*Math.PI*2,1.00+random.nextDouble()*.30,
                 random.nextDouble()*Math.PI*2,.14f+random.nextFloat()*.05f,(random.nextFloat()-.5f)*1.7f,random.nextFloat()*(float)Math.PI*2,random.nextFloat()*(float)Math.PI*2,random.nextBoolean()?1:-1));
         FLAKES=List.copyOf(flakes);
         boolean[][] pixels=new boolean[13][13];

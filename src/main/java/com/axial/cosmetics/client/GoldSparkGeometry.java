@@ -18,7 +18,7 @@ public final class GoldSparkGeometry {
         for (int i = 0; i < 72; i++) {
             sparks.add(new Spark(i * (PERIOD / 72.0) + random.nextDouble() * 1.4,
                     12 + random.nextDouble() * 8, random.nextDouble() * Math.PI * 2,
-                    .48 + random.nextDouble() * .3, .16 + random.nextDouble() * .65,
+                    .95 + random.nextDouble() * .3, .16 + random.nextDouble() * .65,
                     .85 + random.nextDouble() * .45, .16 + random.nextDouble() * .32,
                     .032 + random.nextDouble() * .020, random.nextDouble() * Math.PI * 2));
         }
