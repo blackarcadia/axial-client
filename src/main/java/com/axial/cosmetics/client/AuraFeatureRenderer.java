@@ -18,6 +18,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
     public AuraFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
         WardrobeAura aura;
+        java.util.UUID trailAccount=null;float partial=0;
         double distance=0;
         float time=state.age;
         if(state instanceof WardrobePreviewState preview) {
@@ -28,6 +29,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
             var entity=client.world.getEntityById(state.id);
             if(entity==null||!PlayerProfiles.isActualPlayer(entity.getUuid()))return;
             aura=WardrobePreferences.auraFor(entity.getUuid());
+            trailAccount=entity.getUuid();partial=state.age-entity.age;
             distance=client.player==null?0:entity.squaredDistanceTo(client.player);
             if(distance>64*64)return;
             time+=entity.getUuid().hashCode()&127;
@@ -36,6 +38,7 @@ public final class AuraFeatureRenderer extends FeatureRenderer<PlayerEntityRende
         var mesh=switch(aura) {
             case HEXWIND -> HexwindGeometry.frame(time,distance<24*24);
             case GOLD_SPARK -> GoldSparkGeometry.frame(time,distance<24*24);
+            case PIXEL_STARS -> trailAccount==null?PixelStarsGeometry.frame(time,true):PixelStarsTrail.frame(trailAccount,state,partial,distance<24*24);
         };
         commands.submitCustom(matrices,RenderLayers.entityTranslucentEmissiveNoOutline(WHITE),(entry,vertices)->{
             for(var quad:mesh) {

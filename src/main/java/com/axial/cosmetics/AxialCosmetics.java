@@ -207,6 +207,7 @@ public class AxialCosmetics implements ClientModInitializer {
         }
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            com.axial.cosmetics.client.PixelStarsTrail.tick(client);
             com.axial.cosmetics.client.EnchantmentGuide.tick(client);
             com.axial.cosmetics.client.GangDirectoryGuide.tick(client);
             MinimapRenderer.tick(client);

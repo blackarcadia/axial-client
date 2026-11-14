@@ -64,5 +64,10 @@
     "name": "Black Sneakers",
     "image": "black_sneakers.png",
     "category": "Outfits"
+  },
+  "pixel_stars": {
+    "name": "Pixel Stars",
+    "image": "pixel_stars.gif",
+    "category": "Auras"
   }
 }
