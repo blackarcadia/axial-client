@@ -79,5 +79,10 @@
     "name": "Pink Slime",
     "image": "pink_slime.png",
     "category": "Pets"
+  },
+  "ghostly_ghost": {
+    "name": "Ghostly Ghost",
+    "image": "ghostly_ghost.png",
+    "category": "Pets"
   }
 }

@@ -1,6 +1,6 @@
 package com.axial.cosmetics.client;
 
-import java.util.Map;
+import java.util.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.*;
@@ -13,33 +13,48 @@ import net.minecraft.util.Identifier;
 
 /** A torso anchored companion that floats above the shoulder rather than swinging with the arm. */
 public final class ShoulderPetFeatureRenderer extends FeatureRenderer<PlayerEntityRenderState,PlayerEntityModel> {
-    private static final Identifier TEXTURE=Identifier.of("axial_cosmetics","textures/entity/accessories/pink_slime.png");
-    private final PetModel pet=new PetModel();
-    public ShoulderPetFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){super(context);}
+    private final Identifier texture;
+    private final WardrobeAccessory accessory;
+    private final PetModel pet;
+    public ShoulderPetFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){this(context,WardrobeAccessory.PINK_SLIME);}
+    private ShoulderPetFeatureRenderer(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context,WardrobeAccessory accessory){
+        super(context);this.accessory=accessory;pet=new PetModel(accessory.id);
+        texture=Identifier.of("axial_cosmetics","textures/entity/accessories/"+accessory.id+".png");
+    }
+    public static ShoulderPetFeatureRenderer ghostlyGhost(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){return new ShoulderPetFeatureRenderer(context,WardrobeAccessory.GHOSTLY_GHOST);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
         if(state instanceof WardrobePreviewState preview) {
-            if(!preview.accessories.contains(WardrobeAccessory.PINK_SLIME))return;
+            if(!preview.accessories.contains(accessory))return;
         } else {
             var world=MinecraftClient.getInstance().world;
             if(world==null||state.invisible||state.spectator)return;
             var player=world.getEntityById(state.id);
-            if(player==null||!WardrobePreferences.accessoriesFor(player.getUuid()).contains(WardrobeAccessory.PINK_SLIME))return;
+            if(player==null||!WardrobePreferences.accessoriesFor(player.getUuid()).contains(accessory))return;
         }
         pet.body.setTransform(getContextModel().body.getTransform());
-        FeatureRenderer.render(pet,TEXTURE,matrices,commands,light,state,0xFFFFFFFF,0);
+        FeatureRenderer.render(pet,texture,matrices,commands,light,state,0xFFFFFFFF,0);
     }
-    static ModelPart model(){return BedrockCosmeticModel.bake("pink_slime",Map.of("body",
-            new BedrockCosmeticModel.Anchor("torso",new BedrockCosmeticGeometry.Vec(0,0,0))),32,8);}
-    private static final class PetModel extends Model<PlayerEntityRenderState> {
-        private final ShoulderPetAnimation animation=new ShoulderPetAnimation();
-        final ModelPart body,slime;
-        PetModel(){super(model(),RenderLayers::entityCutoutNoCull);body=root.getChild("torso");slime=body.getChild("body").getChild("slime");}
-        @Override public void setAngles(PlayerEntityRenderState state){
-            slime.resetTransform();
-            var pose=animation.sample(state.age/20f);
-            slime.originX+=pose.position().x();slime.originY-=pose.position().y();slime.originZ+=pose.position().z();
-            var r=BedrockCosmeticGeometry.rotation(pose.rotation());slime.pitch+=r.x();slime.yaw+=r.y();slime.roll+=r.z();
-            slime.xScale=pose.scale().x();slime.yScale=pose.scale().y();slime.zScale=pose.scale().z();
+    static ModelPart model(){return model("pink_slime");}
+    static ModelPart model(String id){return BedrockCosmeticModel.bake(id,Map.of("body",
+            new BedrockCosmeticModel.Anchor("torso",new BedrockCosmeticGeometry.Vec(0,0,0))),id.equals("ghostly_ghost")?64:32,8);}
+    static Map<String,ModelPart> bones(ModelPart root,String id) {
+        var result=new HashMap<String,ModelPart>();result.put("torso",root.getChild("torso"));
+        for(var bone:BedrockCosmeticGeometry.load(id))result.put(bone.name(),result.get(bone.parent()==null?"torso":bone.parent()).getChild(bone.name()));
+        return result;
+    }
+    static void animate(Map<String,ModelPart> bones,ShoulderPetAnimation animation,float seconds) {
+        for(var name:animation.boneNames()) {
+            var part=bones.get(name);part.resetTransform();var pose=animation.sample(name,seconds);
+            part.originX+=pose.position().x();part.originY-=pose.position().y();part.originZ+=pose.position().z();
+            var r=BedrockCosmeticGeometry.rotation(pose.rotation());part.pitch+=r.x();part.yaw+=r.y();part.roll+=r.z();
+            part.xScale=pose.scale().x();part.yScale=pose.scale().y();part.zScale=pose.scale().z();
         }
+    }
+    private static final class PetModel extends Model<PlayerEntityRenderState> {
+        private final ShoulderPetAnimation animation;
+        private final Map<String,ModelPart> bones;
+        final ModelPart body;
+        PetModel(String id){super(model(id),RenderLayers::entityCutoutNoCull);body=root.getChild("torso");bones=bones(root,id);animation=new ShoulderPetAnimation(id);}
+        @Override public void setAngles(PlayerEntityRenderState state){animate(bones,animation,state.age/20f);}
     }
 }

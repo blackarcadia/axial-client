@@ -311,7 +311,7 @@ public final class WardrobeScreen extends Screen {
         float age=(System.nanoTime()/50_000_000L)%1_000_000;
         var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
         var frameItem=card?item:state.aura!=null?WardrobeItem.of(state.aura):
-                state.accessories.contains(WardrobeAccessory.PINK_SLIME)?WardrobeItem.of(WardrobeAccessory.PINK_SLIME):null;
+                state.accessories.stream().filter(a->a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)).findFirst().map(WardrobeItem::of).orElse(null);
         var view=WardrobeModelView.fit(frameItem,bounds,card);
         c.addEntity(state,view.scale(),new Vector3f(0,view.centerY(),0),
                 new Quaternionf().rotateZ((float)Math.PI),new Quaternionf(),
