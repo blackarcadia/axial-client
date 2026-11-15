@@ -84,5 +84,10 @@
     "name": "Ghostly Ghost",
     "image": "ghostly_ghost.png",
     "category": "Pets"
+  },
+  "pookles": {
+    "name": "Pookles",
+    "image": "pookles.png",
+    "category": "Pets"
   }
 }

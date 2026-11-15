@@ -27,7 +27,7 @@ class CosmeticFaceRenderingTest {
                 MatrixStack.Entry.class,VertexConsumer.class,int.class,int.class,int.class).getDeclaringClass());
     }
     @Test void onlyImportedPerFaceModelsUseTheCompatibleRenderer() {
-        for(String id:List.of("ghostly_ghost","pink_slime","black_sneakers")) {
+        for(String id:List.of("ghostly_ghost","pink_slime","pookles","black_sneakers")) {
             var root=id.equals("black_sneakers")?WhiteKicksFeatureRenderer.model(id):ShoulderPetFeatureRenderer.model(id);
             var mapped=new HashSet<String>();
             for(var bone:BedrockCosmeticGeometry.load(id))for(int i=0;i<bone.cubes().size();i++)
