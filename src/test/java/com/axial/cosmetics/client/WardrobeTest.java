@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.axial.cosmetics.client.ModMenuLayout.Rect;
 
 class WardrobeTest {
-    @Test void accessRequiresOwnerSessionAndMatchingWorldPlayer() {
+    @Test void accessRequiresSignedInSessionAndMatchingWorldPlayer() {
         UUID owner=CreatorCosmetics.OWNER, stranger=new UUID(0,1);
         assertTrue(WardrobeAccess.allows(owner,null));
         assertTrue(WardrobeAccess.allows(owner,owner));
-        assertFalse(WardrobeAccess.allows(stranger,null));
-        assertFalse(WardrobeAccess.allows(stranger,stranger));
+        assertTrue(WardrobeAccess.allows(stranger,null));
+        assertTrue(WardrobeAccess.allows(stranger,stranger));
         assertFalse(WardrobeAccess.allows(stranger,owner));
         assertFalse(WardrobeAccess.allows(owner,stranger));
         assertFalse(WardrobeAccess.allows(null,null));
@@ -33,7 +33,7 @@ class WardrobeTest {
         }
     }
     @Test void categoriesHaveTheirOwnSearchPromptAndExcludeTheEmoteWheel() {
-        assertEquals(6,WardrobeCategory.values().length);
+        assertEquals(7,WardrobeCategory.values().length);
         assertEquals("Search cosmetics...",WardrobeCategory.ALL.search);
         assertEquals("Search capes...",WardrobeCategory.CAPES.search);
         assertEquals("Search auras...",WardrobeCategory.AURAS.search);
@@ -41,6 +41,7 @@ class WardrobeTest {
         assertFalse(WardrobeCategory.CAPES.includesAuras());
         assertEquals("Search headwear...",WardrobeCategory.HEADWEAR.search);
         assertEquals("Search outfits...",WardrobeCategory.OUTFITS.search);
+        assertEquals("Search pets...",WardrobeCategory.PETS.search);
         assertEquals("Search backpacks...",WardrobeCategory.BACKPACKS.search);
         for(var category:WardrobeCategory.values())assertFalse(category.label.equalsIgnoreCase("Emotes"));
     }

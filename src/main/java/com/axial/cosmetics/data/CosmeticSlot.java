@@ -7,5 +7,6 @@ public enum CosmeticSlot {
     RIGHT_ARM,
     LEGS,
     BOOTS,
+    PET,
     BACKPACK
 }

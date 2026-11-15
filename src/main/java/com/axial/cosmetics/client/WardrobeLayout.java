@@ -26,7 +26,7 @@ final class WardrobeLayout {
         columns = centerW >= 220 ? 2 : 1;
     }
     Rect category(int index) {
-        int h = Math.min(27, Math.max(10,categories.height()/WardrobeCategory.values().length));
+        int h = Math.min(27, Math.max(3,categories.height()/WardrobeCategory.values().length));
         return new Rect(categories.x(),categories.y()+index*h,categories.width(),h-2);
     }
     Rect card(int index) {

@@ -6,6 +6,7 @@ enum WardrobeCategory {
     AURAS("Auras", "grid", "Search auras..."),
     HEADWEAR("Headwear", "account", "Search headwear..."),
     OUTFITS("Outfits", "shirt", "Search outfits..."),
+    PETS("Pets", "account", "Search pets..."),
     BACKPACKS("Backpacks", "backpack", "Search backpacks...");
 
     final String label, icon, search;

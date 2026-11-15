@@ -74,5 +74,10 @@
     "name": "Pixel Snowflakes",
     "image": "pixel_snowflakes.gif",
     "category": "Auras"
+  },
+  "pink_slime": {
+    "name": "Pink Slime",
+    "image": "pink_slime.png",
+    "category": "Pets"
   }
 }

@@ -66,7 +66,7 @@ public final class WardrobeScreen extends Screen {
             focusedItem=WardrobeItem.of(WardrobePreferences.current());
             if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).stream().findFirst().orElse(null);
             if(focusedItem!=null&&focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
-            if(focusedItem!=null&&focusedItem.accessory()!=null)category=WardrobeCategory.OUTFITS;
+            if(focusedItem!=null&&focusedItem.accessory()!=null)category=focusedItem.accessory().slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)?WardrobeCategory.PETS:WardrobeCategory.OUTFITS;
             rotation=focusedItem==null?155:WardrobeModelView.yaw(focusedItem);previewRotation.jump(rotation);
         }
         if(!skinRequested) {
@@ -310,7 +310,9 @@ public final class WardrobeScreen extends Screen {
         if(skin==null||(card&&item==null))return;
         float age=(System.nanoTime()/50_000_000L)%1_000_000;
         var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
-        var view=WardrobeModelView.fit(card?item:WardrobeItem.of(state.aura),bounds,card);
+        var frameItem=card?item:state.aura!=null?WardrobeItem.of(state.aura):
+                state.accessories.contains(WardrobeAccessory.PINK_SLIME)?WardrobeItem.of(WardrobeAccessory.PINK_SLIME):null;
+        var view=WardrobeModelView.fit(frameItem,bounds,card);
         c.addEntity(state,view.scale(),new Vector3f(0,view.centerY(),0),
                 new Quaternionf().rotateZ((float)Math.PI),new Quaternionf(),
                 bounds.x(),bounds.y(),bounds.right(),bounds.bottom());

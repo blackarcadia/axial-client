@@ -14,6 +14,7 @@ public final class ItemSkinConflict {
             case HEAD -> hasSkin(state.equippedHeadStack,EquipmentSlot.HEAD);
             case CHEST,LEFT_ARM,RIGHT_ARM,BACKPACK -> hasSkin(state.equippedChestStack,EquipmentSlot.CHEST);
             case LEGS -> hasSkin(state.equippedLegsStack,EquipmentSlot.LEGS);
+            case PET -> false;
             case BOOTS -> hasSkin(state.equippedFeetStack,EquipmentSlot.FEET);
         });
     }

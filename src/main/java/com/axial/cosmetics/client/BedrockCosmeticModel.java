@@ -9,6 +9,9 @@ final class BedrockCosmeticModel {
     private BedrockCosmeticModel() {}
 
     static ModelPart bake(String id,Map<String,Anchor> anchors) {
+        return bake(id,anchors,32,32);
+    }
+    static ModelPart bake(String id,Map<String,Anchor> anchors,int textureWidth,int textureHeight) {
         var data=new ModelData();
         var parts=new HashMap<String,ModelPartData>();
         var paths=new HashMap<String,List<String>>();
@@ -41,7 +44,7 @@ final class BedrockCosmeticModel {
                         new ModelTransform(origin.x(),origin.y(),origin.z(),rotation.x(),rotation.y(),rotation.z(),scale.x(),scale.y(),scale.z()));
             }
         }
-        var root=TexturedModelData.of(data,32,32).createModel();
+        var root=TexturedModelData.of(data,textureWidth,textureHeight).createModel();
         for(var entry:faceMappings.entrySet()){
             var part=root;for(var name:entry.getKey())part=part.getChild(name);
             part.forEachCuboid(new net.minecraft.client.util.math.MatrixStack(),(matrix,path,index,cube)->{
@@ -51,7 +54,7 @@ final class BedrockCosmeticModel {
                     // Y-down means the native DOWN normal is the authored top face.
                     String face=n.x()<-.5f?"east":n.x()>.5f?"west":n.y()<-.5f?"up":n.y()>.5f?"down":n.z()<0?"north":"south";
                     var uv=entry.getValue().get(face);if(uv==null)continue;
-                    float u0=uv.u()/32,v0=uv.v()/32,u1=(uv.u()+uv.width())/32,v1=(uv.v()+uv.height())/32;
+                    float u0=uv.u()/textureWidth,v0=uv.v()/textureHeight,u1=(uv.u()+uv.width())/textureWidth,v1=(uv.v()+uv.height())/textureHeight;
                     var v=quad.vertices();
                     cube.sides[i]=new ModelPart.Quad(new ModelPart.Vertex[]{v[0].remap(u1,v0),v[1].remap(u0,v0),v[2].remap(u0,v1),v[3].remap(u1,v1)},quad.direction());
                 }

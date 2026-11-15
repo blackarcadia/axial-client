@@ -10,7 +10,8 @@ enum WardrobeAccessory {
     WHITE_KICKS("white_kicks","White Kicks","SNEAKERS",500,CosmeticSlot.BOOTS),
     WHITE_SNEAKERS("white_sneakers","White Sneakers","SNEAKERS",CosmeticSlot.BOOTS),
     BLACK_SNEAKERS("black_sneakers","Black Sneakers","SNEAKERS",CosmeticSlot.BOOTS),
-    RIBCAGE("ribcage","Ribcage","CHEST",CosmeticSlot.CHEST);
+    RIBCAGE("ribcage","Ribcage","CHEST",CosmeticSlot.CHEST),
+    PINK_SLIME("pink_slime","Pink Slime","SHOULDER PET",CosmeticSlot.PET);
     final String id,label,badge;
     final Set<CosmeticSlot> slots;
     final int previewSize;

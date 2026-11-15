@@ -23,7 +23,8 @@ record WardrobeItem(WardrobeCape cape,WardrobeAura aura,WardrobeAccessory access
         var items=new ArrayList<WardrobeItem>();
         if(category.includesCapes())WardrobeCape.owned(uuid).forEach(c->items.add(of(c)));
         if(category.includesAuras())WardrobeAura.owned(uuid).forEach(a->items.add(of(a)));
-        if(category==WardrobeCategory.ALL||category==WardrobeCategory.OUTFITS)WardrobeAccessory.owned(uuid).forEach(a->items.add(of(a)));
+        WardrobeAccessory.owned(uuid).stream().filter(a->category==WardrobeCategory.ALL
+                || (a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)?category==WardrobeCategory.PETS:category==WardrobeCategory.OUTFITS)).forEach(a->items.add(of(a)));
         return List.copyOf(items);
     }
 }
