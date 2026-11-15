@@ -126,6 +126,7 @@ tasks.register('installDevelopmentMods', Copy) {
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
         include 'litematica-fabric-1.21.11-0.26.16.jar'
+        include 'replaymod-1.21.11-2.6.28.jar'
         include 'malilib-fabric-1.21.11-0.27.20.jar'
     }
 
@@ -379,6 +380,7 @@ tasks.register('releaseFatJar', Jar) {
         include 'emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar'
         include 'PlayerAnimationLibFabric-1.1.10+mc.1.21.11.jar'
         include 'litematica-fabric-1.21.11-0.26.16.jar'
+        include 'replaymod-1.21.11-2.6.28.jar'
         include 'malilib-fabric-1.21.11-0.27.20.jar'
     }
 

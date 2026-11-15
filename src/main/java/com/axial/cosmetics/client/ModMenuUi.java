@@ -26,6 +26,18 @@ final class ModMenuUi {
     }
     static Text text(String value) { return UiTypography.text(value,1,false); }
     static void icon(DrawContext context, String name, int x, int y, int w, int h, int color) {
+        if(name.equals("replay")) {
+            context.getMatrices().pushMatrix();
+            try {
+                context.getMatrices().translate(x,y);context.getMatrices().scale(w/24f,h/24f);
+                int ink=tint(color);
+                context.fill(3,4,21,6,ink);context.fill(3,18,21,20,ink);
+                context.fill(3,4,5,20,ink);context.fill(19,4,21,20,ink);
+                for(int side:new int[]{6,16})for(int row:new int[]{7,11,15})context.fill(side,row,side+2,row+2,ink);
+                context.fill(10,8,12,16,ink);context.fill(12,10,14,14,ink);context.fill(14,11,16,13,ink);
+            }finally{context.getMatrices().popMatrix();}
+            return;
+        }
         if(name.equals("book")) {
             context.getMatrices().pushMatrix();
             try {

@@ -126,6 +126,7 @@
     "InGameHudWaypointLabelsMixin",
     "WarpWaypointManagerMixin",
     "TitleScreenButtonSkinMixin",
+    "ReplayMainMenuButtonMixin",
     "TitleScreenMenuLayoutMixin"
   ],
   "injectors": {

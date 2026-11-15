@@ -381,7 +381,7 @@ public final class GitHubReleaseUpdater {
                         || name.startsWith("immediatelyfast-")
                         || name.startsWith("entityculling-")
                         || name.startsWith("cloth-config-") || name.startsWith("moreculling-")
-                        || name.startsWith("staticbgmod-") || name.startsWith("emotecraft-")
+                        || name.startsWith("staticbgmod-") || name.startsWith("emotecraft-") || name.startsWith("replaymod-")
                         || name.startsWith("bendablecuboidsfabric-") || name.startsWith("playeranimationlibfabric-")
                         || isRuntimeDependencyJar(name))) {
                     Files.move(path, backup.resolve(path.getFileName()));

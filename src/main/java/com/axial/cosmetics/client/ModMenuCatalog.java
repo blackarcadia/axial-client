@@ -103,6 +103,8 @@ final class ModMenuCatalog {
         entries.add(new ModMenuEntry("Litematica", "Load schematics and manage placements", ModMenuEntry.Category.WORLD,
                 "chunk_borders", null, null,
                 () -> LitematicaMenu.open(MinecraftClient.getInstance().currentScreen)));
+        entries.add(new ModMenuEntry("Replay Mod", "Record gameplay and browse saved replays", ModMenuEntry.Category.WORLD,
+                "replay", null, null, () -> ReplayMenu.open(MinecraftClient.getInstance().currentScreen)));
         entries.add(new ModMenuEntry("Hit Indicators", "Animated red markers for your confirmed hits", ModMenuEntry.Category.VISUALS,
                 "crosshair", HitIndicatorsConfig::enabled, () -> HitIndicatorsConfig.setEnabled(!HitIndicatorsConfig.enabled()), null));
         entries.add(new ModMenuEntry("Polls", "Community votes and a movable countdown HUD", ModMenuEntry.Category.HUD,

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import com.axial.cosmetics.client.MenuMusicConfig;
+import com.axial.cosmetics.client.ReplayViewerButton;
 import com.axial.cosmetics.client.MenuMusicVolumeSliderWidget;
 import com.axial.cosmetics.client.TitleScreenAccountsDropdown;
 import net.minecraft.client.MinecraftClient;
@@ -39,6 +40,7 @@ public abstract class TitleScreenMenuLayoutMixin {
     private void axial_cosmetics$layoutTitleMenu(CallbackInfo ci) {
         axial_cosmetics$ensureMusicSlider();
         axial_cosmetics$ensureAccountsButton();
+        axial_cosmetics$ensureReplayButton();
         axial_cosmetics$applyLayout();
     }
 
@@ -99,7 +101,14 @@ public abstract class TitleScreenMenuLayoutMixin {
             }
         }
 
+        for(Object child:children)if(child instanceof ReplayViewerButton replay)replay.layout(((TitleScreen)(Object)this).width);
         removeRealmsWidgets();
+    }
+
+    private void axial_cosmetics$ensureReplayButton() {
+        var screen=(TitleScreen)(Object)this;
+        for(Object child:screen.children())if(child instanceof ReplayViewerButton)return;
+        axial_cosmetics$addToScreenLists0(new ReplayViewerButton(screen.width));
     }
 
     private void axial_cosmetics$ensureMusicSlider() {

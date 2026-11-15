@@ -17,6 +17,7 @@
     "fabric": "*",
     "minecraft": "1.21.11",
     "litematica": ">=0.26.16",
+    "replaymod": ">=1.21.11-2.6.28",
     "malilib": ">=0.27.20 <0.28.0"
   },
   "contact": {

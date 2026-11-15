@@ -29,4 +29,15 @@ class ModMenuEntryTest {
         assertNull(entry.toggle());
         assertNotNull(entry.configure());
     }
+    @Test void replayViewerIsAFullCardActionAndItsTitleIconFitsBesideMusicControls() {
+        var entry=new ModMenuEntry("Replay Mod","Record gameplay and browse saved replays",ModMenuEntry.Category.WORLD,"replay",null,null,()->{});
+        assertTrue(entry.opensMenu());assertNull(entry.toggle());assertFalse(entry.isEnabled());
+        assertTrue(entry.matches(ModMenuEntry.Category.WORLD,"saved replay",false));
+        assertFalse(entry.matches(ModMenuEntry.Category.ALL,"",true));
+        for(int width:new int[]{260,320,427,640,960,1280}) {
+            int musicX=Math.max(20,width-20-32-8-112);
+            assertTrue(ReplayViewerButton.x(width)>=20);
+            assertTrue(ReplayViewerButton.x(width)+24<=musicX-8);
+        }
+    }
 }

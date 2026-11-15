@@ -158,6 +158,7 @@ public class MinecraftLauncher {
         installEmotecraft(layout);
         installBundledMod(layout, "malilib-fabric-1.21.11-0.27.20.jar", "malilib-fabric-");
         installBundledMod(layout, "litematica-fabric-1.21.11-0.26.16.jar", "litematica-fabric-");
+        installBundledMod(layout, "replaymod-1.21.11-2.6.28.jar", "replaymod-");
         installBundledEmotes(layout);
         removeStaticBgMod(layout);
         removeCollective(layout);
