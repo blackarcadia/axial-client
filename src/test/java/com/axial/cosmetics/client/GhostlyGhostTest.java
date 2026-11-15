@@ -14,15 +14,15 @@ class GhostlyGhostTest {
                 assertTrue(v.u()>=0&&v.u()<=1);assertTrue(v.v()>=0&&v.v()<=1);
                 maxU[0]=Math.max(maxU[0],v.u());maxV[0]=Math.max(maxV[0],v.v());
             }
-        });assertEquals(31,count[0]);assertEquals(1,maxU[0]);assertEquals(1,maxV[0]);
+        });assertEquals(29,count[0]);assertEquals(1,maxU[0]);assertEquals(1,maxV[0]);
     }
     @Test void embeddedTracksAnimateGhostEyesChainAndWeightAndLoopCleanly() {
         var animation=new ShoulderPetAnimation("ghostly_ghost");
         assertEquals(Set.of("ghost","eye_left","eye_right","chain","iron_ball"),animation.boneNames());
-        assertEquals(.79f,animation.sample("ghost",1).position().y(),.0001f);
-        assertEquals(1,animation.sample("ghost",1).scale().x());
-        assertEquals(.1f,animation.sample("eye_left",1.65f).scale().y(),.0001f);
-        assertEquals(1,animation.sample("eye_left",1.8f).scale().y(),.0001f);
+        assertEquals(1.65f,animation.sample("ghost",1).position().y(),.0001f);
+        assertEquals(.935f,animation.sample("ghost",1).scale().x(),.0001f);
+        assertEquals(.035f,animation.sample("eye_left",1.65f).scale().y(),.0001f);
+        assertEquals(1,animation.sample("eye_left",4f).scale().y(),.0001f);
         assertEquals(animation.sample("chain",0),animation.sample("chain",4));
         var model=ShoulderPetFeatureRenderer.model("ghostly_ghost");var bones=ShoulderPetFeatureRenderer.bones(model,"ghostly_ghost");
         for(int i=0;i<80;i++) {

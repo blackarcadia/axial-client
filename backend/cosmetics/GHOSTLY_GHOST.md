@@ -3,10 +3,10 @@
 Cosmetic ID: `ghostly_ghost`. Category: **Pets**. Slot: **Pet**.
 PayNow product: `625822431184945152`.
 
-The 31 supplied Blockbench cubes, hierarchy and 64 × 8 texture are preserved.
+The 29 supplied Blockbench cubes, hierarchy and 64 × 8 texture are preserved.
 An offset of (-4, +20, 0) model pixels places the ghost above the shoulder,
 with its chain and iron ball hanging beside the player. The supplied embedded
-four-second animation drives the ghost's floating motion, blinking eyes,
+four-second animation drives the ghost's floating motion, squash/stretch, blinking eyes,
 chain and weight. The pet follows the animated torso and hides for invisible
 and spectator players. Equipping it replaces another pet while retaining outfits,
 cape and aura. Ownership is server-authoritative and supports private unlock codes.
@@ -39,3 +39,7 @@ box UV coordinates in its base cuboid constructor, so changing the standard
 quad UVs alone leaves the optimized renderer sampling the wrong texture regions.
 This client-side compatibility path preserves fractional cube scales and leaves
 ordinary box-UV cubes on their existing rendering path.
+
+Updated from `Axial_Cube_Ghost (5)/cubed_ghost.bbmodel`. The existing shoulder
+offset is retained so the updated model’s larger size and farther-out placement
+are preserved. Client and store cameras are widened to show the entire pet.
