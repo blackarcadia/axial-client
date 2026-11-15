@@ -40,7 +40,8 @@ class WardrobeTest {
         assertTrue(WardrobeCategory.ALL.includesAuras());assertTrue(WardrobeCategory.AURAS.includesAuras());
         assertFalse(WardrobeCategory.CAPES.includesAuras());
         assertEquals("Search headwear...",WardrobeCategory.HEADWEAR.search);
-        assertEquals("Search outfits...",WardrobeCategory.OUTFITS.search);
+        assertEquals("Bodywear",WardrobeCategory.OUTFITS.label);
+        assertEquals("Search bodywear...",WardrobeCategory.OUTFITS.search);
         assertEquals("Search pets...",WardrobeCategory.PETS.search);
         assertEquals("Search backpacks...",WardrobeCategory.BACKPACKS.search);
         for(var category:WardrobeCategory.values())assertFalse(category.label.equalsIgnoreCase("Emotes"));

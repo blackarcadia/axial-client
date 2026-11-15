@@ -22,7 +22,7 @@ import com.axial.cosmetics.client.ModMenuLayout.Rect;
 public final class WardrobeScreen extends Screen {
     private final Screen parent;
     private WardrobeLayout layout;
-    private WardrobeCategory category = WardrobeCategory.CAPES;
+    private WardrobeCategory category = WardrobeCategory.ALL;
     private boolean dragging;
     private WardrobeItem focusedItem;
     private float rotation = 155;
@@ -65,8 +65,6 @@ public final class WardrobeScreen extends Screen {
         if(focusedItem==null) {
             focusedItem=WardrobeItem.of(WardrobePreferences.current());
             if(focusedItem==null)focusedItem=WardrobeItem.owned(client.getSession().getUuidOrNull(),WardrobeCategory.ALL).stream().findFirst().orElse(null);
-            if(focusedItem!=null&&focusedItem.aura()!=null)category=WardrobeCategory.AURAS;
-            if(focusedItem!=null&&focusedItem.accessory()!=null)category=focusedItem.accessory().slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)?WardrobeCategory.PETS:WardrobeCategory.OUTFITS;
             rotation=focusedItem==null?155:WardrobeModelView.yaw(focusedItem);previewRotation.jump(rotation);
         }
         if(!skinRequested) {

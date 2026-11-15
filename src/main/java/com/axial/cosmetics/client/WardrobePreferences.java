@@ -47,10 +47,19 @@ public final class WardrobePreferences {
         if(!WardrobeAccess.allowed())return;
         UUID account=MinecraftClient.getInstance().getSession().getUuidOrNull();
         if(!cape.ownedBy(account))return;
-        WardrobeCape selected=nextSelection(current(),cape);
-        var updated=new Properties();updated.putAll(selections);
-        updated.setProperty(account.toString(),selected==null?"minecraft":selected.id);
-        persist(updated);
+        load();persist(capeToggle(selections,account,cape));
+    }
+    static Properties capeToggle(Properties values,UUID uuid,WardrobeCape clicked) {
+        var updated=new Properties();updated.putAll(values);
+        if(uuid==null||clicked==null||!clicked.ownedBy(uuid))return updated;
+        var accessories=accessorySelections(values,uuid);
+        var compatible=accessories.stream().filter(item->!CapeObstruction.wardrobeBlocks(java.util.List.of(item))).toList();
+        boolean blocked=compatible.size()!=accessories.size();
+        // Clicking the currently selected but hidden cape restores it instead of toggling it off.
+        var selected=blocked?clicked:nextSelection(selection(values,uuid),clicked);
+        updated.setProperty(uuid.toString(),selected==null?"minecraft":selected.id);
+        if(selected!=null&&blocked)writeAccessories(updated,uuid,compatible);
+        return updated;
     }
     static WardrobeAura auraSelection(Properties values,UUID uuid) {
         if(uuid==null)return null;
@@ -91,10 +100,13 @@ public final class WardrobePreferences {
         var updated=new Properties();updated.putAll(values);
         if(uuid==null||!accessory.ownedBy(uuid))return updated;
         var items=CosmeticLoadout.toggle(accessorySelections(values,uuid),accessory,item->item.slots);
+        writeAccessories(updated,uuid,items);
+        return updated;
+    }
+    private static void writeAccessories(Properties updated,UUID uuid,java.util.List<WardrobeAccessory> items) {
         updated.setProperty(uuid+".accessories",items.isEmpty()?"none":items.stream().map(item->item.id).collect(java.util.stream.Collectors.joining(",")));
         // Retain a single-item hint for older versions without letting it override the new loadout.
         updated.setProperty(uuid+".accessory",items.isEmpty()?"none":items.getFirst().id);
-        return updated;
     }
     static void toggle(WardrobeAccessory accessory)throws IOException{
         if(!WardrobeAccess.allowed())return;

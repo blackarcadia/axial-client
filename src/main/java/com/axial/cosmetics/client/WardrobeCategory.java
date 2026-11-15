@@ -5,7 +5,7 @@ enum WardrobeCategory {
     CAPES("Capes", "shirt", "Search capes..."),
     AURAS("Auras", "grid", "Search auras..."),
     HEADWEAR("Headwear", "account", "Search headwear..."),
-    OUTFITS("Outfits", "shirt", "Search outfits..."),
+    OUTFITS("Bodywear", "shirt", "Search bodywear..."),
     PETS("Pets", "account", "Search pets..."),
     BACKPACKS("Backpacks", "backpack", "Search backpacks...");
 
