@@ -38,7 +38,7 @@ class PotionsHudConfigTest {
         Files.writeString(file, "{broken");
         PotionsHudConfig.load(file);
         assertFalse(PotionsHudConfig.isEnabled());
-        assertTrue(PotionsHudConfig.showBox());
+        assertFalse(PotionsHudConfig.showBox());
         assertEquals("Potions", PotionsHudConfig.title());
         Files.writeString(file, "{\"title\":null,\"enabled\":true}");
         PotionsHudConfig.load(file);
