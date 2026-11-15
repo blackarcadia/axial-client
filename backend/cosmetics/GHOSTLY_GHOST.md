@@ -31,3 +31,11 @@ refund and chargeback handlers grant or revoke this product normally.
 Client checks cover UVs, animation sampling, model clearance and pet replacement.
 Backend checks use synthetic signed events and an in-memory database. A live
 Minecraft visual check and actual PayNow checkout remain separate validation.
+
+## Per-face UV rendering compatibility
+
+Imported face-mapped cubes render their authored quads directly. Sodium snapshots
+box UV coordinates in its base cuboid constructor, so changing the standard
+quad UVs alone leaves the optimized renderer sampling the wrong texture regions.
+This client-side compatibility path preserves fractional cube scales and leaves
+ordinary box-UV cubes on their existing rendering path.

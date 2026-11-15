@@ -15,6 +15,7 @@ final class BedrockCosmeticModel {
         var data=new ModelData();
         var parts=new HashMap<String,ModelPartData>();
         var paths=new HashMap<String,List<String>>();
+        var cubePaths=new ArrayList<List<String>>();
         var faceMappings=new HashMap<List<String>,Map<String,BedrockCosmeticGeometry.FaceUv>>();
         var pivots=new HashMap<String,BedrockCosmeticGeometry.Vec>();
         for(var anchor:anchors.values()) {
@@ -38,7 +39,8 @@ final class BedrockCosmeticModel {
                 var rotation=BedrockCosmeticGeometry.rotation(cube.rotation());
                 var dilation=new Dilation(cube.inflate()/scale.x(),cube.inflate()/scale.y(),cube.inflate()/scale.z());
                 String cubeName="cube"+index++;
-                if(!cube.faces().isEmpty()){var cubePath=new ArrayList<>(path);cubePath.add(cubeName);faceMappings.put(List.copyOf(cubePath),cube.faces());}
+                var cubePath=new ArrayList<>(path);cubePath.add(cubeName);cubePaths.add(List.copyOf(cubePath));
+                if(!cube.faces().isEmpty())faceMappings.put(List.copyOf(cubePath),cube.faces());
                 part.addChild(cubeName,ModelPartBuilder.create().uv(cube.u(),cube.v()).mirrored(cube.mirror())
                                 .cuboid(local.x(),local.y(),local.z(),size.x(),size.y(),size.z(),dilation),
                         new ModelTransform(origin.x(),origin.y(),origin.z(),rotation.x(),rotation.y(),rotation.z(),scale.x(),scale.y(),scale.z()));
@@ -60,6 +62,29 @@ final class BedrockCosmeticModel {
                 }
             });
         }
-        return root;
+        if(faceMappings.isEmpty())return root;
+        var children=new HashMap<List<String>,List<String>>();
+        var allPaths=new ArrayList<>(paths.values());allPaths.addAll(cubePaths);
+        for(var path:allPaths)children.computeIfAbsent(List.copyOf(path.subList(0,path.size()-1)),key->new ArrayList<>()).add(path.getLast());
+        return withAuthoredFaces(root,List.of(),children,faceMappings.keySet());
+    }
+
+    private static ModelPart withAuthoredFaces(ModelPart original,List<String> path,
+            Map<List<String>,List<String>> childNames,Set<List<String>> mapped) {
+        var cubes=new ArrayList<ModelPart.Cuboid>();
+        original.forEachCuboid(new net.minecraft.client.util.math.MatrixStack(),(matrix,name,index,cube)->{
+            if(name.isEmpty())cubes.add(mapped.contains(path)?new FaceMappedCosmeticCuboid(cube):cube);
+        });
+        var children=new LinkedHashMap<String,ModelPart>();
+        for(var name:childNames.getOrDefault(path,List.of())) {
+            var childPath=new ArrayList<>(path);childPath.add(name);
+            children.put(name,withAuthoredFaces(original.getChild(name),List.copyOf(childPath),childNames,mapped));
+        }
+        var part=new ModelPart(List.copyOf(cubes),children);
+        part.setDefaultTransform(original.getDefaultTransform());part.setTransform(original.getTransform());
+        // getTransform() intentionally omits scale; fractional imported cubes need it.
+        part.xScale=original.xScale;part.yScale=original.yScale;part.zScale=original.zScale;
+        part.visible=original.visible;part.hidden=original.hidden;
+        return part;
     }
 }
