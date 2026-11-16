@@ -36,6 +36,23 @@ class EmoteWheelPreviewTest {
             for(String method:new String[]{"axial$animateIcon","axial$animateFallback"})assertTrue(mixin.methods.stream().anyMatch(m->m.name.equals(method)));
         }
     }
+    @Test void superRenderWrapperUsesTheCurrentWheelCardAsReceiverNotItsParent()throws Exception {
+        String card="io/github/kosmx/emotes/arch/screen/widget/preview/elemets/PlayerChooseElement";
+        String expected;
+        try(var jar=new JarFile("src/main/resources/emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar")) {
+            var type=read(jar,card);var render=type.methods.stream().filter(m->m.name.equals("method_48579")).findFirst().orElseThrow();
+            MethodInsnNode call=null;
+            for(var instruction:render.instructions)if(instruction instanceof MethodInsnNode candidate&&candidate.owner.equals("io/github/kosmx/emotes/arch/gui/widgets/PlayerPreview")&&candidate.name.equals("method_48579"))call=candidate;
+            assertNotNull(call);assertEquals(Opcodes.INVOKESPECIAL,call.getOpcode());
+            // MixinExtras expects the enclosing subtype for a super invocation's receiver.
+            expected="(L"+type.name+";"+call.desc.substring(1,call.desc.indexOf(')'))+"Lcom/llamalad7/mixinextras/injector/wrapoperation/Operation;)V";
+        }
+        try(var jar=new JarFile(System.getProperty("axial.test.modJar"))) {
+            var mixin=read(jar,"com/axial/cosmetics/mixin/EmoteRadialElementThemeMixin");
+            var handler=mixin.methods.stream().filter(m->m.name.equals("axial$animateFallback")).findFirst().orElseThrow();
+            assertEquals(expected,handler.desc,"The receiver must match MixinExtras' production super-call contract");
+        }
+    }
     private ClassNode read(JarFile jar,String path)throws Exception {
         var type=new ClassNode();try(var in=jar.getInputStream(jar.getJarEntry(path+".class"))){new ClassReader(in).accept(type,0);}return type;
     }

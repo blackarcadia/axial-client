@@ -13,10 +13,10 @@ public final class ReplayRecordingConfig {
     public static boolean enabled(){var value=enabled;if(value==null){synchronized(ReplayRecordingConfig.class){if(enabled==null)enabled=ReplayRecordingPreference.read(file());value=enabled;}}return value;}
     public static void toggle() {
         boolean next=!enabled();
-        try {ReplayRecordingPreference.write(file(),next);enabled=next;if(!next)stopCurrent();}
+        try {ReplayRecordingPreference.write(file(),next);enabled=next;if(!next){ReplayRecordingRestart.clear();stopCurrent();}}
         catch(Exception ex){throw new IllegalStateException("Could not update Replay Mod recording",ex);}
     }
-    static String description(){return enabled()?"Recording on • Rejoin after re-enabling to start fresh":"Recording off • Saved replays remain available";}
+    static String description(){return enabled()?"Recording on • Start Recording is available in the pause menu":"Recording off • Saved replays remain available";}
     private static void stopCurrent()throws Exception {
         var module=Class.forName("com.replaymod.recording.ReplayModRecording");var instance=module.getField("instance").get(null);if(instance==null)return;
         var connection=module.getMethod("getConnectionEventHandler").invoke(instance);if(connection==null)return;

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.axial.cosmetics.client.EmoteWheelPreview;
-import io.github.kosmx.emotes.arch.gui.widgets.PlayerPreview;
+import io.github.kosmx.emotes.arch.screen.widget.preview.elemets.PlayerChooseElement;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -93,7 +93,7 @@ public abstract class EmoteRadialElementThemeMixin {
     @WrapOperation(method={"method_48579","renderWidget"},at={
             @At(value="INVOKE",target="Lio/github/kosmx/emotes/arch/gui/widgets/PlayerPreview;method_48579(Lnet/minecraft/class_332;IIF)V"),
             @At(value="INVOKE",target="Lio/github/kosmx/emotes/arch/gui/widgets/PlayerPreview;renderWidget(Lnet/minecraft/client/gui/DrawContext;IIF)V")},remap=false)
-    private void axial$animateFallback(PlayerPreview preview,DrawContext context,int mouseX,int mouseY,float delta,Operation<Void> original) {
+    private void axial$animateFallback(PlayerChooseElement preview,DrawContext context,int mouseX,int mouseY,float delta,Operation<Void> original) {
         if(!axial$drawPreview(context))original.call(preview,context,mouseX,mouseY,delta);
     }
     @Unique private boolean axial$drawPreview(DrawContext context) {

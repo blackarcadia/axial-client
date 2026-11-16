@@ -130,6 +130,7 @@
     "ReplayViewerBackgroundMixin",
     "ReplayViewerButtonsMixin",
     "ReplayRecordingStartMixin",
+    "ReplayRecordingRestartButtonMixin",
     "ReplayRecordingConnectionMixin",
     "ReplayRecordingControlsMixin",
     "ReplayRecordingPacketMixin",

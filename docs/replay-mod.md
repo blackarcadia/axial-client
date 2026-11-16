@@ -33,9 +33,13 @@ are also hidden and prevented from restarting a finalized recorder. Native recor
 screens remain available but cannot override the global recording gate.
 
 Saved replays and the viewer remain available with recording off, including NPC
-animation playback. Re-enable the toggle and **rejoin the server/world** to create
-a fresh recording session; a complete replay needs its login/world-entry packets.
-Native per-server/singleplayer auto-record preferences are still respected.
+animation playback. Re-enabling immediately restores a **Start Recording** button
+in the pause menu if no live recorder exists. It offers a reconnect for multiplayer,
+or saving and reopening the world in singleplayer, because a valid fresh replay
+needs its login/world-entry packets. Nothing disconnects when merely enabling the
+feature or dismissing the prompt. The explicit start enables recording for that
+one connection without overwriting the native auto-record settings. Existing live
+recorders keep their native Start/Stop/Pause controls without a duplicate button.
 
 ## Checks
 
