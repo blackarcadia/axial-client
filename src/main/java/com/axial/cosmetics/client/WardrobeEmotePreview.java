@@ -10,12 +10,15 @@ import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 /** Detached GUI animation stack: no world, network events, player changes or emote audio. */
 final class WardrobeEmotePreview extends AvatarAnimManager {
     private final PreviewController controller=new PreviewController();
-    private final long started=System.nanoTime();
+    private long started=System.nanoTime();
     private Animation animation;
     WardrobeEmotePreview(){super(null);addAnimLayer(1000,controller);}
     void attach(PlayerEntityRenderState state,WardrobeEmote emote) {
         var holder=emote.holder();if(holder==null)return;
-        if(animation!=holder.emote){animation=holder.emote;controller.triggerAnimation(animation,0);}
+        attach(state,holder.emote);
+    }
+    void attach(PlayerEntityRenderState state,Animation selected) {
+        if(animation!=selected){animation=selected;started=System.nanoTime();controller.triggerAnimation(animation,0);}
         float time=(float)(((System.nanoTime()-started)/50_000_000d)%animation.length());
         controller.sample(time);setTickDelta(0);
         ((IAvatarAnimationState)state).playerAnimLib$setAnimManager(this);

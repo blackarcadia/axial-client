@@ -20,6 +20,9 @@ final class WardrobePreviewState extends PlayerEntityRenderState {
         this(item.cape(),item.aura(),item.accessory()==null?java.util.List.of():java.util.List.of(item.accessory()),skin,age,yaw);
     }
 
+    static WardrobePreviewState mannequin(float age,float yaw) {
+        return new WardrobePreviewState(null,null,java.util.List.of(),CARD_SKIN,age,yaw);
+    }
     static WardrobePreviewState equipped(SkinTextures skin,float age,float yaw) {
         return new WardrobePreviewState(WardrobePreferences.current(),WardrobePreferences.currentAura(),
                 WardrobePreferences.currentAccessories(),skin,age,yaw);
