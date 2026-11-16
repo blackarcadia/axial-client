@@ -119,5 +119,70 @@
     "name": "Spooky Dance",
     "image": "emote_spooky_dance.png",
     "category": "Emotes"
+  },
+  "emote_oddball": {
+    "name": "Oddball",
+    "image": "emote_oddball.png",
+    "category": "Emotes"
+  },
+  "emote_say_so": {
+    "name": "Say So",
+    "image": "emote_say_so.png",
+    "category": "Emotes"
+  },
+  "emote_dylan_dance": {
+    "name": "Dylan Dance",
+    "image": "emote_dylan_dance.png",
+    "category": "Emotes"
+  },
+  "emote_rasputin": {
+    "name": "Rasputin",
+    "image": "emote_rasputin.png",
+    "category": "Emotes"
+  },
+  "emote_sad_cat": {
+    "name": "Sad Cat",
+    "image": "emote_sad_cat.png",
+    "category": "Emotes"
+  },
+  "emote_the_phitty": {
+    "name": "The Phitty",
+    "image": "emote_the_phitty.png",
+    "category": "Emotes"
+  },
+  "emote_slick_back": {
+    "name": "Slick Back",
+    "image": "emote_slick_back.png",
+    "category": "Emotes"
+  },
+  "emote_default_dance": {
+    "name": "Default Dance",
+    "image": "emote_default_dance.png",
+    "category": "Emotes"
+  },
+  "emote_odd_loop": {
+    "name": "Odd Loop",
+    "image": "emote_odd_loop.png",
+    "category": "Emotes"
+  },
+  "emote_take_the_l": {
+    "name": "Take The L",
+    "image": "emote_take_the_l.png",
+    "category": "Emotes"
+  },
+  "emote_caramel": {
+    "name": "Caramel",
+    "image": "emote_caramel.png",
+    "category": "Emotes"
+  },
+  "emote_twerk": {
+    "name": "Twerk",
+    "image": "emote_twerk.png",
+    "category": "Emotes"
+  },
+  "emote_breakdance": {
+    "name": "Breakdance",
+    "image": "emote_breakdance.png",
+    "category": "Emotes"
   }
 }

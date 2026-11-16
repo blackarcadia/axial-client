@@ -17,7 +17,20 @@ public final class BundledEmoteSynchronizer {
             "death.emotecraft",
             "fear.emotecraft",
             "keep_your_head_off.emotecraft",
-            "spooky_dance.emotecraft"
+            "spooky_dance.emotecraft",
+            "oddball.emotecraft",
+            "say_so.emotecraft",
+            "dylan_dance.emotecraft",
+            "rasputin.emotecraft",
+            "sad_cat.emotecraft",
+            "the_phitty.emotecraft",
+            "slick_back.emotecraft",
+            "default_dance.emotecraft",
+            "odd_loop.emotecraft",
+            "take_the_l.emotecraft",
+            "caramel.emotecraft",
+            "twerk.emotecraft",
+            "breakdance.emotecraft"
     );
 
     private BundledEmoteSynchronizer() {

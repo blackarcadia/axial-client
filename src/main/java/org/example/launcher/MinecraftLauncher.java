@@ -842,6 +842,19 @@ public class MinecraftLauncher {
         installBundledEmote(layout, FEAR_EMOTE_FILE, "Fear");
         installBundledEmote(layout, KEEP_YOUR_HEAD_OFF_EMOTE_FILE, "Keep Your Head Off");
         installBundledEmote(layout, SPOOKY_DANCE_EMOTE_FILE, "Spooky Dance");
+        installBundledEmote(layout, "oddball.emotecraft", "Oddball");
+        installBundledEmote(layout, "say_so.emotecraft", "Say So");
+        installBundledEmote(layout, "dylan_dance.emotecraft", "Dylan Dance");
+        installBundledEmote(layout, "rasputin.emotecraft", "Rasputin");
+        installBundledEmote(layout, "sad_cat.emotecraft", "Sad Cat");
+        installBundledEmote(layout, "the_phitty.emotecraft", "The Phitty");
+        installBundledEmote(layout, "slick_back.emotecraft", "Slick Back");
+        installBundledEmote(layout, "default_dance.emotecraft", "Default Dance");
+        installBundledEmote(layout, "odd_loop.emotecraft", "Odd Loop");
+        installBundledEmote(layout, "take_the_l.emotecraft", "Take The L");
+        installBundledEmote(layout, "caramel.emotecraft", "Caramel");
+        installBundledEmote(layout, "twerk.emotecraft", "Twerk");
+        installBundledEmote(layout, "breakdance.emotecraft", "Breakdance");
     }
 
     private void installBundledEmote(FileLayout layout, String fileName, String displayName) throws IOException {

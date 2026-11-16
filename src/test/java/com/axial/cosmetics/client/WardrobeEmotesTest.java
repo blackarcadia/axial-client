@@ -50,7 +50,8 @@ class WardrobeEmotesTest {
     }
     @Test void hostedAssetsMatchCatalogChecksumsAndStableNativeWheelIdentities()throws Exception {
         var root=com.google.gson.JsonParser.parseString(Files.readString(Path.of("backend/cosmetics/public/assets/emotes/catalog.json"))).getAsJsonObject();
-        assertEquals(6,root.getAsJsonArray("emotes").size());
+        assertEquals(WardrobeEmote.values().length,root.getAsJsonArray("emotes").size());
+        assertEquals(19,WardrobeEmote.values().length);
         var admin=com.google.gson.JsonParser.parseString(Files.readString(Path.of("backend/cosmetics/catalog.json"))).getAsJsonObject();
         for(var value:root.getAsJsonArray("emotes")) {
             var entry=value.getAsJsonObject();var e=WardrobeEmote.fromId(entry.get("id").getAsString());assertNotNull(e);
@@ -59,20 +60,29 @@ class WardrobeEmotesTest {
             var data=Files.readAllBytes(Path.of("backend/cosmetics/public/assets/emotes",entry.get("file").getAsString()));
             VpsEmoteAssets.verify(data,entry.get("sha256").getAsString());
             var animation=new BinaryFormat().read(new java.io.ByteArrayInputStream(data),e.file).values().iterator().next();assertEquals(e.animation,animation.uuid());
+            assertEquals(e.label,EmoteCatalogNames.label(animation.uuid()));
+            assertEquals(e.animation,NpcEmoteDirector.unpack(NpcEmoteDirector.pack(animation,e.label)).uuid(),e.label+" must survive relay/replay encoding");
             assertThrows(java.io.IOException.class,()->VpsEmoteAssets.verify(new byte[]{1,2,3},entry.get("sha256").getAsString()));
         }
     }
     @Test void nativePlaybackEntryAndPackagedOwnershipGuardMatch()throws Exception {
+        var nativeFields=new HashMap<String,String>();
         try(var jar=new java.util.jar.JarFile("src/main/resources/emotecraft-fabric-for-MC1.21.11-3.2.0-b.build.159.jar")) {
             var type=new org.objectweb.asm.tree.ClassNode();
             try(var input=jar.getInputStream(jar.getJarEntry("io/github/kosmx/emotes/main/EmoteHolder.class"))){new org.objectweb.asm.ClassReader(input).accept(type,0);}
             assertTrue(type.methods.stream().anyMatch(m->m.name.equals("playEmote")&&m.desc.equals("()Z")));
+            assertTrue(type.methods.stream().anyMatch(m->m.name.equals("<init>")&&m.desc.equals("(Lcom/zigythebird/playeranimcore/animation/Animation;)V")));
+            for(var field:type.fields)nativeFields.put(field.name,field.desc);
         }
         try(var jar=new java.util.jar.JarFile(System.getProperty("axial.test.modJar"))) {
             assertNotNull(jar.getJarEntry("com/axial/cosmetics/client/WardrobeEmotePreview.class"));
             assertNotNull(jar.getJarEntry("com/axial/cosmetics/client/WardrobeEmoteWheelScreen.class"));
             assertNotNull(jar.getJarEntry("com/axial/cosmetics/client/VpsEmoteAssets.class"));
-            assertTrue(new String(jar.getInputStream(jar.getJarEntry("axial-cosmetics.mixins.json")).readAllBytes()).contains("EmoteVpsOwnershipMixin"));
+            var config=new String(jar.getInputStream(jar.getJarEntry("axial-cosmetics.mixins.json")).readAllBytes());
+            assertTrue(config.contains("EmoteVpsOwnershipMixin"));assertTrue(config.contains("EmoteCatalogNameMixin"));
+            var alias=new org.objectweb.asm.tree.ClassNode();
+            try(var input=jar.getInputStream(jar.getJarEntry("com/axial/cosmetics/mixin/EmoteCatalogNameMixin.class"))){new org.objectweb.asm.ClassReader(input).accept(alias,0);}
+            for(String name:List.of("name","emote"))assertEquals(nativeFields.get(name),alias.fields.stream().filter(f->f.name.equals(name)).findFirst().orElseThrow().desc);
         }
     }
     @Test void detachedSpacemanControllerChangesPoseAndRepeatsWithoutAWorldOrLivePlayer()throws Exception {

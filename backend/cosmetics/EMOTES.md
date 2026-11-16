@@ -1,6 +1,6 @@
 # VPS emotes and wardrobe wheel placement
 
-The six current emotes are managed in the existing admin panel:
+The 19 current emotes are managed in the existing admin panel:
 **Cosmetics → Load player UUID → Emotes → Save cosmetic access**. They use the
 same grant, redemption-code and audit system as other wardrobe items. No PayNow
 products or store listings are created by this change.
@@ -15,8 +15,21 @@ Grant IDs:
 | Fear | `emote_fear` |
 | Keep Your Head Off | `emote_keep_your_head_off` |
 | Spooky Dance | `emote_spooky_dance` |
+| Oddball | `emote_oddball` |
+| Say So | `emote_say_so` |
+| Dylan Dance | `emote_dylan_dance` |
+| Rasputin | `emote_rasputin` |
+| Sad Cat | `emote_sad_cat` |
+| The Phitty | `emote_the_phitty` |
+| Slick Back | `emote_slick_back` |
+| Default Dance | `emote_default_dance` |
+| Odd Loop | `emote_odd_loop` |
+| Take The L | `emote_take_the_l` |
+| Caramel | `emote_caramel` |
+| Twerk | `emote_twerk` |
+| Breakdance | `emote_breakdance` |
 
-The initial rollout grants all six to the owner account. Other players need
+The owner account is granted all 19 emotes in the current catalog. Other players need
 individual grants or redeem codes. Existing non-emote ownership is preserved.
 Updated clients refresh VPS grants within a minute; revoked managed emotes cannot
 be played through an old saved wheel position. Connected-server emote restrictions
@@ -44,3 +57,8 @@ Deploy the catalog additions, `public/assets/emote_*` admin icons and
 `public/assets/emotes/` together. Adding future emotes still requires registering
 its grant ID/UUID in the client catalog, as with other current wardrobe cosmetics.
 Never include private VPS settings or admin passwords in these public files.
+
+The additional 13 emotes retain their original binary data and embedded icons.
+Catalog display names are applied to native Emotecraft holders by animation UUID,
+so the wheel tooltip and NPC picker use the same names as the wardrobe. The extra
+Lethal Company attachment was not imported because it was not in the requested list.
