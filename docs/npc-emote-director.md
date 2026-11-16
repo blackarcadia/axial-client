@@ -26,6 +26,9 @@ Each recording embeds its animation definitions and timestamped cues in
 time, including seeking backwards, pause, speed changes and offline rendering.
 Assignments already playing when recording begins retain their current phase.
 NPC positions and skins still come from Replay Mod's normal entity recording.
+The animation track is carried into processed replays when recording stops, with
+cues retimed for Replay Mod cut and split markers. Emotes already playing at a
+trimmed start are seeded with their current phase.
 
 **The updated AxialClient is required to view these local NPC animations in a
 replay.** Plain Replay Mod does not read this custom track. Existing replays without

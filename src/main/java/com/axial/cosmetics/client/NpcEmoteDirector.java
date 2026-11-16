@@ -99,7 +99,7 @@ public final class NpcEmoteDirector {
     static boolean editable(){sync();return MinecraftClient.getInstance().world!=null&&playback==null;}
     static String status() {
         sync();if(!problem.isEmpty())return problem;
-        if(playback!=null)return "Replay playback • NPC animation track loaded";
+        if(playback!=null)return replay.cueCount()==0?"Replay playback • no NPC animation track in this file":"Replay playback • NPC animation track loaded";
         return recording!=null?"Recording • NPC emotes are embedded in this replay":"Live preview • start Replay Mod recording before filming";
     }
     static void assign(UUID actor,EmoteHolder emote,boolean loop) {

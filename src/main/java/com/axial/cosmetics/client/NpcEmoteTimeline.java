@@ -28,6 +28,7 @@ final class NpcEmoteTimeline {
     private final Map<UUID,NavigableMap<Long,Cue>> tracks=new LinkedHashMap<>();
     Map<String,Clip> clips(){return Collections.unmodifiableMap(clips);}
     Set<UUID> actors(){return Collections.unmodifiableSet(tracks.keySet());}
+    List<Cue> cues(){return Collections.unmodifiableList(cues);}
     int cueCount(){return cues.size();}
     void addClip(Clip clip) {
         if(!clips.containsKey(clip.id())&&clips.size()>=MAX_CLIPS)throw new IllegalStateException("Too many emotes in this filming session");

@@ -129,6 +129,7 @@
     "ReplayMainMenuButtonMixin",
     "NpcEmoteRenderMixin",
     "NpcEmoteClockMixin",
+    "NpcReplayProcessingMixin",
     "TitleScreenMenuLayoutMixin"
   ],
   "injectors": {

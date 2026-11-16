@@ -17,6 +17,8 @@ class NpcReplayCompatibilityTest {
             assertTrue(listener.fields.stream().anyMatch(f->f.name.equals("replayFile")));
             assertTrue(listener.fields.stream().anyMatch(f->f.name.equals("saveService")&&f.desc.equals("Ljava/util/concurrent/ExecutorService;")));
             assertTrue(listener.methods.stream().anyMatch(m->m.name.equals("getCurrentDuration")&&m.desc.equals("()J")));
+            var processor=read(jar,"com/replaymod/editor/gui/MarkerProcessor");
+            assertTrue(processor.methods.stream().anyMatch(m->m.name.equals("apply")&&m.desc.equals("(Ljava/nio/file/Path;Ljava/util/function/Consumer;)Ljava/util/List;")));
             var sender=read(jar,"com/replaymod/replay/ReplaySender");
             assertTrue(sender.methods.stream().anyMatch(m->m.name.equals("currentTimeStamp")&&m.desc.equals("()I")));
         }
@@ -28,6 +30,9 @@ class NpcReplayCompatibilityTest {
             var render=read(jar,"com/axial/cosmetics/mixin/NpcEmoteRenderMixin");
             assertTrue(render.methods.stream().anyMatch(m->m.name.equals("axial$updateActorPose")&&m.desc.startsWith("(Lnet/minecraft/class_11890;")));
             var mixins=new String(jar.getInputStream(jar.getJarEntry("axial-cosmetics.mixins.json")).readAllBytes());
+            var processing=read(jar,"com/axial/cosmetics/mixin/NpcReplayProcessingMixin");
+            assertTrue(processing.methods.stream().anyMatch(m->m.name.equals("axial$preserveActorTrack")&&m.desc.equals("(Ljava/nio/file/Path;Ljava/util/function/Consumer;Lcom/llamalad7/mixinextras/injector/wrapoperation/Operation;)Ljava/util/List;")));
+            assertTrue(mixins.contains("NpcReplayProcessingMixin"));
             assertTrue(mixins.contains("NpcEmoteClockMixin"));assertTrue(mixins.contains("NpcEmoteRenderMixin"));
         }
     }
