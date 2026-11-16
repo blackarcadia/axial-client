@@ -89,5 +89,35 @@
     "name": "Pookles",
     "image": "pookles.png",
     "category": "Pets"
+  },
+  "emote_gangnam_style": {
+    "name": "Gangnam Style",
+    "image": "emote_gangnam_style.svg",
+    "category": "Emotes"
+  },
+  "emote_rat_dance": {
+    "name": "Rat Dance",
+    "image": "emote_rat_dance.png",
+    "category": "Emotes"
+  },
+  "emote_death": {
+    "name": "Death",
+    "image": "emote_death.png",
+    "category": "Emotes"
+  },
+  "emote_fear": {
+    "name": "Fear",
+    "image": "emote_fear.png",
+    "category": "Emotes"
+  },
+  "emote_keep_your_head_off": {
+    "name": "Keep Your Head Off",
+    "image": "emote_keep_your_head_off.png",
+    "category": "Emotes"
+  },
+  "emote_spooky_dance": {
+    "name": "Spooky Dance",
+    "image": "emote_spooky_dance.png",
+    "category": "Emotes"
   }
 }

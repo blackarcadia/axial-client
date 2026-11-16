@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "emotes": [
+    {
+      "id": "emote_gangnam_style",
+      "animation": "00039df2-3f23-ec84-0007-5d66adfcfb6a",
+      "file": "gangnam_style.emotecraft",
+      "sha256": "7738e9dfdb3f6519a9eaa7e0e8843071982d630a27cf608e3241cbeb373d5429"
+    },
+    {
+      "id": "emote_rat_dance",
+      "animation": "1fac5d45-0000-0000-0000-000000000000",
+      "file": "rat_dance.emotecraft",
+      "sha256": "8ca8bb3a97a4eefee4baeed464ebd47de94bd46b0eced6e5779f6bf6887dfad2"
+    },
+    {
+      "id": "emote_death",
+      "animation": "7146ae20-0520-415e-beb4-9379f848f590",
+      "file": "death.emotecraft",
+      "sha256": "5ad583d989e4b092f3212b0214d9af7834e16d0253200c2c00427884a0445711"
+    },
+    {
+      "id": "emote_fear",
+      "animation": "000380e3-6fec-6184-0007-2855df429a6a",
+      "file": "fear.emotecraft",
+      "sha256": "2396f519127218ec61970bfa76e1eb3c762fb673bbbba43b62eb842581dca369"
+    },
+    {
+      "id": "emote_keep_your_head_off",
+      "animation": "00038d24-8f03-5b11-0007-3a20c4136d51",
+      "file": "keep_your_head_off.emotecraft",
+      "sha256": "4866ee708d330f4d0bdbd1c88fad59ea6a1aaa83b92eacdf9592c8cf62a47602"
+    },
+    {
+      "id": "emote_spooky_dance",
+      "animation": "f9cd0cf2-0000-0000-0000-000000000000",
+      "file": "spooky_dance.emotecraft",
+      "sha256": "0a901dbec102e482b61c51ba3fd4988d236acd793fc671032b3f7ff5d6fc8d27"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import com.axial.cosmetics.client.ModMenuLayout.Rect;
 public final class WardrobeScreen extends Screen {
     private final Screen parent;
     private WardrobeLayout layout;
+    private final java.util.Map<WardrobeEmote,WardrobeEmotePreview> emotePreviews=new java.util.EnumMap<>(WardrobeEmote.class);
     private WardrobeCategory category = WardrobeCategory.ALL;
     private boolean dragging;
     private WardrobeItem focusedItem;
@@ -111,6 +112,7 @@ public final class WardrobeScreen extends Screen {
         scrolling.jump(scroll,layout.maxScroll(matching.size()));
         int index=0;
         for(var item:matchingItems())card(item,layout.card(index++,scroll));
+        if(focusedItem!=null&&focusedItem.emote()!=null)button("Assign to wheel",new Rect(layout.details.x()+4,layout.details.y()+27,Math.max(1,layout.details.width()-8),20),()->client.setScreen(new WardrobeEmoteWheelScreen(this,focusedItem.emote())));
         int arrowY=layout.preview.bottom()-21;
         button("<",new Rect(layout.preview.x()+4,arrowY,20,18),()->rotation-=45);
         button(">",new Rect(layout.preview.right()-24,arrowY,20,18),()->rotation+=45);
@@ -123,6 +125,7 @@ public final class WardrobeScreen extends Screen {
     }
     private void save(WardrobeItem item) {
         if (!WardrobeAccess.allowed()) return;
+        if(item.emote()!=null){emotePreviews.remove(item.emote());focusedItem=item;rotation=205;error="";rebuild();return;}
         try {item.toggle();focusedItem=item;rotation=WardrobeModelView.yaw(item);equippedAt=System.nanoTime();error="";rebuild();}
         catch(IOException ex) {error="Could not save. Try again.";}
     }
@@ -175,7 +178,7 @@ public final class WardrobeScreen extends Screen {
             }
         } else if(item.cape()!=null)drawCape(c,item.cape(),image.x(),image.y(),image.width(),image.height());
         else if(item.accessory()!=null)drawAccessory(c,item.accessory(),image);
-        else drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
+        else if(item.emote()==null)drawAura(c,item.aura(),r.height()<55?image:new Rect(r.x()+5,r.y()+4,r.width()-10,Math.max(8,r.height()-35)));
         if(r.height()<55) {
             label(c,textRenderer,item.label(),image.right()+5,r.y()+(r.height()-9)/2,
                     selected?BRAND:INK,.75f,r.right()-image.right()-9,false);
@@ -184,7 +187,7 @@ public final class WardrobeScreen extends Screen {
         c.fill(r.x()+6,r.bottom()-29,r.right()-6,r.bottom()-28,tint(DIVIDER));
         label(c,textRenderer,item.label(),r.x()+7,r.bottom()-23,INK,.85f,r.width()-14,true);
         boolean equipped=item.equipped();
-        label(c,textRenderer,reward?"ADDED TO YOUR WARDROBE":equipped?"EQUIPPED":"CLICK TO EQUIP",r.x()+7,r.bottom()-12,
+        label(c,textRenderer,reward?"ADDED TO YOUR WARDROBE":equipped?"EQUIPPED":item.emote()!=null?"PREVIEW / ASSIGN TO WHEEL":"CLICK TO EQUIP",r.x()+7,r.bottom()-12,
                 reward?0xFFB5F5CB:equipped?BRAND:MUTED,.7f,r.width()-14,false);
     }
 
@@ -236,7 +239,9 @@ public final class WardrobeScreen extends Screen {
         }
         Rect d=layout.details;
         label(c,textRenderer,focusedItem==null?"Your wardrobe starts here":focusedItem.label(),d.x()+4,d.y()+3,INK,.95f,d.width()-8,true);
-        if(d.height()>60&&focusedItem!=null) {
+        if(focusedItem!=null&&focusedItem.emote()!=null) {
+            label(c,textRenderer,"Drag to rotate • Looping preview",d.x()+4,d.y()+17,MUTED,.6f,d.width()-8,false);
+        } else if(d.height()>60&&focusedItem!=null) {
             label(c,textRenderer,focusedItem.badge(),d.x()+4,d.y()+18,0xFFE8BA47,.7f,d.width()-8,false);
             label(c,textRenderer,"Drag to rotate",d.x()+4,d.y()+32,MUTED,.7f,d.width()-8,false);
             label(c,textRenderer,focusedItem.equipped()?"Click to unequip":"Click to equip",d.x()+4,d.y()+43,MUTED,.65f,d.width()-8,false);
@@ -245,7 +250,7 @@ public final class WardrobeScreen extends Screen {
             label(c,textRenderer,"No cosmetics here yet",layout.grid.x()+3,layout.grid.y()+12,MUTED,.8f,layout.grid.width()-6,false);
         }
         c.fill(p.x()+8,p.bottom()-31,p.right()-8,p.bottom()-30,DIVIDER);
-        label(c,textRenderer,error.isEmpty()?"Your collection • Click a cosmetic to equip":error,p.x()+101,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-174,false);
+        label(c,textRenderer,error.isEmpty()?(focusedItem!=null&&focusedItem.emote()!=null?"Emotes • Preview a card, then assign to your wheel":"Your collection • Click a cosmetic to equip"):error,p.x()+101,p.bottom()-20,error.isEmpty()?MUTED:RED,.7f,p.width()-174,false);
         super.render(c,mx,my,delta);
         var categoryStart=layout.category(0);var categoryNext=layout.category(1);
         int categoryY=categoryStart.y()+(int)Math.round(categoryMarker.toward(category.ordinal())*(categoryNext.y()-categoryStart.y()));
@@ -299,16 +304,18 @@ public final class WardrobeScreen extends Screen {
 
     private void drawPlayer(DrawContext c,float delta) {
         Rect r=layout.preview;
-        label(c,textRenderer,"YOUR LOADOUT",r.x()+8,r.y()+8,MUTED,.65f,r.width()-16,false);
+        label(c,textRenderer,focusedItem!=null&&focusedItem.emote()!=null?"EMOTE PREVIEW":"YOUR LOADOUT",r.x()+8,r.y()+8,MUTED,.65f,r.width()-16,false);
         drawModel(c,focusedItem,new Rect(r.x()+3,r.y()+19,Math.max(1,r.width()-6),Math.max(1,r.height()-44)),shownRotation,false);
     }
 
     private void drawModel(DrawContext c,WardrobeItem item,Rect bounds,float yaw,boolean card) {
-        var skin=card?WardrobePreviewState.CARD_SKIN:client.player==null?menuSkin:client.player.getSkin();
+        boolean emote=item!=null&&item.emote()!=null;
+        var skin=card||emote?WardrobePreviewState.CARD_SKIN:client.player==null?menuSkin:client.player.getSkin();
         if(skin==null||(card&&item==null))return;
         float age=(System.nanoTime()/50_000_000L)%1_000_000;
-        var state=card?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
-        var frameItem=card?item:state.aura!=null?WardrobeItem.of(state.aura):
+        var state=card||emote?new WardrobePreviewState(item,skin,age,yaw):WardrobePreviewState.equipped(skin,age,yaw);
+        if(emote)emotePreviews.computeIfAbsent(item.emote(),key->new WardrobeEmotePreview()).attach(state,item.emote());
+        var frameItem=card||emote?item:state.aura!=null?WardrobeItem.of(state.aura):
                 state.accessories.stream().filter(a->a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)).findFirst().map(WardrobeItem::of).orElse(null);
         var view=WardrobeModelView.fit(frameItem,bounds,card);
         c.addEntity(state,view.scale(),new Vector3f(0,view.centerY(),0),

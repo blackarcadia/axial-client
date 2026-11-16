@@ -7,6 +7,7 @@ enum WardrobeCategory {
     HEADWEAR("Headwear", "account", "Search headwear..."),
     OUTFITS("Bodywear", "shirt", "Search bodywear..."),
     PETS("Pets", "account", "Search pets..."),
+    EMOTES("Emotes", "replay", "Search emotes..."),
     BACKPACKS("Backpacks", "backpack", "Search backpacks...");
 
     final String label, icon, search;

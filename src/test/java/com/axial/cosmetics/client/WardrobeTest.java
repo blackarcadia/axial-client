@@ -32,8 +32,9 @@ class WardrobeTest {
             assertTrue(l.grid.right()<l.preview.x());
         }
     }
-    @Test void categoriesHaveTheirOwnSearchPromptAndExcludeTheEmoteWheel() {
-        assertEquals(7,WardrobeCategory.values().length);
+    @Test void categoriesHaveTheirOwnSearchPromptIncludingEmotes() {
+        assertEquals(8,WardrobeCategory.values().length);
+        assertEquals("Search emotes...",WardrobeCategory.EMOTES.search);
         assertEquals("Search cosmetics...",WardrobeCategory.ALL.search);
         assertEquals("Search capes...",WardrobeCategory.CAPES.search);
         assertEquals("Search auras...",WardrobeCategory.AURAS.search);
@@ -44,7 +45,7 @@ class WardrobeTest {
         assertEquals("Search bodywear...",WardrobeCategory.OUTFITS.search);
         assertEquals("Search pets...",WardrobeCategory.PETS.search);
         assertEquals("Search backpacks...",WardrobeCategory.BACKPACKS.search);
-        for(var category:WardrobeCategory.values())assertFalse(category.label.equalsIgnoreCase("Emotes"));
+        assertEquals("Emotes",WardrobeCategory.EMOTES.label);
     }
     @Test void capeSelectionNeverMutatesMinecraftCapeVisibilityAndTilesToggleDirectly() throws Exception {
         var renderer=read("/com/axial/cosmetics/mixin/PlayerEntityRendererCreatorMixin.class");

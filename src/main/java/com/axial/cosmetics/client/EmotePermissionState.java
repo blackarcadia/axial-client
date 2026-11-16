@@ -41,13 +41,17 @@ public final class EmotePermissionState {
         received = true;
     }
 
+    public static boolean canUse(EmoteHolder emote) {
+        return canUse(emote.getUuid(),net.minecraft.client.MinecraftClient.getInstance().getSession().getUuidOrNull());
+    }
+    static boolean canUse(UUID animation,UUID account) {
+        var managed=WardrobeEmote.fromAnimation(animation);
+        return (managed==null||managed.ownedBy(account))&&(!received||allowAll||allowed.contains(animation));
+    }
     public static Iterable<EmoteHolder> filter(Iterable<EmoteHolder> emotes) {
-        if (!received || allowAll) return emotes;
-
         List<EmoteHolder> permitted = new ArrayList<>();
-        Set<UUID> permittedIds = allowed;
         for (EmoteHolder emote : emotes) {
-            if (permittedIds.contains(emote.get())) permitted.add(emote);
+            if(canUse(emote))permitted.add(emote);
         }
         return permitted;
     }

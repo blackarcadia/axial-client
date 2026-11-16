@@ -60,6 +60,7 @@ public class AxialCosmetics implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         BundledEmoteSynchronizer.synchronize();
+        com.axial.cosmetics.client.VpsEmoteAssets.start();
         com.axial.cosmetics.client.EmoteMenuTheme.initialize();
         com.axial.cosmetics.client.AuraRenderLayers.initialize();
         com.axial.cosmetics.client.EmoteRelay.initialize();

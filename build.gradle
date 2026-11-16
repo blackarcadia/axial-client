@@ -855,6 +855,7 @@ def extractEmoteTestLibraries = tasks.register('extractEmoteTestLibraries', Copy
     into layout.buildDirectory.dir('emote-test-libraries')
 }
 dependencies {
+    compileOnly files(layout.buildDirectory.file('emote-test-libraries/mochafloats-4.1.5.jar')).builtBy(extractEmoteTestLibraries)
     testRuntimeOnly files(
         layout.buildDirectory.file('emote-test-libraries/NoteBlockLib-3.2.1.jar'),
         layout.buildDirectory.file('emote-test-libraries/mochafloats-4.1.5.jar'),

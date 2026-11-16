@@ -130,6 +130,7 @@
     "NpcEmoteRenderMixin",
     "NpcEmoteClockMixin",
     "NpcReplayProcessingMixin",
+    "EmoteVpsOwnershipMixin",
     "TitleScreenMenuLayoutMixin"
   ],
   "injectors": {
