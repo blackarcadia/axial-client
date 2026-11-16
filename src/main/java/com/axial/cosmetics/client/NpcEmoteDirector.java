@@ -153,18 +153,21 @@ public final class NpcEmoteDirector {
     }
     public static Float overrideTicks(Object controller){return clocks.get(controller);}
     private static NpcEmoteTimeline.Clip pack(EmoteHolder holder) {
+        return pack(holder.emote,holder.name.getString());
+    }
+    static NpcEmoteTimeline.Clip pack(Animation animation,String name) {
         var buffer=Unpooled.buffer();
         try {
-            new EmotePacket.Builder().configureToStreamEmote(holder.emote).setSizeLimit(NpcEmoteTimeline.MAX_PACKET,true).build().write(buffer,PacketBound.CLIENT);
+            new EmotePacket.Builder().configureToStreamEmote(animation).setSizeLimit(NpcEmoteTimeline.MAX_PACKET,true).build().write(buffer,PacketBound.CLIENT);
             if(buffer.readableBytes()>NpcEmoteTimeline.MAX_PACKET)throw new IllegalArgumentException("This emote is too large for a replay actor");
             var bytes=new byte[buffer.readableBytes()];buffer.readBytes(bytes);
-            return new NpcEmoteTimeline.Clip(holder.getUuid().toString(),holder.name.getString(),Base64.getEncoder().encodeToString(bytes),holder.emote.length()*20);
+            return new NpcEmoteTimeline.Clip(animation.uuid().toString(),name,Base64.getEncoder().encodeToString(bytes),animation.length());
         }finally{buffer.release();}
     }
     static Animation unpack(NpcEmoteTimeline.Clip clip) {
         var bytes=Base64.getDecoder().decode(clip.packet());var buffer=Unpooled.wrappedBuffer(bytes);
         try{var packet=new EmotePacket(buffer,PacketBound.CLIENT);var animation=packet.data.emoteData;
-            if(!packet.data.valid||packet.data.purpose!=PacketTask.STREAM||animation==null||!animation.uuid().toString().equals(clip.id())||Math.abs(animation.length()*20-clip.durationTicks())>.01f)
+            if(!packet.data.valid||packet.data.purpose!=PacketTask.STREAM||animation==null||!animation.uuid().toString().equals(clip.id())||Math.abs(animation.length()-clip.durationTicks())>.01f)
                 throw new IllegalArgumentException("Invalid embedded NPC emote");
             return animation;
         }finally{buffer.release();}
