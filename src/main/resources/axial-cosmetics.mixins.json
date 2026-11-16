@@ -127,6 +127,8 @@
     "WarpWaypointManagerMixin",
     "TitleScreenButtonSkinMixin",
     "ReplayMainMenuButtonMixin",
+    "NpcEmoteRenderMixin",
+    "NpcEmoteClockMixin",
     "TitleScreenMenuLayoutMixin"
   ],
   "injectors": {

@@ -63,6 +63,7 @@ public class AxialCosmetics implements ClientModInitializer {
         com.axial.cosmetics.client.EmoteMenuTheme.initialize();
         com.axial.cosmetics.client.AuraRenderLayers.initialize();
         com.axial.cosmetics.client.EmoteRelay.initialize();
+        com.axial.cosmetics.client.NpcEmoteDirector.initialize();
         PayloadTypeRegistry.playC2S().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(com.axial.cosmetics.client.GangDirectoryPayload.ID,com.axial.cosmetics.client.GangDirectoryPayload.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(com.axial.cosmetics.client.GangDirectoryPayload.ID,(payload,context)->{
