@@ -22,6 +22,8 @@ public final class NpcEmoteDirector {
     private static final Map<UUID,Applied> applied=new HashMap<>();
     private static final Map<Object,Float> clocks=Collections.synchronizedMap(new WeakHashMap<>());
     private static NpcEmoteTimeline live=new NpcEmoteTimeline(),recorded=new NpcEmoteTimeline(),replay=new NpcEmoteTimeline();
+    private static final PlayerEmoteRecording playerRecording=new PlayerEmoteRecording();
+    private static final Map<UUID,NpcEmoteTimeline.Clip> playerClips=new HashMap<>();
     private static long origin=System.nanoTime();
     private static Object liveWorld,recorder,playbackHandler;
     private static NpcReplayArchive.Writer writer;
@@ -30,13 +32,21 @@ public final class NpcEmoteDirector {
     private static String problem="";
     private NpcEmoteDirector() {}
     public static void initialize() {
-        ClientTickEvents.END_CLIENT_TICK.register(client->{sync();if(client.world!=null)for(var player:client.world.getPlayers())apply(player);});
+        ClientTickEvents.END_CLIENT_TICK.register(client->{sync();if(client.world!=null)for(var player:client.world.getPlayers())apply(player);observePlayers(client);});
         ClientPlayConnectionEvents.DISCONNECT.register((handler,client)->resetLive());
     }
     private static long now(){return Math.max(0,(System.nanoTime()-origin)/1_000_000);}
     private static void resetLive() {
+        clearWorld();recording=null;recorder=null;writer=null;
+    }
+    private static void clearWorld() {
         clearApplied();assignments.clear();liveAnimations.clear();live=new NpcEmoteTimeline();origin=System.nanoTime();liveWorld=null;
-        recording=null;recorder=null;writer=null;
+        playerRecording.clear();playerClips.clear();
+    }
+    private static void finishWorldTrack() {
+        boolean changed=playerRecording.removeMissing(recorded,Set.of(),recording.time());
+        var stops=assignments.keySet().stream().map(id->new NpcEmoteTimeline.Cue(recording.time(),id,"",false,0)).toList();
+        recorded.addAll(stops);if(changed||!stops.isEmpty())writer.submit(recorded.encode());
     }
     private static void clearApplied() {
         for(var value:applied.values())release(value);
@@ -60,11 +70,15 @@ public final class NpcEmoteDirector {
             }
             if(playbackHandler!=null){clearApplied();playbackHandler=null;replay=new NpcEmoteTimeline();replayAnimations.clear();}
             var client=MinecraftClient.getInstance();
-            if(liveWorld!=null&&client.world!=liveWorld)resetLive();liveWorld=client.world;
             recording=NpcReplayBridge.recording();
+            if(liveWorld!=null&&client.world!=liveWorld) {
+                if(recording!=null&&recording.listener()==recorder&&writer!=null)finishWorldTrack();
+                clearWorld();
+            }
+            liveWorld=client.world;
             if(recording==null){recorder=null;return;}
             if(recording.listener()!=recorder) {
-                recorder=recording.listener();writer=new NpcReplayArchive.Writer(recording.executor(),recording.file());recorded=new NpcEmoteTimeline();problem="";
+                recorder=recording.listener();writer=new NpcReplayArchive.Writer(recording.executor(),recording.file());recorded=new NpcEmoteTimeline();playerRecording.clear();playerClips.clear();problem="";
                 var seed=new ArrayList<NpcEmoteTimeline.Cue>();long time=now();
                 for(var id:assignments.keySet()){
                     var pose=live.pose(id,time);if(pose==null)continue;recorded.addClip(pose.clip());
@@ -78,6 +92,32 @@ public final class NpcEmoteDirector {
             if(playback!=null){clearApplied();replay=new NpcEmoteTimeline();replayAnimations.clear();}
             fail("NPC replay support unavailable",ex);
         }
+    }
+    private static void observePlayers(MinecraftClient client) {
+        if(playback!=null||client.world==null||recording==null||writer==null)return;
+        try {
+            boolean changed=false;var present=new HashSet<UUID>();
+            for(var player:client.world.getPlayers()) {
+                var actor=player.getUuid();present.add(actor);
+                // The explicit director already captures its own actors; do not overwrite those cues.
+                if(assignments.containsKey(actor)){playerRecording.forget(actor);continue;}
+                NpcEmoteTimeline.Clip clip=null;float ticks=0;boolean paused=false;
+                if(player instanceof IPlayerEntity emote&&emote.isPlayingEmote()) {
+                    var controller=emote.emotecraft$getEmote();var animation=controller.getCurrentAnimationInstance();
+                    if(animation!=null) {
+                        clip=playerClips.get(animation.uuid());
+                        if(clip==null) {
+                            String name=EmoteCatalogNames.label(animation.uuid());if(name==null)name=animation.getNameOrId();
+                            clip=pack(animation,name.length()>160?name.substring(0,160):name);playerClips.put(animation.uuid(),clip);
+                        }
+                        ticks=controller.getAnimationTicks();paused=controller.getAnimationState()==com.zigythebird.playeranimcore.enums.State.PAUSED;
+                    }
+                }
+                changed|=playerRecording.sample(recorded,actor,clip,ticks,paused,recording.time());
+            }
+            changed|=playerRecording.removeMissing(recorded,present,recording.time());
+            if(changed)writer.submit(recorded.encode());
+        }catch(Exception ex){fail("Replay could not save player emotes",ex);}
     }
     private static void fail(String message,Throwable failure) {
         if(!problem.equals(message))org.slf4j.LoggerFactory.getLogger(NpcEmoteDirector.class).warn(message,failure);
@@ -99,8 +139,8 @@ public final class NpcEmoteDirector {
     static boolean editable(){sync();return MinecraftClient.getInstance().world!=null&&playback==null;}
     static String status() {
         sync();if(!problem.isEmpty())return problem;
-        if(playback!=null)return replay.cueCount()==0?"Replay playback • no NPC animation track in this file":"Replay playback • NPC animation track loaded";
-        return recording!=null?"Recording • NPC emotes are embedded in this replay":"Live preview • start Replay Mod recording before filming";
+        if(playback!=null)return replay.cueCount()==0?"Replay playback • no saved emote track in this file":"Replay playback • Emote animation track loaded";
+        return recording!=null?"Recording • Player and NPC emotes are embedded in this replay":"Live preview • start Replay Mod recording before filming";
     }
     static void assign(UUID actor,EmoteHolder emote,boolean loop) {
         if(!editable())throw new IllegalStateException("Join your filming world before assigning NPCs");
@@ -143,8 +183,8 @@ public final class NpcEmoteDirector {
         if(pose==null){if(previous!=null){release(previous);applied.remove(player.getUuid());}return;}
         if(!(player instanceof IPlayerEntity emote))return;
         var animation=(playback!=null?replayAnimations:liveAnimations).get(pose.clip().id());if(animation==null)return;
-        var controller=emote.emotecraft$getEmote();
-        if(previous==null||previous.entity()!=player||!previous.cue().equals(pose.cue())||!emote.isPlayingEmote()) {
+        var controller=emote.emotecraft$getEmote();var current=controller.getCurrentAnimationInstance();
+        if(previous==null||previous.entity()!=player||!previous.cue().equals(pose.cue())||!emote.isPlayingEmote()||current==null||!current.uuid().toString().equals(pose.clip().id())) {
             if(previous!=null)release(previous);
             emote.emotecraft$playEmote(animation,Animation.LoopType.LOOP,pose.ticks(),false);
             boolean muted=controller.muteNbs;controller.muteNbs=true;applied.put(player.getUuid(),new Applied(player,pose.cue(),controller,muted));

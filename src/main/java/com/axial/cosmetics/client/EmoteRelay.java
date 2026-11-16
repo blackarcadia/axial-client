@@ -67,6 +67,9 @@ public final class EmoteRelay extends AbstractNetworkInstance {
         INSTANCE.worker.scheduleWithFixedDelay(INSTANCE::maintain,1,1,TimeUnit.SECONDS);
     }
     private void tick(MinecraftClient client) {
+        // Recorded performers must not receive unrelated live relay state during playback.
+        try {if(NpcReplayBridge.playback()!=null){if(context!=null)reset();return;}}
+        catch(ReflectiveOperationException ignored){ }
         if(client.world==null||client.player==null||!client.player.getUuid().equals(client.getSession().getUuidOrNull())) {
             if(context!=null)reset();return;
         }

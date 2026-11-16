@@ -71,10 +71,10 @@ public final class NpcReplayProcessing {
             var cues=new ArrayList<NpcEmoteTimeline.Cue>();
             for(var actor:source.actors()) {
                 var pose=source.pose(actor,span.start());
-                cues.add(new NpcEmoteTimeline.Cue(destination,actor,pose==null?"":pose.clip().id(),pose!=null&&pose.cue().loop(),pose==null?0:pose.ticks()));
+                cues.add(new NpcEmoteTimeline.Cue(destination,actor,pose==null?"":pose.clip().id(),pose!=null&&pose.cue().loop(),pose==null?0:pose.ticks(),pose!=null&&pose.cue().paused()));
             }
             for(var cue:source.cues())if(cue.time()>span.start()&&cue.time()<span.end())
-                cues.add(new NpcEmoteTimeline.Cue(destination+cue.time()-span.start(),cue.actor(),cue.clip(),cue.loop(),cue.offsetTicks()));
+                cues.add(new NpcEmoteTimeline.Cue(destination+cue.time()-span.start(),cue.actor(),cue.clip(),cue.loop(),cue.offsetTicks(),cue.paused()));
             result.addAll(cues);destination+=span.end()-span.start();
         }
         return result;

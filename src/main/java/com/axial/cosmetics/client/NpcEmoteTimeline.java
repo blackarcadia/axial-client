@@ -16,7 +16,8 @@ final class NpcEmoteTimeline {
             if(Base64.getDecoder().decode(packet).length>MAX_PACKET)throw new IllegalArgumentException("Emote is too large");
         }
     }
-    record Cue(long time,UUID actor,String clip,boolean loop,float offsetTicks) {
+    record Cue(long time,UUID actor,String clip,boolean loop,float offsetTicks,boolean paused) {
+        Cue(long time,UUID actor,String clip,boolean loop,float offsetTicks){this(time,actor,clip,loop,offsetTicks,false);}
         Cue {
             Objects.requireNonNull(actor);Objects.requireNonNull(clip);
             if(time<0||time>MAX_TIME||!Float.isFinite(offsetTicks)||offsetTicks<0||offsetTicks>72000)throw new IllegalArgumentException("Invalid actor cue");
@@ -43,7 +44,7 @@ final class NpcEmoteTimeline {
     Pose pose(UUID actor,long time) {
         var track=tracks.get(actor);if(track==null)return null;var entry=track.floorEntry(time);if(entry==null)return null;
         var cue=entry.getValue();if(cue.clip().isEmpty())return null;var clip=clips.get(cue.clip());
-        double ticks=(time-cue.time())/50d+cue.offsetTicks();
+        double ticks=(cue.paused()?0:(time-cue.time())/50d)+cue.offsetTicks();
         if(!cue.loop()&&ticks>=clip.durationTicks())return null;
         return new Pose(cue,clip,(float)(cue.loop()?ticks%clip.durationTicks():ticks));
     }
@@ -51,7 +52,7 @@ final class NpcEmoteTimeline {
         var root=new JsonObject();root.addProperty("version",1);var definitions=new JsonArray();
         for(var clip:clips.values()){var c=new JsonObject();c.addProperty("id",clip.id());c.addProperty("name",clip.name());c.addProperty("packet",clip.packet());c.addProperty("durationTicks",clip.durationTicks());definitions.add(c);}
         root.add("clips",definitions);var events=new JsonArray();
-        for(var cue:cues){var c=new JsonObject();c.addProperty("time",cue.time());c.addProperty("actor",cue.actor().toString());c.addProperty("clip",cue.clip());c.addProperty("loop",cue.loop());c.addProperty("offsetTicks",cue.offsetTicks());events.add(c);}
+        for(var cue:cues){var c=new JsonObject();c.addProperty("time",cue.time());c.addProperty("actor",cue.actor().toString());c.addProperty("clip",cue.clip());c.addProperty("loop",cue.loop());c.addProperty("offsetTicks",cue.offsetTicks());c.addProperty("paused",cue.paused());events.add(c);}
         root.add("cues",events);var data=root.toString().getBytes(StandardCharsets.UTF_8);
         if(data.length>MAX_BYTES)throw new IllegalStateException("Actor timeline exceeds replay size limit");return data;
     }
@@ -65,7 +66,7 @@ final class NpcEmoteTimeline {
             var result=new NpcEmoteTimeline();
             for(var v:definitions){var c=v.getAsJsonObject();var clip=new Clip(c.get("id").getAsString(),c.get("name").getAsString(),c.get("packet").getAsString(),c.get("durationTicks").getAsFloat());if(result.clips.containsKey(clip.id()))throw new IllegalArgumentException("Duplicate emote");result.addClip(clip);}
             var cues=new ArrayList<Cue>();
-            for(var v:events){var c=v.getAsJsonObject();cues.add(new Cue(c.get("time").getAsLong(),UUID.fromString(c.get("actor").getAsString()),c.get("clip").getAsString(),c.get("loop").getAsBoolean(),c.get("offsetTicks").getAsFloat()));}
+            for(var v:events){var c=v.getAsJsonObject();cues.add(new Cue(c.get("time").getAsLong(),UUID.fromString(c.get("actor").getAsString()),c.get("clip").getAsString(),c.get("loop").getAsBoolean(),c.get("offsetTicks").getAsFloat(),c.has("paused")&&c.get("paused").getAsBoolean()));}
             result.addAll(cues);return result;
         }catch(RuntimeException ex){throw new IllegalArgumentException("Invalid NPC emote timeline",ex);}
     }
