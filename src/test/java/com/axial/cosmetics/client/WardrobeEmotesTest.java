@@ -18,17 +18,25 @@ class WardrobeEmotesTest {
         var account=UUID.randomUUID();String json="{\"version\":1,\"players\":{\""+account+"\":[\"emote_rat_dance\",\"unknown_emote\"]}}";
         var parsed=CosmeticAssignments.parse(json);assertEquals(Set.of("emote_rat_dance"),parsed.get(account));
         CosmeticAssignments.acceptRedemption(account,parsed.get(account),1);
-        assertEquals(List.of(WardrobeItem.of(WardrobeEmote.RAT_DANCE)),WardrobeItem.owned(account,WardrobeCategory.EMOTES));
+        assertEquals(4,WardrobeItem.owned(account,WardrobeCategory.EMOTES).size());
         assertTrue(WardrobeItem.owned(account,WardrobeCategory.ALL).contains(WardrobeItem.of(WardrobeEmote.RAT_DANCE)));
         assertFalse(WardrobeEmote.DEATH.ownedBy(account));assertFalse(WardrobeItem.of(WardrobeEmote.RAT_DANCE).equipped());
     }
     @Test void vpsRevocationsAndServerRestrictionsBothApplyToSavedWheelEmotes() {
-        var account=UUID.randomUUID();var e=WardrobeEmote.RAT_DANCE;
+        var account=UUID.randomUUID();var e=WardrobeEmote.ODDBALL;
         CosmeticAssignments.acceptRedemption(account,Set.of(e.id),1);
         assertTrue(EmotePermissionState.canUse(e.animation,account));
         EmotePermissionState.update("");assertFalse(EmotePermissionState.canUse(e.animation,account));
         EmotePermissionState.update("*");assertTrue(EmotePermissionState.canUse(e.animation,account));
         CosmeticAssignments.acceptRedemption(account,Set.of(),2);assertFalse(EmotePermissionState.canUse(e.animation,account));
+    }
+    @Test void exactlyFourStarterEmotesAreAvailableWithoutAnyManualGrants()throws Exception {
+        var account=UUID.randomUUID();CosmeticAssignments.acceptRedemption(account,Set.of(),1);
+        var expected=Set.of(WardrobeEmote.RAT_DANCE,WardrobeEmote.SAY_SO,WardrobeEmote.CARAMEL,WardrobeEmote.DEFAULT_DANCE);
+        assertEquals(expected,new HashSet<>(WardrobeItem.owned(account,WardrobeCategory.EMOTES).stream().map(WardrobeItem::emote).toList()));
+        for(var emote:WardrobeEmote.values()){assertEquals(expected.contains(emote),emote.ownedBy(account));assertFalse(emote.ownedBy(null));}
+        CosmeticAssignments.acceptRedemption(account,Set.of(WardrobeEmote.ODDBALL.id),2);assertTrue(WardrobeEmote.ODDBALL.ownedBy(account));
+        CosmeticAssignments.acceptRedemption(account,Set.of(),3);assertFalse(WardrobeEmote.ODDBALL.ownedBy(account));assertEquals(4,WardrobeItem.owned(account,WardrobeCategory.EMOTES).size());
     }
     @Test void wheelEditsOnlyTheSelectedNativeSlotAndPreservesOtherPages() {
         var pages=new UUID[15][8];var old=UUID.randomUUID();pages[2][3]=old;var next=EmoteWheelLoadout.copy(pages);
@@ -56,6 +64,8 @@ class WardrobeEmotesTest {
         for(var value:root.getAsJsonArray("emotes")) {
             var entry=value.getAsJsonObject();var e=WardrobeEmote.fromId(entry.get("id").getAsString());assertNotNull(e);
             assertEquals("Emotes",admin.getAsJsonObject(e.id).get("category").getAsString());
+            assertEquals(e.isDefault(),entry.get("default").getAsBoolean());
+            assertEquals(e.isDefault(),admin.getAsJsonObject(e.id).get("default").getAsBoolean());
             assertTrue(Files.isRegularFile(Path.of("backend/cosmetics/public/assets",admin.getAsJsonObject(e.id).get("image").getAsString())));
             var data=Files.readAllBytes(Path.of("backend/cosmetics/public/assets/emotes",entry.get("file").getAsString()));
             VpsEmoteAssets.verify(data,entry.get("sha256").getAsString());

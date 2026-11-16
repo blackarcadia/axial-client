@@ -93,96 +93,115 @@
   "emote_gangnam_style": {
     "name": "Gangnam Style",
     "image": "emote_gangnam_style.svg",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_rat_dance": {
     "name": "Rat Dance",
     "image": "emote_rat_dance.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": true
   },
   "emote_death": {
     "name": "Death",
     "image": "emote_death.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_fear": {
     "name": "Fear",
     "image": "emote_fear.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_keep_your_head_off": {
     "name": "Keep Your Head Off",
     "image": "emote_keep_your_head_off.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_spooky_dance": {
     "name": "Spooky Dance",
     "image": "emote_spooky_dance.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_oddball": {
     "name": "Oddball",
     "image": "emote_oddball.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_say_so": {
     "name": "Say So",
     "image": "emote_say_so.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": true
   },
   "emote_dylan_dance": {
     "name": "Dylan Dance",
     "image": "emote_dylan_dance.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_rasputin": {
     "name": "Rasputin",
     "image": "emote_rasputin.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_sad_cat": {
     "name": "Sad Cat",
     "image": "emote_sad_cat.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_the_phitty": {
     "name": "The Phitty",
     "image": "emote_the_phitty.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_slick_back": {
     "name": "Slick Back",
     "image": "emote_slick_back.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_default_dance": {
     "name": "Default Dance",
     "image": "emote_default_dance.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": true
   },
   "emote_odd_loop": {
     "name": "Odd Loop",
     "image": "emote_odd_loop.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_take_the_l": {
     "name": "Take The L",
     "image": "emote_take_the_l.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_caramel": {
     "name": "Caramel",
     "image": "emote_caramel.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": true
   },
   "emote_twerk": {
     "name": "Twerk",
     "image": "emote_twerk.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   },
   "emote_breakdance": {
     "name": "Breakdance",
     "image": "emote_breakdance.png",
-    "category": "Emotes"
+    "category": "Emotes",
+    "default": false
   }
 }

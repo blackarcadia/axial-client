@@ -28,6 +28,7 @@ enum WardrobeEmote {
     WardrobeEmote(String file,String label,String animation){this.file=file;this.id="emote_"+file;this.label=label;this.animation=UUID.fromString(animation);}
     static WardrobeEmote fromId(String id){for(var e:values())if(e.id.equals(id))return e;return null;}
     static WardrobeEmote fromAnimation(UUID id){for(var e:values())if(e.animation.equals(id))return e;return null;}
-    boolean ownedBy(UUID account){return CosmeticAssignments.owns(account,id,false);}
+    boolean isDefault(){return this==RAT_DANCE||this==SAY_SO||this==CARAMEL||this==DEFAULT_DANCE;}
+    boolean ownedBy(UUID account){return account!=null&&(isDefault()||CosmeticAssignments.owns(account,id,false));}
     EmoteHolder holder(){return EmoteHolder.getEmoteFromUuid(animation);}
 }

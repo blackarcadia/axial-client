@@ -8,11 +8,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CosmeticRedemptionTest {
-    @Test void emptyWardrobeAllowsRedemptionButDoesNotGrantEquipment() {
+    @Test void starterWardrobeAllowsRedemptionButDoesNotGrantEquipment() {
         var account=UUID.fromString("11223344-1234-4234-8234-123456789012");
         assertTrue(WardrobeAccess.allows(account,null));assertTrue(WardrobeAccess.allows(account,account));
         assertFalse(WardrobeAccess.allows(null,null));assertFalse(WardrobeAccess.allows(account,UUID.randomUUID()));
-        assertTrue(WardrobeItem.owned(account,WardrobeCategory.ALL).isEmpty());
+        assertEquals(4,WardrobeItem.owned(account,WardrobeCategory.ALL).size());
+        assertTrue(WardrobeItem.owned(account,WardrobeCategory.ALL).stream().allMatch(item->item.emote()!=null));
     }
     @Test void responseMustNameAKnownCosmeticPresentInTheVerifiedGrantList() {
         var r=CosmeticRedemptionService.parse(JsonParser.parseString("{\"revision\":10,\"uuid\":\"11223344-1234-4234-8234-123456789012\",\"cosmetic\":\"magenta_city\",\"cosmetics\":[\"magenta_city\",\"ribcage\"]}").getAsJsonObject());

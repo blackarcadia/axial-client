@@ -6,133 +6,152 @@
       "animation": "00039df2-3f23-ec84-0007-5d66adfcfb6a",
       "file": "gangnam_style.emotecraft",
       "sha256": "7738e9dfdb3f6519a9eaa7e0e8843071982d630a27cf608e3241cbeb373d5429",
-      "name": "Gangnam Style"
+      "name": "Gangnam Style",
+      "default": false
     },
     {
       "id": "emote_rat_dance",
       "animation": "1fac5d45-0000-0000-0000-000000000000",
       "file": "rat_dance.emotecraft",
       "sha256": "8ca8bb3a97a4eefee4baeed464ebd47de94bd46b0eced6e5779f6bf6887dfad2",
-      "name": "Rat Dance"
+      "name": "Rat Dance",
+      "default": true
     },
     {
       "id": "emote_death",
       "animation": "7146ae20-0520-415e-beb4-9379f848f590",
       "file": "death.emotecraft",
       "sha256": "5ad583d989e4b092f3212b0214d9af7834e16d0253200c2c00427884a0445711",
-      "name": "Death"
+      "name": "Death",
+      "default": false
     },
     {
       "id": "emote_fear",
       "animation": "000380e3-6fec-6184-0007-2855df429a6a",
       "file": "fear.emotecraft",
       "sha256": "2396f519127218ec61970bfa76e1eb3c762fb673bbbba43b62eb842581dca369",
-      "name": "Fear"
+      "name": "Fear",
+      "default": false
     },
     {
       "id": "emote_keep_your_head_off",
       "animation": "00038d24-8f03-5b11-0007-3a20c4136d51",
       "file": "keep_your_head_off.emotecraft",
       "sha256": "4866ee708d330f4d0bdbd1c88fad59ea6a1aaa83b92eacdf9592c8cf62a47602",
-      "name": "Keep Your Head Off"
+      "name": "Keep Your Head Off",
+      "default": false
     },
     {
       "id": "emote_spooky_dance",
       "animation": "f9cd0cf2-0000-0000-0000-000000000000",
       "file": "spooky_dance.emotecraft",
       "sha256": "0a901dbec102e482b61c51ba3fd4988d236acd793fc671032b3f7ff5d6fc8d27",
-      "name": "Spooky Dance"
+      "name": "Spooky Dance",
+      "default": false
     },
     {
       "id": "emote_oddball",
       "name": "Oddball",
       "animation": "000388b0-8671-9ce6-0007-303ccd326310",
       "file": "oddball.emotecraft",
-      "sha256": "2a9d6fc0e89a15944e5a9e68238c2d7daa871feaf7e935e437369eea36c20291"
+      "sha256": "2a9d6fc0e89a15944e5a9e68238c2d7daa871feaf7e935e437369eea36c20291",
+      "default": false
     },
     {
       "id": "emote_say_so",
       "name": "Say So",
       "animation": "0003eacb-7dce-e4b5-0007-e29e8da00f3d",
       "file": "say_so.emotecraft",
-      "sha256": "3665889b09f6f201954ed8ddaf9f60a8882c502cd7ffdf370a35c5d9863bbf22"
+      "sha256": "3665889b09f6f201954ed8ddaf9f60a8882c502cd7ffdf370a35c5d9863bbf22",
+      "default": true
     },
     {
       "id": "emote_dylan_dance",
       "name": "Dylan Dance",
       "animation": "000387bd-7768-77ce-0007-3628b37345c8",
       "file": "dylan_dance.emotecraft",
-      "sha256": "b396ca6854f0a3ae59199a3e67c16241e0c8961d2aad4a9de49d32b317ad532c"
+      "sha256": "b396ca6854f0a3ae59199a3e67c16241e0c8961d2aad4a9de49d32b317ad532c",
+      "default": false
     },
     {
       "id": "emote_rasputin",
       "name": "Rasputin",
       "animation": "0003a918-45bf-27b0-0007-6b1a77780bee",
       "file": "rasputin.emotecraft",
-      "sha256": "e33373cb3a216f092f52cef86695bc43acac4f55f091ae2987248689c3f13ff1"
+      "sha256": "e33373cb3a216f092f52cef86695bc43acac4f55f091ae2987248689c3f13ff1",
+      "default": false
     },
     {
       "id": "emote_sad_cat",
       "name": "Sad Cat",
       "animation": "0003867f-738b-126e-0007-321725311da8",
       "file": "sad_cat.emotecraft",
-      "sha256": "891f40abd1c6dea6d5b5ab61b7eaf90994408dd6e560225b4bde983a589a4878"
+      "sha256": "891f40abd1c6dea6d5b5ab61b7eaf90994408dd6e560225b4bde983a589a4878",
+      "default": false
     },
     {
       "id": "emote_the_phitty",
       "name": "The Phitty",
       "animation": "000384ce-e689-4b0f-0007-2c3f26c29ecb",
       "file": "the_phitty.emotecraft",
-      "sha256": "e467fef9e9459da45b71325de802fcb42c8e8cd28d77e866fd2b776687d04869"
+      "sha256": "e467fef9e9459da45b71325de802fcb42c8e8cd28d77e866fd2b776687d04869",
+      "default": false
     },
     {
       "id": "emote_slick_back",
       "name": "Slick Back",
       "animation": "0003b9ae-d5d9-64fa-0007-8729b515ec4c",
       "file": "slick_back.emotecraft",
-      "sha256": "e9b1797862652eaae2806a87a3657748c8f0c00d8c07fd5b86ec96441392c6b5"
+      "sha256": "e9b1797862652eaae2806a87a3657748c8f0c00d8c07fd5b86ec96441392c6b5",
+      "default": false
     },
     {
       "id": "emote_default_dance",
       "name": "Default Dance",
       "animation": "c0e099c5-0000-0000-0000-000000000000",
       "file": "default_dance.emotecraft",
-      "sha256": "b2b7f49adcf11cdbbccd49b1caf75f022f1df3c2e3f1a0392a4d94c46d0d5180"
+      "sha256": "b2b7f49adcf11cdbbccd49b1caf75f022f1df3c2e3f1a0392a4d94c46d0d5180",
+      "default": true
     },
     {
       "id": "emote_odd_loop",
       "name": "Odd Loop",
       "animation": "0003bc02-5c8b-cec3-0007-8dcc9b23a2e7",
       "file": "odd_loop.emotecraft",
-      "sha256": "0e9e5d87b7d1095d8b605e43da9319b4d694b60326ba83da836c322d89a32fe1"
+      "sha256": "0e9e5d87b7d1095d8b605e43da9319b4d694b60326ba83da836c322d89a32fe1",
+      "default": false
     },
     {
       "id": "emote_take_the_l",
       "name": "Take The L",
       "animation": "d37c7498-0000-0000-0000-000000000000",
       "file": "take_the_l.emotecraft",
-      "sha256": "b890422dd5fce1752c8b6f7fdade26ef62f6a031744075f157fa75b059540bb2"
+      "sha256": "b890422dd5fce1752c8b6f7fdade26ef62f6a031744075f157fa75b059540bb2",
+      "default": false
     },
     {
       "id": "emote_caramel",
       "name": "Caramel",
       "animation": "ac90254c-c1b8-47ca-bd20-b42f6575cd6f",
       "file": "caramel.emotecraft",
-      "sha256": "841a6a4af7b697137375105a56c189571cf398cdf769054d6b6ea91c6f65b1f6"
+      "sha256": "841a6a4af7b697137375105a56c189571cf398cdf769054d6b6ea91c6f65b1f6",
+      "default": true
     },
     {
       "id": "emote_twerk",
       "name": "Twerk",
       "animation": "0003863f-f4bb-dcf8-0007-2eb2a604b5c6",
       "file": "twerk.emotecraft",
-      "sha256": "8753886699b9577336677587642a9d52f6a62f98443dbbde93dcb2de778ba68d"
+      "sha256": "8753886699b9577336677587642a9d52f6a62f98443dbbde93dcb2de778ba68d",
+      "default": false
     },
     {
       "id": "emote_breakdance",
       "name": "Breakdance",
       "animation": "6f792aad-0589-47d1-900d-60d52337d77b",
       "file": "breakdance.emotecraft",
-      "sha256": "84b18d6f70db36a3f145c40c82aa8c3888646b2a9aa29f587417436be5485b1d"
+      "sha256": "84b18d6f70db36a3f145c40c82aa8c3888646b2a9aa29f587417436be5485b1d",
+      "default": false
     }
   ]
 }

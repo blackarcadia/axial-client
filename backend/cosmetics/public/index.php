@@ -56,7 +56,7 @@ try {
         $db->commit();
         $etag='"cosmetics-'.$revision.'"';header('ETag: '.$etag);header('Cache-Control: public, max-age=15');
         if(($_SERVER['HTTP_IF_NONE_MATCH']??'')===$etag){http_response_code(304);exit;}
-        reply(['version'=>1,'revision'=>$revision,'players'=>(object)$players]);
+        reply(['version'=>1,'revision'=>$revision,'defaults'=>array_keys(array_filter($catalog,static fn(array $item): bool => ($item['category']??'')==='Emotes'&&($item['default']??false)===true)),'players'=>(object)$players]);
     }
     if($path!=='/admin'&&$path!=='/')reply(['error'=>'Not found'],404);
     header('Cache-Control: no-store');

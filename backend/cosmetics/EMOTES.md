@@ -29,8 +29,12 @@ Grant IDs:
 | Twerk | `emote_twerk` |
 | Breakdance | `emote_breakdance` |
 
-The owner account is granted all 19 emotes in the current catalog. Other players need
-individual grants or redeem codes. Existing non-emote ownership is preserved.
+Rat Dance, Say So, Caramel and Default Dance are included for every signed-in
+player, including accounts with no manual grants. Other emotes need individual
+VPS grants or redeem codes. Existing explicit grants remain intact, including
+owner testing grants from the previous rollout. Fresh-install seed data includes
+only the four starter emotes. The admin panel labels starter emotes "Included by
+default"; removing their manual checkbox does not remove the baseline access.
 Updated clients refresh VPS grants within a minute; revoked managed emotes cannot
 be played through an old saved wheel position. Connected-server emote restrictions
 still apply in addition to VPS ownership. Older clients retain their old behavior.
