@@ -9,8 +9,9 @@ final class EmoteWheelLoadout {
     static com.axial.cosmetics.client.ModMenuLayout.Rect slotBounds(com.axial.cosmetics.client.ModMenuLayout.Rect panel,int slot) {
         int[] columns={1,2,2,2,1,0,0,0},rows={2,2,1,0,0,0,1,2};
         int cellW=(panel.width()-24)/3,cellH=(panel.height()-142)/3;
+        int cardHeight=Math.min(48,Math.max(20,cellH-6));
         return new com.axial.cosmetics.client.ModMenuLayout.Rect(panel.x()+12+columns[slot]*cellW+3,
-                panel.y()+80+rows[slot]*cellH+(cellH-20)/2,cellW-6,20);
+                panel.y()+80+rows[slot]*cellH+(cellH-cardHeight)/2,cellW-6,cardHeight);
     }
     static UUID[][] copy(UUID[][] pages){var result=pages.clone();for(int i=0;i<result.length;i++)result[i]=pages[i].clone();return result;}
     static void put(UUID[][] pages,int page,int slot,UUID emote){
@@ -23,6 +24,7 @@ final class EmoteWheelLoadout {
         update(page,slot,emote.animation);
     }
     static void clear(int page,int slot){update(page,slot,null);}
+    static void restore(int page,int slot,UUID previous){update(page,slot,previous);}
     private static void update(int page,int slot,UUID id) {
         var config=PlatformTools.getConfig();var old=config.fastMenuEmotes;var next=copy(old);put(next,page,slot,id);config.fastMenuEmotes=next;
         if(!Serializer.INSTANCE.saveConfig()){config.fastMenuEmotes=old;throw new IllegalStateException("Could not save your emote wheel");}

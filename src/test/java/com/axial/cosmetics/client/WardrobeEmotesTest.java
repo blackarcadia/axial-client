@@ -38,7 +38,7 @@ class WardrobeEmotesTest {
         assertThrows(IllegalArgumentException.class,()->EmoteWheelLoadout.put(next,15,0,old));assertThrows(IllegalArgumentException.class,()->EmoteWheelLoadout.put(next,1,8,old));
     }
     @Test void eightSpatialSlotsFitWithoutOverlappingAtSmallAndLargeGuiSizes() {
-        for(int width:new int[]{304,380,470})for(int height:new int[]{224,270,330}) {
+        for(int width:new int[]{304,380,470,600})for(int height:new int[]{224,270,330,380}) {
             var panel=new ModMenuLayout.Rect(8,8,width,height);var slots=new ArrayList<ModMenuLayout.Rect>();
             for(int i=0;i<8;i++) {
                 var r=EmoteWheelLoadout.slotBounds(panel,i);assertTrue(r.x()>=panel.x()+12&&r.right()<=panel.right()-12);

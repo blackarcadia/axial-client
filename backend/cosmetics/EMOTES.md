@@ -23,11 +23,13 @@ be played through an old saved wheel position. Connected-server emote restrictio
 still apply in addition to VPS ownership. Older clients retain their old behavior.
 
 In the client, open **Wardrobe → Emotes**, select a card to preview its animation
-on the spaceman, then choose **Assign to wheel**. Select a page and spatial slot,
-then **Assign here**. The screen uses Emotecraft's native 15 pages of 8 positions;
+on the spaceman, then choose **Assign to wheel**. Choose a wheel page,
+then click a slot to save immediately. Occupied slots show their current emote;
+clicking replaces that position. **Undo** restores the last replaced or cleared
+slot. The screen uses Emotecraft's native 15 pages of 8 positions;
 slot 1 is at the bottom, following the native wheel's order. Assigning replaces only
 that slot, preserves other positions, and saves to the native Emotecraft config.
-**Clear slot** removes that position. Previewing never plays an emote on the live
+**Clear selected** removes the last selected position. Previewing never plays an emote on the live
 player, sends animation packets, or requires a world to be open.
 
 Assets and a SHA-256 manifest are hosted under `/assets/emotes/`. The manifest is
