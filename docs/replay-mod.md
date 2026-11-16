@@ -1,29 +1,50 @@
 # Replay Mod integration
 
-The client bundles the supplied `replaymod-1.21.11-2.6.28.jar` unchanged.
-Replay Mod's included Fabric libraries remain in its nested JARs. Existing
-Fabric API satisfies the declared runtime dependencies; no separate download is
-needed. The launcher installs Replay Mod alongside the client and replaces older
-managed versions without changing recordings or configuration.
+The client bundles `replaymod-1.21.11-2.6.28.jar` unchanged. Its included Fabric
+libraries remain nested. The launcher installs Replay Mod alongside the client;
+existing replay files and native Replay Mod settings are preserved.
 
-A 24 × 24 filmstrip button sits to the left of the main menu music slider.
-It uses the client charcoal surface, a purple hover state, a tooltip and keyboard
-activation. Features → World → Replay Mod opens the same replay viewer as a full
-card action. It has no artificial enabled/disabled switch; Replay Mod owns its
-recording settings, accessible from the viewer's settings button.
+## Viewer appearance
 
-`ReplayMenu` calls the supplied viewer's constructor and `toMinecraft()` adapter
-through stable Replay Mod API names. Cancel returns to the screen that opened it.
-The native Escape behavior remains managed by Replay Mod. The optional
-`ReplayMainMenuButtonMixin` suppresses Replay Mod's default main-menu injection
-on TitleScreen so it cannot add a duplicate or move Axial's existing menu buttons.
+The 24 × 24 filmstrip beside the main-menu music slider opens the replay viewer.
+The Replay Mod card's gear action opens the same viewer. Full-screen Replay Mod
+menus use Axial's `sub_menu_background.png`; text buttons use the same
+`packbutton2.png` skin, clean font and hover shading as the client's other menus.
+Disabled buttons retain a muted appearance. Icon/texture controls keep their symbols.
+Replay Mod uses its own GUI library, so dedicated mixins theme its screen adapter
+and buttons rather than relying on the vanilla PressableWidget skin.
 
-Checks cover bundled dependency presence, pinned viewer API, remapped mixin
-signature, packaged JAR bytes, launcher update behavior, retained recordings,
-Features card behavior and icon spacing. A real recording/playback and visual
-check in the packaged client remain required before release.
+## Recording switch
 
-Development startup validation: `:runClient` detects Replay Mod 1.21.11-2.6.28,
-but exits before the title screen at the existing Bendable Cuboids player-animation
-injection and Emotecraft wheel-key injection failures in the named development
-environment. No live icon/viewer or recording/playback verification was possible.
+**Features → World → Replay Mod** now has an on/off toggle. This controls
+**recording**, not loading the mod or replay playback. No restart is needed to
+switch recording off. The preference is saved atomically in
+`config/axial-replay-recording.json` and defaults to on for existing installs.
+
+Switching off blocks recorder initialization and packet capture, removes only
+Replay Mod's raw/decoded handlers from the active Netty pipeline, and calls its
+normal finalization routine to flush/save the current recording. The Minecraft
+connection stays open. Finalization is guarded against a second call when the
+connection later disconnects. Any queued packet buffers skipped by the gate are
+released. Replay Mod unregisters its recording event handler and HUD as part of
+normal finalization. Start/Stop and Pause/Resume controls are not added to the
+pause screen while the feature is off. Controls cached by an older pause screen
+are also hidden and prevented from restarting a finalized recorder. Native recording options on the world/server
+screens remain available but cannot override the global recording gate.
+
+Saved replays and the viewer remain available with recording off, including NPC
+animation playback. Re-enable the toggle and **rejoin the server/world** to create
+a fresh recording session; a complete replay needs its login/world-entry packets.
+Native per-server/singleplayer auto-record preferences are still respected.
+
+## Checks
+
+Focused tests cover preference persistence, malformed-config handling, detaching
+recorders without closing the game connection, packet-buffer release, duplicate
+finalization, the pinned native GUI/recording APIs, production packaging, feature
+card behavior, replay archive preservation and NPC animation timing.
+
+The development client previously exits before the title screen at existing
+Bendable Cuboids and Emotecraft injection failures in the named development
+environment. A live visual and recording/playback check in the packaged client is
+still required; the automated checks do not replace that check.
