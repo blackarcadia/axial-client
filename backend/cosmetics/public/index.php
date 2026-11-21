@@ -18,6 +18,8 @@ try {
     require_once dirname(__DIR__).'/RedeemCodes.php';
     require_once dirname(__DIR__).'/Polls.php';
     Polls::migrate($db);
+    require_once dirname(__DIR__).'/DeveloperRoles.php';
+    DeveloperRoles::migrate($db);
     $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
     $method=$_SERVER['REQUEST_METHOD'];
     if(str_starts_with($path,'/v1/feedback/')) {
@@ -56,7 +58,7 @@ try {
         $db->commit();
         $etag='"cosmetics-'.$revision.'"';header('ETag: '.$etag);header('Cache-Control: public, max-age=15');
         if(($_SERVER['HTTP_IF_NONE_MATCH']??'')===$etag){http_response_code(304);exit;}
-        reply(['version'=>1,'revision'=>$revision,'defaults'=>array_keys(array_filter($catalog,static fn(array $item): bool => ($item['category']??'')==='Emotes'&&($item['default']??false)===true)),'players'=>(object)$players]);
+        reply(['version'=>1,'revision'=>$revision,'defaults'=>array_keys(array_filter($catalog,static fn(array $item): bool => ($item['category']??'')==='Emotes'&&($item['default']??false)===true)),'developers'=>DeveloperRoles::members($db),'players'=>(object)$players]);
     }
     if($path!=='/admin'&&$path!=='/')reply(['error'=>'Not found'],404);
     header('Cache-Control: no-store');

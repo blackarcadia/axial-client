@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 public final class ReplayMenu {
     private ReplayMenu() {}
     public static void open(Screen parent) {
+        if(!DeveloperAccess.allowed())return;
         try {
             var module=Class.forName("com.replaymod.replay.ReplayModReplay");
             var instance=module.getField("instance").get(null);

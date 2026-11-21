@@ -58,6 +58,7 @@ public final class NpcEmoteDirector {
         value.controller().muteNbs=value.muted();
     }
     private static void sync() {
+        if(!DeveloperAccess.allowed()){resetLive();playback=null;return;}
         try {
             playback=NpcReplayBridge.playback();
             if(playback!=null) {
@@ -136,7 +137,7 @@ public final class NpcEmoteDirector {
     }
     static boolean assigned(UUID id){return assignments.containsKey(id);}
     static int assignedCount(){return assignments.size();}
-    static boolean editable(){sync();return MinecraftClient.getInstance().world!=null&&playback==null;}
+    static boolean editable(){sync();return DeveloperAccess.allowed()&&MinecraftClient.getInstance().world!=null&&playback==null;}
     static String status() {
         sync();if(!problem.isEmpty())return problem;
         if(playback!=null)return replay.cueCount()==0?"Replay playback • no saved emote track in this file":"Replay playback • Emote animation track loaded";

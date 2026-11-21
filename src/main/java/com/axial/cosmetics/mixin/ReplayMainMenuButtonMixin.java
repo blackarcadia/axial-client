@@ -15,6 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ReplayMainMenuButtonMixin {
     @Inject(method="injectIntoMainMenu",at=@At("HEAD"),cancellable=true,remap=false)
     private void axial$useSubtleReplayButton(Screen screen,Collection<?> buttons,CallbackInfo ci) {
-        if(screen instanceof TitleScreen)ci.cancel();
+        if(!com.axial.cosmetics.client.DeveloperAccess.allowed()||screen instanceof TitleScreen)ci.cancel();
     }
 }

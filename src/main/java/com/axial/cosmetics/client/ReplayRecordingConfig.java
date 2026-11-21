@@ -10,8 +10,9 @@ public final class ReplayRecordingConfig {
     private static final java.util.Map<Object,ReplayRecorderStatus> buttons=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private ReplayRecordingConfig() {}
     private static Path file(){return FabricLoader.getInstance().getConfigDir().resolve("axial-replay-recording.json");}
-    public static boolean enabled(){var value=enabled;if(value==null){synchronized(ReplayRecordingConfig.class){if(enabled==null)enabled=ReplayRecordingPreference.read(file());value=enabled;}}return value;}
+    public static boolean enabled(){if(!DeveloperAccess.allowed())return false;var value=enabled;if(value==null){synchronized(ReplayRecordingConfig.class){if(enabled==null)enabled=ReplayRecordingPreference.read(file());value=enabled;}}return value;}
     public static void toggle() {
+        if(!DeveloperAccess.allowed())return;
         boolean next=!enabled();
         try {ReplayRecordingPreference.write(file(),next);enabled=next;if(!next){ReplayRecordingRestart.clear();stopCurrent();}}
         catch(Exception ex){throw new IllegalStateException("Could not update Replay Mod recording",ex);}

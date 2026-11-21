@@ -84,7 +84,7 @@ public final class CosmeticAssignments {
                 }
                 var snapshot=parse(json);
                 long revision=JsonParser.parseString(json).getAsJsonObject().get("revision").getAsLong();
-                synchronized(CosmeticAssignments.class){if(requestedAt<redeemedAt||revision<minimumRevision)return;grants=snapshot;}
+                synchronized(CosmeticAssignments.class){if(requestedAt<redeemedAt||revision<minimumRevision)return;grants=snapshot;DeveloperAccess.update(json);}
                 client.execute(()->{if(client.currentScreen instanceof WardrobeScreen wardrobe)wardrobe.refreshCosmetics();});
                 Files.createDirectories(cache.getParent());var temporary=Files.createTempFile(cache.getParent(),"axial-grants-",".tmp");
                 try {Files.writeString(temporary,json);Files.move(temporary,cache,StandardCopyOption.REPLACE_EXISTING);}

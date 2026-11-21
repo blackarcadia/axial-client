@@ -14,10 +14,11 @@ public final class ReplayViewerButton extends ClickableWidget {
     private final UiMotion hover=new UiMotion(0);
     public ReplayViewerButton(int screenWidth) {
         super(x(screenWidth),24,24,24,ClientMenuText.literal("Replay Viewer"));
+        visible=active=DeveloperAccess.allowed();
         setTooltip(Tooltip.of(ClientMenuText.literal("Replay Viewer")));
     }
     static int x(int screenWidth){return Math.max(20,screenWidth-204);}
-    public void layout(int screenWidth){setDimensionsAndPosition(24,24,x(screenWidth),24);}
+    public void layout(int screenWidth){visible=active=DeveloperAccess.allowed();setDimensionsAndPosition(24,24,x(screenWidth),24);}
     @Override public void onClick(Click click,boolean doubled){if(click.button()==0)open();}
     private void open() {
         var client=MinecraftClient.getInstance();
