@@ -203,5 +203,10 @@
     "image": "emote_breakdance.png",
     "category": "Emotes",
     "default": false
+  },
+  "cowboy_hat": {
+    "name": "Cowboy Hat",
+    "image": "cowboy_hat.png",
+    "category": "Headwear"
   }
 }

@@ -26,7 +26,7 @@ record WardrobeItem(WardrobeCape cape,WardrobeAura aura,WardrobeAccessory access
         if(category.includesCapes())WardrobeCape.owned(uuid).forEach(c->items.add(of(c)));
         if(category.includesAuras())WardrobeAura.owned(uuid).forEach(a->items.add(of(a)));
         WardrobeAccessory.owned(uuid).stream().filter(a->category==WardrobeCategory.ALL
-                || (a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)?category==WardrobeCategory.PETS:category==WardrobeCategory.OUTFITS)).forEach(a->items.add(of(a)));
+                || (a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.HEAD)?category==WardrobeCategory.HEADWEAR:a.slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)?category==WardrobeCategory.PETS:category==WardrobeCategory.OUTFITS)).forEach(a->items.add(of(a)));
         if(category==WardrobeCategory.ALL||category==WardrobeCategory.EMOTES)for(var e:WardrobeEmote.values())if(e.ownedBy(uuid))items.add(of(e));
         return List.copyOf(items);
     }

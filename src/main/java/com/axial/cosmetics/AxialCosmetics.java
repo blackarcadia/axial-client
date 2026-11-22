@@ -204,6 +204,7 @@ public class AxialCosmetics implements ClientModInitializer {
                     registrationHelper.register(new com.axial.cosmetics.client.WhiteKicksFeatureRenderer(playerRenderer));
                     registrationHelper.register(com.axial.cosmetics.client.WhiteKicksFeatureRenderer.whiteSneakers(playerRenderer));
                     registrationHelper.register(com.axial.cosmetics.client.WhiteKicksFeatureRenderer.blackSneakers(playerRenderer));
+                    registrationHelper.register(new com.axial.cosmetics.client.CowboyHatFeatureRenderer(playerRenderer));
                     registrationHelper.register(new com.axial.cosmetics.client.RibcageFeatureRenderer(playerRenderer));
                     registrationHelper.register(new com.axial.cosmetics.client.ShoulderPetFeatureRenderer(playerRenderer));
                     registrationHelper.register(com.axial.cosmetics.client.ShoulderPetFeatureRenderer.ghostlyGhost(playerRenderer));
