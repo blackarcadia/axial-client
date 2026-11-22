@@ -39,4 +39,23 @@ class WardrobeModelViewTest {
         assertTrue(aura.scale()<full.scale(),"aura needs more space around the mannequin");
         assertEquals(full,WardrobeModelView.fit(null,bounds,false),"empty loadout still shows the player");
     }
+    @Test void allFootwearCardsUseTheSameFeetFraming() {
+        var bounds=new Rect(0,0,140,130);
+        var expected=WardrobeModelView.fit(WardrobeItem.of(WardrobeAccessory.WHITE_SNEAKERS),bounds,true);
+        for(var accessory:WardrobeAccessory.values())if(accessory.slots.contains(com.axial.cosmetics.data.CosmeticSlot.BOOTS))
+            assertEquals(expected,WardrobeModelView.fit(WardrobeItem.of(accessory),bounds,true),accessory.id);
+        assertEquals(expected,WardrobeModelView.fit(WardrobeItem.of(WardrobeAccessory.KORGIE),bounds,true));
+    }
+
+    @Test void headwearCardsFrameTheHeadAndLeaveRoomForTheFullBrim() {
+        var bounds=new Rect(0,0,140,130);
+        var hat=WardrobeItem.of(WardrobeAccessory.COWBOY_HAT);
+        var closeup=WardrobeModelView.fit(hat,bounds,true);
+        assertTrue(closeup.scale()>WardrobeModelView.fit(hat,bounds,false).scale());
+        assertEquals(1.9f,closeup.centerY());
+        // The hat's brim extends beyond the player's eight-pixel head.
+        assertTrue(closeup.scale()*1.55f<=bounds.width()-8+.001f);
+        assertTrue(closeup.scale()*1.05f<=bounds.height()-6+.001f);
+    }
+
 }

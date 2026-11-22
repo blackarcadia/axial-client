@@ -16,7 +16,9 @@ record WardrobeModelView(float scale,float centerY) {
         else if(item!=null&&item.accessory()==WardrobeAccessory.GHOSTLY_GHOST) {height=card?1.4f:2.3f;width=2.6f;center=card?1.7f:1f;}
         else if(item!=null&&item.accessory()==WardrobeAccessory.POOKLES) {height=card?1.3f:2.2f;width=2.1f;center=card?1.65f:1f;}
         else if(item!=null&&item.accessory()!=null&&item.accessory().slots.contains(com.axial.cosmetics.data.CosmeticSlot.PET)) {height=card?1.15f:2.1f;width=1.8f;center=card?1.6f:.95f;}
-        else if(card&&item!=null&&(item.accessory()==WardrobeAccessory.WHITE_KICKS||item.accessory()==WardrobeAccessory.WHITE_SNEAKERS||item.accessory()==WardrobeAccessory.BLACK_SNEAKERS)) {
+        else if(card&&item!=null&&item.accessory()!=null&&item.accessory().slots.contains(com.axial.cosmetics.data.CosmeticSlot.HEAD)) {
+            height=1.05f;width=1.55f;center=1.9f;
+        } else if(card&&item!=null&&item.accessory()!=null&&item.accessory().slots.contains(com.axial.cosmetics.data.CosmeticSlot.BOOTS)) {
             height=.95f;width=1.05f;center=.38f;
         } else if(card&&item!=null&&(item.accessory()==WardrobeAccessory.SWIM_BANDS||item.accessory()==WardrobeAccessory.RIBCAGE)) {
             height=1.5f;width=1.4f;center=1.13f;

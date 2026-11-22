@@ -213,5 +213,10 @@
     "name": "Korgie",
     "image": "korgie.png",
     "category": "Outfits"
+  },
+  "3d_glasses": {
+    "name": "3D Glasses",
+    "image": "3d_glasses.png",
+    "category": "Headwear"
   }
 }

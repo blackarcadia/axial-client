@@ -6,6 +6,7 @@ import net.minecraft.util.Identifier;
 
 /** Independently equipped, server-granted model cosmetics. */
 enum WardrobeAccessory {
+    GLASSES_3D("3d_glasses","3D Glasses","GLASSES",CosmeticSlot.HEAD),
     KORGIE("korgie","Korgie","SLIPPERS",CosmeticSlot.BOOTS),
     COWBOY_HAT("cowboy_hat","Cowboy Hat","HAT",CosmeticSlot.HEAD),
     SWIM_BANDS("swim_bands","Swim Bands","ARM BANDS",CosmeticSlot.LEFT_ARM,CosmeticSlot.RIGHT_ARM),
