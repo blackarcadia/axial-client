@@ -3,7 +3,7 @@
 Cosmetic ID: `3d_glasses`. PayNow product: `628318350954471424`.
 Category: Headwear. Slot: Head. Equipping replaces other headwear.
 
-Updated from `3dglassesmodel2.geo.json` and its supplied texture.
+Updated from `3dglassesmodel3.geo.json` and its supplied texture.
 
 The supplied model preserves all 64 cubes and its 32×32 texture. The shared
 headwear renderer follows the animated player head and respects ownership,
