@@ -20,6 +20,9 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
     public static WhiteKicksFeatureRenderer whiteSneakers(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){
         return new WhiteKicksFeatureRenderer(context,WardrobeAccessory.WHITE_SNEAKERS);
     }
+    public static WhiteKicksFeatureRenderer korgie(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){
+        return new WhiteKicksFeatureRenderer(context,WardrobeAccessory.KORGIE);
+    }
     public static WhiteKicksFeatureRenderer blackSneakers(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){
         return new WhiteKicksFeatureRenderer(context,WardrobeAccessory.BLACK_SNEAKERS);
     }
@@ -49,6 +52,6 @@ public final class WhiteKicksFeatureRenderer extends FeatureRenderer<PlayerEntit
     static ModelPart model(String id){
         return BedrockCosmeticModel.bake(id,Map.of(
                 "bipedLeftLeg",new BedrockCosmeticModel.Anchor("left",new BedrockCosmeticGeometry.Vec(2,12,0)),
-                "bipedRightLeg",new BedrockCosmeticModel.Anchor("right",new BedrockCosmeticGeometry.Vec(-2,12,0))));
+                "bipedRightLeg",new BedrockCosmeticModel.Anchor("right",new BedrockCosmeticGeometry.Vec(-2,12,0))),id.equals("korgie")?16:32,id.equals("korgie")?16:32);
     }
 }

@@ -5,6 +5,7 @@ request. Product IDs are strings; preserve all digits when copying them.
 
 | PayNow product ID | Product | Cosmetic ID |
 | --- | --- | --- |
+| `628277311203966976` | Korgie | `korgie` |
 | `628258556944064512` | Cowboy Hat | `cowboy_hat` |
 | `619762575072043008` | Staff | `staff` |
 | `624788824383295488` | White Sneakers | `white_sneakers` |

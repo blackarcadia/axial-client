@@ -208,5 +208,10 @@
     "name": "Cowboy Hat",
     "image": "cowboy_hat.png",
     "category": "Headwear"
+  },
+  "korgie": {
+    "name": "Korgie",
+    "image": "korgie.png",
+    "category": "Outfits"
   }
 }
