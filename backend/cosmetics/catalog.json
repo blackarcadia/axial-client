@@ -218,5 +218,10 @@
     "name": "3D Glasses",
     "image": "3d_glasses_v2.png",
     "category": "Headwear"
+  },
+  "ufo": {
+    "name": "UFO",
+    "image": "ufo.png",
+    "category": "Pets"
   }
 }

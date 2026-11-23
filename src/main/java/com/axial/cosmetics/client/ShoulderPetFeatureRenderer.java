@@ -23,6 +23,7 @@ public final class ShoulderPetFeatureRenderer extends FeatureRenderer<PlayerEnti
     }
     public static ShoulderPetFeatureRenderer ghostlyGhost(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){return new ShoulderPetFeatureRenderer(context,WardrobeAccessory.GHOSTLY_GHOST);}
     public static ShoulderPetFeatureRenderer pookles(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){return new ShoulderPetFeatureRenderer(context,WardrobeAccessory.POOKLES);}
+    public static ShoulderPetFeatureRenderer ufo(FeatureRendererContext<PlayerEntityRenderState,PlayerEntityModel> context){return new ShoulderPetFeatureRenderer(context,WardrobeAccessory.UFO);}
     @Override public void render(MatrixStack matrices,OrderedRenderCommandQueue commands,int light,PlayerEntityRenderState state,float yaw,float pitch) {
         if(state instanceof WardrobePreviewState preview) {
             if(!preview.accessories.contains(accessory))return;
@@ -36,8 +37,8 @@ public final class ShoulderPetFeatureRenderer extends FeatureRenderer<PlayerEnti
         FeatureRenderer.render(pet,texture,matrices,commands,light,state,0xFFFFFFFF,0);
     }
     static ModelPart model(){return model("pink_slime");}
-    static ModelPart model(String id){return BedrockCosmeticModel.bake(id,Map.of("body",
-            new BedrockCosmeticModel.Anchor("torso",new BedrockCosmeticGeometry.Vec(0,0,0))),switch(id){case "ghostly_ghost"->64;case "pookles"->96;default->32;},8);}
+    static ModelPart model(String id){return BedrockCosmeticModel.bake(id,Map.of(id.equals("ufo")?"spinnybottom2":"body",
+            new BedrockCosmeticModel.Anchor("torso",new BedrockCosmeticGeometry.Vec(0,0,0))),switch(id){case "ghostly_ghost"->64;case "pookles"->96;default->32;},id.equals("ufo")?32:8);}
     static Map<String,ModelPart> bones(ModelPart root,String id) {
         var result=new HashMap<String,ModelPart>();result.put("torso",root.getChild("torso"));
         for(var bone:BedrockCosmeticGeometry.load(id))result.put(bone.name(),result.get(bone.parent()==null?"torso":bone.parent()).getChild(bone.name()));
