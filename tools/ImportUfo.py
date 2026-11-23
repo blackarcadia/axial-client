@@ -1,4 +1,4 @@
-"""Import UFO's embedded texture, authored cubes and linear idle animation."""
+"""Import UFO's authored cubes and animation, with an optional supplied texture."""
 import base64, json, pathlib, sys
 assets=pathlib.Path(__file__).resolve().parents[1]/'src/main/resources/assets/axial_cosmetics'
 m=json.loads(pathlib.Path(sys.argv[1]).read_text())
@@ -32,4 +32,5 @@ for animator in animation['animators'].values():
  if channels: tracks[animator['name']]=channels
 out={'format_version':'1.8.0','animations':{'animation.ufo.float':dict(loop=True,animation_length=animation['length'],bones=tracks)}}
 (assets/'animations/ufo.animation.json').write_text(json.dumps(out,indent=2)+'\n')
-(assets/'textures/entity/accessories/ufo.png').write_bytes(base64.b64decode(m['textures'][0]['source'].split(',',1)[1]))
+texture=pathlib.Path(sys.argv[2]).read_bytes() if len(sys.argv)>2 else base64.b64decode(m['textures'][0]['source'].split(',',1)[1])
+(assets/'textures/entity/accessories/ufo.png').write_bytes(texture)
