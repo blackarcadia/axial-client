@@ -5,6 +5,16 @@ import net.minecraft.client.util.math.MatrixStack;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class UfoTest {
+ @Test void outerHullUsesGreyExteriorRatherThanGreenInterior() {
+  var hull=ShoulderPetFeatureRenderer.model("ufo").getChild("torso").getChild("spinnybottom2").getChild("base").getChild("cube2");
+  hull.forEachCuboid(new MatrixStack(),(m,p,i,c)->{
+   var outside=Arrays.stream(c.sides).filter(f->f.direction().x()<-.9f).findFirst().orElseThrow();
+   assertEquals(Set.of(6f/32,14f/32),new HashSet<>(Arrays.stream(outside.vertices()).map(v->v.u()).toList()));
+   assertEquals(Set.of(2f/32,4f/32),new HashSet<>(Arrays.stream(outside.vertices()).map(v->v.v()).toList()));
+   var inside=Arrays.stream(c.sides).filter(f->f.direction().x()>.9f).findFirst().orElseThrow();
+   assertEquals(Set.of(0f,2f/32),new HashSet<>(Arrays.stream(inside.vertices()).map(v->v.v()).toList()));
+  });
+ }
  @Test void preservesAuthoredCubesTextureAndAnimatedHierarchy()throws Exception {
   var root=ShoulderPetFeatureRenderer.model("ufo");var count=new int[1];
   root.forEachCuboid(new MatrixStack(),(m,p,i,c)->{count[0]++;assertInstanceOf(FaceMappedCosmeticCuboid.class,c);});

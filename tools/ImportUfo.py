@@ -14,7 +14,9 @@ def visit(node,parent=None):
   for name,f in e['faces'].items():
    if f.get('texture') is None: continue
    assert not f.get('rotation',0), 'Rotated UV face'
-   u,v,u1,v1=f['uv']; faces[name]=dict(uv=[u,v],uv_size=[u1-u,v1-v])
+   # Blockbench names X faces geometrically; the Bedrock baker uses reflected X names.
+   face={'east':'west','west':'east'}.get(name,name)
+   u,v,u1,v1=f['uv']; faces[face]=dict(uv=[u,v],uv_size=[u1-u,v1-v])
   b['cubes'].append(dict(origin=shift(e['from']),size=[y-x for x,y in zip(e['from'],e['to'])],pivot=shift(e['origin']),rotation=e.get('rotation',[0,0,0]),uv=faces,inflate=e.get('inflate',0)))
 for node in m['outliner']: visit(node)
 # Retain the authored pivot for animated rotations; attach the whole model to the torso.
