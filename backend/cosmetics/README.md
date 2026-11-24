@@ -2,6 +2,12 @@
 
 Admin: https://api.axialclient.com/admin
 
+The redesigned panel has separate Overview, Cosmetics, Players, Feedback, Polls
+and Payments pages in the sidebar. Start at Overview for live counts and shortcuts.
+Use Cosmetics for UUID lookup and grouped grants, Players for the searchable
+directory, Feedback for category/status filters and approvals, Polls for creation
+and retained results, and Payments for PayNow settings. See [dashboard notes](DASHBOARD.md).
+
 Fallback: https://37-59-98-176.sslip.io/admin
 
 Permanent address: https://api.axialclient.com/admin once the `api` A record points to `37.59.98.176` (DNS-only if using Cloudflare). HTTPS certificates are managed by Caddy. The temporary HTTPS address is live while DNS is pending.

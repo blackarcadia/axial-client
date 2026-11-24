@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 final class FeedbackError extends RuntimeException {
-    public function __construct(string $message, public readonly int $status) { parent::__construct($message); }
+    public function __construct(string $message, public readonly int $status, public readonly int $retryAfter=0) { parent::__construct($message); }
 }
 
 /** Private inbox: verified Minecraft sessions, bounded submissions and separate delivery receipts. */
@@ -20,14 +20,33 @@ final class Feedback {
                 $db->commit();
             }catch(Throwable $ex){$db->rollBack();throw $ex;}
         }
+        self::upgradeRatePolicy($db);
+    }
+    private static function upgradeRatePolicy(PDO $db): void {
+        $db->exec('CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY,value INTEGER NOT NULL)');
+        if((int)self::query($db,"SELECT value FROM metadata WHERE name='feedback_limit_policy'")->fetchColumn()>=2)return;
+        $db->beginTransaction();
+        try {
+            $db->exec("UPDATE metadata SET value=value WHERE name='feedback_limit_policy'");
+            if((int)self::query($db,"SELECT value FROM metadata WHERE name='feedback_limit_policy'")->fetchColumn()<2){
+                // The old account policy accepted at most five submissions; later attempts were false charges.
+                $db->exec("UPDATE feedback_limits SET attempts=5 WHERE peer LIKE 'submit:%' AND attempts>5");
+                $db->exec("INSERT INTO metadata(name,value) VALUES('feedback_limit_policy',2) ON CONFLICT(name) DO UPDATE SET value=2");
+            }
+            $db->commit();
+        }catch(Throwable $ex){$db->rollBack();throw $ex;}
     }
     private static function query(PDO $db,string $sql,array $args=[]): PDOStatement {
         $q=$db->prepare($sql);$q->execute($args);return $q;
     }
-    private static function limit(PDO $db,string $key,int $maximum,int $window): void {
+    private static function limit(PDO $db,string $key,int $maximum,int $window,string $label="Too many verification requests"): void {
         self::query($db,'INSERT INTO feedback_limits VALUES(?,?,1) ON CONFLICT(peer) DO UPDATE SET attempts=CASE WHEN started_at<? THEN 1 ELSE attempts+1 END,started_at=CASE WHEN started_at<? THEN excluded.started_at ELSE started_at END',[$key,time(),time()-$window,time()-$window]);
-        if((int)self::query($db,'SELECT attempts FROM feedback_limits WHERE peer=?',[$key])->fetchColumn()>$maximum)
-            throw new FeedbackError('Too many requests. Please try again later.',429);
+        $row=self::query($db,'SELECT started_at,attempts FROM feedback_limits WHERE peer=?',[$key])->fetch(PDO::FETCH_ASSOC);
+        if((int)$row['attempts']>$maximum){
+            $wait=max(1,(int)$row['started_at']+$window-time());
+            $minutes=(int)ceil($wait/60);$duration=$minutes>=60?intdiv($minutes,60).'h '.($minutes%60).'m':$minutes.'m';
+            throw new FeedbackError($label.'. Try again in '.$duration.'.',429,$wait);
+        }
     }
     public static function handle(PDO $db,string $action,array $body,string $token,string $peer,?callable $verify=null): array {
         self::query($db,'DELETE FROM feedback_challenges WHERE expires_at<?',[time()]);
@@ -63,12 +82,18 @@ final class Feedback {
             if(!is_string($category)||!in_array($category,['prisons','client'],true)||!is_string($kind)||!in_array($kind,['bug','suggestion','general'],true))throw new FeedbackError('Choose a valid feedback category and type.',400);
             if(!is_string($message)||!preg_match('//u',$message)||strlen(trim($message))<10||strlen($message)>8000||!is_string($request)||!preg_match('/\A[a-f0-9-]{36}\z/',$request))throw new FeedbackError('Enter 10–2000 characters of feedback.',400);
             if(preg_match_all('/./us',$message)>2000)throw new FeedbackError('Feedback is limited to 2000 characters.',400);
-            $old=self::query($db,'SELECT id FROM feedback WHERE uuid=? AND request_id=?',[$uuid,$request])->fetchColumn();
-            if($old)return ['id'=>(int)$old];
-            self::limit($db,'submit:'.$uuid,5,86400);
-            self::limit($db,'submit-peer:'.$peer,50,86400);
-            self::query($db,'INSERT INTO feedback(uuid,username,message,request_id,created_at,status,category,kind) VALUES(?,?,?,?,?,?,?,?)',[$uuid,$session['username'],trim($message),$request,time(),'pending',$category,$kind]);
-            return ['id'=>(int)$db->lastInsertId()];
+            $db->beginTransaction();
+            try {
+                // Serialize duplicate retries and all three quota checks with the insert.
+                self::query($db,'UPDATE feedback_limits SET attempts=attempts WHERE peer=?',['submit:'.$uuid]);
+                $old=self::query($db,'SELECT id FROM feedback WHERE uuid=? AND request_id=?',[$uuid,$request])->fetchColumn();
+                if($old){$db->commit();return ['id'=>(int)$old];}
+                self::limit($db,'submit:'.$uuid,25,86400,'Feedback limit: 25 per day');
+                self::limit($db,'submit-burst:'.$uuid,5,60,'Feedback limit: 5 per minute');
+                self::limit($db,'submit-peer:'.$peer,200,86400,'Feedback limit for this network reached');
+                self::query($db,'INSERT INTO feedback(uuid,username,message,request_id,created_at,status,category,kind) VALUES(?,?,?,?,?,?,?,?)',[$uuid,$session['username'],trim($message),$request,time(),'pending',$category,$kind]);
+                $id=(int)$db->lastInsertId();$db->commit();return ['id'=>$id];
+            }catch(Throwable $ex){$db->rollBack();throw $ex;}
         }
         if($action==='notifications')return ['notifications'=>self::query($db,'SELECT id,feedback_id,reply FROM feedback_notifications WHERE uuid=? ORDER BY id LIMIT 20',[$uuid])->fetchAll(PDO::FETCH_ASSOC)];
         if($action==='ack') {

@@ -9,10 +9,10 @@ the menu. Failed delivery preserves the draft and does not play the success sequ
 
 The
 editor uses the shared client panels, buttons, fonts and accent colours. Players
-can send 10–2000 characters, up to five submissions per account per day. Requests
+can send 10–2000 characters, up to 25 submissions per account per day, with a five-per-minute burst limit. Requests
 run off the game thread, and failed sends retain the draft for retry.
 
-In https://api.axialclient.com/admin#feedback, the team can read the latest 100
+In https://api.axialclient.com/admin?page=feedback, the team can read the latest 100
 submissions with their category and type, approve with an optional reply, or delete permanently. Approval
 queues a private notification; repeating approval does not queue another.
 Deletion removes the submission text but preserves an undelivered approval.
@@ -59,3 +59,8 @@ idempotency, account isolation, approval/deletion, acknowledgements and limits.
 Live checks cover the authenticated panel and unauthenticated API boundaries.
 A real Minecraft account is still needed to check submission and notification
 delivery end to end in game.
+
+Quota is charged only when a new submission is saved. Duplicate retries and
+rejected requests do not consume submission quota. Rate-limited responses include
+a specific limit, wait time and Retry-After header. The v2 rate-policy migration
+repairs legacy account counters inflated by blocked retries, once per database.

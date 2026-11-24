@@ -52,6 +52,9 @@ public abstract class ItemModelManagerCustomItemMixin {
     private static final Identifier CHAINBELT_MODEL =
             Identifier.of("axial_cosmetics", "chainbelt");
     @Unique
+    private static final Identifier PIEBELT_MODEL =
+            Identifier.of("axial_cosmetics", "piebelt");
+    @Unique
     private static final Identifier MACE_MODEL =
             Identifier.of("axial_cosmetics", "mace");
     @Unique
@@ -95,6 +98,9 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(278.0F).equals(modelData.getFloat(0))) {
                 return SOULCOLLECTOR_MODEL;
+            }
+            if (modelData != null && Float.valueOf(310.0F).equals(modelData.getFloat(0))) {
+                return PIEBELT_MODEL;
             }
             if (modelData != null && Float.valueOf(298.0F).equals(modelData.getFloat(0))) {
                 return FIRECRACKER_MODEL;

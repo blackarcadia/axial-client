@@ -1,6 +1,6 @@
 # Community polls
 
-Create polls in https://api.axialclient.com/admin#polls. Supply a question, 2–6
+Create polls in https://api.axialclient.com/admin?page=polls. Supply a question, 2–6
 distinct choices, a duration and a unit (minutes, hours or days). For example,
 use `30` minutes or `24` hours. Durations range from 1 minute to 30 days, with
 up to 10 polls active together. Questions/options are immutable after publishing.
