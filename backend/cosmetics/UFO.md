@@ -7,7 +7,7 @@ private pets. No store product is configured.
 Imported from `UFO23.bbmodel`: all 53 cubes, 25 bones, supplied 32 × 32 texture,
 authored face UVs, cube inflation and all 1,948 linear animation keys. The
 4.04167-second animation loops through the existing shoulder pet renderer.
-The model is offset (-6, +24, 0) above the shoulder, retaining its authored root
+The model is offset (+13.5, +26.575, -0.1) above the shoulder, retaining its authored root
 pivot for rotations. Equipping replaces another pet and retains other slots.
 
 Reimport with `python3 tools/ImportUfo.py /path/to/UFO23.bbmodel /path/to/texture.png`.
@@ -22,3 +22,6 @@ visual testing remains unverified. Players need an updated client to render UFO.
 The importer swaps Blockbench east/west UV names for the Bedrock baker’s reflected
 X convention. This keeps the grey hull exterior outside and the green interior
 inside. A regression check verifies both sides of an unrotated hull panel.
+
+UFO shares Ghostly Ghost’s positive-X shoulder placement. Its authored root pivot
+is translated with the geometry so idle rotations stay centred on the pet.

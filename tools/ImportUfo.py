@@ -3,7 +3,8 @@ import base64, json, pathlib, sys
 assets=pathlib.Path(__file__).resolve().parents[1]/'src/main/resources/assets/axial_cosmetics'
 m=json.loads(pathlib.Path(sys.argv[1]).read_text())
 elements={e['uuid']:e for e in m['elements']}; groups={g['uuid']:g for g in m['groups']}; bones=[]
-def shift(v): return [v[0]-6,v[1]+24,v[2]]
+# Match Ghostly Ghost’s shoulder centre while retaining UFO’s authored rotation pivot.
+def shift(v): return [v[0]+13.5,v[1]+26.575,v[2]-.1]
 def visit(node,parent=None):
  g=groups[node['uuid']]; b=dict(name=g['name'],pivot=shift(g['origin']),rotation=g.get('rotation',[0,0,0]),cubes=[])
  if parent: b['parent']=parent

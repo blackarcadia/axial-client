@@ -5,6 +5,24 @@ import net.minecraft.client.util.math.MatrixStack;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class UfoTest {
+ @Test void floatsAboveTheSameShoulderAsGhostThroughoutItsLoop() {
+  var root=ShoulderPetFeatureRenderer.model("ufo");
+  var bones=ShoulderPetFeatureRenderer.bones(root,"ufo");var animation=new ShoulderPetAnimation("ufo");
+  var ghost=ShoulderPetFeatureRenderer.model("ghostly_ghost");
+  var reference=new float[]{Float.POSITIVE_INFINITY,Float.NEGATIVE_INFINITY};
+  ghost.collectVertices(new MatrixStack(),p->{reference[0]=Math.min(reference[0],p.x());reference[1]=Math.max(reference[1],p.x());});
+  float shoulderX=(reference[0]+reference[1])/2;
+  for(int frame=0;frame<=97;frame++) {
+   ShoulderPetFeatureRenderer.animate(bones,animation,frame*4.04167f/97);
+   var bounds=new float[]{Float.POSITIVE_INFINITY,Float.NEGATIVE_INFINITY};
+   root.collectVertices(new MatrixStack(),p->{
+    assertTrue(p.x()>.3f,"UFO must stay outside the head");
+    assertTrue(p.y()<-.19f,"UFO must stay above the shoulder");
+    bounds[0]=Math.min(bounds[0],p.x());bounds[1]=Math.max(bounds[1],p.x());
+   });
+   assertEquals(shoulderX,(bounds[0]+bounds[1])/2,.15f);
+  }
+ }
  @Test void outerHullUsesGreyExteriorRatherThanGreenInterior() {
   var hull=ShoulderPetFeatureRenderer.model("ufo").getChild("torso").getChild("spinnybottom2").getChild("base").getChild("cube2");
   hull.forEachCuboid(new MatrixStack(),(m,p,i,c)->{
