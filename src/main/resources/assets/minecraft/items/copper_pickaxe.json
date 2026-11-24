@@ -4,6 +4,13 @@
     "property": "minecraft:custom_model_data",
     "entries": [
       {
+        "threshold": 115,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/nebulafang"
+        }
+      },
+      {
         "threshold": 232,
         "model": {
           "type": "minecraft:model",
