@@ -18,6 +18,8 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier KROKS_MODEL = Identifier.of("axial_cosmetics", "kroks");
     @Unique
+    private static final Identifier COWBOYBOOTS_MODEL = Identifier.of("axial_cosmetics", "cowboyboots");
+    @Unique
     private static final Identifier PUMPKINBOMB_MODEL = Identifier.of("axial_cosmetics", "pumpkinbomb");
     @Unique
     private static final Identifier TEDDYBEAR_MODEL = Identifier.of("axial_cosmetics", "teddybear");
@@ -36,6 +38,9 @@ public abstract class ItemModelManagerCustomItemMixin {
     @Unique
     private static final Identifier SOULCOLLECTOR_MODEL =
             Identifier.of("axial_cosmetics", "soulcollector");
+    @Unique
+    private static final Identifier TURKEYBONE_MODEL =
+            Identifier.of("axial_cosmetics", "turkeybone");
     @Unique
     private static final Identifier KNIGHTSBOOTS_MODEL =
             Identifier.of("axial_cosmetics", "knightsboots");
@@ -59,6 +64,8 @@ public abstract class ItemModelManagerCustomItemMixin {
             Identifier.of("axial_cosmetics", "mace");
     @Unique
     private static final Identifier LAMPSHADE_MODEL = Identifier.of("axial_cosmetics", "lampshade");
+    @Unique
+    private static final Identifier WITCHHAT_MODEL = Identifier.of("axial_cosmetics", "witchhat");
     @Unique
     private static final Identifier POWERBOX_MODEL = Identifier.of("axial_cosmetics", "powerbox");
     @Unique
@@ -98,6 +105,15 @@ public abstract class ItemModelManagerCustomItemMixin {
             }
             if (modelData != null && Float.valueOf(278.0F).equals(modelData.getFloat(0))) {
                 return SOULCOLLECTOR_MODEL;
+            }
+            if (modelData != null && Float.valueOf(313.0F).equals(modelData.getFloat(0))) {
+                return TURKEYBONE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(311.0F).equals(modelData.getFloat(0))) {
+                return COWBOYBOOTS_MODEL;
+            }
+            if (modelData != null && Float.valueOf(31.0F).equals(modelData.getFloat(0))) {
+                return COWBOYBOOTS_MODEL;
             }
             if (modelData != null && Float.valueOf(310.0F).equals(modelData.getFloat(0))) {
                 return PIEBELT_MODEL;
@@ -144,6 +160,9 @@ public abstract class ItemModelManagerCustomItemMixin {
 
             if (modelData != null && Float.valueOf(248.0F).equals(modelData.getFloat(0))) {
                 return LAMPSHADE_MODEL;
+            }
+            if (modelData != null && Float.valueOf(312.0F).equals(modelData.getFloat(0))) {
+                return WITCHHAT_MODEL;
             }
             if (modelData != null && Float.valueOf(249.0F).equals(modelData.getFloat(0))) {
                 return POWERBOX_MODEL;
